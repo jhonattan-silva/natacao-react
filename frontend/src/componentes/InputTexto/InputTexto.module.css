@@ -1,0 +1,28 @@
+.campo-texto {
+    /* Estilos para o container do input */
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .campo-texto label {
+    /* Estilos para a label */
+    flex: 1; /* Ocupa todo o espaço disponível */
+    font-size: 16px;
+    margin-right: 10px;
+  }
+  
+  input {
+    /* Estilos para o input */
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    outline: none; /* Remove o contorno ao focar */
+  }
+  
+  input:focus {
+    /* Estilos para o input quando focado */
+    border-color: #999;
+  }

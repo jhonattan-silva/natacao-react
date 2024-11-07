@@ -1,0 +1,29 @@
+/* Estilos específicos para os rádios */
+input[type="radio"] {
+    display: none;
+}
+
+/* Estilo das labels associadas aos rádios */
+input[type="radio"] + label {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-right: 10px;
+    border: 2px solid #ddd;
+    border-radius: 50px;
+    background-color: #f9f9f9;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+}
+
+/* Estilos quando o rádio está selecionado */
+input[type="radio"]:checked + label {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+    color: #fff;
+}
+
+/* Estilo para hover nas labels dos rádios */
+input[type="radio"] + label:hover {
+    background-color: #e0e0e0;
+}

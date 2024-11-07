@@ -1,0 +1,41 @@
+/backend:
+    /config: Configuração do banco de dados.
+    /controllers: Funções de controle para lidar com as requisições.
+    /models: Modelos do banco de dados.
+    /routes: Rotas da API.
+    /middleware: Middlewares personalizados, como autenticação.
+    index.js: Ponto de entrada do servidor Express.
+
+/frontend: React.
+    /public: Arquivos públicos como HTML.
+    /src: Código fonte do React.
+    /components: Componentes reutilizáveis.
+    /pages: Páginas principais do aplicativo.
+    /services: Configuração de Axios e chamadas à API.
+    /utils: Funções utilitárias e helpers.
+    App.js: Componente principal do React.
+    index.js: Ponto de entrada do React.
+    styles.css: Estilos globais.
+
+FRONTEND
+npm install react-router-dom
+npm install pdfmake
+npm install pdffonts
+
+cria a routes.js dentro do src
+chama o <AppRoutes /> lá no index.js do src
+
+npm install axios
+
+
+BACKEND
+npm init -y
+npm install express
+npm install --save-dev nodemon
+npm install mysql2
+npm install dotenv //dotenv é muito útil nesse contexto, pois ele permite que você armazene informações sensíveis, como as credenciais do banco de dados, em um arquivo separado (.env) 
+npm install cors helmet body-parser //cors e helmet seguranca em requisições, body-parser leitura do json entre front e back
+
+
+
+criar server.js

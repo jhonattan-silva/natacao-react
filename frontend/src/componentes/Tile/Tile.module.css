@@ -1,0 +1,20 @@
+.tile {
+    cursor: pointer;
+    padding: 20px;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    margin: 10px;
+    border-radius: 10px;
+}
+
+
+.noticias { background-color: #007bff; }
+.eventos { background-color: #28a745; }
+.configuracoes { background-color: #dc3545; }
+.usuarios { background-color: #ffc107; }
+.balizamento {  background-color: rgb(253, 57, 253);}
+.equipe {background-color: orangered;}
+.etapa {background-color: rgb(68, 223, 250);}

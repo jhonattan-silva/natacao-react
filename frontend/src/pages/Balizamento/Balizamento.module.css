@@ -1,0 +1,67 @@
+@font-face {
+    font-family: "Roboto Flex";
+    src: url("https://digitalupgrade.com/images/misc/RobotoFlex-VariableFont_GRADXTRAYOPQYTASYTDEYTFIYTLCYTUCopszslntwdthwght.woff2") format("woff2"); 
+}
+  
+body {
+    font-family: 'Roboto Flex', sans-serif; 
+    background-color: #252C32 !important;
+    display: flex;
+    justify-content: center;
+}
+
+.container-fluid {
+    display: grid;
+    place-items: center; /* Centraliza horizontal e verticalmente */
+}
+
+h3, h1 {
+    color: #ffffff;
+    text-align: center; /* Centraliza o título horizontalmente */
+    margin-bottom: 10px;
+}
+
+table {
+    width: 80%; /* Ajusta a tabela para ocupar 80% da largura disponível */
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #ccc;
+    margin-left: auto; /* Centraliza a tabela horizontalmente */
+    margin-right: auto; /* Centraliza a tabela horizontalmente */
+}
+
+table thead {
+    text-align: center;
+    font-weight: bold;
+}
+
+table th, table td {
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+table th {
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+table tr:nth-child(even) {
+    background-color: #eacece;
+}
+
+/* Estilo para a linha do título da bateria */
+.bateria-title {
+    background-color: #d94646; /* Altere para a cor que desejar */
+    color: #333; /* Cor do texto */
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Estilo para o cabeçalho da tabela */
+.table-header {
+    background-color: #9983e2 !important; /* Altere para a cor que desejar */
+    color: #000; /* Cor do texto */
+    font-weight: bold;
+}
