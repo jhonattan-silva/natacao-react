@@ -1,0 +1,17 @@
+/* Botao.module.css */
+
+.botao {
+    /* Estilos básicos para o botão */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .botao:hover {
+    /* Estilos para o botão quando o mouse está sobre ele */
+    background-color: #0069d9;
+  }

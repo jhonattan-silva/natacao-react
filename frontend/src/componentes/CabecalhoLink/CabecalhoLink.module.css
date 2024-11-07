@@ -1,0 +1,10 @@
+.link {
+    color: aliceblue;
+    font-size: 22px;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 1em;
+    margin: 5px;
+    background-color: darkgreen;
+    border-radius: 15px;
+}

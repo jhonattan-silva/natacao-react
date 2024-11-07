@@ -1,0 +1,11 @@
+.rodape {
+    background-color: aqua;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1em 20em;
+}
+
+.rodape p {
+    max-width: 20%;
+}
