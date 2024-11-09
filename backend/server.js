@@ -31,6 +31,7 @@ const etapasRoutes = require('./routes/etapasRoutes');
 const usuariosRoutes = require('./routes/usuariosRoutes');
 const nadadoresRoutes = require('./routes/nadadoresRoutes');
 const inscricaoRoutes = require('./routes/inscricaoRoutes');
+const rankingsRoutes = require('./routes/rankingsRoutes');
 
 app.use('/api/balizamento', balizamentoRoutes);
 app.use('/api/equipes', equipesRoutes);
@@ -38,6 +39,7 @@ app.use('/api/etapas', etapasRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/nadadores', nadadoresRoutes);
 app.use('/api/inscricao', inscricaoRoutes);
+app.use('/api/ranking', rankingsRoutes);
 
 
 // Página não encontrada

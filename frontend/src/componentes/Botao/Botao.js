@@ -1,8 +1,8 @@
 import style from './Botao.module.css';
 
-const Botao = ({ onClick, children }) => {
+const Botao = ({ onClick, children, classBtn }) => {
     return (
-        <button className={style.botao} onClick={onClick}>{children}</button>
+        <button className={classBtn} onClick={onClick}>{children}</button>
     )
 }
 

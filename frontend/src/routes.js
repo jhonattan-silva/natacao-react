@@ -7,6 +7,7 @@ import Etapas from "./pages/Etapas/Etapas";
 import Usuarios from "./pages/Usuarios/Usuarios";
 import Nadadores from "./pages/Nadadores/Nadadores";
 import Inscricao from "./pages/Inscricao/Inscricao";
+import Rankings from "./pages/Rankings/Rankings";
 
 const AppRoutes = () => {
     return (
@@ -20,6 +21,7 @@ const AppRoutes = () => {
                 <Route path="/usuarios" element={<Usuarios />}/>
                 <Route path="/nadadores" element={<Nadadores />}/>
                 <Route path="/inscricao" element={<Inscricao />}/>
+                <Route path="/rankings" element={<Rankings />}/>
             </Routes>
         </BrowserRouter>
     )

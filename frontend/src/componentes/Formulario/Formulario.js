@@ -9,6 +9,7 @@ const Formulario = ({ inputs, aoSalvar }) => {
                     <InputTexto
                         key={index}
                         obrigatorio={input.obrigatorio}
+                        id={input.id}
                         tipo={input.tipo}
                         label={input.label}
                         placeholder={input.placeholder}

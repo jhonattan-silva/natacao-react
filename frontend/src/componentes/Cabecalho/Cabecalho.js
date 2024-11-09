@@ -17,6 +17,7 @@ const Cabecalho = () => {
                 <CabecalhoLink url='./Resultados'> Resultados </CabecalhoLink>
                 <CabecalhoLink url='./Classificacao'> Classificação </CabecalhoLink>
                 <CabecalhoLink url='./balizamento'> Balizamento </CabecalhoLink>
+                <CabecalhoLink url='./rankings'>Rankings</CabecalhoLink>
             </nav>
             <CabecalhoLink url='./Admin'> Acesso Restrito </CabecalhoLink>
         </header>

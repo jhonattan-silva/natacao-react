@@ -28,10 +28,11 @@ router.post('/cadastrarNadador', async (req, res) => {
     const { nome, cpf, data_nasc, telefone, sexo, equipeId } = req.body;
 
     const cpfNumeros = cpf.replace(/\D/g, '');
+    const telefoneNumeros = telefone.replace(/\D/g, '');
 
     try {
         // Insere um novo registro no banco de dados
-        const [result] = await db.query('INSERT INTO nadadores (nome, cpf, data_nasc, telefone, sexo, equipes_id) VALUES (?, ?, ?, ?, ?, ?)', [nome, cpfNumeros, data_nasc, telefone, sexo, equipeId]);
+        const [result] = await db.query('INSERT INTO nadadores (nome, cpf, data_nasc, telefone, sexo, equipes_id) VALUES (?, ?, ?, ?, ?, ?)', [nome, cpfNumeros, data_nasc, telefoneNumeros, sexo, equipeId]);
         res.status(201).json({ id: result.insertId }); // Retorna o ID do novo nadador
     } catch (error) {
         console.error('Erro ao adicionar nadador:', error);

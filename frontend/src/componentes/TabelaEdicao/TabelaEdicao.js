@@ -4,7 +4,7 @@ import style from './TabelaEdicao.module.css';
 
 const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete }) => {
   // Detecta as colunas automaticamente e exclui as especificadas em `colunasOcultas`
-  const colunas = dados.length > 0 
+  const colunas = dados.length > 0
     ? Object.keys(dados[0]).filter(coluna => !colunasOcultas.includes(coluna))
     : [];
 
@@ -26,13 +26,13 @@ const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete
         {dados.map((linha, index) => (
           <tr key={index}>
             {colunas.map((coluna, idx) => (
-              <td key={idx}>{linha[coluna]}</td> 
+              <td key={idx}>{linha[coluna]}</td>
             ))}
             {(onEdit || onInativar || onDelete) && (
               <td>
-                {onEdit && <button onClick={() => onEdit(linha.id)}>Editar</button>}
-                {onInativar && <button onClick={() => onInativar(linha.id)}>Inativar</button>}
-                {onDelete && <button onClick={() => onDelete(linha.id)}>Excluir</button>}
+                {onEdit && <button className={style.btnEditar} onClick={() => onEdit(linha.id)}>Editar</button>}
+                {onInativar && <button className={style.btnExcluir} onClick={() => onInativar(linha.id)}>Inativar</button>}
+                {onDelete && <button className={style.btnExcluir} onClick={() => onDelete(linha.id)}>Excluir</button>}
               </td>
             )}
           </tr>

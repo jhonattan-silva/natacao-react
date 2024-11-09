@@ -1,0 +1,11 @@
+.cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: aquamarine;
+}
+
+.logo {
+    height: 100px;
+    width: 100px;
+}
