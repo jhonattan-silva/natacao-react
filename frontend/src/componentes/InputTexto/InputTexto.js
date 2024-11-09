@@ -7,8 +7,9 @@ const InputTexto = (props) => {
 
     return (
         <div className='campo-texto'>
-            <label>{props.label}</label>
+            <label htmlFor={props.id}>{props.label}</label>
             <input
+                id={props.id}
                 type={props.tipo || 'text'} // Define o tipo como "text" por padrão
                 value={props.valor}
                 onChange={aoDigitar}
