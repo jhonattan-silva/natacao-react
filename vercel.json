@@ -1,6 +1,8 @@
 {
-    "build": {
-      "command": "npm run build",
-      "output": "frontend/build"
-    }
+    "builds": [
+      {
+        "src": "frontend",
+        "use": "@vercel/static"
+      }
+    ]
   }
