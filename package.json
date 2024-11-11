@@ -1,9 +1,7 @@
 {
-    "scripts": {
-      "start:front": "cd frontend && npm start",
-      "start:back": "cd backend && node server.js",
-      "start": "npm run start:back & npm run start:front"
-    }
+  "scripts": {
+    "start:front": "cd frontend && npm start",
+    "start:back": "cd backend && node server.js",
+    "start": "npm-run-all --parallel start:back start:front"
   }
-  
-  
+}
