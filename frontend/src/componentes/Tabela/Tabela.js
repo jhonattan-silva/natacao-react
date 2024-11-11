@@ -1,8 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import style from './Tabela.module.css';
 
 const Tabela = ({ dados }) => {
+    const [ordenaConfig, setOrdenaConfig] = useState({ key: null, direction: 'asc' }); //para ordenação
+
+    const sortedData = React.useMemo(() => {
+        if (!dados || dados.length === 0) return [];
+
+        const sortableItems = [...dados];
+        if (ordenaConfig.key) {
+            sortableItems.sort((a, b) => {
+                if (a[ordenaConfig.key] < b[ordenaConfig.key]) return ordenaConfig.direction === 'asc' ? -1 : 1;
+                if (a[ordenaConfig.key] > b[ordenaConfig.key]) return ordenaConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [dados, ordenaConfig]);
+
+     // Define a configuração de ordenação ao clicar no cabeçalho da coluna
+     const ordenar = (key) => {
+        let direction = 'asc';
+        if (ordenaConfig.key === key && ordenaConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setOrdenaConfig({ key, direction });
+    };
+
+
+
     if (!dados || dados.length === 0) {
         return <p>Nenhum dado disponível.</p>;
     }
@@ -12,12 +39,21 @@ const Tabela = ({ dados }) => {
             <thead>
                 <tr>
                     {Object.keys(dados[0]).map((coluna) => (
-                        <th key={coluna}>{coluna}</th>
+                        <th
+                            key={coluna}
+                            onClick={() => ordenar(coluna)}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {coluna}
+                            {ordenaConfig.key === coluna && (
+                                <span>{ordenaConfig.direction === 'asc' ? ' 🔼' : ' 🔽'}</span>
+                            )}
+                        </th>
                     ))}
                 </tr>
             </thead>
             <tbody>
-                {dados.map((linha, index) => (
+                {sortedData.map((linha, index) => (
                     <tr key={index}>
                         {Object.values(linha).map((valor, idx) => (
                             <td key={idx}>{valor}</td>

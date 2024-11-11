@@ -32,6 +32,8 @@ const usuariosRoutes = require('./routes/usuariosRoutes');
 const nadadoresRoutes = require('./routes/nadadoresRoutes');
 const inscricaoRoutes = require('./routes/inscricaoRoutes');
 const rankingsRoutes = require('./routes/rankingsRoutes');
+const uploadRoutes = require('./uploads'); // Importa o arquivo uploads.js
+
 
 app.use('/api/balizamento', balizamentoRoutes);
 app.use('/api/equipes', equipesRoutes);
@@ -39,13 +41,17 @@ app.use('/api/etapas', etapasRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/nadadores', nadadoresRoutes);
 app.use('/api/inscricao', inscricaoRoutes);
-app.use('/api/ranking', rankingsRoutes);
+app.use('/api/rankings', rankingsRoutes);
+app.use(uploadRoutes); // Adiciona as rotas de upload
+
+
 
 
 // Página não encontrada
 app.use((req, res) => {
   res.status(404).send('Desculpe, não pode passar por aqui!');
 });
+
 
 // Exportando conexão com banco de dados
 module.exports = db;
