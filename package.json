@@ -3,5 +3,8 @@
     "start:front": "cd frontend && npm start",
     "start:back": "cd backend && node server.js",
     "start": "npm-run-all --parallel start:back start:front"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
   }
 }
