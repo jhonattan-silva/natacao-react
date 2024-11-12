@@ -1,5 +1,3 @@
-import style from './RadioButtons.module.css';
-
 const RadioButtons = ({ titulo, opcoes, name, aoSelecionar, classNameRadioDiv, classNameRadioItem, classNameRadioOpcoes }) => {
     return (
         <div className={classNameRadioDiv}>
