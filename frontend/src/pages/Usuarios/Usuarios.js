@@ -17,8 +17,8 @@ const Usuarios = () => {
     const baseUrl = 'http://localhost:5000/api/usuarios';
     const apiListaUsuarios = `${baseUrl}/listarUsuarios`;
     const apiCadastraUsuario = `${baseUrl}/cadastrarUsuario`;
-    const apiAtualizaUsuario = `${baseUrl}/atualizarUsuario`;
-    const apiBuscaUsuarios = `${baseUrl}/buscaUsuarios`;
+  //  const apiAtualizaUsuario = `${baseUrl}/atualizarUsuario`;
+   // const apiBuscaUsuarios = `${baseUrl}/buscaUsuarios`;
     const apiListaPerfis = `${baseUrl}/listarPerfis`;
     const apiListaEquipes = `${baseUrl}/listarEquipes`;
 
