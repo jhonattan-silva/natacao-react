@@ -14,7 +14,6 @@ const Etapas = () => {
     const [etapaEditando, setEtapaEditando] = useState(null); //estado para edição
     const [provasCarregadas, setProvasCarregadas] = useState(false); //estado para carregamento de provas no editar
 
-
     const baseUrl = 'http://localhost:5000/api/etapas';
     const apiListaEtapas = `${baseUrl}/listarEtapas`;
     const apiCadastraEtapas = `${baseUrl}/cadastrarEtapas`;
