@@ -40,3 +40,4 @@ npm install xlsx multer //xlsx para lidar com planilhas e multer para uploads
 
 
 criar server.js
+npm install npm-run-all //NA RAIZ PARA RODAR JUNTOS BACK E FRONT
