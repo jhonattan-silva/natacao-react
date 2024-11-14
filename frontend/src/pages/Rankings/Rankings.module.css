@@ -1,0 +1,208 @@
+/* Respostas menores */
+@media (max-width: 768px) {
+    .cadastroContainer {
+        width: 90%;
+        /* Aumenta a largura em telas menores */
+        padding: 15px;
+    }
+}
+
+
+
+/* rankings.module.css */
+
+/* Estilo para o título */
+h1 {
+    font-size: 4rem;
+    color: #e3e9f1;
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+h2 {
+    font-size: 2rem;
+    color: #ccc;
+    text-align: center;
+}
+
+/* Estilos para a tabela */
+.rankings table{
+    width: 70%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Cabeçalho da tabela */
+.rankings th {
+    background-color: #1a73e8;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 12px;
+    text-align: left;
+    font-size: 1rem;
+}
+
+/* Linhas da tabela */
+.rankings td {
+    padding: 10px;
+    text-align: left;
+    font-size: 1rem;
+    color: black;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Alternância de cor nas linhas da tabela */
+.rankings tr:nth-child(even) {
+    background-color: #9bd5e8;
+}
+
+.rankings tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+/* Estilo de foco ao passar o mouse sobre uma linha */
+.rankings tr:hover {
+    background-color: #6de95f;
+}
+
+.btnAdd {
+    width: 30%;
+    height: 50px;
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: #5e4caf;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    margin: auto;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center; /*vertical*/
+    justify-content: center; /* horizontal */
+}
+
+
+.cadastroContainer { /* CAMPO DE FORMULARIO COMPLETO */
+    width: 70%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    /* Fundo claro */
+    border: 1px solid #ddd;
+    /* Borda suave */
+    border-radius: 8px;
+    /* Cantos arredondados */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    /* Sombra suave */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.cadastroContainer form {
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    /* Fundo claro */
+    /*border: 1px solid #ddd; /* Borda suave */
+    border-radius: 8px;
+    /* Cantos arredondados */
+    /*    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    display: flex;
+    flex-direction: column;
+    align-items: normal;
+}
+
+/* Estilo para inputs e selects */
+.cadastroContainer input[type="text"],
+.cadastroContainer input[type="password"],
+.cadastroContainer input[type="email"],
+.cadastroContainer select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+/* Estilo para checkbox */
+.cadastroContainer input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+/* Estilo para botões */
+.cadastroContainer button {
+    width: 30%;
+    height: 50px;
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* Efeito hover para botões */
+.cadastroContainer button:hover {
+    background-color: #45a049;
+}
+
+
+/* Estilo para o contêiner principal, com espaçamento inferior */
+.radioSexoDiv {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px; /* Ajuste o valor para aumentar o espaçamento */
+}
+
+/* Contêiner das opções de radio buttons para exibir em linha */
+.radioSexoOpcoes {
+    display: flex;
+    flex-direction: row;
+}
+
+/* Estilo para cada item de radio button */
+.radioSexoItem {
+    display: flex;
+    align-items: center;
+    margin-right: 20px; /* Espaço entre os itens do radio button */
+}
+
+/* Cor de fundo inicial para todos os labels (antes de serem selecionados) */
+.radioSexoItem label {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    background-color: #f0f0f0; /* Cor de fundo inicial */
+}
+
+/* Estilo aplicado ao label quando Masculino está selecionado */
+.radioSexoItem input[type="radio"][value="M"]:checked + label {
+    background-color: rgb(57, 57, 251);
+    border-color: blue;
+    color: white;
+}
+
+/* Estilo aplicado ao label quando Feminino está selecionado */
+.radioSexoItem input[type="radio"][value="F"]:checked + label {
+    background-color: rgb(247, 98, 123);
+    border-color: pink;
+    color: white;
+}

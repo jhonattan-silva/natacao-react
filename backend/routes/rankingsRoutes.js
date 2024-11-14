@@ -24,16 +24,27 @@ const readJsonFile = () => {
     });
 };
 
-// Rota para retornar todos os resultados
 router.get('/resultados', async (req, res) => {
+    const { equipe } = req.query;
+
     try {
-        const jsonData = await readJsonFile();
-        res.json(jsonData);
+        const jsonData = await readJsonFile();  // Carrega os dados JSON
+
+        const filteredData = jsonData.filter(item => {
+            const equipeMatch = equipe ? item.Equipe === equipe : true;  // Filtro por equipe
+
+            return equipeMatch;  // Retorna true se passar em ambos os filtros
+        });
+
+        res.json(filteredData);  // Retorna os dados filtrados
     } catch (error) {
-        console.error(error);
-        res.status(500).send(error);
+        console.error('Erro ao ler arquivo ou filtrar dados:', error);
+        res.status(500).send(error.message || 'Erro interno do servidor.');
     }
 });
+
+
+
 
 // Rota para listar todas as equipes do JSON
 router.get('/listaEquipes', async (req, res) => {
@@ -48,17 +59,5 @@ router.get('/listaEquipes', async (req, res) => {
     }
 });
 
-// Rota para listar todas as provas do JSON
-router.get('/listaProvas', async (req, res) => {
-    try {
-        const jsonData = await readJsonFile();
-        // Extrai o campo "Nado" e remove duplicatas
-        const provas = [...new Set(jsonData.map(item => item.Nado))].filter(Boolean);
-        res.json(provas.map(descricao => ({ descricao })));
-    } catch (error) {
-        console.error('Erro ao listar provas:', error);
-        res.status(500).send('Erro ao listar provas');
-    }
-});
 
 module.exports = router;

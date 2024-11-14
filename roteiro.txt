@@ -33,7 +33,7 @@ npm init -y
 npm install express
 npm install --save-dev nodemon
 npm install mysql2
-npm install dotenv //dotenv é muito útil nesse contexto, pois ele permite que você armazene informações sensíveis, como as credenciais do banco de dados, em um arquivo separado (.env) 
+npm install dotenv //dotenv permite que armazene informações sensíveis, como as credenciais do banco de dados, em um arquivo separado (.env) 
 npm install cors helmet body-parser //cors e helmet seguranca em requisições, body-parser leitura do json entre front e back
 npm install xlsx multer //xlsx para lidar com planilhas e multer para uploads
 
