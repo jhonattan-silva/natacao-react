@@ -21,7 +21,7 @@ const Rankings = () => {
     };
 
     //buscar equipes para a listasuspensa = SELECT
-     useEffect(() => {
+    useEffect(() => {
         const fetchEquipes = async () => {
             try {
                 const response = await axios.get(apiEquipes);
@@ -38,21 +38,21 @@ const Rankings = () => {
         try {
             const url = `${apiRanking}?${equipeId ? `equipe=${equipeId}` : ''}`;
             const response = await axios.get(url);
-    
+
             const groupedData = response.data.reduce((acc, item) => {
                 const { Nado } = item;
                 acc[Nado] = acc[Nado] || [];
                 acc[Nado].push(item);
                 return acc;
             }, {});
-    
+
             setRankings(groupedData);
         } catch (error) {
             console.error('Erro ao buscar dados do ranking:', error);
         }
     };
-    
-    
+
+
 
     // Chama a função para buscar rankings ao carregar o componente
     useEffect(() => {
@@ -70,11 +70,13 @@ const Rankings = () => {
     return (
         <div className={style.rankings}>
             <h1>Rankings</h1>
-            <ListaSuspensa
-                textoPlaceholder="Selecione uma Equipe"
-                fonteDados={apiEquipes}
-                onChange={equipeSelecionada} />
-            <Botao onClick={filtrarClick} classBtn={style.btnFiltrar}>FILTRAR</Botao>
+            <div className={style.filtroContainer}>
+                <ListaSuspensa
+                    textoPlaceholder="Selecione uma Equipe"
+                    fonteDados={apiEquipes}
+                    onChange={equipeSelecionada} />
+                <Botao onClick={filtrarClick} classBtn={style.btnFiltrar}>FILTRAR</Botao>
+            </div>
             {Object.keys(rankings).map((nado) => (
                 <div key={nado}>
                     <h2>{nado}</h2>
