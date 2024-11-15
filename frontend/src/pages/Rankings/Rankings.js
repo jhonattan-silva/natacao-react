@@ -20,6 +20,11 @@ const Rankings = () => {
         setEquipeId(id);
     };
 
+    const api = axios.create({
+        baseURL: baseUrl,
+        timeout: 20000, //20 segundos
+    });
+
     //buscar equipes para a listasuspensa = SELECT
     useEffect(() => {
         const fetchEquipes = async () => {
@@ -27,7 +32,11 @@ const Rankings = () => {
                 const response = await axios.get(apiEquipes);
                 setEquipeId(response.data[0]?.id || ''); // Preenche a equipe selecionada com o primeiro item, se houver
             } catch (error) {
-                console.error('Erro ao buscar dados de equipes:', error);
+                if (error.code === 'ERR_NETWORK') {
+                    console.error('Erro de REDE', error);
+                } else {
+                    console.error('Erro ao buscar dados de equipes:', error);
+                }
             }
         };
         fetchEquipes();
@@ -37,7 +46,7 @@ const Rankings = () => {
     const fetchRankings = async () => {
         try {
             const url = `${apiRanking}?${equipeId ? `equipe=${equipeId}` : ''}`;
-            const response = await axios.get(url);
+            const response = await api.get(url);
 
             const groupedData = response.data.reduce((acc, item) => {
                 const { Nado } = item;
@@ -48,7 +57,11 @@ const Rankings = () => {
 
             setRankings(groupedData);
         } catch (error) {
-            console.error('Erro ao buscar dados do ranking:', error);
+            if (error.code === 'ERR_NETWORK') {
+                console.error("Erro de REDE ao buscar o ranking", error);
+            } else {
+                console.error('Erro ao buscar dados do ranking:', error);
+            }
         }
     };
 
