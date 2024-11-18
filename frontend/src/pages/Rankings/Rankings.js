@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../servicos/api';
 import Tabela from '../../componentes/Tabela/Tabela';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import style from './Rankings.module.css';
@@ -7,29 +7,19 @@ import Botao from '../../componentes/Botao/Botao';
 
 const Rankings = () => {
     const [rankings, setRankings] = useState({});
-    const [equipeId, setEquipeId] = useState(''); //captura o id do equipe
+    const [equipeId, setEquipeId] = useState(''); // Captura o ID da equipe
     const [filtroAtivo, setFiltroAtivo] = useState(false); // Estado para monitorar o clique no botão "Filtrar"
 
-
-    const baseUrl = 'http://localhost:5000/api/rankings';
-
-    const apiRanking = `${baseUrl}/resultados`;
-    const apiEquipes = `${baseUrl}/listaEquipes`;
-
+    // Atualiza o estado com a equipe selecionada
     const equipeSelecionada = (id) => {
         setEquipeId(id);
     };
 
-    const api = axios.create({
-        baseURL: baseUrl,
-        timeout: 20000, //20 segundos
-    });
-
-    //buscar equipes para a listasuspensa = SELECT
+    // Buscar equipes para a lista suspensa (SELECT)
     useEffect(() => {
         const fetchEquipes = async () => {
             try {
-                const response = await axios.get(apiEquipes);
+                const response = await api.get('/listaEquipes'); // Requisição usando o Axios configurado
                 setEquipeId(response.data[0]?.id || ''); // Preenche a equipe selecionada com o primeiro item, se houver
             } catch (error) {
                 if (error.code === 'ERR_NETWORK') {
@@ -40,14 +30,15 @@ const Rankings = () => {
             }
         };
         fetchEquipes();
-    }, [apiEquipes]);
+    }, []);
 
     // Função para buscar os rankings e exibir todos os dados por padrão
     const fetchRankings = async () => {
         try {
-            const url = `${apiRanking}?${equipeId ? `equipe=${equipeId}` : ''}`;
-            const response = await api.get(url);
+            const url = `/resultados?${equipeId ? `equipe=${equipeId}` : ''}`;
+            const response = await api.get(url); // Requisição usando o Axios configurado
 
+            // Agrupa os dados por "Nado"
             const groupedData = response.data.reduce((acc, item) => {
                 const { Nado } = item;
                 acc[Nado] = acc[Nado] || [];
@@ -58,14 +49,12 @@ const Rankings = () => {
             setRankings(groupedData);
         } catch (error) {
             if (error.code === 'ERR_NETWORK') {
-                console.error("Erro de REDE ao buscar o ranking", error);
+                console.error('Erro de REDE ao buscar o ranking', error);
             } else {
                 console.error('Erro ao buscar dados do ranking:', error);
             }
         }
     };
-
-
 
     // Chama a função para buscar rankings ao carregar o componente
     useEffect(() => {
@@ -75,9 +64,9 @@ const Rankings = () => {
     // Função de clique do botão "Filtrar"
     const filtrarClick = () => {
         setFiltroAtivo(true);
-        console.log("EQUIPE ESCOLHIDA", equipeId);
+        console.log('EQUIPE ESCOLHIDA', equipeId);
 
-        fetchRankings(equipeId); // Aplica o filtro e busca novamente os dados
+        fetchRankings(); // Aplica o filtro e busca novamente os dados
     };
 
     return (
@@ -86,9 +75,12 @@ const Rankings = () => {
             <div className={style.filtroContainer}>
                 <ListaSuspensa
                     textoPlaceholder="Selecione uma Equipe"
-                    fonteDados={apiEquipes}
-                    onChange={equipeSelecionada} />
-                <Botao onClick={filtrarClick} classBtn={style.btnFiltrar}>FILTRAR</Botao>
+                    fonteDados="/listaEquipes" // Endpoint relativo
+                    onChange={equipeSelecionada}
+                />
+                <Botao onClick={filtrarClick} classBtn={style.btnFiltrar}>
+                    FILTRAR
+                </Botao>
             </div>
             {Object.keys(rankings).map((nado) => (
                 <div key={nado}>
