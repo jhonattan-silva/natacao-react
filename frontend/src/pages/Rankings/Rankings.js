@@ -7,19 +7,21 @@ import Botao from '../../componentes/Botao/Botao';
 
 const Rankings = () => {
     const [rankings, setRankings] = useState({});
-    const [equipeId, setEquipeId] = useState(''); // Captura o ID da equipe
+    const [equipeId, setEquipeId] = useState(''); //captura o id do equipe
     const [filtroAtivo, setFiltroAtivo] = useState(false); // Estado para monitorar o clique no botão "Filtrar"
 
-    // Atualiza o estado com a equipe selecionada
+    const apiRanking = `/rankings/resultados`;
+    const apiEquipes = `/rankings/listaEquipes`;
+
     const equipeSelecionada = (id) => {
         setEquipeId(id);
     };
 
-    // Buscar equipes para a lista suspensa (SELECT)
+    //buscar equipes para a listasuspensa = SELECT
     useEffect(() => {
         const fetchEquipes = async () => {
             try {
-                const response = await api.get('/listaEquipes'); // Requisição usando o Axios configurado
+                const response = await api.get(apiEquipes);
                 setEquipeId(response.data[0]?.id || ''); // Preenche a equipe selecionada com o primeiro item, se houver
             } catch (error) {
                 if (error.code === 'ERR_NETWORK') {
@@ -30,15 +32,14 @@ const Rankings = () => {
             }
         };
         fetchEquipes();
-    }, []);
+    }, [apiEquipes]);
 
     // Função para buscar os rankings e exibir todos os dados por padrão
     const fetchRankings = async () => {
         try {
-            const url = `/resultados?${equipeId ? `equipe=${equipeId}` : ''}`;
-            const response = await api.get(url); // Requisição usando o Axios configurado
+            const url = `${apiRanking}?${equipeId ? `equipe=${equipeId}` : ''}`;
+            const response = await api.get(url);
 
-            // Agrupa os dados por "Nado"
             const groupedData = response.data.reduce((acc, item) => {
                 const { Nado } = item;
                 acc[Nado] = acc[Nado] || [];
@@ -49,12 +50,14 @@ const Rankings = () => {
             setRankings(groupedData);
         } catch (error) {
             if (error.code === 'ERR_NETWORK') {
-                console.error('Erro de REDE ao buscar o ranking', error);
+                console.error("Erro de REDE ao buscar o ranking", error);
             } else {
                 console.error('Erro ao buscar dados do ranking:', error);
             }
         }
     };
+
+
 
     // Chama a função para buscar rankings ao carregar o componente
     useEffect(() => {
@@ -64,9 +67,9 @@ const Rankings = () => {
     // Função de clique do botão "Filtrar"
     const filtrarClick = () => {
         setFiltroAtivo(true);
-        console.log('EQUIPE ESCOLHIDA', equipeId);
+        console.log("EQUIPE ESCOLHIDA", equipeId);
 
-        fetchRankings(); // Aplica o filtro e busca novamente os dados
+        fetchRankings(equipeId); // Aplica o filtro e busca novamente os dados
     };
 
     return (
@@ -75,12 +78,9 @@ const Rankings = () => {
             <div className={style.filtroContainer}>
                 <ListaSuspensa
                     textoPlaceholder="Selecione uma Equipe"
-                    fonteDados="/listaEquipes" // Endpoint relativo
-                    onChange={equipeSelecionada}
-                />
-                <Botao onClick={filtrarClick} classBtn={style.btnFiltrar}>
-                    FILTRAR
-                </Botao>
+                    fonteDados={apiEquipes}
+                    onChange={equipeSelecionada} />
+                <Botao onClick={filtrarClick} classBtn={style.btnFiltrar}>FILTRAR</Botao>
             </div>
             {Object.keys(rankings).map((nado) => (
                 <div key={nado}>

@@ -1,6 +1,6 @@
 import style from './ListaSuspensa.module.css';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../servicos/api';
 
 const ListaSuspensa = ({ fonteDados, onChange, textoPlaceholder, obrigatorio = false }) => {
     const [opcoes, setOpcoes] = useState([]);
@@ -8,7 +8,7 @@ const ListaSuspensa = ({ fonteDados, onChange, textoPlaceholder, obrigatorio = f
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(fonteDados);
+                const response = await api.get(fonteDados);
                 setOpcoes(response.data);
             } catch (error) {
                 console.error('Erro ao buscar dados:', error);
