@@ -12,7 +12,25 @@ dotenv.config();
 const port = process.env.PORT;
 
 // Adicionando CORS e body-parser
-app.use(cors());
+const allowedOrigins = [
+    'http://localhost:3000',     // Origem para desenvolvimento no desktop
+    'http://192.168.1.110:3000', // Origem para dispositivos móveis na rede local
+    'https://natacao-react.vercel.app/',    // Origem de produção
+];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Permite origens específicas ou nenhuma origem (em desenvolvimento)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Não permitido pelo CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true, // Permite envio de cookies, se necessário
+}));
+
 app.use(bodyParser.json());
 //app.use(helmet()); // Ativando Helmet
 
@@ -20,7 +38,7 @@ app.get('/', (req, res) => {
   res.send(`'Backend está funcionando!'`);
 });
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
 
