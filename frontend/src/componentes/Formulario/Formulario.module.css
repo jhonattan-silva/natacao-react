@@ -1,0 +1,79 @@
+
+
+h1, h2 {
+    text-align: center;
+    color: #343a40;
+}
+
+/* Estilos do formulário */
+.formulario {
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Estilos dos inputs */
+.inputTexto {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.inputTexto label {
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.inputTexto input, .inputTexto select, .inputTexto textarea {
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.inputTexto input:focus, .inputTexto select:focus, .inputTexto textarea:focus {
+    border-color: #6c63ff;
+    outline: none;
+}
+
+/* Estilos dos botões */
+button, .btn {
+    background: linear-gradient(135deg, #6c63ff, #5a54e5);
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 16px;
+}
+
+button:hover, .btn:hover {
+    background: linear-gradient(135deg, #5a54e5, #6c63ff);
+}
+
+button:disabled, .btn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Estilos do Select */
+select {
+    appearance: none;
+    background: url('data:image/svg+xml;base64,PCEtLQpnbG9iYWwKc3ZnIHZlcnNpb249IjEuMSIgYmFzZVByb2ZpbGU9ImZ1bGwiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8cGF0aCBkPSJNNDU5LjcgMjA3LjdsLTMzLjYtMzMuNi05Ni4yIDk2LjIgOTYuMiA5Ni4yIDMzLjYtMzMuNi0xMjkgLTEyOXoiIC8+CjxwYXRoIGQ9Ik0zNzkuMyA1MTEuNkwyNTYgMzc0LjMgMTMyLjcgNTExLjZsLTMzLjYtMzMuNiAxMjktMTI5IDEyOSAxMjkgMzMuNiAzMy42em0tODguMy04OC4zbC0zMy42LTMzLjYtOTYgOTYgOTYgOTYgMzMuNi0zMy42eiIvPjwvc3ZnPg==') no-repeat right 10px center;
+    background-color: white;
+    background-size: 12px 12px;
+}

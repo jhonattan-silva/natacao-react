@@ -41,16 +41,13 @@ const Etapas = () => {
     };
 
     const handleEdit = async (id) => {
-        if (!provasCarregadas) return; // Aguarda até que as provas estejam carregadas
-
         try {
             const response = await axios.get(`${apiAtualizaEtapas}/${id}`);
             const etapa = response.data;
-
+    
             console.log('Etapa carregada:', etapa); // Log dos dados da etapa
-            console.log('Provas Masculinas:', provasMasculino); // Log das provas masculinas
-            console.log('Provas Femininas:', provasFeminino); // Log das provas femininas
-
+    
+            // Atualiza o estado com os dados da etapa
             setEtapaEditando(etapa);
             setNomeEtapa(etapa.nome);
             setDataEtapa(new Date(etapa.data).toISOString().split('T')[0]);
@@ -58,28 +55,33 @@ const Etapas = () => {
             setSedeEtapa(etapa.sede);
             setEnderecoEtapa(etapa.endereco);
             setTorneioEtapa(etapa.Torneios_id);
-
-            // Marque os checkboxes com base nos IDs das provas retornadas
-            const selecionadasMasculino = etapa.provas.filter(provaId =>
-                provasMasculino.some(prova => Number(prova.id) === Number(provaId)) // Converte provaId para number
-            );
-            const selecionadasFeminino = etapa.provas.filter(provaId =>
-                provasFeminino.some(prova => prova.id === Number(provaId)) // Converte provaId para number
-            );
-
-            console.log('Selecionadas Masculino:', selecionadasMasculino); // Log do resultado
-            console.log('Selecionadas Feminino:', selecionadasFeminino); // Log do resultado
-
-            // Atualiza o estado com os checkboxes selecionados
+    
+            // Filtra as provas selecionadas com base nos IDs retornados
+            const selecionadasMasculino = provasMasculino
+                .filter(prova => etapa.provas.includes(Number(prova.id)))
+                .map(prova => prova.id);
+    
+            const selecionadasFeminino = provasFeminino
+                .filter(prova => etapa.provas.includes(Number(prova.id)))
+                .map(prova => prova.id);
+    
+            const selecionadasAmbos = Object.keys(idMap)
+                .filter(idMasculino =>
+                    selecionadasMasculino.includes(idMasculino) &&
+                    selecionadasFeminino.includes(idMap[idMasculino])
+                );
+      
+            // Atualiza o estado com as seleções
             setSelecionadasMasculino(selecionadasMasculino);
             setSelecionadasFeminino(selecionadasFeminino);
-            setSelecionadasAmbos([]);
-
+            setSelecionadasAmbos(selecionadasAmbos);
+    
             setFormVisivel(true);
         } catch (error) {
             console.error('Erro ao carregar etapa para edição:', error);
         }
     };
+    
 
     const handleExcluir = async (id) => {
         if (window.confirm("Tem certeza que deseja excluir esta etapa?")) {
@@ -317,16 +319,16 @@ const Etapas = () => {
     return (
         <>
             <CabecalhoAdmin />
-            <div className={style.etapas}>
+            <div className={style.etapasContainer}>
                 <h1>ETAPAS</h1>
                 <TabelaEdicao
                     dados={etapas}
                     colunasOcultas={['id', 'Torneios_id']}
                     onEdit={handleEdit}
                     onDelete={handleExcluir} />
-                <Botao onClick={handleAdicionar}>Adicionar Nova Etapa</Botao>
+                <Botao classBtn={style.btnComponente} onClick={handleAdicionar}>Adicionar Nova Etapa</Botao>
                 {formVisivel && (
-                    <div>
+                    <div className={style.cadastroContainer}>
                         <Formulario inputs={inputs} aoSalvar={aoSalvar} />
                         <ListaSuspensa
                             textoPlaceholder={"Escolha o torneio"}
@@ -355,8 +357,7 @@ const Etapas = () => {
                                 aoAlterar={aoAlterarFeminino}
                             />
                         </div>
-                        <p>Selecionadas: {JSON.stringify(selecionadasFeminino)}</p>
-                        <Botao onClick={aoSalvar}>SALVAR</Botao>
+                        <Botao classBtn={style.btnComponente} onClick={aoSalvar}>SALVAR</Botao>
                     </div>
                 )}
             </div>

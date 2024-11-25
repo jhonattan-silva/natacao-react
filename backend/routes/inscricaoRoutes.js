@@ -16,7 +16,7 @@ router.get('/listarEventos', async (req, res) => {
 // Listar todos NADADORES
 router.get('/listarNadadores', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM nadadores'); // Busca todos os nadadores
+        const [rows] = await db.query('SELECT * FROM nadadores WHERE equipes_id = 2'); // Busca todos os nadadores
         res.json(rows); // Retorna a lista de nadadores em JSON
     } catch (error) {
         console.error('Erro ao buscar nadadores:', error); // Loga o erro no servidor

@@ -1,5 +1,5 @@
-.etapas h2 {
-    color: white;
+.etapasContainer {
+    justify-content: center;
     text-align: center;
 }
 
@@ -52,4 +52,44 @@
 
 .provasContainer h3 {
     color: black;
+}
+
+
+/* Estilos dos botões */
+.btnComponente {
+    background: linear-gradient(135deg, #6c63ff, #5a54e5);
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+button:hover, .btn:hover {
+    background: linear-gradient(135deg, #5a54e5, #6c63ff);
+}
+
+button:disabled, .btn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+
+.cadastroContainer { /* CAMPO DE FORMULARIO COMPLETO */
+    width: 70%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    /* Fundo claro */
+    border: 1px solid #ddd;
+    /* Borda suave */
+    border-radius: 8px;
+    /* Cantos arredondados */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    /* Sombra suave */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }

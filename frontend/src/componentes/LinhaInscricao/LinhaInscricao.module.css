@@ -25,7 +25,7 @@
   }
   
   input[type="checkbox"]:checked::before {
-    content: '\\2714'; /* Unicode character for checkmark */
+    content: '\2714'; /* Unicode character for checkmark */
     font-size: 14px;
     color: white;
     position: absolute;

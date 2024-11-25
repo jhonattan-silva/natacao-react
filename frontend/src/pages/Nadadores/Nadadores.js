@@ -230,7 +230,7 @@ const Nadadores = () => {
                     dados={nadadores}
                     onEdit={handleEdit}
                     onInativar={handleInativar}
-                    colunasOcultas={['id', 'equipes_id']}
+                    colunasOcultas={['id', 'ativo']}
                 />
                 <Botao classBtn={style.btnAdd} onClick={handleAdicionar}>Adicionar Novo Nadador</Botao>
                 {formVisivel && (
