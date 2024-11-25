@@ -1,4 +1,3 @@
-//importando módulos
 const express = require('express');
 const dotenv = require('dotenv'); //salva credenciais em outro arquivo
 const app = express(); // backend/server.js
@@ -9,7 +8,7 @@ const bodyParser = require('body-parser'); //backend interpreta os json nas requ
 
 // Definindo porta e inicializando dotenv
 dotenv.config();
-const port = process.env.PORT;
+const port = process.env.PORT || 5000;
 
 // Adicionando CORS e body-parser
 const allowedOrigins = [
@@ -24,7 +23,7 @@ app.use(cors({
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            callback(new Error('Não permitido pelo CORS'));
+            callback(new Error('Não permitido pelo CORS*-*'));
         }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -38,8 +37,11 @@ app.get('/', (req, res) => {
   res.send(`'Backend está funcionando!'`);
 });
 
-app.listen(port, '0.0.0.0', () => {
+// Inicialização do servidor
+app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
+  console.log(`Ambiente: ${process.env.NODE_ENV}`);
+  console.log(`Origens permitidas: ${allowedOrigins.join(', ')}`);
 });
 
 // Importando e utilizando rotas
@@ -63,6 +65,14 @@ app.use('/api/rankings', rankingsRoutes);
 app.use(uploadRoutes); // Adiciona as rotas de upload
 app.use('/api/migracao', migracao);
 
+// Servir o frontend em produção
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'frontend', 'build')));
+
+  app.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'));
+  });
+}
 
 // Página não encontrada
 app.use((req, res) => {

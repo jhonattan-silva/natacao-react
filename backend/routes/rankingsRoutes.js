@@ -1,16 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql2/promise');
-const app = express(); // backend/server.js
-
-const cors = require('cors');
-
-app.use(cors({
-    origin: ['http://localhost:3000', 'https://natacao-react.vercel.app'], // Ajuste para os domínios corretos
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
 
 // Configuração do banco (só para teste)
 const pool = mysql.createPool({
