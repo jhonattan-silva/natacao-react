@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../servicos/api';
 import Botao from '../../componentes/Botao/Botao';
 import style from './Equipes.module.css';
 import TabelaEdicao from '../../componentes/TabelaEdicao/TabelaEdicao';
@@ -10,15 +10,14 @@ import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 const Equipes = () => {
   const [equipes, setEquipes] = useState([]);
   const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
-  const baseUrl = 'http://localhost:5000/api/equipes';
-  const apiListaEquipes = `${baseUrl}/listarEquipes`;
-  const apiCadastraEquipe = `${baseUrl}/cadastrarEquipe`;
-  const apiListaTreinadores = `${baseUrl}/listarTreinadores`;
+  const apiListaEquipes = "equipes/listarEquipes";
+  const apiCadastraEquipe = `equipes/cadastrarEquipe`;
+  const apiListaTreinadores = `equipes/listarTreinadores`;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${apiListaEquipes}`);
+        const response = await api.get(`${apiListaEquipes}`);
         setEquipes(response.data);
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
@@ -47,7 +46,7 @@ const Equipes = () => {
 
   const adicionarEquipe = async (dados) => {
     try {
-      const response = await axios.post(apiCadastraEquipe, dados);
+      const response = await api.post(apiCadastraEquipe, dados);
       setEquipes([...equipes, response.data]);
       setFormVisivel(false);
     } catch (error) {
@@ -62,7 +61,7 @@ const Equipes = () => {
   useEffect(() => {
     const fetchTreinadores = async () => {
       try {
-        const response = await axios.get(`${apiListaTreinadores}`);
+        const response = await api.get(`${apiListaTreinadores}`);
         setListaTreinadores(response.data);
       } catch (error) {
         console.error('Erro ao buscar treinadores:', error);
