@@ -22,7 +22,11 @@ const Rankings = () => {
         const fetchEquipes = async () => {
             try {
                 const response = await api.get(apiEquipes);
-                setEquipeId(response.data[0]?.id || ''); // Preenche a equipe selecionada com o primeiro item, se houver
+                if (Array.isArray(response.data)) {
+                    setEquipeId(response.data[0]?.id || ''); // Preenche a equipe selecionada com o primeiro item, se houver
+                } else {
+                    console.error('ERRO: A resposta das equipes não é um array');
+                }
             } catch (error) {
                 if (error.code === 'ERR_NETWORK') {
                     console.error('Erro de REDE', error);
@@ -46,7 +50,6 @@ const Rankings = () => {
                 acc[Nado].push(item);
                 return acc;
             }, {});
-
             setRankings(groupedData);
         } catch (error) {
             if (error.code === 'ERR_NETWORK') {
@@ -56,8 +59,6 @@ const Rankings = () => {
             }
         }
     };
-
-
 
     // Chama a função para buscar rankings ao carregar o componente
     useEffect(() => {
