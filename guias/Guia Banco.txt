@@ -1,0 +1,76 @@
+Adicionando TORNEIOS
+INSERT INTO Torneios (nome, data_inicio, data_fim) VALUES
+('2024', '2024-01-01', '2024-12-31'),
+('2025', '2025-01-01', '2025-12-31');
+
+Adicionando as PROVAS
+INSERT INTO provas (distancia, estilo, tipo, sexo) VALUES
+(25, 'LIVRE', 'INDIVIDUAL', 'M'),
+(50, 'LIVRE', 'INDIVIDUAL', 'M'),
+(50, 'COSTAS', 'INDIVIDUAL', 'M'),
+(50, 'PEITO', 'INDIVIDUAL', 'M'),
+(50, 'BORBOLETA', 'INDIVIDUAL', 'M'),
+(100, 'MEDLEY', 'INDIVIDUAL', 'M'),
+(100, 'LIVRE', 'INDIVIDUAL', 'M'),
+(100, 'COSTAS', 'INDIVIDUAL', 'M'),
+(100, 'PEITO', 'INDIVIDUAL', 'M'),
+(100, 'BORBOLETA', 'INDIVIDUAL', 'M'),
+(200, 'LIVRE', 'INDIVIDUAL', 'M'),
+(200, 'COSTAS', 'INDIVIDUAL', 'M'),
+(200, 'PEITO', 'INDIVIDUAL', 'M'),
+(200, 'BORBOLETA', 'INDIVIDUAL', 'M'),
+(200, 'MEDLEY', 'INDIVIDUAL', 'M'),
+(400, 'LIVRE', 'INDIVIDUAL', 'M'),
+(400, 'MEDLEY', 'INDIVIDUAL', 'M'),
+(800, 'LIVRE', 'INDIVIDUAL', 'M'),
+(1.500, 'LIVRE', 'INDIVIDUAL', 'M'),
+(100, 'LIVRE', 'REVEZAMENTO', 'M'),
+(100, 'MEDLEY', 'REVEZAMENTO', 'M'),
+(200, 'LIVRE', 'REVEZAMENTO', 'M'),
+(25, 'LIVRE', 'INDIVIDUAL', 'F'),
+(50, 'LIVRE', 'INDIVIDUAL', 'F'),
+(50, 'COSTAS', 'INDIVIDUAL', 'F'),
+(50, 'PEITO', 'INDIVIDUAL', 'F'),
+(50, 'BORBOLETA', 'INDIVIDUAL', 'F'),
+(100, 'MEDLEY', 'INDIVIDUAL', 'F'),
+(100, 'LIVRE', 'INDIVIDUAL', 'F'),
+(100, 'COSTAS', 'INDIVIDUAL', 'F'),
+(100, 'PEITO', 'INDIVIDUAL', 'F'),
+(100, 'BORBOLETA', 'INDIVIDUAL', 'F'),
+(200, 'LIVRE', 'INDIVIDUAL', 'F'),
+(200, 'COSTAS', 'INDIVIDUAL', 'F'),
+(200, 'PEITO', 'INDIVIDUAL', 'F'),
+(200, 'BORBOLETA', 'INDIVIDUAL', 'F'),
+(200, 'MEDLEY', 'INDIVIDUAL', 'F'),
+(400, 'LIVRE', 'INDIVIDUAL', 'F'),
+(400, 'MEDLEY', 'INDIVIDUAL', 'F'),
+(800, 'LIVRE', 'INDIVIDUAL', 'F'),
+(1.500, 'LIVRE', 'INDIVIDUAL', 'F'),
+(100, 'LIVRE', 'REVEZAMENTO', 'F'),
+(100, 'MEDLEY', 'REVEZAMENTO', 'F'),
+(200, 'LIVRE', 'REVEZAMENTO', 'F');
+
+Inserindo EQUIPES
+INSERT INTO equipes (nome, ativo) VALUES ('**************SEM INFORMAÇÃO******************', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Dudu Acqua Center', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Secretaria de Esportes e Lazer de Lins', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Lins Country Club', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Prefeitura de Guaiçara - Triunfo/Transbrasiliana', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Aitec Sandalus/Natação Tupã', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Studio Mota', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('SMEL CATANDUVA', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Lago Azul Penapolis', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Clube Penapolense/SME Penapolis', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('AAEEVA Natação', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Kinesis Iacanga', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Saúde e Movimento', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Clube Esportivo Marimbondo', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Assis Natação ATC/SEMEA', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Tarumã Natação - Projeto Raia 4', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Secretaria de Esportes Jaú', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Natação Duartina', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Fitbem', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Natação Birigui', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Natação Unesp Botucatu', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Associação Atlética Ferroviária de Botucatu', 1);
+INSERT INTO equipes (nome, ativo) VALUES ('Natação Ourinhos', 1);

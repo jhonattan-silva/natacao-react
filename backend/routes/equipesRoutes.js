@@ -2,16 +2,22 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-//Listar todas EQUIPES
+// Listar todas EQUIPES (incluindo equipes sem treinadores)
 router.get('/listarEquipes', async (req, res) => {
   try {
-    const [equipes] = await db.query('SELECT e.nome AS equipe, e.id AS id, u.nome AS treinador FROM equipes e JOIN usuarios_equipes ue ON e.id = ue.equipes_id JOIN usuarios u ON ue.usuarios_id = u.id');
+    const [equipes] = await db.query(`
+      SELECT e.nome AS Equipe, e.id AS id, u.nome AS Treinador 
+      FROM equipes e 
+      LEFT JOIN usuarios_equipes ue ON e.id = ue.equipes_id 
+      LEFT JOIN usuarios u ON ue.usuarios_id = u.id
+    `);
     res.json(equipes);
   } catch (error) {
     console.error('Erro ao buscar equipes:', error);
     res.status(500).send('Erro ao buscar equipes');
   }
 });
+
 
 
 router.post('/cadastrarEquipe', async (req, res) => {

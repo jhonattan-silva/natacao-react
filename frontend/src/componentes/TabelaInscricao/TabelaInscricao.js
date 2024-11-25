@@ -31,9 +31,8 @@ const TabelaInscricao = ({ nadadores, provas, selecoes, onCheckboxChange }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {nadadoresMasculino.map(nadador => {
+                    {nadadoresMasculino.map(nadador => {
                             const numProvasSelecionadas = Object.values(selecoes[nadador.id] || {}).filter(Boolean).length;
-
                             return (
                                 <LinhaInscricao
                                     key={nadador.id}
@@ -65,7 +64,6 @@ const TabelaInscricao = ({ nadadores, provas, selecoes, onCheckboxChange }) => {
                     <tbody>
                         {nadadoresFeminino.map(nadador => {
                             const numProvasSelecionadas = Object.values(selecoes[nadador.id] || {}).filter(Boolean).length;
-
                             return (
                                 <LinhaInscricao
                                     key={nadador.id}

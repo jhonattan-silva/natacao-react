@@ -32,63 +32,42 @@ const Inscricao = () => {
         fetchEventos();
     }, []);
 
+    const fetchDadosEvento = async () => {
+        try {
+            const nadadoresResponse = await axios.get(apiListaNadadores); //lista de nadadores
+            const provasResponse = await axios.get(`${apiProvasEvento}/${eventoSelecionado}`); //lista de provas - por evento
+            const inscricoesResponse = await axios.get(`${apiListaInscricoes}/${eventoSelecionado}`); //inscricoes já realizadas do evento
+
+            setNadadores(nadadoresResponse.data); // Lista completa de nadadores
+            setProvas(provasResponse.data?.provas || []); // Provas vinculadas ao evento
+
+            const novasSelecoes = {};
+            inscricoesResponse.data.forEach(inscricao => { //para cada inscricao já localizada...
+                if (!novasSelecoes[inscricao.nadadorId]) {
+                    novasSelecoes[inscricao.nadadorId] = {};
+                }
+                novasSelecoes[inscricao.nadadorId][inscricao.provaId] = true; //novasSeleções recebe o id do nadador e da prova
+            });
+
+            setSelecoes(novasSelecoes || {});
+        } catch (error) {
+            console.error("Erro ao buscar dados do evento:", error);
+        }
+    };
+
     useEffect(() => {
-        // Código para buscar dados do evento
-        const fetchDadosEvento = async () => {
-            try {
-                const nadadoresResponse = await axios.get(apiListaNadadores);
-                const provasResponse = await axios.get(`${apiProvasEvento}/${eventoSelecionado}`);
-                const inscricoesResponse = await axios.get(`${apiListaInscricoes}/${eventoSelecionado}`);
-    
-                console.log("Inscrições recebidas do backend:", inscricoesResponse.data);
-    
-                setNadadores(nadadoresResponse.data);
-                setProvas(provasResponse.data.provas);
-    
-                const novasSelecoes = {};
-    
-                inscricoesResponse.data.forEach(inscricao => {
-                    console.log("Processando inscrição:", inscricao); // Verifica o conteúdo da inscrição atual
-                    
-                    const nadador = nadadoresResponse.data.find(n => n.id === inscricao.nadadorId); // Corrigido para usar nadadorId
-                    console.log("Resultado da busca por nadador:", nadador); // Verifica se encontrou um nadador correspondente
-                    
-                    if (nadador) {
-                        console.log("Nadador encontrado:", nadador); // Exibe o nadador encontrado com o mesmo `id`
-                        
-                        if (!novasSelecoes[nadador.id]) {
-                            novasSelecoes[nadador.id] = {};
-                            console.log("Criando novo objeto de seleções para o nadador:", nadador.id); // Log para indicar criação do objeto de seleções
-                        }
-                
-                        novasSelecoes[nadador.id][inscricao.provaId] = true; // Corrigido para usar provaId
-                        console.log(`Marcando prova ${inscricao.provaId} para o nadador ${nadador.id}`); // Confirmação de marcação da prova
-                    } else {
-                        console.log("Nenhum nadador encontrado para a inscrição:", inscricao.nadadorId); // Corrigido para usar nadadorId
-                    }
-                });
-                
-                // Exibe o estado final de novasSelecoes para verificar se está conforme esperado
-                console.log("Seleções após o preenchimento:", novasSelecoes);
-                
-                setSelecoes(novasSelecoes);
-    
-            } catch (error) {
-                console.error("Erro ao buscar dados do evento:", error);
-            }
-        };
-    
         if (eventoSelecionado) {
             fetchDadosEvento();
         }
     }, [eventoSelecionado]);
-    
+
+
 
     // Função para atualizar a seleção de checkboxes
     const handleCheckboxChange = (nadadorId, provaId, isChecked) => {
         setSelecoes(prevSelecoes => {
-            const selecoesNadador = prevSelecoes[nadadorId] || {};            
-            
+            const selecoesNadador = prevSelecoes[nadadorId] || {};
+
             // Verificando se o nadador já tem 2 inscrições
             const numeroDeInscricoes = Object.values(selecoesNadador).filter(Boolean).length;
             if (numeroDeInscricoes >= 2 && isChecked) {
@@ -120,10 +99,12 @@ const Inscricao = () => {
         );
 
         try {
-            const response = await axios.post(apiSalvarInscricao, inscricoes);
-            alert('Inscrição realizada com sucesso:', response.data);
+            await axios.post(apiSalvarInscricao, inscricoes);
+            alert('Inscrição realizada com sucesso!');
+            await fetchDadosEvento(); // Recarrega os dados do evento após salvar
         } catch (error) {
             console.error('Erro ao realizar a inscrição:', error);
+            alert('Erro ao salvar a inscrição.');
         }
     };
 
@@ -140,12 +121,16 @@ const Inscricao = () => {
                 />
                 {eventoSelecionado && (
                     <div>
-                        <TabelaInscricao
-                            nadadores={nadadores}
-                            provas={provas}
-                            selecoes={selecoes}
-                            onCheckboxChange={handleCheckboxChange}
-                        />
+                        {nadadores.length > 0 && provas.length > 0 ? (
+                            <TabelaInscricao
+                                nadadores={nadadores}
+                                provas={provas}
+                                selecoes={selecoes}
+                                onCheckboxChange={handleCheckboxChange}
+                            />
+                        ) : (
+                            <p>Carregando nadadores e provas...</p>
+                        )}
                         <Botao onClick={aoSalvar}>REALIZAR INSCRIÇÃO</Botao>
                     </div>
                 )}

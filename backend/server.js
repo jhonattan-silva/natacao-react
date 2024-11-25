@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 //app.use(helmet()); // Ativando Helmet
 
 app.get('/', (req, res) => {
-  res.send('Backend está funcionando!');
+  res.send(`'Backend está funcionando!'`);
 });
 
 app.listen(port, () => {
@@ -33,7 +33,7 @@ const nadadoresRoutes = require('./routes/nadadoresRoutes');
 const inscricaoRoutes = require('./routes/inscricaoRoutes');
 const rankingsRoutes = require('./routes/rankingsRoutes');
 const uploadRoutes = require('./uploads'); // Importa o arquivo uploads.js
-
+const migracao = require('./routes/migracaoRoute'); //rota para ajudar na migração dos dados
 
 app.use('/api/balizamento', balizamentoRoutes);
 app.use('/api/equipes', equipesRoutes);
@@ -43,8 +43,7 @@ app.use('/api/nadadores', nadadoresRoutes);
 app.use('/api/inscricao', inscricaoRoutes);
 app.use('/api/rankings', rankingsRoutes);
 app.use(uploadRoutes); // Adiciona as rotas de upload
-
-
+app.use('/api/migracao', migracao);
 
 
 // Página não encontrada

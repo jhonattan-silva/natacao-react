@@ -1,4 +1,4 @@
-import './InputTexto.module.css';
+import style from './InputTexto.module.css';
 
 const InputTexto = (props) => {
     const aoDigitar = (evento) => {
@@ -6,7 +6,7 @@ const InputTexto = (props) => {
     };
 
     return (
-        <div className='campo-texto'>
+        <div className={style.campoTexto}>
             <label htmlFor={props.id}>{props.label}</label>
             <input
                 id={props.id}

@@ -102,7 +102,7 @@ router.post('/cadastrarEtapas', async (req, res) => {
 
 
 
-// Rota para buscar uma etapa específica com provas vinculadas
+// Rota para BUSCAR uma etapa JÁ CADASTRADA
 router.get('/atualizarEtapas/:id', async (req, res) => {
     const etapaId = req.params.id;
     try {
@@ -137,7 +137,7 @@ router.get('/atualizarEtapas/:id', async (req, res) => {
     }
 });
 
-// Rota para atualizar uma etapa e suas provas
+// Rota para SALVAR ATUALIZAÇÕES uma etapa e suas provas
 router.put('/atualizarEtapas/:id', async (req, res) => {
     const etapaId = req.params.id;
     const { nome, data, cidade, sede, endereco, Torneios_id, provas } = req.body;
@@ -154,7 +154,7 @@ router.put('/atualizarEtapas/:id', async (req, res) => {
 
         // Insere as novas associações de provas
         for (const prova of provas) {
-            await db.query('INSERT INTO eventos_provas (Eventos_id, Provas_id) VALUES (?, ?)', [etapaId, prova]);
+            await db.query('INSERT INTO eventos_provas (Eventos_id, Provas_id) VALUES (?, ?)', [etapaId, prova.provas_id]);
         }
 
         res.json({ message: 'Etapa atualizada com sucesso!' });
