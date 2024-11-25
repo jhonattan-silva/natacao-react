@@ -18,6 +18,11 @@
 .env.test.local
 .env.production.local
 
+# Ignore arquivos de configuração sensíveis
+.env
+.env.*
+
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

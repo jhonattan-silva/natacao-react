@@ -12,23 +12,22 @@ const port = process.env.PORT || 5000;
 
 // Adicionando CORS e body-parser
 const allowedOrigins = [
-    'http://localhost:3000',     // Origem para desenvolvimento no desktop
-    'http://192.168.1.110:3000', // Origem para dispositivos móveis na rede local
-    'https://natacao-react.vercel.app/',    // Origem de produção
+    'http://localhost:3000',            // Para desenvolvimento local
+    'https://natacao-react.vercel.app' // Para produção
 ];
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Permite origens específicas ou nenhuma origem (em desenvolvimento)
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            callback(new Error('Não permitido pelo CORS*-*'));
+            callback(new Error('Origem não permitida pelo CORS'));
         }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true, // Permite envio de cookies, se necessário
+    credentials: true,
 }));
+
 
 app.use(bodyParser.json());
 //app.use(helmet()); // Ativando Helmet

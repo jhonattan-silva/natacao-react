@@ -13,20 +13,17 @@ const pool = mysql.createPool({
 });
  */
 
-// Configuração do banco (só para teste)
+// Configuração do banco com base no ambiente
 const pool = mysql.createPool({
-  host: 'blugeddj68mfwddszfyw-mysql.services.clever-cloud.com', 
-  user: 'u7zv9tojrhhp4uit',           
-  password: 'ceePfgbPJuVpdWHK550X',        
-  database: 'blugeddj68mfwddszfyw',         
-  port: 3306,                  
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
 });
-
-
-
 
 pool.getConnection()
   .then(connection => {
