@@ -9,13 +9,21 @@ const ListaSuspensa = ({ fonteDados, onChange, textoPlaceholder, obrigatorio = f
         const fetchData = async () => {
             try {
                 const response = await api.get(fonteDados);
-                setOpcoes(response.data);
+                
+                if (Array.isArray(response.data)) {
+                    setOpcoes(response.data);
+                } else {
+                    console.error("Erro: A resposta não é um array", response.data);
+                    setOpcoes([]); // Garante que não quebre a interface
+                }
             } catch (error) {
                 console.error('Erro ao buscar dados:', error);
+                setOpcoes([]); // Garante que `opcoes` esteja vazio em caso de erro
             }
         };
         fetchData();
     }, [fonteDados]);
+    
 
     //MUDANÇA DE OPÇÃO
     const aoEscolher = (event) => {
