@@ -1,20 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const mysql = require('mysql2/promise');
-
-// Configuração do banco (só para teste)
-const pool = mysql.createPool({
-    host: 'blugeddj68mfwddszfyw-mysql.services.clever-cloud.com', 
-    user: 'u7zv9tojrhhp4uit',           
-    password: 'ceePfgbPJuVpdWHK550X',        
-    database: 'blugeddj68mfwddszfyw',         
-    port: 3306,                  
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
-
-
+const db = require('../config/db');
 
 
 // Rota para buscar resultados com filtro opcional por equipe
@@ -25,7 +11,7 @@ router.get('/resultados', async (req, res) => {
         const query = equipe
             ? 'SELECT * FROM temp WHERE Equipe = ?'
             : 'SELECT * FROM temp';
-        const [rows] = await pool.query(query, [equipe].filter(Boolean));
+        const [rows] = await db.query(query, [equipe].filter(Boolean));
 
         if (!Array.isArray(rows)) {
             console.error('Resposta inesperada de /resultados:', rows);
@@ -43,7 +29,7 @@ router.get('/resultados', async (req, res) => {
 // Rota para listar equipes únicas
 router.get('/listaEquipes', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT DISTINCT Equipe FROM temp WHERE Equipe IS NOT NULL');
+        const [rows] = await db.query('SELECT DISTINCT Equipe FROM temp WHERE Equipe IS NOT NULL');
         
         if (!Array.isArray(rows)) {
             console.error('Resposta inesperada de /listaEquipes:', rows);

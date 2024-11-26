@@ -7,42 +7,49 @@ import Botao from '../../componentes/Botao/Botao';
 
 const Rankings = () => {
     const [rankings, setRankings] = useState({});
-    const [equipeId, setEquipeId] = useState(''); //captura o id do equipe
+    const [equipeId, setEquipeId] = useState(''); // Captura o ID da equipe
     const [filtroAtivo, setFiltroAtivo] = useState(false); // Estado para monitorar o clique no botão "Filtrar"
+    const [error, setError] = useState(null); // Armazena erros para exibição na interface
 
     const apiRanking = `/rankings/resultados`;
     const apiEquipes = `/rankings/listaEquipes`;
 
+    // Atualiza equipe selecionada
     const equipeSelecionada = (id) => {
         setEquipeId(id);
     };
 
-    //buscar equipes para a listasuspensa = SELECT
+    // Buscar equipes para a ListaSuspensa
     useEffect(() => {
         const fetchEquipes = async () => {
             try {
                 const response = await api.get(apiEquipes);
                 if (Array.isArray(response.data)) {
-                    setEquipeId(response.data[0]?.id || ''); // Preenche a equipe selecionada com o primeiro item, se houver
+                    setEquipeId(response.data[0]?.id || ''); // Seleciona o primeiro item como padrão
+                    setError(null); // Limpa erros anteriores
                 } else {
                     console.error('ERRO: A resposta das equipes não é um array');
+                    setError('A resposta do servidor para as equipes é inválida.');
                 }
-            } catch (error) {
-                if (error.code === 'ERR_NETWORK') {
-                    console.error('Erro de REDE', error);
-                } else {
-                    console.error('Erro ao buscar dados de equipes:', error);
-                }
+            } catch (err) {
+                console.error('Erro ao buscar dados de equipes:', err);
+                setError(`Erro ao buscar equipes: ${err.message}`);
             }
         };
         fetchEquipes();
     }, [apiEquipes]);
 
-    // Função para buscar os rankings e exibir todos os dados por padrão
+    // Buscar rankings
     const fetchRankings = async () => {
         try {
             const url = `${apiRanking}?${equipeId ? `equipe=${equipeId}` : ''}`;
+            console.log('Buscando rankings em:', url);
+
             const response = await api.get(url);
+
+            if (!Array.isArray(response.data)) {
+                throw new Error(`Resposta inesperada: ${JSON.stringify(response.data)}`);
+            }
 
             const groupedData = response.data.reduce((acc, item) => {
                 const { Nado } = item;
@@ -50,27 +57,26 @@ const Rankings = () => {
                 acc[Nado].push(item);
                 return acc;
             }, {});
+
             setRankings(groupedData);
-        } catch (error) {
-            if (error.code === 'ERR_NETWORK') {
-                console.error("Erro de REDE ao buscar o ranking", error);
-            } else {
-                console.error('Erro ao buscar dados do ranking:', error);
-            }
+            setError(null); // Limpa erros anteriores
+        } catch (err) {
+            console.error('Erro ao buscar dados do ranking:', err);
+            setError(`Erro ao buscar rankings: ${err.message}`);
         }
     };
 
-    // Chama a função para buscar rankings ao carregar o componente
+    // Atualizar rankings ao mudar `equipeId`
     useEffect(() => {
-        fetchRankings(); // Carrega todos os rankings ao iniciar
-    }, []); // O array vazio significa que isso acontecerá apenas uma vez, ao carregar o componente
+        if (equipeId) {
+            fetchRankings();
+        }
+    }, [equipeId]);
 
-    // Função de clique do botão "Filtrar"
+    // Botão de Filtrar
     const filtrarClick = () => {
         setFiltroAtivo(true);
-        console.log("EQUIPE ESCOLHIDA", equipeId);
-
-        fetchRankings(equipeId); // Aplica o filtro e busca novamente os dados
+        fetchRankings(); // Recarrega os rankings
     };
 
     return (
@@ -80,15 +86,27 @@ const Rankings = () => {
                 <ListaSuspensa
                     textoPlaceholder="Selecione uma Equipe"
                     fonteDados={apiEquipes}
-                    onChange={equipeSelecionada} />
-                <Botao onClick={filtrarClick} classBtn={style.btnFiltrar}>FILTRAR</Botao>
+                    onChange={equipeSelecionada}
+                />
+                <Botao onClick={filtrarClick} classBtn={style.btnFiltrar}>
+                    FILTRAR
+                </Botao>
             </div>
-            {Object.keys(rankings).map((nado) => (
-                <div key={nado}>
-                    <h2>{nado}</h2>
-                    <Tabela dados={rankings[nado]} />
+            {error && (
+                <div style={{ color: 'red', marginTop: '10px' }}>
+                    <strong>Erro:</strong> {error}
                 </div>
-            ))}
+            )}
+            {Object.keys(rankings).length > 0 ? (
+                Object.keys(rankings).map((nado) => (
+                    <div key={nado}>
+                        <h2>{nado}</h2>
+                        <Tabela dados={rankings[nado]} />
+                    </div>
+                ))
+            ) : (
+                <p>Nenhum dado disponível para o ranking.</p>
+            )}
         </div>
     );
 };
