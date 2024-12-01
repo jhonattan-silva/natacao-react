@@ -53,6 +53,7 @@ const inscricaoRoutes = require('./routes/inscricaoRoutes');
 const rankingsRoutes = require('./routes/rankingsRoutes');
 const uploadRoutes = require('./uploads'); // Importa o arquivo uploads.js
 const migracao = require('./routes/migracaoRoute'); //rota para ajudar na migração dos dados
+const resultadosEntrada = require('./routes/resultadosEntradaRoutes');
 
 app.use('/api/balizamento', balizamentoRoutes);
 app.use('/api/equipes', equipesRoutes);
@@ -63,6 +64,7 @@ app.use('/api/inscricao', inscricaoRoutes);
 app.use('/api/rankings', rankingsRoutes);
 app.use(uploadRoutes); // Adiciona as rotas de upload
 app.use('/api/migracao', migracao);
+app.use('/api/resultadosEntrada', resultadosEntrada);
 
 // Servir o frontend em produção
 if (process.env.NODE_ENV === 'production') {

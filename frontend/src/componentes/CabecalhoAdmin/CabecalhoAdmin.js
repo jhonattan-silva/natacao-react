@@ -15,7 +15,7 @@ const CabecalhoAdmin = () => {
                 <CabecalhoLink url='../Nadadores'> Nadadores </CabecalhoLink>
                 <CabecalhoLink url='../Inscricao'> Inscrição </CabecalhoLink>
                 <CabecalhoLink url='../Etapas'> Etapas </CabecalhoLink>
-                <CabecalhoLink url='../Resultados'> Resultados </CabecalhoLink>
+                <CabecalhoLink url='../ResultadosEntrada'> Inserir Resultados </CabecalhoLink>
                 <CabecalhoLink url='../Classificacao'> Classificação </CabecalhoLink>
                 <CabecalhoLink url='../balizamento'> Balizamento </CabecalhoLink>
                 <CabecalhoLink url='../Admin'> ADMIN </CabecalhoLink>
