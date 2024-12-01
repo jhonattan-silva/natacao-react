@@ -13,9 +13,9 @@ const ListaSuspensa = ({ fonteDados, onChange, textoPlaceholder, obrigatorio = f
             try {
                 const response = await api.get(fonteDados);
                 if (!Array.isArray(response.data)) {
-                    throw new Error(`Resposta não é um array. Dados: ${JSON.stringify(response.data)}`);
+                    throw new Error(`LS->Resposta não é um array. Dados: ${JSON.stringify(response.data)}`);
                 }
-                setOpcoes(response.data);
+                setOpcoes(response.data);                
                 setError(null); // Limpa o erro caso a chamada seja bem-sucedida
             } catch (err) {
                 console.error(`Erro ao acessar ${fonteDados}:`, err);

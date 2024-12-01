@@ -56,49 +56,48 @@ export function dividirEmBaterias(nadadores) {
 }
 
 // Função para distribuir os nadadores nas raias de acordo com a classificação
-export function distribuirNadadoresNasRaias(nadadores) {
-    const nadadoresPorRaia = Array(6).fill(null).map(() => []); // cria as raias vazias
-    const ordemRaias = [6, 1, 5, 2, 4, 3]; // ordem de distribuição
-    const raias = []; // array que irá armazenar as raias de acordo com a lógica
+export function distribuirNadadoresNasRaias(nadadores, provaId) {
+    const nadadoresPorRaia = Array(6).fill(null).map(() => []); // Cria as raias vazias
+    const raias = []; // Armazena as raias de acordo com o número de nadadores
 
-
-    // Definindo as raias manualmente com base no número de nadadores
+    // Define as raias manualmente com base no número de nadadores
     switch (nadadores.length) {
         case 6:
             raias.push(6, 5, 4, 3, 2, 1); // Para 6 nadadores
-            console.log("TEM SEISSSSSSSSSSSS");
-            console.log(raias);
-            
             break;
         case 5:
             raias.push(4, 5, 2, 3, 1); // Para 5 nadadores
-            console.log("CINCUUUUUUUUUUUM");
-            
             break;
         case 4:
             raias.push(4, 3, 2, 1); // Para 4 nadadores
-            console.log("FOOOOOOOOOOOUR");
-            
             break;
         case 3:
             raias.push(2, 3, 1); // Para 3 nadadores
-            console.log("ARVRESSSSSSSS");
-            
             break;
         default:
-            console.log("Número de nadadores não suportado");
-            return []; // Retorna um array vazio se o número de nadadores não for suportado
+            console.error(`Número de nadadores não suportado: ${nadadores.length}`);
+            return []; // Retorna vazio para números não suportados
     }
 
+    console.log("RAIAS DEFINIDAS:", raias);
 
+    // Distribui os nadadores nas raias
     nadadores.forEach((nadador, index) => {
-        const raiaIndex = ordemRaias[index % ordemRaias.length] - 1; // usa ordemRaias para obter o índice desejado
-        console.log("INDEX: ", index);
-        console.log("RAIA INDEX: ", raias[index]);
+        const raiaIndex = index; // O índice corresponde diretamente ao índice de "raias"
+        if (raias[raiaIndex] === undefined) {
+            console.error(`Raia não encontrada para índice ${index}`);
+            return;
+        }
 
-        nadadoresPorRaia[raiaIndex].push({ ...nadador, raia: raias[index] });
+        nadadoresPorRaia[raias[raiaIndex] - 1].push({
+            ...nadador,
+            raia: raias[raiaIndex],
+            prova_id: provaId,
+        });
+
+        console.log(`Nadador ${nadador.nome_nadador} posicionado na raia ${raias[raiaIndex]} para a prova ${provaId}`);
     });
 
-    return nadadoresPorRaia.filter(raia => raia.length > 0); // tira as raias vazias
+    return nadadoresPorRaia.filter(raia => raia.length > 0); // Retorna somente raias com nadadores
 }
 
