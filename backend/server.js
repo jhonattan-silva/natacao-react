@@ -4,7 +4,7 @@ const app = express(); // backend/server.js
 const db = require('./config/db');// Conexão com banco de dados
 const cors = require('cors'); // Garante permissao de requisições front->backend
 const bodyParser = require('body-parser'); //backend interpreta os json nas requisições
-//const helmet = require('helmet'); // Helmet
+const helmet = require('helmet'); // Helmet para defesa http
 
 // Definindo porta e inicializando dotenv
 dotenv.config();
@@ -30,7 +30,7 @@ app.use(cors({
 
 
 app.use(bodyParser.json());
-//app.use(helmet()); // Ativando Helmet
+app.use(helmet()); // Ativando Helmet
 
 app.get('/', (req, res) => {
   res.send(`'Backend está funcionando!'`);
@@ -44,6 +44,7 @@ app.listen(port, () => {
 });
 
 // Importando e utilizando rotas
+const authRoutes = require('./routes/authRoutes');
 const balizamentoRoutes = require('./routes/balizamentoRoutes');
 const equipesRoutes = require('./routes/equipesRoutes');
 const etapasRoutes = require('./routes/etapasRoutes');
@@ -55,6 +56,7 @@ const uploadRoutes = require('./uploads'); // Importa o arquivo uploads.js
 const migracao = require('./routes/migracaoRoute'); //rota para ajudar na migração dos dados
 const resultadosEntrada = require('./routes/resultadosEntradaRoutes');
 
+app.use('/api/auth', authRoutes);
 app.use('/api/balizamento', balizamentoRoutes);
 app.use('/api/equipes', equipesRoutes);
 app.use('/api/etapas', etapasRoutes);
@@ -65,6 +67,7 @@ app.use('/api/rankings', rankingsRoutes);
 app.use(uploadRoutes); // Adiciona as rotas de upload
 app.use('/api/migracao', migracao);
 app.use('/api/resultadosEntrada', resultadosEntrada);
+
 
 // Servir o frontend em produção
 if (process.env.NODE_ENV === 'production') {

@@ -6,11 +6,11 @@ import api from '../../servicos/api';
 import Botao from '../../componentes/Botao/Botao';
 
 const ResultadosEntrada = () => {
-    const [eventos, setEventos] = useState();//recebe todos eventos pela api
-    const [eventoId, setEventoId] = useState(); //recebe o evento escolhido
-    const [provas, setProvas] = useState(); //recebe todas provas pela api
-    const [provaId, setProvaId] = useState(); //estado da prova selecionada
-    const [baterias, setBaterias] = useState({}); //recebe as baterias de cada prova
+    const [eventos, setEventos] = useState([]);//recebe todos eventos pela api
+    const [eventoId, setEventoId] = useState(''); //recebe o evento escolhido
+    const [provas, setProvas] = useState([]); //recebe todas provas pela api
+    const [provaId, setProvaId] = useState(''); //estado da prova selecionada
+    const [baterias, setBaterias] = useState([]); //recebe as baterias de cada prova
     const [erro, setErro] = useState(null); //estado para erros
 
     const apiEventos = '/resultadosEntrada/listarEventos';
@@ -24,6 +24,15 @@ const ResultadosEntrada = () => {
         return eventoId ? `${apiProvasEvento}/${eventoId}` : null; // Somente define a URL quando há um evento selecionado
     }, [eventoId]);
 
+
+    // Nome da prova selecionada para não fazer busca desnecessária no banco
+    const nomeProvaSelecionada = useMemo(() => {
+        console.log('Provas disponíveis:', provas); // Exibe todas as provas
+        console.log('Prova selecionada (ID):', provaId); // Exibe o ID selecionado
+        return provas.find((prova) => String(prova.prova_id) === String(provaId))?.nome || '';
+    }, [provas, provaId]);
+    
+
     //Listar os eventos
     useEffect(() => {
         const fetchEventos = async () => {
@@ -31,7 +40,7 @@ const ResultadosEntrada = () => {
                 const response = await api.get(apiEventos);
                 if (Array.isArray(response.data)) { //verificação se a resposta está no formato desejado
                     setEventos(response.data[0]?.id || ''); //recebe o campo id da resposta da api
-                    setErro(null);
+                    setErro(null);                    
                 } else {
                     console.error('ERRO: A resposta dos eventos não é array');
                     setErro('Erro nos dados do banco');
@@ -56,6 +65,8 @@ const ResultadosEntrada = () => {
                 if (Array.isArray(response.data)) {
                     setProvas(response.data); // Atualiza o estado com o array completo
                     setErro(null); // Nenhum erro
+                    
+                    console.log("RETORNO>>>>>", response.data);
                 } else {
                     console.error('ERRO: A resposta das provas não é array', response.data);
                     setErro('Erro nos dados vindos do banco');
@@ -71,46 +82,69 @@ const ResultadosEntrada = () => {
 
     useEffect(() => {
         if (!provaId) return; //se não tiver escolhido a prova ainda
-
+    
         const fetchBaterias = async () => {
             try {
                 const urlBateriasEvento = `${apiBateriasProva}/${provaId}`;
-                console.log("Buscando baterias da prova", urlBateriasEvento);
+                console.log("Buscando baterias da prova:", urlBateriasEvento);
+    
                 const response = await api.get(urlBateriasEvento);
-
+                console.log("Resposta da API de baterias:", response.data);
+    
                 if (Array.isArray(response.data)) {
+                    console.log("Baterias recebidas:", response.data);
                     setBaterias(response.data);
                     setErro(null);
                 } else {
-                    console.error("ERRO: A resposta da bateria não é array");
-                    setErro("Erro na busca das baterias no banco !Array");
+                    console.error("Resposta inesperada:", response.data);
+                    setErro("Erro nos dados recebidos.");
                 }
             } catch (err) {
-                console.error("Erro ao buscar baterias, mesmo sendo array", err);
-                setErro("Erro na busca das baterias no banco Array");
+                console.error("Erro ao buscar baterias:", err.message);
+                setErro("Erro ao buscar baterias.");
             }
         };
         fetchBaterias();
     }, [provaId]);
-    /*
-        const inputs = [
-            {
-                obrigatorio: true,
-                label: "Nome",
-                placeholder: "Digite o nome",
-                valor: nomeNadador,
-                aoAlterar: setNomeNadador
-            },
-        ]
-    */
-        const aoSalvar = async (evento) => {
-            evento.preventDefault();
- 
-            alert('Resultado salvo com sucesso!');
-        };
     
+     // Atualizar tempos no estado
+     const atualizarTempo = (bateriaId, nadadorId, novoTempo) => {
+        setBaterias((prev) =>
+            prev.map((bateria) =>
+                bateria.id === bateriaId
+                    ? {
+                        ...bateria,
+                        nadadores: bateria.nadadores.map((nadador) =>
+                            nadador.id === nadadorId
+                                ? { ...nadador, tempo: novoTempo }
+                                : nadador
+                        ),
+                    }
+                    : bateria
+            )
+        );
+    };
 
-        
+    // Salvar dados no backend
+    const aoSalvar = async () => {
+        try {
+            const dados = baterias.map((bateria) => ({
+                bateriaId: bateria.id,
+                nadadores: bateria.nadadores.map((nadador) => ({
+                    id: nadador.id,
+                    tempo: nadador.tempo,
+                })),
+            }));
+            console.log('Enviando dados para o backend:', dados);
+            await api.post('/resultadosEntrada/salvarResultados', { provaId, dados });
+            alert('Resultados salvos com sucesso!');
+        } catch (err) {
+            console.error('Erro ao salvar resultados:', err.message);
+            alert('Erro ao salvar resultados. Tente novamente.');
+        }
+    };
+
+    console.log("PROVA SELECIONADA______", nomeProvaSelecionada);
     return (
         <div className={style.resultadosEntrada}>
             <div className={style.opcoesContainer}>
@@ -118,60 +152,45 @@ const ResultadosEntrada = () => {
                     fonteDados={apiEventos}
                     textoPlaceholder="Escolha o evento"
                     onChange={setEventoId}
-                    obrigatorio={true}
+                    obrigatorio
                 />
-                {eventoId && ( //se já selecionou o evento
+                {eventoId && (
                     <ListaSuspensa
                         fonteDados={urlProvasEvento}
                         textoPlaceholder="Escolha a prova disputada"
                         onChange={setProvaId}
-                    />)}
+                        selectId='prova_id'
+                    />
+                )}
             </div>
             <div className={style.listagemContainer}>
                 {baterias.length > 0 && (
                     <section>
-                        <h1>Prova: {baterias[0]?.nomeProva}</h1> {/* Nome da prova */}
+                        <h1>Prova: {nomeProvaSelecionada}</h1>
                         {baterias.map((bateria) => (
-                            <div key={bateria.numeroBateria}>
-                                <h2>Bateria {bateria.numeroBateria}</h2>
+                            <div key={bateria.id}>
+                                <h2>{bateria.numeroBateria}</h2>
                                 <Formulario
                                     inputs={bateria.nadadores.map((nadador) => ({
                                         id: nadador.id,
                                         label: nadador.nome,
                                         tipo: 'text',
                                         placeholder: 'Digite o tempo realizado',
-                                        valor: nadador.tempo || '', // Valor inicial do tempo
+                                        valor: nadador.tempo || '',
                                         obrigatorio: true,
-                                        aoAlterar: (novoTempo) => {
-                                            // Atualiza o tempo no estado
-                                            setBaterias((prev) =>
-                                                prev.map((b) =>
-                                                    b.numeroBateria === bateria.numeroBateria
-                                                        ? {
-                                                            ...b,
-                                                            nadadores: b.nadadores.map((n) =>
-                                                                n.id === nadador.id
-                                                                    ? { ...n, tempo: novoTempo }
-                                                                    : n
-                                                            ),
-                                                        }
-                                                        : b
-                                                )
-                                            );
-                                        },
+                                        aoAlterar: (novoTempo) => atualizarTempo(bateria.id, nadador.id, novoTempo),
                                     }))}
-                                    aoSalvar={(e) => {
-                                        e.preventDefault();
-                                        console.log('Salvando dados da bateria:', bateria.nadadores);
-                                    }}
                                 />
                             </div>
                         ))}
                     </section>
                 )}
-                <Botao onClick={aoSalvar} classBtn={style.btnSalvar} />
+                <Botao onClick={aoSalvar} className={style.btnSalvar}>
+                    Salvar Resultados
+                </Botao>
             </div>
         </div>
     );
-}
+};
+
 export default ResultadosEntrada;
