@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '../../servicos/api';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import TabelaEdicao from '../../componentes/TabelaEdicao/TabelaEdicao';
 import React, { useEffect, useState } from 'react';
@@ -27,15 +27,14 @@ const Nadadores = () => {
     };
 
     /* URLS de API */
-    const baseUrl = 'http://localhost:5000/api/nadadores';
-    const apiListaNadadores = `${baseUrl}/listarNadadores`;
-    const apiCadastraNadador = `${baseUrl}/cadastrarNadador`;
-    const apiListaEquipes = `${baseUrl}/listarEquipes`;
+    const apiListaNadadores = `/nadadores/listarNadadores`;
+    const apiCadastraNadador = `/nadadores/cadastrarNadador`;
+    const apiListaEquipes = `/nadadores/listarEquipes`;
 
     // Busca todos os Nadadores e atualizar a lista
     const fetchNadadores = async () => {
         try {
-            const response = await axios.get(apiListaNadadores);
+            const response = await api.get(apiListaNadadores);
             const nadadoresFormatados = response.data.map(nadador => ({
                 ...nadador,
                 data_nasc: new Date(nadador.data_nasc).toLocaleDateString('pt-BR', {
@@ -74,7 +73,7 @@ const Nadadores = () => {
     // Função para adicionar um novo Nadador
     const adicionarNadador = async (dados) => {
         try {
-            await axios.post(apiCadastraNadador, dados); // Envia o novo Nadador para o backend
+            await api.post(apiCadastraNadador, dados); // Envia o novo Nadador para o backend
             await fetchNadadores(); // Recarrega a lista completa de Nadadoress do backend
             setFormVisivel(false); // Esconde o formulário após salvar
         } catch (error) {

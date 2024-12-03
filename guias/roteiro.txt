@@ -36,6 +36,10 @@ npm install mysql2
 npm install dotenv //dotenv permite que armazene informações sensíveis, como as credenciais do banco de dados, em um arquivo separado (.env) 
 npm install cors helmet body-parser //cors e helmet seguranca em requisições, body-parser leitura do json entre front e back
 npm install xlsx multer //xlsx para lidar com planilhas e multer para uploads
+npm install bcrypt //Biblioteca para hash de senhas.
+npm install jsonwebtoken //Função: Geração e verificação de tokens para autenticação.Padrão de autenticação stateless . Alternativa: OAuth com Passport.js c/ integração com Google, Facebook.
+npm install express-validator //Facilita a autenticação com JWT sem escrever lógica manual.
+
 
 
 

@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { authMiddleware } = require('../middleware/authMiddleware'); // Autenticação
 
 
-router.get('/listarNadadores', async (req, res) => {
+
+router.get('/listarNadadores', authMiddleware, async (req, res) => {
     try {
-        const [rows] = await db.query(`SELECT * FROM nadadores;`);
+        const [rows] = await db.query(`SELECT * FROM nadadores`);
         res.json(rows);
     } catch (error) {
         console.error('Erro ao buscar usuários:', error);
@@ -13,7 +15,7 @@ router.get('/listarNadadores', async (req, res) => {
     }
 });
 
-router.get('/listarEquipes', async (req, res) => {
+router.get('/listarEquipes', authMiddleware, async (req, res) => {
     try {
       const [equipes] = await db.query('SELECT id, nome FROM equipes');
       res.json(equipes);
@@ -24,7 +26,7 @@ router.get('/listarEquipes', async (req, res) => {
   });
 
   //Rota para adicionar Nadador
-router.post('/cadastrarNadador', async (req, res) => {
+router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
     const { nome, cpf, data_nasc, telefone, sexo, equipeId } = req.body;
 
     const cpfNumeros = cpf.replace(/\D/g, '');
