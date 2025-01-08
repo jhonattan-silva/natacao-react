@@ -25,7 +25,7 @@ const AppRoutes = () => {
                 <Route
                     path="/admin"
                     element={
-                        <ProtecaoRota>
+                        <ProtecaoRota requiredRoles={['admin', 'treinador', 'gerencial']}> {/* Protege a rota, só pode acessar se tiver perfil de admin */}
                             <Admin />
                         </ProtecaoRota>
                     }
@@ -33,7 +33,7 @@ const AppRoutes = () => {
                 <Route
                     path="/balizamento"
                     element={
-                        <ProtecaoRota>
+                        <ProtecaoRota requiredRoles={['admin']}>
                             <Balizamento />
                         </ProtecaoRota>
                     }
@@ -41,7 +41,7 @@ const AppRoutes = () => {
                 <Route
                     path="/equipes"
                     element={
-                        <ProtecaoRota>
+                        <ProtecaoRota requiredRoles={['admin']}>
                             <Equipes />
                         </ProtecaoRota>
                     }
@@ -49,7 +49,7 @@ const AppRoutes = () => {
                 <Route
                     path="/etapas"
                     element={
-                        <ProtecaoRota>
+                        <ProtecaoRota requiredRoles={['admin']}>
                             <Etapas />
                         </ProtecaoRota>
                     }
@@ -57,7 +57,7 @@ const AppRoutes = () => {
                 <Route
                     path="/usuarios"
                     element={
-                        <ProtecaoRota>
+                        <ProtecaoRota requiredRoles={['admin']}>
                             <Usuarios />
                         </ProtecaoRota>
                     }
@@ -89,7 +89,7 @@ const AppRoutes = () => {
                 <Route
                     path="/resultadosEntrada"
                     element={
-                        <ProtecaoRota>
+                        <ProtecaoRota requiredRoles={['admin']}>
                             <ResultadosEntrada />
                         </ProtecaoRota>
                     }

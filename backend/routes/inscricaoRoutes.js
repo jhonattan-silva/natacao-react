@@ -5,7 +5,7 @@ const db = require('../config/db');
 // Listar todos EVENTOS
 router.get('/listarEventos', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM eventos'); // Busca todos os eventos
+        const [rows] = await db.query('SELECT * FROM eventos WHERE inscricao_aberta = 1'); // Busca todos os eventos
         res.json(rows); // Retorna a lista de eventos em JSON
     } catch (error) {
         console.error('Erro ao buscar eventos:', error); // Loga o erro no servidor
@@ -14,9 +14,10 @@ router.get('/listarEventos', async (req, res) => {
 });
 
 // Listar todos NADADORES
-router.get('/listarNadadores', async (req, res) => {
+router.get('/listarNadadores/:equipeId', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM nadadores WHERE equipes_id = 2'); // Busca todos os nadadores
+        const { equipeId } = req.params; // Extrai o equipeId da rota
+        const [rows] = await db.query('SELECT * FROM nadadores WHERE equipes_id = ?', [equipeId]); // Busca todos os nadadores
         res.json(rows); // Retorna a lista de nadadores em JSON
     } catch (error) {
         console.error('Erro ao buscar nadadores:', error); // Loga o erro no servidor

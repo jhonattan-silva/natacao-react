@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import ListaSuspensa from "../../componentes/ListaSuspensa/ListaSuspensa";
-import axios from "axios";
 import CabecalhoAdmin from "../../componentes/CabecalhoAdmin/CabecalhoAdmin";
 import Botao from "../../componentes/Botao/Botao";
 import TabelaInscricao from "../../componentes/TabelaInscricao/TabelaInscricao";
+import api from "../../servicos/api";
+import { useUser } from "../../servicos/UserContext"; // Importar o contexto do usuário logado no sistema
 
 const Inscricao = () => {
     const [nadadores, setNadadores] = useState([]);
@@ -11,19 +12,19 @@ const Inscricao = () => {
     const [eventos, setEventos] = useState([]);
     const [eventoSelecionado, setEventoSelecionado] = useState(null);
     const [selecoes, setSelecoes] = useState({});
+    const user = useUser(); // Obter o usuário do contexto do usuário
 
-    const baseUrl = 'http://localhost:5000/api/inscricao';
-    const apiEventos = `${baseUrl}/listarEventos`;
-    const apiListaNadadores = `${baseUrl}/listarNadadores`;
-    const apiListaInscricoes = `${baseUrl}/listarInscricoes`;
-    const apiProvasEvento = `${baseUrl}/listarProvasEvento`;
-    const apiSalvarInscricao = `${baseUrl}/salvarInscricao`;
+    const apiEventos = `/inscricao/listarEventos`;
+    const apiListaNadadores = `/inscricao/listarNadadores/${user?.equipeId}`; // Passar equipeId
+    const apiListaInscricoes = `/inscricao/listarInscricoes`;
+    const apiProvasEvento = `/inscricao/listarProvasEvento`;
+    const apiSalvarInscricao = `/inscricao/salvarInscricao`;
 
     // Buscar eventos para a ListaSuspensa
     useEffect(() => {
         const fetchEventos = async () => {
             try {
-                const response = await axios.get(apiEventos);
+                const response = await api.get(apiEventos);
                 setEventos(response.data);
             } catch (error) {
                 console.error("Erro ao buscar eventos:", error);
@@ -34,9 +35,9 @@ const Inscricao = () => {
 
     const fetchDadosEvento = async () => {
         try {
-            const nadadoresResponse = await axios.get(apiListaNadadores); //lista de nadadores
-            const provasResponse = await axios.get(`${apiProvasEvento}/${eventoSelecionado}`); //lista de provas - por evento
-            const inscricoesResponse = await axios.get(`${apiListaInscricoes}/${eventoSelecionado}`); //inscricoes já realizadas do evento
+            const nadadoresResponse = await api.get(apiListaNadadores); //lista de nadadores
+            const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}`); //lista de provas - por evento
+            const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`); //inscricoes já realizadas do evento
 
             setNadadores(nadadoresResponse.data); // Lista completa de nadadores
             setProvas(provasResponse.data?.provas || []); // Provas vinculadas ao evento
@@ -99,7 +100,7 @@ const Inscricao = () => {
         );
 
         try {
-            await axios.post(apiSalvarInscricao, inscricoes);
+            await api.post(apiSalvarInscricao, inscricoes);
             alert('Inscrição realizada com sucesso!');
             await fetchDadosEvento(); // Recarrega os dados do evento após salvar
         } catch (error) {

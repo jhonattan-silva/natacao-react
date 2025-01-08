@@ -7,11 +7,18 @@ const { authMiddleware } = require('../middleware/authMiddleware'); // Autentica
 
 router.get('/listarNadadores', authMiddleware, async (req, res) => {
     try {
-        const [rows] = await db.query(`SELECT * FROM nadadores`);
+        const equipeId = req.user.equipeId; // Obtém o equipeId do usuário logado a partir do token JWT
+
+        if (!equipeId) {
+            return res.status(400).json({ message: 'Usuário não pertence a nenhuma equipe.' });
+        }
+
+        // Busca os nadadores que pertencem à equipe do usuário logado
+        const [rows] = await db.query('SELECT nome, cpf, data_nasc, celular, sexo FROM nadadores WHERE equipes_id = ?', [equipeId]);
         res.json(rows);
     } catch (error) {
-        console.error('Erro ao buscar usuários:', error);
-        res.status(500).send('Erro ao buscar usuários');
+        console.error('Erro ao buscar nadadores:', error);
+        res.status(500).send('Erro ao buscar nadadores');
     }
 });
 

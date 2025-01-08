@@ -21,6 +21,8 @@ FRONTEND
 npm install react-router-dom
 npm install pdfmake
 npm install pdffonts
+npm install jwt-decode //para decodificar os dados presentes nos tokens
+
 
 cria a routes.js dentro do src
 chama o <AppRoutes /> lá no index.js do src

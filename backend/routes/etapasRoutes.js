@@ -185,7 +185,23 @@ router.delete('/excluiEtapa/:id', async (req, res) => {
     }
 });
 
+// Rota para ABRIR/FECHAR INSCRIÇÃO
+router.put('/abreInscricao/:id', async (req, res) => {
+    const etapaId = req.params.id;
+    const { inscricao_aberta } = req.body;
 
+    try {
+        // Atualiza a coluna inscricao_aberta da etapa
+        await db.query(
+            'UPDATE eventos SET inscricao_aberta = ? WHERE id = ?',
+            [inscricao_aberta, etapaId]
+        );
 
+        res.json({ message: 'Inscrição atualizada com sucesso!' });
+    } catch (error) {
+        console.error('Erro ao atualizar inscrição:', error);
+        res.status(500).json({ error: 'Erro ao atualizar inscrição' });
+    }
+});
 
 module.exports = router;

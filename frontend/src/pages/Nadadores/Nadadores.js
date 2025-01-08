@@ -7,11 +7,13 @@ import Formulario from '../../componentes/Formulario/Formulario';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import style from './Nadadores.module.css';
 import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
+import { jwtDecode } from 'jwt-decode'; // Correção da importação
 
 const Nadadores = () => {
     const [nadadores, setNadadores] = useState([]); //controle de nadadores
     const [equipes, setEquipes] = useState(''); // Controle de equipes listadas
     const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
+    const [equipesUsuario, setEquipeUsuario] = useState(''); // Controle de equipe do usuário logado
 
     /* INPUTS */
     const [nomeNadador, setNomeNadador] = useState(''); // Para input de nome
@@ -27,14 +29,39 @@ const Nadadores = () => {
     };
 
     /* URLS de API */
-    const apiListaNadadores = `/nadadores/listarNadadores`;
-    const apiCadastraNadador = `/nadadores/cadastrarNadador`;
-    const apiListaEquipes = `/nadadores/listarEquipes`;
+    const baseUrl = 'http://localhost:5000/api/nadadores';
+    const apiListaNadadores = `${baseUrl}/listarNadadores`;
+    const apiCadastraNadador = `${baseUrl}/cadastrarNadador`;
+    const apiListaEquipes = `${baseUrl}/listarEquipes`;
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decodedToken = jwtDecode(token);
+            setEquipeUsuario(decodedToken.equipeId); // Armazena o equipeId do usuário logado
+            console.log("Equipe do usuário logado decoded:", decodedToken.equipeId); // Log do equipeId decifrado
+        }
+    }, []);
 
     // Busca todos os Nadadores e atualizar a lista
     const fetchNadadores = async () => {
+
         try {
-            const response = await api.get(apiListaNadadores);
+            const token = localStorage.getItem('token'); // Obtém o token do localStorage
+            
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+
+            if (!equipesUsuario || equipesUsuario.length === 0) {
+                throw new Error('ID da equipe não encontrado.');
+            }
+
+            const response = await api.get(`${apiListaNadadores}?equipeId=${equipesUsuario[0]}`, {
+                headers: {
+                    Authorization: `Bearer ${token}` // Adiciona o token ao cabeçalho
+                }
+            });
             const nadadoresFormatados = response.data.map(nadador => ({
                 ...nadador,
                 data_nasc: new Date(nadador.data_nasc).toLocaleDateString('pt-BR', {
@@ -43,14 +70,20 @@ const Nadadores = () => {
             }));
             setNadadores(nadadoresFormatados);
         } catch (error) {
-            console.error('Erro ao buscar dados:', error);
+            console.error('Erro ao buscar nadadores:', error);
+            if (error.response && error.response.status === 401) {
+                alert('Sessão expirada. Por favor, faça login novamente.');
+                window.location.href = '/login';
+            }
         }
     };
 
     // Carregar a lista de Nadadoress ao montar o componente
     useEffect(() => {
-        fetchNadadores();
-    }, []);
+        if (equipesUsuario && equipesUsuario.length > 0) {
+            fetchNadadores();
+        }
+    }, [equipesUsuario]);
 
 
     //Botão para abrir o formulario de novo Nadador
@@ -73,11 +106,25 @@ const Nadadores = () => {
     // Função para adicionar um novo Nadador
     const adicionarNadador = async (dados) => {
         try {
-            await api.post(apiCadastraNadador, dados); // Envia o novo Nadador para o backend
+            const token = localStorage.getItem('token'); // Obtém o token do localStorage
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+            await api.post(apiCadastraNadador, dados, {
+                headers: {
+                    Authorization: `Bearer ${token}` // Adiciona o token ao cabeçalho
+                }
+            }); // Envia o novo Nadador para o backend
             await fetchNadadores(); // Recarrega a lista completa de Nadadoress do backend
             setFormVisivel(false); // Esconde o formulário após salvar
         } catch (error) {
-            console.error('Erro ao cadastrar Nadador:', error);
+            if (error.response && error.response.status === 401) {
+                alert('Sessão expirada. Por favor, faça login novamente.');
+                window.location.href = '/login'; // Redireciona para a página de login
+            } else {
+                console.error('Erro ao cadastrar Nadador:', error.message);
+                alert('Erro ao cadastrar Nadador: ' + error.message);
+            }
         }
     };
 

@@ -1,6 +1,7 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 const router = express.Router();
-const db = require('../config/db'); 
+const db = require('../config/db');
 
 
 router.get('/listarUsuarios', async (req, res) => {
@@ -27,11 +28,15 @@ router.get('/listarUsuarios', async (req, res) => {
 router.post('/cadastrarUsuario', async (req, res) => {
   const { nome, cpf, celular, email, senha, perfis, equipeId, ativo } = req.body;
 
+  const connection = await db.getConnection(); // Obtém uma conexão do pool para usar o transaction
+
   console.log('Dados recebidos para cadastro:', req.body); // Verifique os dados recebidos
 
   try {
+    await connection.beginTransaction(); // Inicia uma transação
+
     // VERIFICAÇÃO SE JÁ NÃO ESTÁ CADASTRADO
-    const [cpfRepetido] = await db.query('SELECT id FROM usuarios WHERE cpf = ?', [cpf]);
+    const [cpfRepetido] = await connection.query('SELECT id FROM usuarios WHERE cpf = ?', [cpf]);
     if (cpfRepetido.length > 0) {
       return res.status(400).json({ message: 'CPF já registrado' });
     }
@@ -41,75 +46,91 @@ router.post('/cadastrarUsuario', async (req, res) => {
       return res.status(400).send('Todos os campos são obrigatórios');
     }
 
+    // Criptografar a senha antes de armazená-la no banco de dados
+    const hashedSenha = await bcrypt.hash(senha, 10);
+
     // INSERE O USUÁRIO NA TABELA usuarios
-    const [userResult] = await db.query(
-      'INSERT INTO usuarios (nome, cpf, celular, email, senha, ativo) VALUES (?, ?, ?, ?, ?, ?)',
-      [nome, cpf, celular, email, senha, ativo]
+    const [userResult] = await connection.query(
+      'INSERT INTO usuarios (nome, cpf, celular, email, senha, ativo) VALUES (?, ?, ?, ?, ?, 1)', //cadastro vira com ativo = 1
+      [nome, cpf, celular, email, hashedSenha, ativo]
     );
 
     const userId = userResult.insertId;
 
     // INSERE OS PERFIS ASSOCIADOS AO USUÁRIO
     const perfilPromises = perfis.map(perfilId => {
-      return db.query('INSERT INTO usuarios_perfis (usuarios_id, perfis_id) VALUES (?, ?)', [userId, perfilId]);
+      return connection.query('INSERT INTO usuarios_perfis (usuarios_id, perfis_id) VALUES (?, ?)', [userId, perfilId]);
     });
 
-    await Promise.all(perfilPromises);
+    await Promise.all(perfilPromises); // Executa todas as inserções de perfis em paralelo
 
     // INSERE NA TABELA usuarios_equipes SOMENTE SE equipeId FOR FORNECIDO
     if (equipeId !== null) {
-      await db.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [userId, equipeId]);
+      await connection.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [userId, equipeId]);
     }
-    
 
-    res.status(201).send('Usuário cadastrado com sucesso');
+    await connection.commit(); // Finaliza a transação
+    res.status(201).send('Usuário cadastrado com sucesso BE message');
   } catch (error) {
+    await connection.rollback(); // Desfaz a transação em caso de erro
+
     console.error('Erro ao cadastrar usuário:', error);
     res.status(500).send('Erro ao cadastrar usuário');
+  } finally {
+    connection.release(); // Libera a conexão
   }
 });
 
 
 router.put('/atualizarUsuario/:id', async (req, res) => {
-  const userId = req.params.id;
-  const { nome, cpf, celular, email, senha, perfis, equipeId } = req.body;
+  const userId = req.params.id; // Obtém o ID do usuário a ser atualizado
+  const { nome, cpf, celular, email, senha, perfis, equipeId } = req.body; // Obtém os dados do corpo da requisição
+
+  const connection = await db.getConnection(); // Obtém uma conexão do pool para usar o transaction
 
   try {
     // Cria a query de atualização base
     let query = 'UPDATE usuarios SET nome = ?, cpf = ?, celular = ?, email = ?';
     const params = [nome, cpf, celular, email];
-    
-    // Adiciona o campo equipe_id se não estiver vazio
-    if (equipeId) {
-      query += ', equipe_id = ?';
-      params.push(equipeId);
-    }
 
     // Se a senha foi enviada, adiciona à query
     if (senha) {
+      const hashedSenha = await bcrypt.hash(senha, 10); // Criptografa a senha antes de atualizar
       query += ', senha = ?';
-      params.push(senha);
+      params.push(hashedSenha);
     }
-    
-    query += ' WHERE id = ?';
+
+    query += ' WHERE id = ?'; // Finaliza a query com o id do usuário a ser atualizado
     params.push(userId);
 
-    await db.query(query, params);
+    await connection.query(query, params);
 
     // Remove os perfis antigos
-    await db.query('DELETE FROM usuarios_perfis WHERE usuarios_id = ?', [userId]);
+    await connection.query('DELETE FROM usuarios_perfis WHERE usuarios_id = ?', [userId]);
 
     // Adiciona os perfis novos
     const perfilPromises = perfis.map(perfilId => {
-      return db.query('INSERT INTO usuarios_perfis (usuarios_id, perfis_id) VALUES (?, ?)', [userId, perfilId]);
+      return connection.query('INSERT INTO usuarios_perfis (usuarios_id, perfis_id) VALUES (?, ?)', [userId, perfilId]);
     });
 
     await Promise.all(perfilPromises);
 
+    // Adiciona o campo equipe_id se não estiver vazio
+    if (equipeId) { // Se equipeId for 0, não entra aqui
+      await connection.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [userId]);
+
+      // Adiciona a nova equipe
+      await connection.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [userId, equipeId]);
+    }
+
+    await connection.commit(); // Finaliza a transação
     res.send('Usuário atualizado com sucesso');
   } catch (error) {
+    await connection.rollback(); // Desfaz a transação em caso de erro
     console.error('Erro ao atualizar usuário:', error);
     res.status(500).send('Erro ao atualizar usuário');
+  } finally {
+    connection.release(); // Libera a conexão
   }
 });
 
@@ -131,6 +152,30 @@ router.get('/listarEquipes', async (req, res) => {
   } catch (error) {
     console.error('Erro ao buscar equipes:', error);
     res.status(500).send('Erro ao buscar equipes');
+  }
+});
+
+router.get('/buscarUsuario/:id', async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const query = `
+      SELECT u.id, u.nome, u.cpf, u.celular, u.email, ue.equipes_id AS equipeId
+      FROM usuarios u
+      LEFT JOIN usuarios_equipes ue ON u.id = ue.usuarios_id
+      WHERE u.id = ?
+    `;
+
+    const [usuario] = await db.query(query, [userId]);
+
+    if (usuario.length === 0) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    res.json(usuario[0]);
+  } catch (error) {
+    console.error('Erro ao buscar usuário:', error);
+    res.status(500).send('Erro ao buscar usuário');
   }
 });
 
@@ -164,7 +209,7 @@ router.get('/buscarUsuario/:id', async (req, res) => {
       cpf: user.cpf,
       celular: user.celular,
       email: user.email,
-      equipeId: user.equipes, // Substitua por como você quer manipular as equipes
+      equipeId: user.equipeId,
       perfis: user.perfis.split(', '), // Assumindo que os perfis são separados por vírgula
     });
   } catch (error) {

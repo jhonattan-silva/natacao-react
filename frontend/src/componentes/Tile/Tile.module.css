@@ -1,20 +1,35 @@
 .tile {
     cursor: pointer;
     padding: 20px;
-    border: 1px solid;
+    border: 1px solid #ddd;
     display: flex;
     align-items: center;
     justify-content: center;
     height: 150px;
     margin: 10px;
     border-radius: 10px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    width: 200px;
 }
 
+.tile:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.tile h2 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+    color: #333;
+}
 
 .noticias { background-color: #007bff; }
 .eventos { background-color: #28a745; }
 .configuracoes { background-color: #dc3545; }
 .usuarios { background-color: #ffc107; }
-.balizamento {  background-color: rgb(253, 57, 253);}
-.equipe {background-color: orangered;}
-.etapa {background-color: rgb(68, 223, 250);}
+.balizamento { background-color: #6f42c1; }
+.equipe { background-color: #17a2b8; }
+.etapa { background-color: #fd7e14; }

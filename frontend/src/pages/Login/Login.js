@@ -1,56 +1,66 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../servicos/api";
+import Botao from '../../componentes/Botao/Botao';
+import style from './Login.module.css';
 
 const Login = () => {
     const [cpf, setCpf] = useState("");
     const [senha, setSenha] = useState("");
     const [error, setError] = useState("");
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // Hook de navegação do React Router para encaminhar o usuário para outra página
 
     const handleLogin = async (e) => {
         e.preventDefault();
 
         try {
-            const response = await api.post("/auth/login", { cpf, senha });
-            const { token } = response.data;
+            const cpfString = cpf.toString(); // Garantir que o CPF está sendo tratado como string
+            const response = await api.post("/auth/login", { cpf: cpfString, senha }); // Envia o CPF como string e a senha para a rota de login
+            const { token } = response.data; // Extrai o token da resposta
 
             // Armazena o token no localStorage
             localStorage.setItem("token", token);
 
-            // Redireciona para a página inicial protegida
             navigate("/admin");
         } catch (err) {
             console.error("Erro ao fazer login:", err);
-            setError("CPF ou senha inválidos.");
+            if (err.response && err.response.data.message === 'CPF inválido.') {
+                setError("CPF inválido.");
+            } else if (err.response && err.response.data.message === 'Senha inválida.') {
+                setError("Senha inválida.");
+            } else {
+                setError("Erro ao fazer login. Tente novamente.");
+            }
         }
     };
 
     return (
-        <div>
-            <h1>Login</h1>
-            <form onSubmit={handleLogin}>
-                <label>
-                    CPF:
-                    <input
-                        type="number"
-                        value={cpf}
-                        onChange={(e) => setCpf(e.target.value)}
-                        required
-                    />
-                </label>
-                <label>
-                    Senha:
-                    <input
-                        type="password"
-                        value={senha}
-                        onChange={(e) => setSenha(e.target.value)}
-                        required
-                    />
-                </label>
-                {error && <p style={{ color: "red" }}>{error}</p>}
-                <button type="submit">Entrar</button>
-            </form>
+        <div className={style['login-container']}>
+            <div className={style['login-box']}>
+                <h1>Login</h1>
+                <form onSubmit={handleLogin}>
+                    <label>
+                        CPF:
+                        <input
+                            type="number"
+                            value={cpf}
+                            onChange={(e) => setCpf(e.target.value)}
+                            required
+                        />
+                    </label>
+                    <label>
+                        Senha:
+                        <input
+                            type="password"
+                            value={senha}
+                            onChange={(e) => setSenha(e.target.value)}
+                            required
+                        />
+                    </label>
+                    {error && <p className={style['error-message']}>{error}</p>}
+                    <button type="submit" className={style['login-button']}>Entrar</button>
+                </form>
+            </div>
         </div>
     );
 };

@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import style from './TabelaEdicao.module.css';
 
-const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete }) => {
+const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete, funcExtra }) => {
   // Detecta as colunas automaticamente e exclui as especificadas em `colunasOcultas`
   const colunas = dados.length > 0
     ? Object.keys(dados[0]).filter(coluna => !colunasOcultas.includes(coluna))
@@ -19,7 +19,7 @@ const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete
           {colunas.map((coluna) => (
             <th key={coluna}>{coluna}</th>
           ))}
-          {(onEdit || onInativar || onDelete) && <th>Ações</th>} {/* Condicional para exibir Ações */}
+          {(onEdit || onInativar || onDelete || funcExtra) && <th>Ações</th>} {/* Condicional para exibir Ações */}
         </tr>
       </thead>
       <tbody>
@@ -28,11 +28,12 @@ const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete
             {colunas.map((coluna, idx) => (
               <td key={idx}>{linha[coluna]}</td>
             ))}
-            {(onEdit || onInativar || onDelete) && (
+            {(onEdit || onInativar || onDelete || funcExtra) && (
               <td>
                 {onEdit && <button className={style.btnEditar} onClick={() => onEdit(linha.id)}>Editar</button>}
                 {onInativar && <button className={style.btnExcluir} onClick={() => onInativar(linha.id)}>Inativar</button>}
                 {onDelete && <button className={style.btnExcluir} onClick={() => onDelete(linha.id)}>Excluir</button>}
+                {funcExtra && funcExtra(linha)}
               </td>
             )}
           </tr>
@@ -48,6 +49,7 @@ TabelaEdicao.propTypes = {
   onEdit: PropTypes.func,
   onInativar: PropTypes.func,
   onDelete: PropTypes.func,
+  funcExtra: PropTypes.func,
 };
 
 export default TabelaEdicao;

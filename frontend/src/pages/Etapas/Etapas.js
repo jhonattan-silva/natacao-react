@@ -22,6 +22,7 @@ const Etapas = () => {
     const apiListaProvasFeminino = `${baseUrl}/listarProvas?sexo=F`;
     const apiAtualizaEtapas = `${baseUrl}/atualizarEtapas`;
     const apiExcluiEtapa = `${baseUrl}/excluiEtapa`;
+    const apiAbreInscricao = `${baseUrl}/abreInscricao`;
 
     useEffect(() => {
         fetchData(); // Chama a função `fetchData` ao montar o componente
@@ -316,6 +317,15 @@ const Etapas = () => {
         limparFormulario(); // Limpa o formulário após salvar ou atualizar
     };
 
+    const abreInscricao = async (id, inscricaoAberta) => {
+        try {
+            await axios.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota para abrir/fechar inscrição            
+            fetchData(); // Recarrega a lista de etapas do backend
+        } catch (error) {
+            console.error('Erro ao alterar inscrição:', error);
+        }
+    };
+
     return (
         <>
             <CabecalhoAdmin />
@@ -325,7 +335,13 @@ const Etapas = () => {
                     dados={etapas}
                     colunasOcultas={['id', 'Torneios_id']}
                     onEdit={handleEdit}
-                    onDelete={handleExcluir} />
+                    onDelete={handleExcluir}
+                    funcExtra={(etapa) => (
+                        <Botao onClick={() => abreInscricao(etapa.id, etapa.inscricao_aberta)}>
+                            {etapa.inscricao_aberta ? 'Fechar Inscrição' : 'Abrir Inscrição'}
+                        </Botao>
+                    )}
+                />
                 <Botao classBtn={style.btnComponente} onClick={handleAdicionar}>Adicionar Nova Etapa</Botao>
                 {formVisivel && (
                     <div className={style.cadastroContainer}>

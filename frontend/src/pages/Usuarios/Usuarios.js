@@ -7,18 +7,24 @@ import Botao from '../../componentes/Botao/Botao';
 import Formulario from '../../componentes/Formulario/Formulario';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
-import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
 
 const Usuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
     const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
+    const [equipes, setEquipes] = useState(''); // controla as equipes
+    const [perfis, setPerfis] = useState([]); // controla os perfis	
+    const [perfisSelecionados, SetPerfisSelecionados] = useState([]); // controla os perfis selecionados
+    const [equipeSelecionada, setEquipeSelecionada] = useState(''); // controla a equipe selecionada
+    const [isEditing, setIsEditing] = useState(false); // Controla o modo de edição
+    const [editUserId, setEditUserId] = useState(null); // Armazena o ID do usuário em edição
+    const perfilEspecificoId = "2"; // ID 2 = treinador
+    const [mostrarListaSuspensa, setMostrarListaSuspensa] = useState(false); // Controla a visibilidade da lista suspensa de equipes
+
 
     /* URLS de API */
     const baseUrl = 'http://localhost:5000/api/usuarios';
     const apiListaUsuarios = `${baseUrl}/listarUsuarios`;
     const apiCadastraUsuario = `${baseUrl}/cadastrarUsuario`;
-  //  const apiAtualizaUsuario = `${baseUrl}/atualizarUsuario`;
-   // const apiBuscaUsuarios = `${baseUrl}/buscaUsuarios`;
     const apiListaPerfis = `${baseUrl}/listarPerfis`;
     const apiListaEquipes = `${baseUrl}/listarEquipes`;
 
@@ -32,11 +38,44 @@ const Usuarios = () => {
         }
     };
 
+    // Função para buscar todos os perfis e atualizar a lista
+    const fetchPerfis = async () => {
+        try {
+            const responsePerfis = await axios.get(apiListaPerfis);
+            const perfilFormatado = responsePerfis.data.map(perfil => ({
+                id: perfil.id.toString(),
+                label: perfil.nome,
+            }));
+            setPerfis(perfilFormatado);
+        } catch (error) {
+            console.error('Erro ao buscar perfis:', error);
+        }
+    };
+
+    // Função para buscar todas as equipes e atualizar a lista
+    const fetchEquipes = async () => {
+        try {
+            const responseEquipes = await axios.get(apiListaEquipes);
+            setEquipes(responseEquipes.data);
+        } catch (error) {
+            console.error('Erro ao buscar equipes:', error);
+        }
+    };
+
+    const aoSelecionarEquipe = (id) => {
+        setEquipeSelecionada(parseInt(id, 10)); // Converter para número inteiro
+    };
+
     // Carregar a lista de usuários ao montar o componente
     useEffect(() => {
         fetchUsuarios();
-    }, []);
+        fetchEquipes();
+        fetchPerfis();
+    }, []); // Array vazio para executar apenas uma vez
 
+    useEffect(() => { // Atualiza a visibilidade da lista suspensa de equipes quando os perfis selecionados mudam
+        setMostrarListaSuspensa(perfisSelecionados.includes(perfilEspecificoId)); // Atualiza a visibilidade da lista suspensa de equipes
+    }, [perfisSelecionados]); // Dependência para atualizar a visibilidade da lista suspensa de equipes quando os perfis selecionados mudam
 
     //Botão para abrir o formulario de novo usuário
     const handleAdicionar = () => {
@@ -44,10 +83,40 @@ const Usuarios = () => {
     };
 
     //Botão editar cadastro
-    const handleEdit = (id) => {
-        console.log(`Editando usuário com ID: ${id}`);
-        // Lógica de edição aqui
+    const handleEdit = async (id) => {
+        try {
+            const usuario = usuarios.find((user) => user.id === id);
+
+            if (!usuario) {
+                console.error('Usuário não encontrado');
+                return;
+            }
+
+            // Preenche os campos do formulário com os dados do usuário
+            setNomeUsuario(usuario.nome);
+            setCpf(usuario.cpf);
+            setSenha(''); // Não preencha a senha por motivos de segurança
+            setCelular(usuario.celular);
+            setEmail(usuario.email);
+
+            // Trata perfis
+            const perfisUsuario = Array.isArray(usuario.perfis)
+                ? usuario.perfis.map((perfil) => perfil.id)
+                : [];
+            SetPerfisSelecionados(perfisUsuario);
+
+            // Define equipe selecionada
+            setEquipeSelecionada(usuario.equipeId || '');
+
+            // Ativa o formulário em modo de edição
+            setEditUserId(id);
+            setIsEditing(true);
+            setFormVisivel(true);
+        } catch (error) {
+            console.error('Erro ao editar usuário:', error);
+        }
     };
+
 
     //Botão inativar cadastro
     const handleInativar = (id) => {
@@ -58,42 +127,18 @@ const Usuarios = () => {
     // Função para adicionar um novo usuário
     const adicionarUsuario = async (dados) => {
         try {
+            console.log('Dados enviados para cadastro:', dados); // Adicionar log para depuração
             await axios.post(apiCadastraUsuario, dados); // Envia o novo usuário para o backend
             await fetchUsuarios(); // Recarrega a lista completa de usuários do backend
             setFormVisivel(false); // Esconde o formulário após salvar
+            alert('Usuário salvo com sucesso!'); // Mover alerta de sucesso para dentro do bloco try
         } catch (error) {
             console.error('Erro ao cadastrar usuário:', error);
+            alert('Erro ao cadastrar usuário: ' + error.response.data.message); // Adicionar alerta de erro
         }
     };
 
-    /* LISTA SUSPENSA */
-    const [equipes, setEquipes] = useState(''); // Para o treinador escolhido
-
-    const equipeSelecionada = (id) => {
-        setEquipes(id);
-    };
-
-    /* CHECKBOX DE PERFIS */
-
-    const [perfis, setPerfis] = useState([]);
-    const [perfisSelecionados, SetPerfisSelecionados] = useState([]);
-
-    useEffect(() => {
-        const fetchPerfis = async () => {
-            try {
-                const responsePerfis = await axios.get(apiListaPerfis);
-                const perfilFormatado = responsePerfis.data.map(perfil => ({
-                    id: perfil.id.toString(),
-                    label: perfil.nome,
-                }));
-                setPerfis(perfilFormatado);
-            } catch (error) {
-                console.error('Erro ao buscar perfis:', error);
-            }
-        };
-        fetchPerfis();
-    }, []);
-
+    /* CHECKBOX */
     const aoAlterarPerfis = (id, checked) => {
         SetPerfisSelecionados(prev =>
             checked ? [...prev, id] : prev.filter(item => item !== id)
@@ -172,14 +217,30 @@ const Usuarios = () => {
             senha: senha,
             celular: celular,
             email: email,
-            perfis: perfisSelecionados.map(id => (id)),
-            equipeId: equipes
+            perfis: perfisSelecionados.map(id => parseInt(id, 10)), // Converter IDs para números inteiros
+            equipeId: equipeSelecionada // Já convertido para número inteiro
         };
 
-        await adicionarUsuario(usuarioDados);
-        alert('Usuário salvo com sucesso!');
-        limparFormulario(); // Limpa o formulário após salvar ou atualizar
+        try {
+            if (isEditing) {
+                // Edita o usuário
+                await axios.put(`${baseUrl}/atualizarUsuario/${editUserId}`, usuarioDados);
+                alert('Usuário atualizado com sucesso!');
+            } else {
+                // Cria um novo usuário
+                await axios.post(apiCadastraUsuario, usuarioDados);
+                alert('Usuário cadastrado com sucesso!');
+            }
+
+            await fetchUsuarios(); // Atualiza a lista de usuários
+            limparFormulario(); // Reseta o formulário
+        } catch (error) {
+            console.error('Erro ao salvar o usuário:', error);
+            alert('Erro ao salvar o usuário. Verifique os logs.');
+        }
     };
+
+    const perfilTreinador = 2;
 
     return (
         <>
@@ -189,21 +250,26 @@ const Usuarios = () => {
                 <TabelaEdicao dados={usuarios} onEdit={handleEdit} onInativar={handleInativar} />
                 <Botao onClick={handleAdicionar}>Adicionar Novo Usuário</Botao>
                 {formVisivel && (
-                    <div>
+                    <div className={style['form-container']}>
                         <Formulario inputs={inputs} aoSalvar={aoSalvar} />
                         <CheckboxGroup
-                            titulo="PEFIS"
+                            titulo="PERFIS"
                             opcoes={perfis}
                             selecionadas={perfisSelecionados}
                             aoAlterar={aoAlterarPerfis}
                         />
-                        <RadioButtons />
-                        <ListaSuspensa
-                            textoPlaceholder={"Escolha uma equipe"}
-                            fonteDados={apiListaEquipes}
-                            onChange={equipeSelecionada}
-                        />
-                        <Botao onClick={aoSalvar}>Cadastrar</Botao>
+                        {mostrarListaSuspensa && ( // Renderiza a lista suspensa de equipes somente se o perfil selecionado for "Treinador"
+                            <ListaSuspensa
+                                textoPlaceholder={"Escolha uma equipe"}
+                                fonteDados={apiListaEquipes}
+                                onChange={aoSelecionarEquipe}
+                            />
+                        )}
+                        <div className={style['button-group']}>
+                            <Botao onClick={aoSalvar}>
+                                {isEditing ? 'Atualizar' : 'Cadastrar'} 
+                            </Botao>
+                        </div>
                     </div>
                 )}
             </div>

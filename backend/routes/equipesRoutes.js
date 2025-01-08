@@ -19,6 +19,23 @@ router.get('/listarEquipes', async (req, res) => {
 });
 
 
+router.get('/:id', async (req, res) => { // Rota para buscar uma equipe específica pelo ID
+  try {
+    const equipeId = req.params.id;
+
+    const query = 'SELECT id, nome FROM equipes WHERE id = ?';
+    const [equipe] = await db.query(query, [equipeId]);
+
+    if (equipe.length === 0) {
+      return res.status(404).json({ message: 'Equipe não encontrada' });
+    }
+
+    res.json(equipe[0]);
+  } catch (error) {
+    console.error('Erro ao buscar equipe:', error);
+    res.status(500).send('Erro ao buscar equipe');
+  }
+});
 
 router.post('/cadastrarEquipe', async (req, res) => {
   const { nome, treinadorId } = req.body;
@@ -52,7 +69,6 @@ router.post('/cadastrarEquipe', async (req, res) => {
     res.status(500).json({ error: 'Ocorreu um erro ao adicionar a equipe. Por favor, tente novamente mais tarde.' });
   }
 });
-
 
 //Rota para buscar treinadores por nome
 router.get('/listarTreinadores', async (req, res) => {

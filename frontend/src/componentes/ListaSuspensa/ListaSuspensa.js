@@ -2,6 +2,16 @@ import style from './ListaSuspensa.module.css';
 import { useState, useEffect } from 'react';
 import api from '../../servicos/api';
 
+
+/*******
+ * Componente de lista suspensa
+ * fonteDados: URL da API que fornece os dados
+ * onChange: Função a ser chamada quando o valor da lista for alterado
+ * textoPlaceholder: Texto a ser exibido quando nenhum item for selecionado
+ * obrigatorio: Indica se o campo é obrigatório
+ * selectId: Campo que será usado como valor do `option`
+ * selectExibicao: Campo que será usado como texto visível no `option`
+ */
 const ListaSuspensa = ({ fonteDados,
     onChange,
     textoPlaceholder,
