@@ -98,11 +98,28 @@ const Balizamento = () => {
         <>
             <CabecalhoAdmin />
             <div className={style.balizamento}>
-                <ListaSuspensa
-                    textoPlaceholder="Selecione o Evento"
-                    fonteDados={apiEventos}
-                    onChange={eventoSelecionado} />
-                <Botao onClick={gerarBalizamento}>BALIZAR</Botao>
+                <div className={style.centralizar}>
+                    <h1>BALIZAMENTO</h1>
+                    <ListaSuspensa
+                        textoPlaceholder="Selecione o Evento"
+                        fonteDados={apiEventos}
+                        onChange={eventoSelecionado} />
+                    <Botao onClick={gerarBalizamento}>BALIZAR</Botao>
+                    <hr />
+                </div>
+                {balizamentoGerado && (
+                    <div className={style.botaoContainer}>
+                        <Botao onClick={salvarBalizamento} className={style.salvarBotao}>
+                            SALVAR E FECHAR INSCRIÇÕES
+                        </Botao>
+                        <Botao onClick={() => gerarFilipetas(inscritos)} className={style.baixarBotao}>
+                            Baixar Filipetas
+                        </Botao>
+                        <Botao onClick={() => balizamentoPDF(inscritos)} className={style.baixarBotao}>
+                            Baixar Balizamento
+                        </Botao>
+                    </div>
+                )}
                 {Object.keys(inscritos).map(prova => (
                     <div key={prova}>
                         <h2>{`Balizamento - ${prova}`}</h2>
@@ -115,9 +132,17 @@ const Balizamento = () => {
                     </div>
                 ))}
                 {balizamentoGerado && (
-                    <Botao onClick={salvarBalizamento} className={style.salvarBotao}>
-                        Salvar no Banco
-                    </Botao>
+                    <div className={style.botaoContainer}>
+                        <Botao onClick={salvarBalizamento} className={style.salvarBotao}>
+                            SALVAR E FECHAR INSCRIÇÕES
+                        </Botao>
+                        <Botao onClick={() => gerarFilipetas(inscritos)} className={style.baixarBotao}>
+                            Baixar Filipetas
+                        </Botao>
+                        <Botao onClick={() => balizamentoPDF(inscritos)} className={style.baixarBotao}>
+                            Baixar Balizamento
+                        </Botao>
+                    </div>
                 )}
             </div>
         </>

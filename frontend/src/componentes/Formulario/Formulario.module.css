@@ -72,8 +72,17 @@ button:disabled, .btn:disabled {
 
 /* Estilos do Select */
 select {
-    appearance: none;
-    background: url('data:image/svg+xml;base64,PCEtLQpnbG9iYWwKc3ZnIHZlcnNpb249IjEuMSIgYmFzZVByb2ZpbGU9ImZ1bGwiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8cGF0aCBkPSJNNDU5LjcgMjA3LjdsLTMzLjYtMzMuNi05Ni4yIDk2LjIgOTYuMiA5Ni4yIDMzLjYtMzMuNi0xMjkgLTEyOXoiIC8+CjxwYXRoIGQ9Ik0zNzkuMyA1MTEuNkwyNTYgMzc0LjMgMTMyLjcgNTExLjZsLTMzLjYtMzMuNiAxMjktMTI5IDEyOSAxMjkgMzMuNiAzMy42em0tODguMy04OC4zbC0zMy42LTMzLjYtOTYgOTYgOTYgOTYgMzMuNi0zMy42eiIvPjwvc3ZnPg==') no-repeat right 10px center;
-    background-color: white;
-    background-size: 12px 12px;
+    width: 300px;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: #f0f0f0;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    appearance: none; /* Remove default arrow */
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23007bff" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); /* Custom arrow */
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px 1
 }

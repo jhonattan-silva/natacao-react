@@ -7,9 +7,10 @@ import Formulario from '../../componentes/Formulario/Formulario';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import style from './Nadadores.module.css';
 import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
-import { jwtDecode } from 'jwt-decode'; // Correção da importação
+import { useUser } from '../../servicos/UserContext';
 
 const Nadadores = () => {
+    const user = useUser(); // Obtém o usuário logado a partir do contexto
     const [nadadores, setNadadores] = useState([]); //controle de nadadores
     const [equipes, setEquipes] = useState(''); // Controle de equipes listadas
     const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
@@ -24,49 +25,36 @@ const Nadadores = () => {
     /* RADIO GROUP */
     const [sexo, setSexo] = useState('');
 
-    const equipeSelecionada = (id) => { //para capturar a equipe escolhida
+
+    useEffect(() => {
+        if (user?.equipeId) {
+            setEquipes(user.equipeId); // Define a equipe automaticamente se o usuário já tiver uma
+        }
+    }, [user]);
+
+    const equipeSelecionada = (id) => { //para capturar a equipe escolhida, caso o usuário não tenha uma equipe (admin)
         setEquipes(id);
     };
 
-    /* URLS de API */
-    const baseUrl = 'http://localhost:5000/api/nadadores';
-    const apiListaNadadores = `${baseUrl}/listarNadadores`;
-    const apiCadastraNadador = `${baseUrl}/cadastrarNadador`;
-    const apiListaEquipes = `${baseUrl}/listarEquipes`;
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            const decodedToken = jwtDecode(token);
-            setEquipeUsuario(decodedToken.equipeId); // Armazena o equipeId do usuário logado
-            console.log("Equipe do usuário logado decoded:", decodedToken.equipeId); // Log do equipeId decifrado
-        }
-    }, []);
+    /* URLS de API */
+    const apiListaNadadores = `nadadores/listarNadadores`;
+    const apiCadastraNadador = `nadadores/cadastrarNadador`;
+    const apiListaEquipes = `nadadores/listarEquipes`;
 
     // Busca todos os Nadadores e atualizar a lista
     const fetchNadadores = async () => {
-
         try {
-            const token = localStorage.getItem('token'); // Obtém o token do localStorage
-            
-            if (!token) {
-                throw new Error('Token não encontrado. Por favor, faça login novamente.');
-            }
-
-            if (!equipesUsuario || equipesUsuario.length === 0) {
+            if (!user?.equipeId) {
                 throw new Error('ID da equipe não encontrado.');
             }
 
-            const response = await api.get(`${apiListaNadadores}?equipeId=${equipesUsuario[0]}`, {
-                headers: {
-                    Authorization: `Bearer ${token}` // Adiciona o token ao cabeçalho
-                }
-            });
+            const response = await api.get(`${apiListaNadadores}?equipeId=${user.equipeId}`);
             const nadadoresFormatados = response.data.map(nadador => ({
                 ...nadador,
                 data_nasc: new Date(nadador.data_nasc).toLocaleDateString('pt-BR', {
-                    day: '2-digit', month: '2-digit', year: 'numeric'
-                })
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                }),
             }));
             setNadadores(nadadoresFormatados);
         } catch (error) {
@@ -78,12 +66,12 @@ const Nadadores = () => {
         }
     };
 
-    // Carregar a lista de Nadadoress ao montar o componente
+    // Carregar a lista de Nadadores ao montar o componente
     useEffect(() => {
-        if (equipesUsuario && equipesUsuario.length > 0) {
+        if (user?.equipeId) {
             fetchNadadores();
         }
-    }, [equipesUsuario]);
+    }, [user]);
 
 
     //Botão para abrir o formulario de novo Nadador
@@ -229,7 +217,6 @@ const Nadadores = () => {
         setDataNasc('');
         setCelular('');
         setSexo('');
-        setEquipes('');
         setFormVisivel(false);
     };
 
@@ -237,7 +224,7 @@ const Nadadores = () => {
         evento.preventDefault();
 
         // Validaç]oes
-        if (!nomeNadador || !cpf || !dataNasc || !celular || !equipes) {
+        if (!nomeNadador || !cpf || !dataNasc || !celular || !sexo ) {
             alert('Por favor, preencha todos os campos obrigatórios.');
             return; // Interrompe o processo de salvamento se houver campos vazios
         }
@@ -249,7 +236,7 @@ const Nadadores = () => {
         }
 
         if (!validarCelular(celular)) {
-            alert ('Celular/Telefone Inválido');
+            alert('Celular/Telefone Inválido');
             return;
         }
 
@@ -292,13 +279,15 @@ const Nadadores = () => {
                                 { id: 'M', value: 'M', label: 'Masculino' },
                                 { id: 'F', value: 'F', label: 'Feminino' },
                             ]}
-                            aoSelecionar={(valor) => setSexo(valor)}
+                            aoSelecionar={setSexo}
                         />
-                        <ListaSuspensa
-                            textoPlaceholder={"Escolha uma equipe"}
-                            fonteDados={apiListaEquipes}
-                            onChange={equipeSelecionada}
-                        />
+                        {!user?.equipeId && ( // Apenas exibe ListaSuspensa se não houver equipeId
+                            <ListaSuspensa
+                                textoPlaceholder="Escolha uma equipe"
+                                fonteDados={apiListaEquipes}
+                                onChange={equipeSelecionada}
+                            />
+                        )}
                         <Botao onClick={aoSalvar}>Cadastrar</Botao>
                     </div>
                 )}

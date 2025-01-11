@@ -28,11 +28,11 @@ const Admin = () => {
                 <Tile nomeTile="INSCRIÇÕES" onClick={() => handleTileClick('/inscricao')} />
                 {userProfile.includes('admin') && (
                     <>
-                        <Tile nomeTile="EQUIPES" onClick={() => handleTileClick('/equipes')} />
                         <Tile nomeTile="USUÁRIOS" onClick={() => handleTileClick('/usuarios')} />
-                        <Tile nomeTile="ADICIONAR RESULTADOS" onClick={() => handleTileClick('/resultados')} />
-                        <Tile nomeTile="BALIZAMENTO" onClick={() => handleTileClick('/balizamento')} />
+                        <Tile nomeTile="EQUIPES" onClick={() => handleTileClick('/equipes')} />
                         <Tile nomeTile="ETAPAS" onClick={() => handleTileClick('/etapas')} />
+                        <Tile nomeTile="BALIZAMENTO" onClick={() => handleTileClick('/balizamento')} />
+                        <Tile nomeTile="ADICIONAR RESULTADOS" onClick={() => handleTileClick('/resultadosEntrada')} />
                     </>
                 )}
             </section>

@@ -35,8 +35,8 @@ export const balizamentoPDF = (dados) => {
       { text: 'Balizamento de Prova', style: 'header' },
 
       // Mapeia cada prova para exibir o nome e as baterias
-      ...formattedData.map((prova) => [
-        { text: `Prova: ${prova.nome}`, style: 'subheader' },
+      ...formattedData.map((prova, provaIndex) => [
+        { text: `Prova: ${prova.nome}`, style: 'subheader', pageBreak: provaIndex === 0 ? undefined : 'before', margin: provaIndex === 0 ? [0, 0, 0, 0] : [0, 50, 0, 0] },
 
         // Mapeia cada bateria e exibe seu índice
         ...prova.baterias.map((bateria, index) => [
@@ -91,79 +91,84 @@ export const balizamentoPDF = (dados) => {
 
 /********************************************************************************** */
 /************GERAÇÃO DA FILEPETA************************ */
-// Função para gerar as filipetas
-// Função para gerar as filipetas
-// Função para gerar as filipetas
 export const gerarFilipetas = (dadosBalizamento) => {
   const nadadoresData = [];
-  
+
   // Extrai as informações de cada nadador para cada bateria e raia
   Object.keys(dadosBalizamento).forEach((tipoProva) => {
     dadosBalizamento[tipoProva].forEach((bateria, indiceBateria) => {
-      // Use flat() aqui para acessar nadadores
       bateria.flat().forEach((nadador) => {
         nadadoresData.push({
           tipoProva,
           bateria: indiceBateria + 1,
           raia: nadador.raia || 'N/D',
           nome: nadador.nome_nadador || 'N/D',
-          cpf: nadador.cpf || 'N/D', 
+          cpf: nadador.cpf || 'N/D',
           record: nadador.melhor_tempo || 'Sem tempo',
-          categoria: nadador.categoria || 'N/D', 
-          equipe: nadador.equipe || 'N/D' 
+          categoria: nadador.categoria || 'N/D',
+          equipe: nadador.equipe || 'N/D'
         });
       });
     });
   });
 
-  // Adiciona um console.log para verificar os dados extraídos
-  console.log(nadadoresData); // Verifique aqui se os dados estão corretos
+  // Agrupa nadadores para criar páginas com 5 registros por coluna e 2 colunas por página
+  const pages = [];
+  let currentPage = [];
+  let currentColumn = [];
 
-  // Definição do conteúdo do PDF com borda ao redor de cada filipeta
+  nadadoresData.forEach((nadador) => {
+    const registro = {
+      stack: [
+        { image: logo, width: 50, alignment: 'center', margin: [0, 0, 0, 10] },
+        { text: `Prova: ${nadador.tipoProva}`, style: 'tableHeader' },
+        { text: `Bateria: ${nadador.bateria}`, style: 'tableHeader' },
+        { text: `Raia: ${nadador.raia}`, style: 'tableHeader' },
+        { text: `Nadador: ${nadador.nome}`, style: 'tableHeader' },
+        { text: `CPF: ${nadador.cpf}`, style: 'tableHeader' },
+        { text: `Record: ${nadador.record}`, style: 'tableHeader' },
+        { text: `Categoria: ${nadador.categoria}`, style: 'tableHeader' },
+        { text: `Equipe: ${nadador.equipe}`, style: 'tableHeader' }
+      ],
+      margin: [5, 5, 5, 5], // Margens para dar espaçamento interno
+      border: [true, true, true, true], // Bordas ao redor do registro
+      width: '45%' // Largura do registro
+    };
+
+    currentColumn.push(registro);
+
+    // Verifica se a coluna atingiu 2 registros
+    if (currentColumn.length === 2) {
+      currentPage.push({ columnGap: 10, columns: currentColumn });
+      currentColumn = [];
+    }
+
+    // Verifica se a página atingiu 5 linhas completas
+    if (currentPage.length === 5) {
+      pages.push({ stack: currentPage, pageBreak: 'after' });
+      currentPage = [];
+    }
+  });
+
+  // Adiciona a última coluna e página, se não estiver vazia
+  if (currentColumn.length > 0) currentPage.push({ columnGap: 10, columns: currentColumn });
+  if (currentPage.length > 0) pages.push({ stack: currentPage });
+
+  // Definição do conteúdo do PDF
   const docDefinition = {
-    pageSize: { width: 255.12, height: 170.08 }, // 90mm x 60mm em pontos
+    pageSize: 'A4',
     pageMargins: [10, 10, 10, 10],
-    content: nadadoresData.map((nadador) => ({
-      table: {
-        body: [
-          [
-            {
-              stack: [
-                { 
-                  image: logo, 
-                  width: 40, // largura da logo ajustada
-                  height: 20, // altura da logo ajustada
-                  alignment: 'center', 
-                  margin: [0, 5, 0, 10]
-                },
-                { text: `Prova: ${nadador.tipoProva}`, style: 'details' },
-                { text: `Bateria: ${nadador.bateria}`, style: 'details' },
-                { text: `Raia: ${nadador.raia}`, style: 'details' },
-                { text: `Nadador: ${nadador.nome}`, style: 'details' },
-                { text: `CPF: ${nadador.cpf}`, style: 'details' },
-                { text: `Record: ${nadador.record}`, style: 'details'},
-                { text: `Categoria: ${nadador.categoria}`, style: 'details' },
-                { text: `Equipe: ${nadador.equipe}`, style: 'details' }
-              ],
-              margin: [5, 5, 5, 5]
-            }
-          ]
-        ]
-      },
-      layout: {
-        hLineWidth: () => 1, // largura da borda horizontal
-        vLineWidth: () => 1, // largura da borda vertical
-        hLineColor: () => '#000000', // cor da borda horizontal
-        vLineColor: () => '#000000'  // cor da borda vertical
-      },
-      margin: [0, 0, 0, 10]
-    })),
-
+    content: pages,
     styles: {
-      details: {
-        fontSize: 9,
-        margin: [0, 1, 0, 1]
+      tableHeader: {
+        bold: true,
+        fontSize: 8,
+        color: 'black',
+        margin: [0, 2, 0, 2]
       }
+    },
+    defaultStyle: {
+      border: [true, true, true, true] // Ensure borders are applied by default
     }
   };
 

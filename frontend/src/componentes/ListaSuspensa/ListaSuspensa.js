@@ -2,7 +2,6 @@ import style from './ListaSuspensa.module.css';
 import { useState, useEffect } from 'react';
 import api from '../../servicos/api';
 
-
 /*******
  * Componente de lista suspensa
  * fonteDados: URL da API que fornece os dados
@@ -11,18 +10,21 @@ import api from '../../servicos/api';
  * obrigatorio: Indica se o campo é obrigatório
  * selectId: Campo que será usado como valor do `option`
  * selectExibicao: Campo que será usado como texto visível no `option`
+ * valorSelecionado: Valor inicial selecionado
  */
 const ListaSuspensa = ({ fonteDados,
     onChange,
     textoPlaceholder,
     obrigatorio = false,
     selectId = 'id', // Campo que será usado como valor do `option`
-    selectExibicao = 'nome' // Campo que será usado como texto visível no `option` 
+    selectExibicao = 'nome', // Campo que será usado como texto visível no `option`
+    valorSelecionado = '' // Valor inicial selecionado
 }) => {
 
     const [opcoes, setOpcoes] = useState([]);
     const [error, setError] = useState(null); // Estado para armazenar o erro
     const [apiEndpoint, setApiEndpoint] = useState(''); // Estado para mostrar a API acessada
+    const [valor, setValor] = useState(valorSelecionado); // Estado para o valor selecionado
 
     useEffect(() => {
         const fetchData = async () => {
@@ -44,12 +46,13 @@ const ListaSuspensa = ({ fonteDados,
 
     //MUDANÇA DE OPÇÃO
     const aoEscolher = (event) => {
+        setValor(event.target.value);
         onChange(event.target.value);
     }
 
     return (
         <div className={style.listaSuspensa}>
-            <select onChange={aoEscolher} required={obrigatorio}>
+            <select onChange={aoEscolher} required={obrigatorio} value={valor}>
                 <option value=''>{textoPlaceholder}</option>
                 {opcoes.map((opcao) => (
                     <option key={opcao[selectId]} value={opcao[selectId]}>
@@ -68,4 +71,4 @@ const ListaSuspensa = ({ fonteDados,
     );
 };
 
-export default ListaSuspensa
+export default ListaSuspensa;

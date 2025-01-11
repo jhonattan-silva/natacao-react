@@ -103,7 +103,7 @@ router.put('/atualizarUsuario/:id', async (req, res) => {
     query += ' WHERE id = ?'; // Finaliza a query com o id do usuário a ser atualizado
     params.push(userId);
 
-    await connection.query(query, params);
+    await connection.query(query, params); // Executa a query de atualização
 
     // Remove os perfis antigos
     await connection.query('DELETE FROM usuarios_perfis WHERE usuarios_id = ?', [userId]);
@@ -115,9 +115,13 @@ router.put('/atualizarUsuario/:id', async (req, res) => {
 
     await Promise.all(perfilPromises);
 
-    // Adiciona o campo equipe_id se não estiver vazio
-    if (equipeId) { // Se equipeId for 0, não entra aqui
+    // Verifica se o perfil de treinador foi removido
+    const perfilTreinadorId = 2; // ID do perfil de treinador
+    if (!perfis.includes(perfilTreinadorId)) {
+      // Remove a equipe do usuário se o perfil de treinador foi removido
       await connection.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [userId]);
+    } else if (equipeId) { // Se equipeId for fornecido, atualiza a equipe do usuário
+      await connection.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [userId]); // Remove a equipe antiga
 
       // Adiciona a nova equipe
       await connection.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [userId, equipeId]);

@@ -5,6 +5,7 @@ import Botao from "../../componentes/Botao/Botao";
 import TabelaInscricao from "../../componentes/TabelaInscricao/TabelaInscricao";
 import api from "../../servicos/api";
 import { useUser } from "../../servicos/UserContext"; // Importar o contexto do usuário logado no sistema
+import styles from "./Inscricao.module.css"; // Importar o arquivo CSS como módulo
 
 const Inscricao = () => {
     const [nadadores, setNadadores] = useState([]);
@@ -13,6 +14,8 @@ const Inscricao = () => {
     const [eventoSelecionado, setEventoSelecionado] = useState(null);
     const [selecoes, setSelecoes] = useState({});
     const user = useUser(); // Obter o usuário do contexto do usuário
+    console.log("User:", user);
+    
 
     const apiEventos = `/inscricao/listarEventos`;
     const apiListaNadadores = `/inscricao/listarNadadores/${user?.equipeId}`; // Passar equipeId
@@ -62,8 +65,6 @@ const Inscricao = () => {
         }
     }, [eventoSelecionado]);
 
-
-
     // Função para atualizar a seleção de checkboxes
     const handleCheckboxChange = (nadadorId, provaId, isChecked) => {
         setSelecoes(prevSelecoes => {
@@ -112,29 +113,34 @@ const Inscricao = () => {
     return (
         <>
             <CabecalhoAdmin />
-            <div>
-                <h1>Inscrição</h1>
-                <ListaSuspensa
-                    fonteDados={apiEventos}
-                    onChange={(id) => setEventoSelecionado(id)}
-                    textoPlaceholder="Selecione um evento"
-                    obrigatorio={true}
-                />
-                {eventoSelecionado && (
-                    <div>
-                        {nadadores.length > 0 && provas.length > 0 ? (
-                            <TabelaInscricao
-                                nadadores={nadadores}
-                                provas={provas}
-                                selecoes={selecoes}
-                                onCheckboxChange={handleCheckboxChange}
-                            />
-                        ) : (
-                            <p>Carregando nadadores e provas...</p>
-                        )}
-                        <Botao onClick={aoSalvar}>REALIZAR INSCRIÇÃO</Botao>
-                    </div>
-                )}
+            <div className={styles.inscricaoContainer}>
+                <h1>Inscrição - {user?.equipeNome}</h1>
+                <div className={styles.centralizado}>
+                    <ListaSuspensa
+                        fonteDados={apiEventos}
+                        onChange={(id) => setEventoSelecionado(id)}
+                        textoPlaceholder="Selecione um evento"
+                        obrigatorio={true}
+                        className={styles.listaSuspensa}
+                    />
+                    {eventoSelecionado && (
+                        <div>
+                            {nadadores.length > 0 && provas.length > 0 ? (
+                                <TabelaInscricao
+                                    nadadores={nadadores}
+                                    provas={provas}
+                                    selecoes={selecoes}
+                                    onCheckboxChange={handleCheckboxChange}
+                                />
+                            ) : (
+                                <p>Carregando nadadores e provas...</p>
+                            )}
+                            <div className={styles.centralizado}>
+                                <Botao onClick={aoSalvar}>REALIZAR INSCRIÇÃO</Botao>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </>
     );

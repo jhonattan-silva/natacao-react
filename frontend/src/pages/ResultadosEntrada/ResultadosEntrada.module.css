@@ -1,0 +1,115 @@
+.resultadosEntrada.resultadosEntrada {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    width: 80%; /* Aumentar a largura do container */
+    margin: 0 auto; /* Centralizar o container */
+}
+
+.opcoesContainer.opcoesContainer, .listagemContainer.listagemContainer {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.bateriaContainer.bateriaContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.bateriaContainer {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bateriaContainer.bateriaContainer h2 {
+    margin-bottom: 10px;
+}
+.formulario.formulario {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.formulario.formulario div {
+    display: flex;
+    justify-content: center;  /* Centraliza o conteúdo horizontalmente */
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.formulario.formulario label {
+    margin-right: 10px;
+}
+
+.formulario.formulario select {
+    text-align: center; /* Centraliza o texto dentro do select */
+}
+
+.btnSalvar.btnSalvar {
+    margin-top: 20px;
+}
+
+.nadadorContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.nadadorContainer {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.nadadorNome {
+    flex: 1;
+    text-align: left;
+}
+
+.nadadorNome {
+    flex: 1;
+    font-weight: bold;
+    color: #333;
+}
+
+.nadadorInput {
+    flex: 1;
+    text-align: right;
+    margin-right: 10px;
+}
+
+.nadadorInput {
+    flex: 2;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-left: 8px;
+}
+
+.nadadorInput:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    outline: none;
+}
+
+.inputSalvo {
+    border: 4px solid green; /* Adicionado */
+}
+
+label {
+    margin-left: 10px;
+    font-weight: bold;
+    color: #333;
+}
