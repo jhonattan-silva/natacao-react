@@ -18,9 +18,11 @@ const Login = () => {
             const response = await api.post("/auth/login", { cpf: cpfString, senha }); // Envia o CPF como string e a senha para a rota de login
             const { token } = response.data; // Extrai o token da resposta
 
+            console.log("Resposta da API:", response.data); // Verificar a resposta
             // Armazena o token no localStorage
             localStorage.setItem("token", token);
-
+            alert("Login realizado com sucesso!");
+            // Redireciona para a página de admin
             navigate("/admin");
         } catch (err) {
             console.error("Erro ao fazer login:", err);

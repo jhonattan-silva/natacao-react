@@ -26,8 +26,8 @@ const Nadadores = () => {
     const [sexo, setSexo] = useState('');
 
 
-    useEffect(() => {
-        if (user?.equipeId) {
+    useEffect(() => { // Define a equipe do usuário logado ao montar o componente
+        if (user?.equipeId) { // Se o usuário já tiver uma equipe, define automaticamente
             setEquipes(user.equipeId); // Define a equipe automaticamente se o usuário já tiver uma
         }
     }, [user]);

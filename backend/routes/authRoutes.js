@@ -8,6 +8,64 @@ const { authMiddleware } = require('../middleware/authMiddleware');
 const router = express.Router(); // Cria um roteador para as rotas de autenticação 
 const JWT_SECRET = process.env.JWT_SECRET || 'secreto_super_seguro'; // Chave secreta para o JWT 
 
+router.post('/cadastrarUsuarioInicial', async (req, res) => {
+    const nome = "Jhonattan Silva";
+    const cpf = "22341688802";
+    const celular = "14988014282";
+    const email = "jhonattanwcs@hotmail.com";
+    const senha = "123";
+    const perfis = ["admin"];
+    const ativo = 1;
+
+    let connection;
+
+    try {
+        // Get a connection from the pool
+        connection = await db.getConnection();
+
+        // Inicie a transação
+        await connection.beginTransaction();
+
+        // Verifique se o usuário já existe
+        const [existingUser] = await connection.query('SELECT * FROM usuarios WHERE cpf = ?', [cpf]);
+        if (existingUser.length > 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Usuário já cadastrado.' });
+        }
+
+        const senhaCriptografada = await bcrypt.hash(senha, 10); // Criptografa a senha
+
+        // Insira o novo usuário
+        const [result] = await connection.query(
+            'INSERT INTO usuarios (nome, cpf, celular, email, senha, ativo) VALUES (?, ?, ?, ?, ?, ?)',
+            [nome, cpf, celular, email, senhaCriptografada, ativo]
+        );
+
+        const usuarioId = result.insertId; // Obtém o ID do usuário recém-criado
+
+        // Insira na tabela usuarios_perfis
+        await connection.query(
+            'INSERT INTO usuarios_perfis (perfis_id, usuarios_id) VALUES (?, ?)',
+            [1, usuarioId]
+        );
+
+        // Confirme a transação
+        await connection.commit();
+
+        res.status(201).json({ message: 'Usuário cadastrado com sucesso.' });
+    } catch (err) {
+        // Reverte a transação em caso de erro
+        if (connection) await connection.rollback();
+        console.error(err);
+        res.status(500).json({ message: 'Erro ao cadastrar usuário.' });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+module.exports = router;
+
+
 // Login
 router.post('/login', async (req, res) => {
     const { cpf, senha } = req.body; // recebe cpf e senha do corpo da requisição

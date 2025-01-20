@@ -55,13 +55,13 @@ router.get('/listarProvas', async (req, res) => {
 
 //Rota para CADASTRAR NOVA ETAPA
 router.post('/cadastrarEtapas', async (req, res) => {
-    const { nome, data, cidade, sede, endereco, Torneios_id, provas } = req.body;
+    const { nome, data, cidade, sede, endereco, raias, Torneios_id, provas } = req.body;
 
     try {
         // Cria o evento na tabela etapas
         const [result] = await db.query(
-            'INSERT INTO eventos (nome, data, cidade, sede, endereco, Torneios_id) VALUES (?, ?, ?, ?, ?, ?)',
-            [nome, data, cidade, sede, endereco, Torneios_id]
+            'INSERT INTO eventos (nome, data, cidade, sede, endereco, quantidade_raias, Torneios_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [nome, data, cidade, sede, endereco, raias, Torneios_id]
         );
         const etapaId = result.insertId; // ID do novo evento (etapa) criado
 
@@ -90,12 +90,14 @@ router.post('/cadastrarEtapas', async (req, res) => {
             cidade: etapa[0].cidade,
             sede: etapa[0].sede,
             endereco: etapa[0].endereco,
+            raias: etapa[0].raias,
             Torneios_id: etapa[0].Torneios_id,
             provas: provasCadastradas.map(prova => prova.provas_id) // Retorna apenas uma lista de IDs das provas
         });
     } catch (error) {
         console.error('Erro ao cadastrar etapa:', error);
         res.status(500).json({ error: 'Erro ao cadastrar etapa' });
+        return; // Adicionado para evitar execução adicional após erro
     }
 });
 
@@ -110,7 +112,7 @@ router.get('/atualizarEtapas/:id', async (req, res) => {
         const [etapa] = await db.query(
             `SELECT eventos.*, torneios.nome AS Torneio 
              FROM eventos 
-             JOIN torneios ON eventos.Torneios_id = torneios.id 
+             JOIN torneios ON eventos.torneios_id = torneios.id 
              WHERE eventos.id = ?`,
             [etapaId]
         );
@@ -122,7 +124,7 @@ router.get('/atualizarEtapas/:id', async (req, res) => {
 
         // Busca os IDs das provas vinculadas à etapa
         const [provasVinculadas] = await db.query(
-            'SELECT Provas_id FROM eventos_provas WHERE Eventos_id = ?',
+            'SELECT Provas_id FROM eventos_provas WHERE eventos_id = ?',
             [etapaId]
         );
 
@@ -140,21 +142,21 @@ router.get('/atualizarEtapas/:id', async (req, res) => {
 // Rota para SALVAR ATUALIZAÇÕES uma etapa e suas provas
 router.put('/atualizarEtapas/:id', async (req, res) => {
     const etapaId = req.params.id;
-    const { nome, data, cidade, sede, endereco, Torneios_id, provas } = req.body;
+    const { nome, data, cidade, sede, endereco, raias, Torneios_id, provas } = req.body;
 
     try {
         // Atualiza os dados básicos da etapa
         await db.query(
-            'UPDATE eventos SET nome = ?, data = ?, cidade = ?, sede = ?, endereco = ?, Torneios_id = ? WHERE id = ?',
-            [nome, data, cidade, sede, endereco, Torneios_id, etapaId]
+            'UPDATE eventos SET nome = ?, data = ?, cidade = ?, sede = ?, endereco = ?, quantidade_raias = ?, torneios_id = ? WHERE id = ?',
+            [nome, data, cidade, sede, endereco, raias, Torneios_id, etapaId]
         );
 
         // Remove as associações antigas de provas para a etapa
-        await db.query('DELETE FROM eventos_provas WHERE Eventos_id = ?', [etapaId]);
+        await db.query('DELETE FROM eventos_provas WHERE eventos_id = ?', [etapaId]);
 
         // Insere as novas associações de provas
         for (const prova of provas) {
-            await db.query('INSERT INTO eventos_provas (Eventos_id, Provas_id) VALUES (?, ?)', [etapaId, prova.provas_id]);
+            await db.query('INSERT INTO eventos_provas (eventos_id, provas_id) VALUES (?, ?)', [etapaId, prova.provas_id]);
         }
 
         res.json({ message: 'Etapa atualizada com sucesso!' });

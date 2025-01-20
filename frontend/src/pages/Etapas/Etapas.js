@@ -7,12 +7,14 @@ import axios from 'axios';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
+import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
 
 const Etapas = () => {
     const [etapas, setEtapas] = useState([]);
     const [formVisivel, setFormVisivel] = useState(false); //estado para exibição ou não do formulário
     const [etapaEditando, setEtapaEditando] = useState(null); //estado para edição
     const [provasCarregadas, setProvasCarregadas] = useState(false); //estado para carregamento de provas no editar
+    const [raias, setRaias] = useState(''); //estado para quantidade de raias
 
     const baseUrl = 'http://localhost:5000/api/etapas';
     const apiListaEtapas = `${baseUrl}/listarEtapas`;
@@ -45,9 +47,9 @@ const Etapas = () => {
         try {
             const response = await axios.get(`${apiAtualizaEtapas}/${id}`);
             const etapa = response.data;
-    
+
             console.log('Etapa carregada:', etapa); // Log dos dados da etapa
-    
+
             // Atualiza o estado com os dados da etapa
             setEtapaEditando(etapa);
             setNomeEtapa(etapa.nome);
@@ -56,33 +58,33 @@ const Etapas = () => {
             setSedeEtapa(etapa.sede);
             setEnderecoEtapa(etapa.endereco);
             setTorneioEtapa(etapa.Torneios_id);
-    
+
             // Filtra as provas selecionadas com base nos IDs retornados
             const selecionadasMasculino = provasMasculino
                 .filter(prova => etapa.provas.includes(Number(prova.id)))
                 .map(prova => prova.id);
-    
+
             const selecionadasFeminino = provasFeminino
                 .filter(prova => etapa.provas.includes(Number(prova.id)))
                 .map(prova => prova.id);
-    
+
             const selecionadasAmbos = Object.keys(idMap)
                 .filter(idMasculino =>
                     selecionadasMasculino.includes(idMasculino) &&
                     selecionadasFeminino.includes(idMap[idMasculino])
                 );
-      
+
             // Atualiza o estado com as seleções
             setSelecionadasMasculino(selecionadasMasculino);
             setSelecionadasFeminino(selecionadasFeminino);
             setSelecionadasAmbos(selecionadasAmbos);
-    
+
             setFormVisivel(true);
         } catch (error) {
             console.error('Erro ao carregar etapa para edição:', error);
         }
     };
-    
+
 
     const handleExcluir = async (id) => {
         if (window.confirm("Tem certeza que deseja excluir esta etapa?")) {
@@ -281,6 +283,10 @@ const Etapas = () => {
         setFormVisivel(false);
     };
 
+    const aoAlterarRaias = (valor) => {
+        setRaias(valor);
+    };
+
     const aoSalvar = async (evento) => {
         evento.preventDefault();
 
@@ -301,7 +307,8 @@ const Etapas = () => {
             sede: sedeEtapa,
             endereco: enderecoEtapa,
             Torneios_id: torneioEtapa,
-            provas: provas.map(id => ({ provas_id: id }))
+            provas: provas.map(id => ({ provas_id: id })),
+            raias: raias
         };
 
         if (etapaEditando) {
@@ -346,6 +353,17 @@ const Etapas = () => {
                 {formVisivel && (
                     <div className={style.cadastroContainer}>
                         <Formulario inputs={inputs} aoSalvar={aoSalvar} />
+                        <RadioButtons
+                            titulo="Quantidade de Raias da Piscina"
+                            opcoes={[
+                                { id: '5', value: '5', label: '5' },
+                                { id: '6', value: '6', label: '6' },
+                                { id: '7', value: '7', label: '7' },
+                                { id: '8', value: '8', label: '8' },
+                            ]}
+                            aoSelecionar={setRaias}
+                            aoAlterar={aoAlterarRaias}
+                        />
                         <ListaSuspensa
                             textoPlaceholder={"Escolha o torneio"}
                             fonteDados={apiListaTorneios}

@@ -12,8 +12,8 @@ const port = process.env.PORT || 5000;
 
 // Adicionando CORS e body-parser
 const allowedOrigins = [
-    'http://localhost:3000',            // Para desenvolvimento local
-    'https://natacao-react.vercel.app' // Para produção
+    'http://localhost:8080',            // Para desenvolvimento local
+    'http://www.ligapaulistadenatacao.com.br/' // Para produção
 ];
 
 app.use(cors({
