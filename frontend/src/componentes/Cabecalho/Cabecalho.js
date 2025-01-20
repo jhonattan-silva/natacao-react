@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import style from './Cabecalho.module.css';
 import CabecalhoLink from '../CabecalhoLink/CabecalhoLink';
 
-const logo = ['./imagens/logo.jpg'];
+const logo = ['./imagens/logo-removebg.png'];
 
 const Cabecalho = () => {
     return (

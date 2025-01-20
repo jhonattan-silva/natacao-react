@@ -73,6 +73,7 @@ const Usuarios = () => {
     }, []); // Array vazio para executar apenas uma vez
 
     useEffect(() => { // Atualiza a visibilidade da lista suspensa de equipes quando os perfis selecionados mudam
+        console.log('Perfis selecionados:', perfisSelecionados); // Log dos perfis selecionados
         setMostrarListaSuspensa(perfisSelecionados.includes(perfilEspecificoId)); // Atualiza a visibilidade da lista suspensa de equipes
     }, [perfisSelecionados]); // Dependência para atualizar a visibilidade da lista suspensa de equipes quando os perfis selecionados mudam
 
@@ -267,8 +268,6 @@ const Usuarios = () => {
             alert('Erro ao salvar o usuário. Verifique os logs.');
         }
     };
-
-    const perfilTreinador = 2;
 
     return (
         <>

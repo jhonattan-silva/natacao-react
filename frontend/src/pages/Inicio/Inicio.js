@@ -35,7 +35,7 @@ const Inicio = () => {
             <Cabecalho />
             <Carrossel />
             <section className={style.container}>
-                <h1>Etapas</h1>
+                <h1>ETAPAS</h1>
                 {etapas.map((etapa) => {
                     const { date, time } = formatDate(etapa.data);
                     return (

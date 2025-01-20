@@ -9,7 +9,7 @@ router.get('/listarNadadores', authMiddleware, async (req, res) => {
     try {
         const equipeId = req.user.equipeId; // Obtém o equipeId do usuário logado a partir do token JWT
 
-        if (!equipeId) {
+        if (!equipeId || equipeId === '') {
             return res.status(400).json({ message: 'Usuário não pertence a nenhuma equipe.' });
         }
 
