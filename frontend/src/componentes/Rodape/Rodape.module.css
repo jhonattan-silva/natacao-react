@@ -3,9 +3,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.1em 20em;
+    padding: 0.4em 6em;
 }
 
 .rodape p {
-    max-width: 20%;
+    max-width: 30%;
 }

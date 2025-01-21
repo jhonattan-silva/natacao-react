@@ -3,12 +3,12 @@
     justify-content: space-between;
     align-items: center;
     padding: 10px 20px;
-    background-color: #f8f9fa;
+    background-color: #003366;
     border-bottom: 1px solid #dee2e6;
 }
 
 .logo {
-    height: 50px;
+    height: 100px;
     width: 100px;
 }
 
@@ -32,26 +32,38 @@ nav a:hover {
     align-items: center;
 }
 
-.user-details {
+.dadosUsuario {
     display: flex;
     flex-direction: column; /* Organizar em colunas */
     align-items: flex-end; /* Alinhar à direita */
     margin-right: 10px; /* Adicionar margem direita */
 }
 
-.user-details p {
+.dadosUsuario p {
     margin: 0;
+    font-size: 2em;
+    color: white;
+    font-weight: bold;
 }
 
 .logoutButton {
-    padding: 5px 10px;
-    background-color: #dc3545;
+    padding: 10px 20px; /* Aumentar o padding */
+    background-color: #dc3545 !important;
     color: white;
     border: none;
-    border-radius: 3px;
+    border-radius: 5px; /* Aumentar o border-radius */
     cursor: pointer;
+    font-size: 1em; /* Aumentar o tamanho da fonte */
+    transition: background-color 0.3s ease; /* Adicionar transição suave */
 }
 
 .logoutButton:hover {
     background-color: #c82333;
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Alinhar conteúdo à direita */
+    gap: 10px; /* Espaçamento entre elementos */
 }

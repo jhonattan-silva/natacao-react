@@ -1,18 +1,31 @@
-# Etapa base para build
+# Base stage for dependencies
 FROM node:22 AS base
 
 WORKDIR /app
 
-# Instale apenas as dependências do projeto
+# Copy package definitions and install dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
-# Copie o código para o container
+# Copy application source code
 COPY . .
 
-# Etapa para desenvolvimento
+# Development stage
 FROM base AS development
 ENV NODE_ENV=development
-ARG ENV_FILE=.env
-COPY ${ENV_FILE} /app/.env
+ENV CHOKIDAR_USEPOLLING=true 
 CMD ["npm", "start"]
+
+# Build stage
+FROM base AS build
+ENV NODE_ENV=production
+# Only install production dependencies to reduce size
+RUN npm ci --only=production && npm run build
+
+# Production stage with Nginx
+FROM nginx:alpine AS production
+# Copy built application from the build stage
+COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
