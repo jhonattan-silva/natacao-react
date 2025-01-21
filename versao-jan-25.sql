@@ -1,12 +1,11 @@
 -- MySQL Workbench Forward Engineering
 
+-- Forçar codificação na conexão
+SET NAMES 'utf8mb4' COLLATE 'utf8mb4_general_ci';
+
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
-
--- -----------------------------------------------------
--- Schema liga_natacao
--- -----------------------------------------------------
 
 -- -----------------------------------------------------
 -- Schema liga_natacao
@@ -487,11 +486,52 @@ CREATE TABLE IF NOT EXISTS `liga_natacao`.`baterias_inscricoes` (
 ENGINE = InnoDB;
 
 
+
 -- Inserir torneios
 INSERT INTO torneios (nome, data_inicio, data_fim, aberto) VALUES
 ('2023', '2023-01-01', '2023-12-31', 0),
 ('2024', '2024-01-01', '2024-12-31', 0),
 ('2025', '2025-01-01', '2025-12-31', 1);
+
+-- Inserir eventos 2023
+INSERT INTO eventos (nome, data, cidade, endereco, torneios_id, inscricao_aberta, quantidade_raias) VALUES
+('Etapa Marília', '2023-02-25 08:00:00', 'Marília', 'Avenida Brig. Eduardo Gomes, 1000', 1, 0, 0),
+('Etapa Lins', '2023-03-18 07:30:00', 'Lins', 'Rod. Marechal Rondon, km444', 1, 0, 0),
+('Etapa Guaiçara', '2023-04-15 07:30:00', 'Guaiçara', 'R: Dr. Arnaldo de Andrade', 1, 0, 0),
+('Etapa Lençois Paulista', '2023-05-13 07:30:00', 'Lençóis Paulista', 'Avenida Brasil, 1039', 1, 0, 0),
+('Etapa Assis', '2023-06-17 07:30:00', 'Assis', 'Luis Carlos da Silveira, 10', 1, 0, 0),
+('Etapa Marilia II', '2023-08-19 07:30:00', 'Marília', 'Avenida Brigadeiro Eduardo Gomes, 1000', 1, 0, 0),
+('Etapa Penápolis', '2023-09-16 07:30:00', 'Penápolis', 'Avenida Luís Osório, 22', 1, 0, 0),
+('Etapa Tupã', '2023-10-21 07:30:00', 'Tupã', 'Avenida dos Universitários, 145', 1, 0, 0),
+('Etapa Lençóis Paulista', '2023-11-18 07:30:00', 'Lençóis Paulista', 'Avenida Brasil, 1039', 1, 0, 0),
+('Etapa Jaú', '2023-12-16 07:30:00', 'Jaú', 'Alameda Dr José R. Carneiro Lyra, 60', 1, 0, 0);
+
+
+-- Inserir eventos de 2024
+INSERT INTO eventos (nome, data, cidade, endereco, torneios_id, inscricao_aberta, quantidade_raias) VALUES 
+('Etapa Tupã', '2024-02-24 07:30:00', 'Tupã', 'Avenida dos Universitários, 145', 2, 0, 0), 
+('Etapa Lins', '2024-03-16 07:30:00', 'Lins', 'Rod. Marechal Rondon, km444', 2, 0, 0), 
+('Etapa Guaiçara', '2024-04-13 07:15:00', 'Guaiçara', 'Rua: Dr. Arnaldo de Andrade, 150', 2, 0, 0), 
+('Etapa Lençóis Paulista', '2024-05-11 07:30:00', 'Lençóis Paulista', 'Avenida Brasil, 1039', 2, 0, 0), 
+('Etapa Assis', '2024-06-22 07:15:00', 'Assis', 'Rua: Luis Carlos da Silveira, 10', 2, 0, 0), 
+('Etapa Assis', '2024-08-17 07:15:00', 'Assis', 'Luis Carlos da Silveira, 10', 2, 0, 0), 
+('Etapa Lins', '2024-09-21 07:15:00', 'Lins', 'Rua: Dr. Aureliano R. de Andrade, 51', 2, 0, 0), 
+('Etapa Lençóis Paulista', '2024-10-19 07:15:00', 'Lençóis Paulista', 'Avenida Brasil, 1039', 2, 0, 0), 
+('Etapa Penápolis', '2024-11-09 07:15:00', 'Penápolis', 'Avenida Luis Osório, 22', 2, 0, 0), 
+('Etapa Tupã', '2024-12-07 07:15:00', 'Tupã', 'Avenida dos Universitários, 145', 2, 0, 0);
+
+-- Inserir eventos 2025
+INSERT INTO eventos (nome, data, cidade, endereco, torneios_id, inscricao_aberta, quantidade_raias) VALUES 
+('ETAPA I - TUPÃ', '2025-02-22 07:30:00', 'TUPÃ', 'Avenida dos Universitários, 145', 3, 0, 6),
+('ETAPA II - LINS', '2025-03-15 07:30:00', 'LINS', 'Rod. Marechal Rondon, km444', 3, 0, 6),
+('ETAPA III- ASSIS', '2025-04-12 07:30:00', 'ASSIS', 'Rua: Luis Carlos da Silveira, 10', 3, 0, 6),
+('ETAPA IV - LENÇÓIS PAULISTA', '2025-05-17 07:30:00', 'LENÇÓIS PAULISTA', 'Avenida Brasil, 1039', 3, 0, 6),
+('ETAPA V - PARAGUAÇU PAULISTA', '2025-06-14 07:30:00', 'PARAGUAÇU PAULISTA', 'ENDEREÇO A DEFINIR', 3, 0, 6),
+('ETAPA VI - MARILIA', '2025-08-23 07:30:00', 'MARÍLIA', 'Avenida Brigadeiro Eduardo Gomes, 1000', 3, 0, 6),
+('ETAPA VII - LINS II', '2025-09-20 07:30:00', 'LINS', 'Rod. Marechal Rondon, km444', 3, 0, 6),
+('ETAPA VIII - JAÚ', '2025-10-18 07:30:00', 'JAÚ', 'Alameda Dr José R. Carneiro Lyra, 60', 3, 0, 6),
+('ETAPA IX - DUARTINA', '2025-11-08 07:30:00', 'DUARTINA', 'ENDEREÇO A DEFINIR', 3, 0, 6),
+('CAMPEONATO PAULISTA LPN', '2025-12-13 07:30:00', 'PENÁPOLIS', 'Avenida Luis Osório, 22', 3, 0, 6);
 
 -- Inserir perfis com suas respectivas permissões
 INSERT INTO perfis (nome, descricao, data_criacao, data_atualizacao)

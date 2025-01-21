@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import style from './CabecalhoAdmin.module.css';
 import CabecalhoLink from '../CabecalhoLink/CabecalhoLink';
 
-const logo = ['./imagens/logo.jpg'];
+const logo = ['./imagens/logo_noBG.png'];
 
 const CabecalhoAdmin = () => {
     const [nome, setNome] = useState('');
@@ -26,7 +26,7 @@ const CabecalhoAdmin = () => {
                 try {
                     const response = await api.get(`/usuarios/buscarUsuario/${userId}`);
                     const { nome, equipeId } = response.data;
-                    setNome(nome);
+                    setNome(nome.split(' ')[0]); // Definir apenas o primeiro nome
 
                     // Buscar nome da equipe a partir do equipeId para o Profile
                     if (equipeUsuarioId) {
@@ -51,7 +51,7 @@ const CabecalhoAdmin = () => {
 
     return (
         <header className={style.cabecalho}>
-            <Link to="./">
+            <Link to="/"> {/* Alterar o link para redirecionar para a home */}
                 <img src={logo} alt='LPN logo' className={style.logo}></img>
             </Link>
             <nav>
@@ -67,10 +67,12 @@ const CabecalhoAdmin = () => {
                 )}
                 <CabecalhoLink url='../Classificacao'> Classificação </CabecalhoLink>
                 <CabecalhoLink url='../Admin'> ADMIN </CabecalhoLink>
-                <div>
-                    {nome && <p>Bem-vindo, {nome}</p>}
-                    {equipe && <p>Equipe: {equipe}</p>}
-                    <button onClick={handleLogout} className={style.logoutButton}>Sair</button> {/* Adicionar botão Sair */}
+                <div className={style.userInfo}> {/* Adicionar classe para estilização */}
+                    <div className={style.dadosUsuario}> 
+                        {nome && <p>{nome}</p>}
+                        {equipe && <p>Equipe: {equipe}</p>}
+                    </div>
+                    <button onClick={handleLogout} className={style.logoutButton}>Sair</button>
                 </div>
             </nav>
         </header>

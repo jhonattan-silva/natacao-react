@@ -1,6 +1,6 @@
 import style from './Carrossel.module.css';
 
-const piscina = ['imagens/noticias/piscina.jpg'];
+const piscina = ['imagens/noticias/breve.jpg'];
 
 const Carrossel = () => {
     return (

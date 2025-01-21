@@ -20,7 +20,7 @@ const Inicio = () => {
     useEffect(() => {
         const fetchEtapas = async () => {
             try {
-                const response = await api.get('/etapas/listarEtapas'); // Chamar a API listaEtapas
+                const response = await api.get('/etapas/listarEtapasAno'); // Chamar a API listaEtapas
                 setEtapas(response.data); // Definir os Etapas no estado
             } catch (error) {
                 console.error('Erro ao buscar Etapas:', error);
@@ -35,20 +35,23 @@ const Inicio = () => {
             <Cabecalho />
             <Carrossel />
             <section className={style.container}>
-                <h1>ETAPAS</h1>
-                {etapas.map((etapa) => {
-                    const { date, time } = formatDate(etapa.data);
-                    return (
-                        <Card 
-                            key={etapa.id} 
-                            nome={`NOME: ${etapa.nome}`} 
-                            data={`DATA: ${date}`} 
-                            horario={`HORÁRIO: ${time}`} 
-                            local={`LOCAL: ${etapa.local}`} 
-                            cidade={`LOCAL: ${etapa.cidade}`} 
-                        />
-                    );
-                })}
+                <h1>ETAPAS 2025</h1>
+                <div className={style.cardsContainer}>
+                    {etapas.map((etapa) => {
+                        const { date, time } = formatDate(etapa.data);
+                        return (
+                            <Card 
+                                key={etapa.id} 
+                                nome={`${etapa.nome}`} 
+                                data={`DATA: ${date}`} 
+                                horario={`HORÁRIO: ${time}`} 
+                                local={`ENDEREÇO: ${etapa.endereco}`} 
+                                cidade={`LOCAL: ${etapa.cidade}`}
+                                endereco={`ENDEREÇO: ${etapa.endereco}`} 
+                            />
+                        );
+                    })}
+                </div>
             </section>
             <Rodape />
         </div>

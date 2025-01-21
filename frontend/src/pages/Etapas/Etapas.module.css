@@ -93,3 +93,9 @@ button:disabled, .btn:disabled {
     flex-direction: column;
     align-items: center;
 }
+
+.radioRaias {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}

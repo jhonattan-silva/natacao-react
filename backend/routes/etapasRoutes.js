@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-// Rota para BUSCAR TODOS EVENTOS
+// Rota para BUSCAR TODOS EVENTOS 
 router.get('/listarEtapas', async (req, res) => {
     try {
         // Consulta com JOIN para buscar o nome do torneio
@@ -19,6 +19,21 @@ router.get('/listarEtapas', async (req, res) => {
     }
 });
 
+
+router.get('/listarEtapasAno', async (req, res) => {
+    try {
+        const [etapasAno] = await db.query(`
+            SELECT * 
+            FROM eventos 
+            WHERE YEAR(data) = YEAR(CURDATE())
+        `);
+
+        res.json(etapasAno);
+    } catch (error) {
+        console.error('Erro ao buscar etapas do ano:', error);
+        res.status(500).json({ error: 'Erro ao buscar etapas do ano' });
+    }
+});
 
 // Rota para BUSCAR TODOS TORNEIOS
 router.get('/listarTorneios', async (req, res) => {

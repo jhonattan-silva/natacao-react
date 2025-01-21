@@ -16,11 +16,11 @@ services:
     networks:
       - app-network
 
-      
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: development
     env_file:
       - ./frontend/.env
     environment:
@@ -30,7 +30,6 @@ services:
       - "8080:3000"
     volumes:
       - ./frontend:/app
-      - /app/node_modules
     command: npm start
     networks:
       - app-network
