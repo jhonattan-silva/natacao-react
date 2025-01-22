@@ -29,3 +29,11 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Arquivos .env no frontend
+frontend/.env
+frontend/.env.*
+
+# Arquivos .env no backend
+backend/.env
+backend/.env.*
