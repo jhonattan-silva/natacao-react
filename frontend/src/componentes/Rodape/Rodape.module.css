@@ -1,5 +1,5 @@
 .rodape {
-    background-color: aqua;
+    background-color: #003366;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -8,4 +8,5 @@
 
 .rodape p {
     max-width: 30%;
+    color: white;
 }

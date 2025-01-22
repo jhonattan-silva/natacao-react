@@ -363,7 +363,7 @@ const Etapas = () => {
                             ]}
                             aoSelecionar={setRaias}
                             aoAlterar={aoAlterarRaias}
-                            className={style.radioRaias} // Add this line
+                            classNameRadioOpcoes={style.radioRaias}
                         />
                         <ListaSuspensa
                             textoPlaceholder={"Escolha o torneio"}

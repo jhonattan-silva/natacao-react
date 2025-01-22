@@ -70,7 +70,7 @@ const CabecalhoAdmin = () => {
                 <div className={style.userInfo}> {/* Adicionar classe para estilização */}
                     <div className={style.dadosUsuario}> 
                         {nome && <p>{nome}</p>}
-                        {equipe && <p>Equipe: {equipe}</p>}
+                        {equipe && <p>{equipe}</p>}
                     </div>
                     <button onClick={handleLogout} className={style.logoutButton}>Sair</button>
                 </div>

@@ -11,6 +11,9 @@ RUN npm install
 # Copie o restante do código
 COPY . .
 
+# Rebuild native modules
+RUN npm rebuild bcrypt --build-from-source
+
 # Exponha a porta 5000
 EXPOSE 5000
 

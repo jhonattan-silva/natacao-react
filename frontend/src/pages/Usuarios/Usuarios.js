@@ -196,7 +196,8 @@ const Usuarios = () => {
             label: "Senha",
             placeholder: "Digite uma senha",
             valor: senha,
-            aoAlterar: setSenha
+            aoAlterar: setSenha,
+            tipo: "password" // Add this line to hide password characters
         },
         {
             obrigatorio: true,
