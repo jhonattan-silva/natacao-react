@@ -1,5 +1,5 @@
 # Base stage for dependencies
-FROM node:22 AS base
+FROM node:20.12.1 AS base
 
 WORKDIR /app
 
