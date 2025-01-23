@@ -6,12 +6,16 @@ import style from './Inicio.module.css';
 import Card from '../../componentes/Card/Card';
 import api from '../../servicos/api';
 
-const formatDate = (dateString) => {
+const formataData = (dateString) => {
     const optionsDate = { year: 'numeric', month: '2-digit', day: '2-digit' };
     const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: false };
-    const date = new Date(dateString).toLocaleDateString('pt-BR', optionsDate);
-    const time = new Date(dateString).toLocaleTimeString('pt-BR', optionsTime);
-    return { date, time };
+    const dataEvento = new Date(dateString).toLocaleDateString('pt-BR', optionsDate);
+    const horario = new Date(dateString).toLocaleTimeString('pt-BR', optionsTime);
+    return { dataEvento, horario };
+};
+
+const formatarParaMaps = (endereco, cidade) => {
+    return `https://www.google.com/maps/search/${encodeURIComponent(endereco + ', ' + cidade)}`;
 };
 
 const Inicio = () => {
@@ -38,16 +42,17 @@ const Inicio = () => {
                 <h1>ETAPAS 2025</h1>
                 <div className={style.cardsContainer}>
                     {etapas.map((etapa) => {
-                        const { date, time } = formatDate(etapa.data);
+                        const { dataEvento, horario } = formataData(etapa.data);
+                        const mapsLink = formatarParaMaps(etapa.endereco, etapa.cidade);
                         return (
                             <Card 
                                 key={etapa.id} 
                                 nome={`${etapa.nome}`} 
-                                data={`DATA: ${date}`} 
-                                horario={`HORÁRIO: ${time}`} 
-                                local={`ENDEREÇO: ${etapa.endereco}`} 
-                                cidade={`LOCAL: ${etapa.cidade}`}
-                                endereco={`ENDEREÇO: ${etapa.endereco}`} 
+                                data={`Data: ${dataEvento}`} 
+                                horario={`Horário: ${horario}`} 
+                                local={`Sede: ${etapa.sede}`} 
+                                cidade={`Cidade: ${etapa.cidade}`}
+                                endereco={<a href={mapsLink} target="_blank" rel="noopener noreferrer">Endereço: {etapa.endereco}</a>} 
                             />
                         );
                     })}

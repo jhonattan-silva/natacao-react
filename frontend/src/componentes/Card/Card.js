@@ -19,8 +19,8 @@ const Card = ({ nome, cidade, data, horario, endereco, balizamento, resultado })
             <p>{data}</p>
             <p>{horario}</p>
             <p>{endereco}</p>
-            <a href={balizamento} target='_blank'>Ver Balizamento</a>
-            <a href={resultado} target='_blank'>Resultados</a>
+            {/* <a href={balizamento} target='_blank'>Ver Balizamento</a> */}
+            {/* <a href={resultado} target='_blank'>Resultados</a> */}
         </div>
     );
 }

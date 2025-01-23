@@ -16,7 +16,7 @@ const Etapas = () => {
     const [provasCarregadas, setProvasCarregadas] = useState(false); //estado para carregamento de provas no editar
     const [raias, setRaias] = useState(''); //estado para quantidade de raias
 
-    const baseUrl = 'http://localhost:5000/api/etapas';
+    const baseUrl = 'https://localhost:5000/api/etapas';
     const apiListaEtapas = `${baseUrl}/listarEtapas`;
     const apiCadastraEtapas = `${baseUrl}/cadastrarEtapas`;
     const apiListaTorneios = `${baseUrl}/listarTorneios`;

@@ -47,3 +47,15 @@ npm install express-validator //Facilita a autenticação com JWT sem escrever l
 
 criar server.js
 npm install npm-run-all //NA RAIZ PARA RODAR JUNTOS BACK E FRONT
+
+
+
+certbot, criação do primeiro certificado https:
+docker-compose run --rm certbot certonly --webroot \
+  -w /var/www/certbot \
+  -d ligapaulistadenatacao.com.br -d www.ligapaulistadenatacao.com.br
+
+certbot autoassinado para testes locais (executa local)
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "C:\PROJETOS\lpn\certificados\privkey.pem" -out "C:\PROJETOS\lpn\certificados\fullchain.pem" -subj "/CN=localhost"
+
+
