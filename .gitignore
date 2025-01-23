@@ -37,3 +37,5 @@ frontend/.env.*
 # Arquivos .env no backend
 backend/.env
 backend/.env.*
+
+certificados/
