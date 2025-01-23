@@ -4,28 +4,39 @@ const app = express(); // backend/server.js
 const db = require('./config/db');// Conexão com banco de dados
 const cors = require('cors'); // Garante permissao de requisições front->backend
 const bodyParser = require('body-parser'); //backend interpreta os json nas requisições
+const https = require('https'); // Para servir o frontend em produção
 const helmet = require('helmet'); // Helmet para defesa http
+const fs = require('fs'); // Para carregar certificados SSL
+const path = require('path'); // Para lidar com caminhos de arquivos
 
 // Definindo porta e inicializando dotenv
-dotenv.config();
+dotenv.config({ path: '../../.env' });  // Update the path to the root .env file
 const port = process.env.PORT || 5000;
+
+// Carregando certificados SSL
+const privateKey = fs.readFileSync(path.join(__dirname, '../certificados/privkey.pem'), 'utf8');
+const certificate = fs.readFileSync(path.join(__dirname, '../certificados/fullchain.pem'), 'utf8');
+const credentials = { key: privateKey, cert: certificate };
+
 
 // Adicionando CORS e body-parser
 const allowedOrigins = [
-    'http://localhost:8080',            // Para desenvolvimento local
-    'http://www.ligapaulistadenatacao.com.br/' // Para produção
+  'https://localhost',                 // Adicione esta linha (sem porta)
+  'https://localhost:8080',            // Para desenvolvimento local
+  'https://localhost:3000',            // Para desenvolvimento local
+  'https://www.ligapaulistadenatacao.com.br' // Para produção
 ];
 
 app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Origem não permitida pelo CORS'));
-        }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Origem não permitida pelo CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
 }));
 
 
@@ -36,12 +47,14 @@ app.get('/', (req, res) => {
   res.send(`'Backend está funcionando!'`);
 });
 
-// Inicialização do servidor
-app.listen(port, () => {
-  console.log(`Servidor rodando na porta ${port}`);
+
+// Inicializando servidor HTTPS
+https.createServer(credentials, app).listen(port, () => {
+  console.log(`Servidor HTTPS rodando na porta ${port}`);
   console.log(`Ambiente: ${process.env.NODE_ENV}`);
   console.log(`Origens permitidas: ${allowedOrigins.join(', ')}`);
 });
+
 
 // Importando e utilizando rotas
 const authRoutes = require('./routes/authRoutes');
@@ -75,7 +88,7 @@ if (process.env.NODE_ENV === 'production') {
 
   // Captura todas as requisições que não sejam da API e serve o React
   app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'));
   });
 }
 
