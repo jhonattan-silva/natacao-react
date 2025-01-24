@@ -14,8 +14,6 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       API_URL: ${API_URL}
       FRONTEND_URL: ${FRONTEND_URL}
-    #ports:
-    #  - "5000:5000"
     volumes:
       - ${CERTIFICATES_PATH}:/certificados
     depends_on:
@@ -24,10 +22,7 @@ services:
   frontend:
     build:
       context: ./frontend
-    environment:
-      NODE_ENV: ${NODE_ENV:-production}
-    #ports:
-    #  - "3000:3000"
+      target: production  # Usa o estágio production do Dockerfile
     depends_on:
       - backend
 
@@ -38,8 +33,6 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    #ports:
-    #  - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
 
@@ -50,7 +43,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
-      - ${CERTIFICATES_PATH}:/etc/letsencrypt/live/localhost
+      - /etc/letsencrypt:/etc/letsencrypt  # Certificados SSL
     depends_on:
       - backend
       - frontend

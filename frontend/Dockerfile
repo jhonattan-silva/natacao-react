@@ -13,7 +13,7 @@ COPY . .
 # Development stage
 FROM base AS development
 ENV NODE_ENV=development
-ENV CHOKIDAR_USEPOLLING=true 
+ENV CHOKIDAR_USEPOLLING=true
 CMD ["npm", "start"]
 
 # Build stage
@@ -26,6 +26,6 @@ RUN npm ci --only=production && npm run build
 FROM nginx:alpine AS production
 # Copy built application from the build stage
 COPY --from=build /app/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx.prod.conf /etc/nginx/nginx.conf
 # Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
