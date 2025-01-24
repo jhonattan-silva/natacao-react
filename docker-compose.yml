@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   backend:
+    image: ${{ secrets.DOCKER_USERNAME }}/backend:latest
     build:
       context: ./backend
     environment:
@@ -20,6 +21,7 @@ services:
       - db
 
   frontend:
+    image: ${{ secrets.DOCKER_USERNAME }}/frontend:latest
     build:
       context: ./frontend
       target: production  # Usa o estágio production do Dockerfile
