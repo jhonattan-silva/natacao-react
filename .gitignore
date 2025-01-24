@@ -38,4 +38,7 @@ frontend/.env.*
 backend/.env
 backend/.env.*
 
+#Ignore arquivos de desenvolvimento
 certificados/
+docker-compose.override.yml
+nginx.dev.conf
