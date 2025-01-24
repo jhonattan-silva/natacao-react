@@ -14,22 +14,37 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Verificar o conteúdo do repositório
-      - name: Verify repository content
+      # 2. Verificar o conteúdo do diretório de trabalho
+      - name: Verify workspace directory
         run: ls -la ${{ github.workspace }}
 
-      # 3. Configurar Docker Buildx
+      # 3. Verificar o diretório de origem
+      - name: Verify source directory
+        run: ls -la /home/runner/work/natacao-react/natacao-react
+
+      # 4. Depurar o ambiente
+      - name: Debug environment
+        run: |
+          echo "Workspace: ${{ github.workspace }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "SHA: ${{ github.sha }}"
+          echo "Runner OS: ${{ runner.os }}"
+          echo "Runner Temp: ${{ runner.temp }}"
+          echo "Runner Workspace: ${{ runner.workspace }}"
+
+      # 5. Configurar Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # 4. Login no Docker Hub
+      # 6. Login no Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 5. Build e Push do Backend
+      # 7. Build e Push do Backend
       - name: Build and Push Backend
         uses: docker/build-push-action@v4
         with:
@@ -38,7 +53,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/backend:latest
 
-      # 6. Build e Push do Frontend
+      # 8. Build e Push do Frontend
       - name: Build and Push Frontend
         uses: docker/build-push-action@v4
         with:
@@ -47,7 +62,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/frontend:latest
 
-      # 7. Sincronizar arquivos com o servidor
+      # 9. Sincronizar arquivos com o servidor
       - name: Sync repository with server
         uses: appleboy/ssh-action@v0.1.8
         with:
@@ -58,7 +73,17 @@ jobs:
             mkdir -p /var/www/lpn2025
             rsync -avz --delete -v ${{ github.workspace }}/ /var/www/lpn2025/
 
-      # 8. Deploy no Servidor
+      # 10. Verificar o diretório de destino no servidor
+      - name: Verify destination directory on server
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            ls -la /var/www/lpn2025
+
+      # 11. Deploy no Servidor
       - name: Deploy to Production
         uses: appleboy/ssh-action@v0.1.8
         with:
