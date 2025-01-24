@@ -19,13 +19,17 @@ CMD ["npm", "start"]
 # Build stage
 FROM base AS build
 ENV NODE_ENV=production
-# Only install production dependencies to reduce size
 RUN npm ci --only=production && npm run build
 
 # Production stage with Nginx
 FROM nginx:alpine AS production
+
+# Ensure correct path for nginx.prod.conf
+WORKDIR /app
+COPY ../../nginx/nginx.prod.conf /etc/nginx/nginx.conf
+
 # Copy built application from the build stage
 COPY --from=build /app/build /usr/share/nginx/html
-COPY nginx.prod.conf /etc/nginx/nginx.conf
+
 # Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
