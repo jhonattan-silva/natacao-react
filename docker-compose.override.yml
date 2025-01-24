@@ -25,6 +25,12 @@ services:
       - "8080:3000"
     command: npm start
 
+  nginx:
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf
+      - ./certbot/conf:/etc/letsencrypt
+
+
   db:
     environment:
       MYSQL_ROOT_PASSWORD: root
