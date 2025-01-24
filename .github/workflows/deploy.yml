@@ -51,7 +51,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            rsync -avz --delete ./ /var/www/lpn/
+            rsync -avz --delete ./ /var/www/lpn2025/
 
       # 7. Deploy no Servidor
       - name: Deploy to Production
@@ -62,7 +62,7 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             docker-compose --version || sudo apt-get install -y docker-compose-plugin
-            cd /var/www/lpn
+            cd /var/www/lpn2025
             docker-compose down || true
             docker-compose pull
             docker-compose up -d --no-deps backend frontend
