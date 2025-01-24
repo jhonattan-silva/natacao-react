@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     image: ${{ secrets.DOCKER_USERNAME }}/backend:latest
