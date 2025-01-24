@@ -1,15 +1,15 @@
 services:
  
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h; done;'"
-    ports:
-      - "80:80"
-      - "443:443"
- 
+certbot:
+  image: certbot/certbot
+  volumes:
+    - ./certbot/conf:/etc/letsencrypt
+    - ./certbot/www:/var/www/certbot
+  entrypoint: "/bin/sh -c 'certbot certonly --webroot -w /var/www/certbot --agree-tos -n --email jhonattanwcs@hotmail.com -d ligapaulistadenatacao.com.br -d www.ligapaulistadenatacao.com.br && trap exit TERM; while :; do certbot renew; sleep 12h; done;'"
+  ports:
+    - "80:80"
+    - "443:443"
+
   backend:
     image: ${DOCKER_USERNAME:-default_user}/backend:latest  # Usa variável de ambiente ou valor padrão
     build:
