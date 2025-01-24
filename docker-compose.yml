@@ -25,6 +25,7 @@ services:
     build:
       context: ./frontend
       target: production  # Usa o estágio production do Dockerfile
+    command: ["sh", "-c", "cd /usr/share/nginx/html && npx serve -s ."]  # Serve os arquivos estáticos
     depends_on:
       - backend
 
