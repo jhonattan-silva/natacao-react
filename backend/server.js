@@ -5,19 +5,19 @@ const db = require('./config/db');// Conexão com banco de dados
 const cors = require('cors'); // Garante permissao de requisições front->backend
 const bodyParser = require('body-parser'); //backend interpreta os json nas requisições
 const https = require('https'); // Para servir o frontend em produção
+const http = require('http'); // Para servidor HTTP local
 const helmet = require('helmet'); // Helmet para defesa http
 const fs = require('fs'); // Para carregar certificados SSL
 const path = require('path'); // Para lidar com caminhos de arquivos
 
 // Definindo porta e inicializando dotenv
-dotenv.config({ path: '../../.env' });  // Update the path to the root .env file
+dotenv.config({ path: '../../.env' });  // Atualize o caminho para o arquivo .env
 const port = process.env.PORT || 5000;
 
 // Carregando certificados SSL
 const privateKey = fs.readFileSync(path.join(__dirname, '../certificados/privkey.pem'), 'utf8');
 const certificate = fs.readFileSync(path.join(__dirname, '../certificados/fullchain.pem'), 'utf8');
 const credentials = { key: privateKey, cert: certificate };
-
 
 // Adicionando CORS e body-parser
 const allowedOrigins = [
@@ -39,7 +39,6 @@ app.use(cors({
   credentials: true,
 }));
 
-
 app.use(bodyParser.json());
 app.use(helmet()); // Ativando Helmet
 
@@ -47,14 +46,22 @@ app.get('/', (req, res) => {
   res.send(`'Backend está funcionando!'`);
 });
 
-
-// Inicializando servidor HTTPS
-https.createServer(credentials, app).listen(port, () => {
-  console.log(`Servidor HTTPS rodando na porta ${port}`);
-  console.log(`Ambiente: ${process.env.NODE_ENV}`);
-  console.log(`Origens permitidas: ${allowedOrigins.join(', ')}`);
-});
-
+// Inicializando servidor HTTPS ou HTTP, dependendo do ambiente
+if (process.env.NODE_ENV === 'production') {
+  // Em produção, usamos HTTPS
+  https.createServer(credentials, app).listen(port, () => {
+    console.log(`Servidor HTTPS rodando na porta ${port}`);
+    console.log(`Ambiente: ${process.env.NODE_ENV}`);
+    console.log(`Origens permitidas: ${allowedOrigins.join(', ')}`);
+  });
+} else {
+  // Em desenvolvimento, usamos HTTP
+  http.createServer(app).listen(port, () => {
+    console.log(`Servidor HTTP rodando na porta ${port}`);
+    console.log(`Ambiente: ${process.env.NODE_ENV}`);
+    console.log(`Origens permitidas: ${allowedOrigins.join(', ')}`);
+  });
+}
 
 // Importando e utilizando rotas
 const authRoutes = require('./routes/authRoutes');
@@ -81,7 +88,6 @@ app.use(uploadRoutes); // Adiciona as rotas de upload
 app.use('/api/migracao', migracao);
 app.use('/api/resultadosEntrada', resultadosEntrada);
 
-
 // Servir o frontend em produção
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, 'frontend', 'build')));
@@ -96,7 +102,6 @@ if (process.env.NODE_ENV === 'production') {
 app.use((req, res) => {
   res.status(404).send('Desculpe, não pode passar por aqui!');
 });
-
 
 // Exportando conexão com banco de dados
 module.exports = db;
