@@ -1,6 +1,8 @@
+version: '3.8'
+
 services:
   backend:
-    image: ${{ secrets.DOCKER_USERNAME }}/backend:latest
+    image: ${DOCKER_USERNAME:-default_user}/backend:latest  # Usa variável de ambiente ou valor padrão
     build:
       context: ./backend
     environment:
@@ -18,13 +20,13 @@ services:
     depends_on:
       - db
 
-frontend:
-  image: ${{ secrets.DOCKER_USERNAME }}/frontend:latest
-  build:
-    context: ./frontend
-    target: production  # Usa o estágio production do Dockerfile
-  depends_on:
-    - backend
+  frontend:
+    image: ${DOCKER_USERNAME:-default_user}/frontend:latest  # Usa variável de ambiente ou valor padrão
+    build:
+      context: ./frontend
+      target: production
+    depends_on:
+      - backend
 
   db:
     image: mysql:8.0
@@ -43,7 +45,7 @@ frontend:
       - "443:443"
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
-      - /etc/letsencrypt:/etc/letsencrypt  # Certificados SSL
+      - /etc/letsencrypt:/etc/letsencrypt
     depends_on:
       - backend
       - frontend
