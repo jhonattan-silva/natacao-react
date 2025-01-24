@@ -21,11 +21,11 @@ FROM base AS build
 ENV NODE_ENV=production
 RUN npm ci --only=production && npm run build
 
-# Production stage with Nginx
+# NGINX versão alpine
 FROM nginx:alpine AS production
 
 # Copy nginx configuration
-COPY nginx/nginx.prod.conf /etc/nginx/nginx.conf
+COPY ../../nginx/nginx.prod.conf /etc/nginx/nginx.conf
 
 # Copy built application from the build stage
 COPY --from=build /app/build /usr/share/nginx/html
