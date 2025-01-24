@@ -56,8 +56,14 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             mkdir -p /var/www/lpn2025
-            ls -la /github/workspace  # Verificar permissões
-            rsync -avz --delete $GITHUB_WORKSPACE/ /var/www/lpn2025/
+            echo "Verificando conteúdo do workspace local:"
+            ls -la ${{ github.workspace }}
+            echo "Verificando permissões no servidor:"
+            ls -la /var/www || echo "Diretório base inacessível"
+            echo "Iniciando sincronização..."
+            rsync -avz --delete ${{ github.workspace }}/ /var/www/lpn2025/
+            echo "Sincronização concluída. Verificando conteúdo no servidor:"
+            ls -la /var/www/lpn2025
 
 
       # 8. Deploy no Servidor
