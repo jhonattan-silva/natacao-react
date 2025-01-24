@@ -20,14 +20,13 @@ services:
     depends_on:
       - db
 
-  frontend:
-    image: ${{ secrets.DOCKER_USERNAME }}/frontend:latest
-    build:
-      context: ./frontend
-      target: production  # Usa o estágio production do Dockerfile
-    command: ["sh", "-c", "cd /usr/share/nginx/html && npx serve -s ."]  # Serve os arquivos estáticos
-    depends_on:
-      - backend
+frontend:
+  image: ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+  build:
+    context: ./frontend
+    target: production  # Usa o estágio production do Dockerfile
+  depends_on:
+    - backend
 
   db:
     image: mysql:8.0
