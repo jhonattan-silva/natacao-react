@@ -1,14 +1,21 @@
 services:
  
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+
   certbot:
     image: certbot/certbot
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'certbot certonly --webroot -w /var/www/certbot --agree-tos -n --email jhonattanwcs@hotmail.com -d ligapaulistadenatacao.com.br -d www.ligapaulistadenatacao.com.br && trap exit TERM; while :; do certbot renew; sleep 12h; done;'"
-    ports:
-      - "80:80"
-      - "443:443"
 
   backend:
     image: ${DOCKER_USERNAME:-default_user}/backend:latest  # Usa variável de ambiente ou valor padrão
@@ -47,17 +54,6 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
-      - /etc/letsencrypt:/etc/letsencrypt
-    depends_on:
-      - backend
-      - frontend
 
 volumes:
   db_data:
