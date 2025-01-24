@@ -43,7 +43,11 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/frontend:latest
 
-      # 6. Sincronizar arquivos com o servidor pegando os arquivos do workspace e jogando na pasta do projeto
+      # 6. Verificar o diretório de trabalho
+      - name: Verify workspace directory
+        run: ls -la ${{ github.workspace }}
+
+      # 7. Sincronizar arquivos com o servidor pegando os arquivos do workspace e jogando na pasta do projeto
       - name: Sync repository with server
         uses: appleboy/ssh-action@v0.1.8
         with:
@@ -51,9 +55,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-              rsync -avz --delete ${{ github.workspace }}/ /var/www/lpn2025/ 
+            rsync -avz --delete ${{ github.workspace }}/ /var/www/lpn2025/
 
-      # 7. Deploy no Servidor
+      # 8. Deploy no Servidor
       - name: Deploy to Production
         uses: appleboy/ssh-action@v0.1.8
         with:
