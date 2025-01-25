@@ -11,7 +11,7 @@ const fs = require('fs'); // Para carregar certificados SSL
 const path = require('path'); // Para lidar com caminhos de arquivos
 
 // Definindo porta e inicializando dotenv
-dotenv.config({ path: '../../.env' });  // Atualize o caminho para o arquivo .env
+dotenv.config({ path: '../../.env' });  // Carrega variáveis de ambiente
 const port = process.env.PORT || 5000;
 
 /* // Carregando certificados SSL desenvolvimento
@@ -67,7 +67,7 @@ app.get('/', (req, res) => {
 });
 
 // Inicializando servidor HTTPS ou HTTP, dependendo do ambiente
-if (process.env.NODE_ENV === 'production') {
+/* if (process.env.NODE_ENV === 'production') {
   // Em produção, usamos HTTPS
   https.createServer(credentials, app).listen(port, () => {
     console.log(`Servidor HTTPS rodando na porta ${port}`);
@@ -81,7 +81,7 @@ if (process.env.NODE_ENV === 'production') {
     console.log(`Ambiente: ${process.env.NODE_ENV}`);
     console.log(`Origens permitidas: ${allowedOrigins.join(', ')}`);
   });
-}
+} */
 
 // Importando e utilizando rotas
 const authRoutes = require('./routes/authRoutes');
