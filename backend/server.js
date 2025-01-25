@@ -20,7 +20,7 @@ const certificate = fs.readFileSync(path.join(__dirname, '../certificados/fullch
 const credentials = { key: privateKey, cert: certificate }; */
 
 // Caminhos dos certificados no container
-const CERT_PATH = "/certificados/live/ligapaulistadenatacao.com.br";
+const CERT_PATH = "/var/www/lpn2025/certbot/conf/live/ligapaulistadenatacao.com.br";
 const privateKey = fs.readFileSync(path.join(CERT_PATH, "privkey.pem"), "utf8");
 const certificate = fs.readFileSync(path.join(CERT_PATH, "fullchain.pem"), "utf8");
 const credentials = { key: privateKey, cert: certificate };
