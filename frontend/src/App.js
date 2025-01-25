@@ -13,7 +13,7 @@ import ProtecaoRota from "./componentes/ProtecaoRota";
 import Login from "./pages/Login/Login"; // Página de login para autenticação
 
 
-const AppRoutes = () => {
+const App = () => {
     return (
         <BrowserRouter> {/* Avisa que terão rotas aqui dentro */}
             <Routes> {/* Roteador, será o responsavel pelas trocas de rotas */}
@@ -99,4 +99,4 @@ const AppRoutes = () => {
     );
 };
 
-export default AppRoutes;
+export default App;
