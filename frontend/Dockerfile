@@ -14,10 +14,13 @@ COPY . .
 RUN npm run build
 
 # Estágio final: Produção com NGINX
-FROM nginx:alpine AS production
+FROM node:20.12.1 AS production
 
 # Copia a configuração personalizada do NGINX
 COPY nginx/nginx.prod.conf /etc/nginx/nginx.conf
+
+# Instala o NGINX
+RUN apt-get update && apt-get install -y nginx
 
 # Copia os arquivos do build para o NGINX
 COPY --from=build /app/build /usr/share/nginx/html
