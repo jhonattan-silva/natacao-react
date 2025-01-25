@@ -7,25 +7,24 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Copy application source code
-COPY . .
-
 # Development stage
 FROM base AS development
 ENV NODE_ENV=development
 ENV CHOKIDAR_USEPOLLING=true
+COPY . .
 CMD ["npm", "start"]
 
 # Build stage
 FROM base AS build
 ENV NODE_ENV=production
+COPY . .
 RUN npm ci --only=production && npm run build
 
-# NGINX versão alpine
+# Production stage with NGINX
 FROM nginx:alpine AS production
 
 # Copy nginx configuration
-COPY ../../nginx/nginx.prod.conf /etc/nginx/nginx.conf
+COPY nginx/nginx.prod.conf /etc/nginx/nginx.conf
 
 # Copy built application from the build stage
 COPY --from=build /app/build /usr/share/nginx/html
