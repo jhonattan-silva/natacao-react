@@ -46,9 +46,10 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    command: sh -c "./wait-for.sh db:3306 -- npm start"  # Corrigido para passar host e porta
+    command: ["sh", "-c", "./wait-for.sh db 3306 -- npm start"]  # Ajustado para passar os parâmetros corretamente
     depends_on:
       - db
+
 
   frontend:
     image: ${DOCKER_USERNAME:-default_user}/frontend:latest
