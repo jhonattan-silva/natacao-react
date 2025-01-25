@@ -25,5 +25,5 @@ COPY --from=build /app/build /usr/share/nginx/html
 # Expor a porta padrão
 EXPOSE 80
 
-# Comando para iniciar o NGINX
+# Comando para iniciar o Nginx
 CMD ["nginx", "-g", "daemon off;"]

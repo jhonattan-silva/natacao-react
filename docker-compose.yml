@@ -1,5 +1,6 @@
+version: '3.8'
+
 services:
- 
   nginx:
     image: nginx:alpine
     container_name: nginx
@@ -29,7 +30,7 @@ services:
       while :; do certbot renew; sleep 12h; done;'
 
   backend:
-    image: ${DOCKER_USERNAME:-default_user}/backend:latest  # Usa variável de ambiente ou valor padrão
+    image: ${DOCKER_USERNAME:-default_user}/backend:latest
     build:
       context: ./backend
     environment:
@@ -49,13 +50,13 @@ services:
       - db
 
   frontend:
-    image: ${DOCKER_USERNAME:-default_user}/frontend:latest  # Usa variável de ambiente ou valor padrão
+    image: ${DOCKER_USERNAME:-default_user}/frontend:latest
     build:
       context: ./frontend
-      target: build
+      target: production
     volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
+      - frontend_build:/app/build
+    command: sh -c "npm run build && cp -r /app/build/* /usr/share/nginx/html"
     depends_on:
       - backend
 
@@ -64,12 +65,9 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-      #MYSQL_USER: ${MYSQL_USER}
-      #MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
 
-
 volumes:
   db_data:
-  frontend_build:  # Volume compartilhado para o build do frontend
+  frontend_build:
