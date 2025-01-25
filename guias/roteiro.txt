@@ -25,7 +25,7 @@ npm install jwt-decode //para decodificar os dados presentes nos tokens
 
 
 cria a routes.js dentro do src
-chama o <AppRoutes /> lá no index.js do src
+chama o <App /> lá no index.js do src
 
 npm install axios
 
