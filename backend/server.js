@@ -14,10 +14,17 @@ const path = require('path'); // Para lidar com caminhos de arquivos
 dotenv.config({ path: '../../.env' });  // Atualize o caminho para o arquivo .env
 const port = process.env.PORT || 5000;
 
-// Carregando certificados SSL
+/* // Carregando certificados SSL desenvolvimento
 const privateKey = fs.readFileSync(path.join(__dirname, '../certificados/privkey.pem'), 'utf8');
 const certificate = fs.readFileSync(path.join(__dirname, '../certificados/fullchain.pem'), 'utf8');
+const credentials = { key: privateKey, cert: certificate }; */
+
+// Caminhos dos certificados no container
+const CERT_PATH = "/certificados/live/ligapaulistadenatacao.com.br";
+const privateKey = fs.readFileSync(path.join(CERT_PATH, "privkey.pem"), "utf8");
+const certificate = fs.readFileSync(path.join(CERT_PATH, "fullchain.pem"), "utf8");
 const credentials = { key: privateKey, cert: certificate };
+
 
 // Adicionando CORS e body-parser
 const allowedOrigins = [
