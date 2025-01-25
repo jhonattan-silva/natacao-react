@@ -3,31 +3,27 @@ FROM node:20.12.1 AS base
 
 WORKDIR /app
 
-# Copia os arquivos de definição de dependências e instala as dependências
+# Copia os arquivos de dependências e instala
 COPY package*.json ./
 RUN npm ci
 
-# Estágio de desenvolvimento
-FROM base AS development
-ENV NODE_ENV=development
-ENV CHOKIDAR_USEPOLLING=true
-COPY . .
-CMD ["npm", "start"]
-
-# Estágio de build
+# Estágio de build (produção)
 FROM base AS build
 ENV NODE_ENV=production
-COPY . .
-RUN npm ci --only=production && npm run build
+COPY . .  
+RUN npm run build
 
-# Estágio de produção com NGINX
+# Estágio final: Produção com NGINX
 FROM nginx:alpine AS production
 
-# Copia a configuração do NGINX
+# Copia a configuração personalizada do NGINX
 COPY nginx/nginx.prod.conf /etc/nginx/nginx.conf
 
-# Copia a aplicação construída do estágio de build
+# Copia os arquivos do build para o NGINX
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Inicia o NGINX
+# Expor a porta padrão
+EXPOSE 80
+
+# Comando para iniciar o NGINX
 CMD ["nginx", "-g", "daemon off;"]
