@@ -20,10 +20,23 @@ const certificate = fs.readFileSync(path.join(__dirname, '../certificados/fullch
 const credentials = { key: privateKey, cert: certificate }; */
 
 // Caminhos dos certificados no container
-const CERT_PATH = "/var/www/lpn2025/certbot/conf/live/ligapaulistadenatacao.com.br";
+const CERT_PATH = "/etc/letsencrypt/live/ligapaulistadenatacao.com.br/";
+
+
 const privateKey = fs.readFileSync(path.join(CERT_PATH, "privkey.pem"), "utf8");
 const certificate = fs.readFileSync(path.join(CERT_PATH, "fullchain.pem"), "utf8");
 const credentials = { key: privateKey, cert: certificate };
+try {
+  https.createServer(credentials, app).listen(port, () => {
+    console.log(`Servidor HTTPS rodando na porta ${port}`);
+  });
+} catch (err) {
+  console.error("Certificados não encontrados. Executando servidor em HTTP.");
+  http.createServer(app).listen(port, () => {
+    console.log(`Servidor HTTP rodando na porta ${port}`);
+  });
+}
+
 
 
 // Adicionando CORS e body-parser
