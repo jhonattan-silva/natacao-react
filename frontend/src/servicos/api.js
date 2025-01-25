@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+const API_BASE_URL = 'https://www.ligapaulistadenatacao.com.br:5000/api';
 // Cria uma instância do Axios com configuração base
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api', // Base URL
+//  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api', // Base URL
+  baseURL: API_BASE_URL, // Base URL produção
   timeout: 20000, // Tempo limite de 20 segundos
 });
 

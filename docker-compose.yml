@@ -46,7 +46,7 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    command: ["sh", "-c", "./wait-for.sh db 3306 -- npm start"]  # Ajustado para passar os parâmetros corretamente
+    command: sh -c "./wait-for.sh db 3306 npm start" # Espera o banco de dados estar pronto
     depends_on:
       - db
 
