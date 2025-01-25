@@ -5,8 +5,8 @@ FROM node:20.12.1 AS base
 
 WORKDIR /app
 
-# Instala o netcat (nc) para o script wait-for.sh
-RUN apt-get update && apt-get install -y netcat && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Instala o netcat-openbsd para o script wait-for.sh
+RUN apt-get update && apt-get install -y netcat-openbsd && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copia os arquivos de dependências e instala
 COPY package*.json ./
