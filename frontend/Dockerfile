@@ -16,11 +16,14 @@ RUN npm run build
 # Estágio final: Produção com NGINX
 FROM node:20.12.1 AS production
 
-# Copia a configuração personalizada do NGINX
-COPY nginx/nginx.prod.conf /etc/nginx/nginx.conf
+# Configura o ambiente para evitar prompts interativos
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Instala o NGINX
-RUN apt-get update && apt-get install -y nginx
+RUN apt-get update && apt-get install -y --no-install-recommends nginx && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copia a configuração personalizada do NGINX
+COPY nginx/nginx.prod.conf /etc/nginx/nginx.conf
 
 # Copia os arquivos do build para o NGINX
 COPY --from=build /app/build /usr/share/nginx/html
