@@ -28,12 +28,12 @@ const certificate = fs.readFileSync(path.join(CERT_PATH, "fullchain.pem"), "utf8
 const credentials = { key: privateKey, cert: certificate };
 try {
   https.createServer(credentials, app).listen(port, () => {
-    console.log(`Servidor HTTPS rodando na porta ${port}`);
+    console.log(`Servidor HTTPS rodando`);
   });
 } catch (err) {
   console.error("Certificados não encontrados. Executando servidor em HTTP.");
   http.createServer(app).listen(port, () => {
-    console.log(`Servidor HTTP rodando na porta ${port}`);
+    console.log(`Servidor HTTP rodando`);
   });
 }
 

@@ -52,7 +52,7 @@ services:
     image: ${DOCKER_USERNAME:-default_user}/frontend:latest  # Usa variável de ambiente ou valor padrão
     build:
       context: ./frontend
-      target: production
+      target: build
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot

@@ -1,12 +1,12 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-// Verificar se as variáveis de ambiente estão sendo carregadas corretamente
+/* // Verificar se as variáveis de ambiente estão sendo carregadas corretamente
 console.log('DB_HOST:', process.env.MYSQL_DB_HOST);
 console.log('DB_USER:', process.env.MYSQL_USER);
 console.log('DB_PASS:', process.env.MYSQL_PASSWORD);
 console.log('DB_NAME:', process.env.MYSQL_DATABASE);
-console.log('DB_PORT:', process.env.MYSQL_DB_PORT);
+console.log('DB_PORT:', process.env.MYSQL_DB_PORT); */
 
 // Configuração do banco com base no ambiente
 const pool = mysql.createPool({
