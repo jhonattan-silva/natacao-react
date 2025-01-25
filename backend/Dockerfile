@@ -1,21 +1,23 @@
-# Use a imagem base oficial do Node.js
-FROM node:20.12.1
+# Dockerfile do Backend
 
-# Diretório de trabalho
+# Estágio base
+FROM node:20.12.1 AS base
+
 WORKDIR /app
 
-# Copie os arquivos de dependência e instale
+# Copia os arquivos de dependências e instala
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
-# Copie o restante do código
+# Copia o script wait-for.sh e dá permissão de execução
+COPY wait-for.sh /app/wait-for.sh
+RUN chmod +x /app/wait-for.sh
+
+# Copia o restante do código
 COPY . .
 
-# Rebuild native modules
-RUN npm rebuild bcrypt --build-from-source
-
-# Exponha a porta 5000
+# Expõe a porta 5000 (usada pelo backend)
 EXPOSE 5000
 
-# Comando para iniciar o servidor
+# Comando padrão (pode ser sobrescrito no docker-compose.yml)
 CMD ["npm", "start"]
