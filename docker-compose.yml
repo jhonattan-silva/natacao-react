@@ -13,8 +13,8 @@ services:
       - ./certbot/www:/var/www/certbot
       - frontend_build:/usr/share/nginx/html
     depends_on:
-      - backend
-      - frontend
+      - backend  # Espera o backend estar pronto
+      - frontend  # Espera o frontend estar pronto
 
   certbot:
     image: certbot/certbot
@@ -46,7 +46,7 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    command: ["./wait-for.sh", "db:3306", "npm", "start"]
+    command: sh -c "./wait-for.sh db:3306 -- npm start"  # Executa o script corretamente
     depends_on:
       - db
 
@@ -54,10 +54,9 @@ services:
     image: ${DOCKER_USERNAME:-default_user}/frontend:latest
     build:
       context: ./frontend
-      target: production
+      target: production  # Especifica o estágio de produção
     volumes:
       - frontend_build:/usr/share/nginx/html
-    command: sh -c "npm run build && cp -r /app/build/* /usr/share/nginx/html"
     depends_on:
       - backend
 
