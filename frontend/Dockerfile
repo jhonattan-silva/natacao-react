@@ -1,33 +1,33 @@
-# Base stage for dependencies
+# Estágio base para dependências
 FROM node:20.12.1 AS base
 
 WORKDIR /app
 
-# Copy package definitions and install dependencies
+# Copia os arquivos de definição de dependências e instala as dependências
 COPY package*.json ./
 RUN npm ci
 
-# Development stage
+# Estágio de desenvolvimento
 FROM base AS development
 ENV NODE_ENV=development
 ENV CHOKIDAR_USEPOLLING=true
 COPY . .
 CMD ["npm", "start"]
 
-# Build stage
+# Estágio de build
 FROM base AS build
 ENV NODE_ENV=production
 COPY . .
 RUN npm ci --only=production && npm run build
 
-# Production stage with NGINX
+# Estágio de produção com NGINX
 FROM nginx:alpine AS production
 
-# Copy nginx configuration
+# Copia a configuração do NGINX
 COPY nginx/nginx.prod.conf /etc/nginx/nginx.conf
 
-# Copy built application from the build stage
+# Copia a aplicação construída do estágio de build
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Start Nginx
+# Inicia o NGINX
 CMD ["nginx", "-g", "daemon off;"]

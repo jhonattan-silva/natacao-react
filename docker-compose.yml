@@ -73,3 +73,4 @@ services:
 
 volumes:
   db_data:
+  frontend_build:  # Volume compartilhado para o build do frontend
