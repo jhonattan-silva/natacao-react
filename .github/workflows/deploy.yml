@@ -48,23 +48,21 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/frontend:latest
 
       # 7. Sincronizar arquivos com o servidor
-      - name: Sincronizar Repositorio com sercvidor
+      - name: Sincronizar Repositorio com servidor
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
+            echo "Criando diretório de destino, se necessário..."
             mkdir -p /var/www/lpn2025
-            echo "Verificando conteúdo do workspace local:"
-            ls -la ${{ github.workspace }}
-            echo "Verificando permissões no servidor:"
-            ls -la /var/www || echo "Diretório base inacessível"
             echo "Iniciando sincronização..."
-            rsync -avz --delete ${{ github.workspace }}/ /var/www/lpn2025/
-            echo "Sincronização concluída. Verificando conteúdo no servidor:"
+            rsync -avz --delete --progress --exclude ".env" \
+              ${{ github.workspace }}/ /var/www/lpn2025/
+            echo "Sincronização concluída."
+            echo "Arquivos no destino:"
             ls -la /var/www/lpn2025
-
 
       # 8. Deploy no Servidor
       - name: Deploy to Production
@@ -74,8 +72,12 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            docker-compose --version || sudo apt-get install -y docker-compose-plugin
             cd /var/www/lpn2025
+            echo "Parando containers antigos..."
             docker-compose down || true
+            echo "Atualizando imagens..."
             docker-compose pull
-            docker-compose up -d --no-deps backend frontend
+            echo "Subindo novos containers..."
+            docker-compose up -d
+            echo "Containers ativos:"
+            docker ps
