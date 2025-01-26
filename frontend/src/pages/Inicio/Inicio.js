@@ -6,13 +6,27 @@ import style from './Inicio.module.css';
 import Card from '../../componentes/Card/Card';
 import api from '../../servicos/api';
 
-const formataData = (dateString) => {
+/* const formataData = (dateString) => {
     const optionsDate = { year: 'numeric', month: '2-digit', day: '2-digit' };
     const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: false };
     const dataEvento = new Date(dateString).toLocaleDateString('pt-BR', optionsDate);
     const horario = new Date(dateString).toLocaleTimeString('pt-BR', optionsTime);
     return { dataEvento, horario };
+}; */
+
+const formataData = (dateString) => {
+    // Adicionar "Z" se o formato for YYYY-MM-DD HH:mm:ss para tratar como UTC
+    const adjustedDate = dateString.includes('T') ? dateString : `${dateString}Z`;
+
+    const optionsDate = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: false };
+
+    const dataEvento = new Date(adjustedDate).toLocaleDateString('pt-BR', optionsDate);
+    const horario = new Date(adjustedDate).toLocaleTimeString('pt-BR', optionsTime);
+
+    return { dataEvento, horario };
 };
+
 
 const formatarParaMaps = (endereco, cidade) => {
     return `https://www.google.com/maps/search/${encodeURIComponent(endereco + ', ' + cidade)}`;
