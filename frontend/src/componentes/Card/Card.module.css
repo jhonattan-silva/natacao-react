@@ -10,6 +10,7 @@
     flex-direction: column;
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 
 .card:hover {
@@ -45,4 +46,8 @@
 
 .card a:hover {
     background-color: #0056b3;
+}
+
+.endereco {
+    margin-top: auto;
 }

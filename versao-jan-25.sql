@@ -2,6 +2,7 @@
 
 -- Forçar codificação na conexão
 SET NAMES 'utf8mb4' COLLATE 'utf8mb4_general_ci';
+SET time_zone = 'America/Sao_Paulo';  -- Configurar fuso horário para São Paulo
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
