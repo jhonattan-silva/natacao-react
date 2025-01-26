@@ -43,6 +43,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       API_URL: ${API_URL}
       FRONTEND_URL: ${FRONTEND_URL}
+    ports:
+      - "5000:5000"
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
