@@ -68,9 +68,9 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-      TZ: America/Sao_Paulo  # Define o fuso horário
     volumes:
       - db_data:/var/lib/mysql
+      - ./backend/config/my.cnf:/etc/mysql/conf.d/my.cnf  # Monta o arquivo de configuração
 
 volumes:
   db_data:
