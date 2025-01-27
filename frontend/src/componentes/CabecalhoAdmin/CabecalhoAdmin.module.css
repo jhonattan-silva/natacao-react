@@ -15,12 +15,19 @@
 nav {
     display: flex;
     align-items: center;
+    justify-content: center; /* Centralizar links */
+    flex-grow: 1;
 }
 
 nav a {
     margin-right: 15px;
     text-decoration: none;
     color: #007bff;
+}
+
+nav a:last-child {
+    margin-left: auto; /* Alinhar o último link à direita */
+    margin-right: 0;
 }
 
 nav a:hover {

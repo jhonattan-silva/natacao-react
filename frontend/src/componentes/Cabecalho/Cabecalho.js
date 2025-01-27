@@ -26,10 +26,10 @@ const Cabecalho = () => {
                 <CabecalhoLink url='./Classificacao'> Classificação </CabecalhoLink>
                 <CabecalhoLink url='./balizamento'> Balizamento </CabecalhoLink>
                 <CabecalhoLink url='./rankings'>Rankings</CabecalhoLink>
-                <CabecalhoLink url='./Admin'> Acesso Restrito </CabecalhoLink>
+                <CabecalhoLink url='./Admin' className={style.adminLink}> Acesso Restrito </CabecalhoLink>
             </nav>
         </header>
     )
 }
 
-export default Cabecalho
+export default Cabecalho;
