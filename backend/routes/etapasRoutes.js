@@ -37,7 +37,7 @@ router.get('/listarEtapasAnoAtual', async (req, res) => {
 
 // Rota para BUSCAR ETAPAS POR ANO
 router.get('/listarEtapasAno/:ano', async (req, res) => {
-    const ano = req.query.ano; // Obtém o parâmetro 'ano' da query string
+    const ano = req.params.ano; // Obtém o parâmetro 'ano' da URL
     try {
         const [etapasAno] = await db.query(`
             SELECT * 
