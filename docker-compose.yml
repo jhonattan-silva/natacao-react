@@ -46,6 +46,7 @@ services:
     command: sh -c "./wait-for.sh db 3306 && npm start"
     depends_on:
       - db
+      - certbot
 
   frontend:
     build:
