@@ -44,7 +44,8 @@ const allowedOrigins = [
   'https://localhost',                 // Adicione esta linha (sem porta)
   'https://localhost:8080',            // Para desenvolvimento local
   'https://localhost:3000',            // Para desenvolvimento local
-  'https://www.ligapaulistadenatacao.com.br' // Para produção
+  'https://www.ligapaulistadenatacao.com.br', // Para produção
+  'https://ligapaulistadenatacao.com.br', // Para produção
 ];
 
 app.use(cors({
