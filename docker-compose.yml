@@ -11,8 +11,8 @@ services:
       - ./certbot/www:/var/www/certbot
       - frontend_build:/usr/share/nginx/html
     depends_on:
-      - backend  # Espera o backend estar pronto
-      - frontend  # Espera o frontend estar pronto
+      - backend
+      - frontend
 
   certbot:
     image: certbot/certbot
@@ -43,21 +43,18 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
     ports:
       - "5000:5000"
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    command: sh -c "./wait-for.sh db 3306 npm start" # Espera o banco de dados estar pronto
     depends_on:
       - db
 
-
   frontend:
-    image: ${DOCKER_USERNAME:-default_user}/frontend:latest
     build:
       context: ./frontend
-      target: production  # Especifica o estágio de produção
+      target: production
     volumes:
-      - frontend_build:/usr/share/nginx/html
+      - ./frontend:/app  # Monta o código do frontend
+      - /app/node_modules  # Evita conflitos de dependências
+      - frontend_build:/usr/share/nginx/html  # Atualiza o build automaticamente
+    command: sh -c "npm run build && cp -r /app/build/* /usr/share/nginx/html"
     depends_on:
       - backend
 
@@ -68,7 +65,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
     volumes:
       - db_data:/var/lib/mysql
-      - ./backend/config/my.cnf:/etc/mysql/conf.d/my.cnf  # Monta o arquivo de configuração
+      - ./backend/config/my.cnf:/etc/mysql/conf.d/my.cnf
 
 volumes:
   db_data:
