@@ -30,9 +30,7 @@ const CabecalhoAdmin = () => {
                     setNome(nome.split(' ')[0]); // Definir apenas o primeiro nome
 
                     // Buscar nome da equipe a partir do equipeId para o Profile
-                    if (equipeUsuarioId) {
-                        console.log("Token decifrado:", decodedToken);
-                        
+                    if (equipeUsuarioId) {                        
                         const equipeResponse = await api.get(`/equipes/${equipeUsuarioId}`);
                         setEquipe(equipeResponse.data.nome);
                     }
@@ -60,6 +58,7 @@ const CabecalhoAdmin = () => {
                 <img src={logo} alt='LPN logo' className={style.logo}></img>
             </Link>
             <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>
+            <span className={style.closeButton} onClick={toggleMenu}>&times;</span>
             <nav className={menuOpen ? style.open : ''}>
                 <CabecalhoLink url='../../'> Home </CabecalhoLink>
                 <CabecalhoLink url='../Nadadores'> Nadadores </CabecalhoLink>
