@@ -8,7 +8,7 @@ const api = axios.create({
   timeout: 20000, // Tempo limite de 20 segundos
 });
 
-console.log('API Base URL:', api.defaults.baseURL); // Verifica se a URL base está configurada corretamente
+//console.log('API Base URL:', api.defaults.baseURL); // Verifica se a URL base está configurada corretamente
 
 // Adiciona um interceptor para incluir o token JWT em todas as requisições
 api.interceptors.request.use(
