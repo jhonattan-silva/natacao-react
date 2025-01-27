@@ -38,7 +38,7 @@ const Inicio = () => {
     useEffect(() => {
         const fetchEtapas = async () => {
             try {
-                const response = await api.get('/etapas/listarEtapasAno'); // Chamar a API listaEtapas
+                const response = await api.get('/etapas/listarEtapasAnoAtual'); // Chamar a API listaEtapas
                 setEtapas(response.data); // Definir os Etapas no estado
             } catch (error) {
                 console.error('Erro ao buscar Etapas:', error);

@@ -15,6 +15,7 @@ const Etapas = () => {
     const [etapaEditando, setEtapaEditando] = useState(null); //estado para edição
     const [provasCarregadas, setProvasCarregadas] = useState(false); //estado para carregamento de provas no editar
     const [raias, setRaias] = useState(''); //estado para quantidade de raias
+    const [anoSelecionado, setAnoSelecionado] = useState('2025'); // Estado para o ano selecionado
 
     const apiListaEtapas = `etapas/listarEtapas`;
     const apiCadastraEtapas = `etapas/cadastrarEtapas`;
@@ -24,19 +25,20 @@ const Etapas = () => {
     const apiAtualizaEtapas = `etapas/atualizarEtapas`;
     const apiExcluiEtapa = `etapas/excluiEtapa`;
     const apiAbreInscricao = `etapas/abreInscricao`;
+    const apiListaEtapasAno = `etapas/listarEtapasAno`;
 
     useEffect(() => {
-        fetchData(); // Chama a função `fetchData` ao montar o componente
-    }, []); // O array vazio significa que `fetchData` será chamado apenas uma vez, ao carregar o componente
+        fetchData(anoSelecionado); // Chama a função `fetchData` ao montar o componente
+    }, [anoSelecionado]); // Chama `fetchData` sempre que `anoSelecionado` mudar
 
-    const fetchData = async () => {
+    const fetchData = async (ano) => {
         try {
-            const response = await api.get(apiListaEtapas);// Busca no backend a lista de etapas
+            const response = await api.get(`${apiListaEtapasAno}?ano=${ano}`); // Busca no backend a lista de etapas para o ano selecionado
             const etapasFormatadas = response.data.map(etapa => ({
                 ...etapa,
                 data: new Date(etapa.data).toLocaleDateString('pt-BR')
             }));
-            setEtapas(etapasFormatadas);// Define o estado `etapas` com a lista formatada
+            setEtapas(etapasFormatadas); // Define o estado `etapas` com a lista formatada
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
         }
@@ -335,6 +337,16 @@ const Etapas = () => {
             <CabecalhoAdmin />
             <div className={style.etapasContainer}>
                 <h1>ETAPAS</h1>
+                <ListaSuspensa
+                    textoPlaceholder={"Escolha o ano"}
+                    opcoes={[
+                        { id: '2023', value: '2023', label: '2023' },
+                        { id: '2024', value: '2024', label: '2024' },
+                        { id: '2025', value: '2025', label: '2025' }
+                    ]}
+                    valor={anoSelecionado}
+                    aoAlterar={setAnoSelecionado}
+                />
                 <TabelaEdicao
                     dados={etapas}
                     colunasOcultas={['id', 'Torneios_id']}
