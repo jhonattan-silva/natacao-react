@@ -11,6 +11,7 @@ const CabecalhoAdmin = () => {
     const [nome, setNome] = useState('');
     const [equipe, setEquipe] = useState('');
     const [userProfile, setUserProfile] = useState([]);
+    const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate(); // Hook de navegação do React Router
 
     useEffect(() => { // Hook de efeito para buscar informações do usuário
@@ -49,12 +50,17 @@ const CabecalhoAdmin = () => {
         navigate('/'); // Redireciona para a página de login
     };
 
+    const toggleMenu = () => {
+        setMenuOpen(!menuOpen);
+    };
+
     return (
         <header className={style.cabecalho}>
             <Link to="/"> {/* Alterar o link para redirecionar para a home */}
                 <img src={logo} alt='LPN logo' className={style.logo}></img>
             </Link>
-            <nav>
+            <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>
+            <nav className={menuOpen ? style.open : ''}>
                 <CabecalhoLink url='../../'> Home </CabecalhoLink>
                 <CabecalhoLink url='../Nadadores'> Nadadores </CabecalhoLink>
                 <CabecalhoLink url='../Inscricao'> Inscrição </CabecalhoLink>

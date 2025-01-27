@@ -1,9 +1,9 @@
+import api from '../../servicos/api';
 import { useEffect, useState } from 'react';
 import Botao from '../../componentes/Botao/Botao';
 import Formulario from '../../componentes/Formulario/Formulario';
 import TabelaEdicao from '../../componentes/TabelaEdicao/TabelaEdicao';
 import style from './Etapas.module.css';
-import axios from 'axios';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
@@ -16,15 +16,14 @@ const Etapas = () => {
     const [provasCarregadas, setProvasCarregadas] = useState(false); //estado para carregamento de provas no editar
     const [raias, setRaias] = useState(''); //estado para quantidade de raias
 
-    const baseUrl = 'https://localhost:5000/api/etapas';
-    const apiListaEtapas = `${baseUrl}/listarEtapas`;
-    const apiCadastraEtapas = `${baseUrl}/cadastrarEtapas`;
-    const apiListaTorneios = `${baseUrl}/listarTorneios`;
-    const apiListaProvasMasculino = `${baseUrl}/listarProvas?sexo=M`;
-    const apiListaProvasFeminino = `${baseUrl}/listarProvas?sexo=F`;
-    const apiAtualizaEtapas = `${baseUrl}/atualizarEtapas`;
-    const apiExcluiEtapa = `${baseUrl}/excluiEtapa`;
-    const apiAbreInscricao = `${baseUrl}/abreInscricao`;
+    const apiListaEtapas = `etapas/listarEtapas`;
+    const apiCadastraEtapas = `etapas/cadastrarEtapas`;
+    const apiListaTorneios = `etapas/listarTorneios`;
+    const apiListaProvasMasculino = `etapas/listarProvas?sexo=M`;
+    const apiListaProvasFeminino = `etapas/listarProvas?sexo=F`;
+    const apiAtualizaEtapas = `etapas/atualizarEtapas`;
+    const apiExcluiEtapa = `etapas/excluiEtapa`;
+    const apiAbreInscricao = `etapas/abreInscricao`;
 
     useEffect(() => {
         fetchData(); // Chama a função `fetchData` ao montar o componente
@@ -32,7 +31,7 @@ const Etapas = () => {
 
     const fetchData = async () => {
         try {
-            const response = await axios.get(apiListaEtapas);// Busca no backend a lista de etapas
+            const response = await api.get(apiListaEtapas);// Busca no backend a lista de etapas
             const etapasFormatadas = response.data.map(etapa => ({
                 ...etapa,
                 data: new Date(etapa.data).toLocaleDateString('pt-BR')
@@ -45,7 +44,7 @@ const Etapas = () => {
 
     const handleEdit = async (id) => {
         try {
-            const response = await axios.get(`${apiAtualizaEtapas}/${id}`);
+            const response = await api.get(`${apiAtualizaEtapas}/${id}`);
             const etapa = response.data;
 
             console.log('Etapa carregada:', etapa); // Log dos dados da etapa
@@ -89,7 +88,7 @@ const Etapas = () => {
     const handleExcluir = async (id) => {
         if (window.confirm("Tem certeza que deseja excluir esta etapa?")) {
             try {
-                await axios.delete(`${apiExcluiEtapa}/${id}`);
+                await api.delete(`${apiExcluiEtapa}/${id}`);
                 alert("Etapa excluída com sucesso!");
                 fetchData(); // Atualiza a lista após exclusão
             } catch (error) {
@@ -109,7 +108,7 @@ const Etapas = () => {
 
     const adicionarEtapa = async (dados) => {
         try {
-            const response = await axios.post(apiCadastraEtapas, dados);// Envia os dados para salvar a nova etapa
+            const response = await api.post(apiCadastraEtapas, dados);// Envia os dados para salvar a nova etapa
             fetchData(); // Recarrega a lista de etapas do backend
             setFormVisivel(true); // Esconde o formulário após o salvamento
         } catch (error) {
@@ -119,7 +118,7 @@ const Etapas = () => {
 
     const atualizarEtapa = async (dados) => {
         try {
-            await axios.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, dados); //chama a rota de edição equivalente ao id selecionado
+            await api.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, dados); //chama a rota de edição equivalente ao id selecionado
             fetchData(); //Recarrega as etapas após atualizar
             setFormVisivel(false);//fecha o form
             setEtapaEditando(null);//limpa o estado de edição
@@ -139,7 +138,7 @@ const Etapas = () => {
     useEffect(() => {
         const fetchTorneios = async () => {
             try {
-                const response = await axios.get(apiListaTorneios);
+                const response = await api.get(apiListaTorneios);
                 setListaTorneios(response.data);
             } catch (error) {
                 console.error('Erro ao buscar torneios:', error);
@@ -196,7 +195,7 @@ const Etapas = () => {
     useEffect(() => {
         const fetchProvas = async () => {
             try {
-                const responseMasculino = await axios.get(apiListaProvasMasculino);
+                const responseMasculino = await api.get(apiListaProvasMasculino);
                 const formattedMasculino = responseMasculino.data.map(prova => ({
                     id: prova.id.toString(),
                     label: `${prova.distancia}m ${prova.estilo} (${prova.tipo})`,
@@ -206,7 +205,7 @@ const Etapas = () => {
                 }));
                 setProvasMasculino(formattedMasculino);
 
-                const responseFeminino = await axios.get(apiListaProvasFeminino);
+                const responseFeminino = await api.get(apiListaProvasFeminino);
                 const formattedFeminino = responseFeminino.data.map(prova => ({
                     id: prova.id.toString(),
                     label: `${prova.distancia}m ${prova.estilo} (${prova.tipo})`,
@@ -326,7 +325,7 @@ const Etapas = () => {
 
     const abreInscricao = async (id, inscricaoAberta) => {
         try {
-            await axios.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota para abrir/fechar inscrição            
+            await api.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota para abrir/fechar inscrição            
             fetchData(); // Recarrega a lista de etapas do backend
         } catch (error) {
             console.error('Erro ao alterar inscrição:', error);
