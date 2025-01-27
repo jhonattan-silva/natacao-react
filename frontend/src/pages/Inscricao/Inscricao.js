@@ -14,7 +14,6 @@ const Inscricao = () => {
     const [eventoSelecionado, setEventoSelecionado] = useState(null);
     const [selecoes, setSelecoes] = useState({});
     const user = useUser(); // Obter o usuário do contexto do usuário
-    console.log("User:", user);
     
 
     const apiEventos = `/inscricao/listarEventos`;
