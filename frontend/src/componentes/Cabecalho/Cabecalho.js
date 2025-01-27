@@ -18,6 +18,7 @@ const Cabecalho = () => {
                 <img src={logo} alt='LPN logo' className={style.logo}></img>
             </Link>
             <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>
+            <span className={style.closeButton} onClick={toggleMenu}>&times;</span>
             <nav className={menuOpen ? style.open : ''}>
                 <CabecalhoLink url='./Noticias'> Noticias </CabecalhoLink>
                 <CabecalhoLink url='./Etapas'> Etapas </CabecalhoLink>
