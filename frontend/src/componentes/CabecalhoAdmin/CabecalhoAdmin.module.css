@@ -67,3 +67,57 @@ nav a:hover {
     justify-content: flex-end; /* Alinhar conteúdo à direita */
     gap: 10px; /* Espaçamento entre elementos */
 }
+
+.menuIcon {
+    display: none;
+    font-size: 30px;
+    cursor: pointer;
+    color: white;
+}
+
+@media (max-width: 600px) {
+    .cabecalho {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .logo {
+        height: 80px;
+        width: 80px;
+    }
+
+    nav {
+        display: none;
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: 250px;
+        background-color: #003366;
+        flex-direction: column;
+        align-items: flex-start;
+        padding-top: 60px;
+        transition: transform 0.3s ease-in-out;
+        transform: translateX(100%);
+    }
+
+    nav a {
+        width: 100%;
+        padding: 10px 20px;
+    }
+
+    nav.open {
+        display: flex;
+        transform: translateX(0);
+    }
+
+    .menuIcon {
+        display: block;
+    }
+
+    .userInfo {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px 20px;
+    }
+}
