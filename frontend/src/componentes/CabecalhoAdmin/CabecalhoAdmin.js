@@ -57,8 +57,8 @@ const CabecalhoAdmin = () => {
             <Link to="/"> {/* Alterar o link para redirecionar para a home */}
                 <img src={logo} alt='LPN logo' className={style.logo}></img>
             </Link>
-            <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>
-            <span className={style.closeButton} onClick={toggleMenu}>&times;</span>
+            {!menuOpen && <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>}
+            {menuOpen && <span className={style.closeButton} onClick={toggleMenu}>&times;</span>}
             <nav className={menuOpen ? style.open : ''}>
                 <CabecalhoLink url='../../'> Home </CabecalhoLink>
                 <CabecalhoLink url='../Nadadores'> Nadadores </CabecalhoLink>

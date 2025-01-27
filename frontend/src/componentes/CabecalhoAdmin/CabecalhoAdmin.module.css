@@ -69,7 +69,7 @@ nav a:hover {
 }
 
 .menuIcon {
-    display: none;
+    display: block;
     font-size: 30px;
     cursor: pointer;
     color: white;
@@ -83,6 +83,14 @@ nav a:hover {
     position: absolute;
     top: 10px;
     right: 10px;
+}
+
+nav.open + .closeButton {
+    display: block;
+}
+
+nav.open + .menuIcon {
+    display: none;
 }
 
 @media (max-width: 600px) {
