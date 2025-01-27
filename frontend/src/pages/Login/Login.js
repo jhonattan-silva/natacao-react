@@ -35,6 +35,10 @@ const Login = () => {
         }
     };
 
+    const handleBack = () => {
+        navigate('/'); // Navega para a página inicial
+    };
+
     return (
         <div className={style['login-container']}>
             <div className={style['login-box']}>
@@ -61,6 +65,7 @@ const Login = () => {
                     {error && <p className={style['error-message']}>{error}</p>}
                     <button type="submit" className={style['login-button']}>Entrar</button>
                 </form>
+                <button onClick={handleBack} className={style['back-button']}>Voltar</button>
             </div>
         </div>
     );
