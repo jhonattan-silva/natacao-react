@@ -17,15 +17,16 @@ const Etapas = () => {
     const [raias, setRaias] = useState(''); //estado para quantidade de raias
     const [anoSelecionado, setAnoSelecionado] = useState('2025'); // Estado para o ano selecionado
 
-    const apiListaEtapas = `etapas/listarEtapas`;
-    const apiCadastraEtapas = `etapas/cadastrarEtapas`;
-    const apiListaTorneios = `etapas/listarTorneios`;
-    const apiListaProvasMasculino = `etapas/listarProvas?sexo=M`;
-    const apiListaProvasFeminino = `etapas/listarProvas?sexo=F`;
-    const apiAtualizaEtapas = `etapas/atualizarEtapas`;
-    const apiExcluiEtapa = `etapas/excluiEtapa`;
-    const apiAbreInscricao = `etapas/abreInscricao`;
-    const apiListaEtapasAno = `etapas/listarEtapasAno`;
+    const baseURL = 'https://www.ligapaulistadenatacao.com.br:5000/api/';
+    const apiListaEtapas = `${baseURL}etapas/listarEtapas`;
+    const apiCadastraEtapas = `${baseURL}etapas/cadastrarEtapas`;
+    const apiListaTorneios = `${baseURL}etapas/listarTorneios`;
+    const apiListaProvasMasculino = `${baseURL}etapas/listarProvas?sexo=M`;
+    const apiListaProvasFeminino = `${baseURL}etapas/listarProvas?sexo=F`;
+    const apiAtualizaEtapas = `${baseURL}etapas/atualizarEtapas`;
+    const apiExcluiEtapa = `${baseURL}etapas/excluiEtapa`;
+    const apiAbreInscricao = `${baseURL}etapas/abreInscricao`;
+    const apiListaEtapasAno = `${baseURL}etapas/listarEtapasAno`;
 
     useEffect(() => {
         fetchData(anoSelecionado); // Chama a função `fetchData` ao montar o componente
@@ -33,12 +34,16 @@ const Etapas = () => {
 
     const fetchData = async (ano) => {
         try {
-            const response = await api.get(`${apiListaEtapasAno}/${ano}`); // Busca no backend a lista de etapas para o ano selecionado
-            const etapasFormatadas = response.data.map(etapa => ({
-                ...etapa,
-                data: new Date(etapa.data).toLocaleDateString('pt-BR')
-            }));
-            setEtapas(etapasFormatadas); // Define o estado `etapas` com a lista formatada
+            const response = await api.get(`${apiListaEtapasAno}?ano=${ano}`); // Busca no backend a lista de etapas para o ano selecionado
+            if (response.data) {
+                const etapasFormatadas = response.data.map(etapa => ({
+                    ...etapa,
+                    data: new Date(etapa.data).toLocaleDateString('pt-BR')
+                }));
+                setEtapas(etapasFormatadas); // Define o estado `etapas` com a lista formatada
+            } else {
+                console.error('Nenhum dado retornado da API');
+            }
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
         }
@@ -139,7 +144,11 @@ const Etapas = () => {
         const fetchTorneios = async () => {
             try {
                 const response = await api.get(apiListaTorneios);
-                setListaTorneios(response.data);
+                if (response.data) {
+                    setListaTorneios(response.data);
+                } else {
+                    console.error('Nenhum dado retornado da API');
+                }
             } catch (error) {
                 console.error('Erro ao buscar torneios:', error);
             }
@@ -196,39 +205,44 @@ const Etapas = () => {
         const fetchProvas = async () => {
             try {
                 const responseMasculino = await api.get(apiListaProvasMasculino);
-                const formattedMasculino = responseMasculino.data.map(prova => ({
-                    id: prova.id.toString(),
-                    label: `${prova.distancia}m ${prova.estilo} (${prova.tipo})`,
-                    estilo: prova.estilo,
-                    distancia: prova.distancia,
-                    tipo: prova.tipo
-                }));
-                setProvasMasculino(formattedMasculino);
-
                 const responseFeminino = await api.get(apiListaProvasFeminino);
-                const formattedFeminino = responseFeminino.data.map(prova => ({
-                    id: prova.id.toString(),
-                    label: `${prova.distancia}m ${prova.estilo} (${prova.tipo})`,
-                    estilo: prova.estilo,
-                    distancia: prova.distancia,
-                    tipo: prova.tipo
-                }));
-                setProvasFeminino(formattedFeminino);
 
-                const generatedIdMap = {};
-                formattedMasculino.forEach(masculino => {
-                    const feminino = formattedFeminino.find(
-                        fem => fem.estilo === masculino.estilo &&
-                            fem.distancia === masculino.distancia &&
-                            fem.tipo === masculino.tipo
-                    );
-                    if (feminino) {
-                        generatedIdMap[masculino.id] = feminino.id;
-                    }
-                });
-                setIdMap(generatedIdMap);
+                if (responseMasculino.data && responseFeminino.data) {
+                    const formattedMasculino = responseMasculino.data.map(prova => ({
+                        id: prova.id.toString(),
+                        label: `${prova.distancia}m ${prova.estilo} (${prova.tipo})`,
+                        estilo: prova.estilo,
+                        distancia: prova.distancia,
+                        tipo: prova.tipo
+                    }));
+                    setProvasMasculino(formattedMasculino);
 
-                setProvasCarregadas(true); // Define como carregado após buscar todas as provas
+                    const formattedFeminino = responseFeminino.data.map(prova => ({
+                        id: prova.id.toString(),
+                        label: `${prova.distancia}m ${prova.estilo} (${prova.tipo})`,
+                        estilo: prova.estilo,
+                        distancia: prova.distancia,
+                        tipo: prova.tipo
+                    }));
+                    setProvasFeminino(formattedFeminino);
+
+                    const generatedIdMap = {};
+                    formattedMasculino.forEach(masculino => {
+                        const feminino = formattedFeminino.find(
+                            fem => fem.estilo === masculino.estilo &&
+                                fem.distancia === masculino.distancia &&
+                                fem.tipo === masculino.tipo
+                        );
+                        if (feminino) {
+                            generatedIdMap[masculino.id] = feminino.id;
+                        }
+                    });
+                    setIdMap(generatedIdMap);
+
+                    setProvasCarregadas(true); // Define como carregado após buscar todas as provas
+                } else {
+                    console.error('Nenhum dado retornado da API');
+                }
             } catch (error) {
                 console.error('Erro ao buscar provas:', error);
             }
