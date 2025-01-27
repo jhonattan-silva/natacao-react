@@ -34,7 +34,7 @@ const Etapas = () => {
 
     const fetchData = async (ano) => {
         try {
-            const response = await api.get(`${apiListaEtapasAno}?ano=${ano}`); // Busca no backend a lista de etapas para o ano selecionado
+            const response = await api.get(`${apiListaEtapasAno}/${ano}`); // Busca no backend a lista de etapas para o ano selecionado
             if (response.data) {
                 const etapasFormatadas = response.data.map(etapa => ({
                     ...etapa,
