@@ -345,7 +345,7 @@ const Etapas = () => {
                         { id: '2025', value: '2025', label: '2025' }
                     ]}
                     valor={anoSelecionado}
-                    aoAlterar={setAnoSelecionado}
+                    onChange={setAnoSelecionado}
                 />
                 <TabelaEdicao
                     dados={etapas}
