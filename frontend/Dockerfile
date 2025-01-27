@@ -7,18 +7,17 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Estágio de build
-FROM base AS build
-ENV NODE_ENV=production
+# Estágio de build (produção)
+FROM node:20.12.1 AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
 COPY . .
 RUN npm run build
 
-# Estágio de produção com Nginx
+# Estágio final: Produção com NGINX
 FROM nginx:alpine AS production
 COPY nginx/nginx.prod.conf /etc/nginx/nginx.conf
-WORKDIR /usr/share/nginx/html
-RUN rm -rf ./* # Limpa arquivos antigos para evitar conflitos
-COPY --from=build /app/build .
-
+COPY --from=build /app/build /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
