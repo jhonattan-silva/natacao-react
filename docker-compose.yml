@@ -69,6 +69,6 @@ services:
       - db_data:/var/lib/mysql
       - ./backend/config/my.cnf:/etc/mysql/conf.d/my.cnf
 
-  volumes:
-    db_data:
-    frontend_build:
+volumes:
+  db_data:
+  frontend_build:
