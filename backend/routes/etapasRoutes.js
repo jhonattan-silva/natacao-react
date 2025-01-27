@@ -20,13 +20,30 @@ router.get('/listarEtapas', async (req, res) => {
 });
 
 
-router.get('/listarEtapasAno', async (req, res) => {
+router.get('/listarEtapasAnoAtual', async (req, res) => {
     try {
         const [etapasAno] = await db.query(`
             SELECT * 
             FROM eventos 
             WHERE YEAR(data) = YEAR(CURDATE())
         `);
+
+        res.json(etapasAno);
+    } catch (error) {
+        console.error('Erro ao buscar etapas do ano:', error);
+        res.status(500).json({ error: 'Erro ao buscar etapas do ano' });
+    }
+});
+
+// Rota para BUSCAR ETAPAS POR ANO
+router.get('/listarEtapasAno', async (req, res) => {
+    const ano = req.query.ano; // Obtém o parâmetro 'ano' da query string
+    try {
+        const [etapasAno] = await db.query(`
+            SELECT * 
+            FROM eventos 
+            WHERE YEAR(data) = ?
+        `, [ano]);
 
         res.json(etapasAno);
     } catch (error) {
