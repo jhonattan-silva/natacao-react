@@ -55,6 +55,7 @@ const Equipes = () => {
   };
 
   const [nomeEquipe, setNomeEquipe] = useState(''); // Para input de nome
+  const [cidadeEquipe, setCidadeEquipe] = useState(''); // Para input de cidade
   const [treinadorEquipe, setTreinadorEquipe] = useState(''); // Para o treinador escolhido
   const [listaTreinadores, setListaTreinadores] = useState([]); // Para listar os treinadores
 
@@ -77,12 +78,19 @@ const Equipes = () => {
       placeholder: "Digite o nome da equipe",
       valor: nomeEquipe,
       aoAlterar: setNomeEquipe
+    },
+    {
+      obrigatorio: true,
+      label: "Cidade",
+      placeholder: "Digite a cidade da equipe",
+      valor: cidadeEquipe,
+      aoAlterar: setCidadeEquipe
     }
   ];
 
   const aoSalvar = (evento) => {
     evento.preventDefault();
-    adicionarEquipe({ nome: nomeEquipe, treinadorId: treinadorEquipe });
+    adicionarEquipe({ nome: nomeEquipe, cidade: cidadeEquipe, treinadorId: treinadorEquipe });
   };
 
   return (
