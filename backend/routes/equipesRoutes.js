@@ -6,7 +6,7 @@ const db = require('../config/db');
 router.get('/listarEquipes', async (req, res) => {
   try {
     const [equipes] = await db.query(`
-      SELECT e.nome AS Equipe, e.cidade AS Cidade, e.id AS id, u.nome AS Treinador 
+      SELECT e.nome AS Equipe, e.cidade AS Cidade, e.id AS id, e.ativo AS Ativo, u.nome AS Treinador 
       FROM equipes e 
       LEFT JOIN usuarios_equipes ue ON e.id = ue.equipes_id 
       LEFT JOIN usuarios u ON ue.usuarios_id = u.id
@@ -22,7 +22,7 @@ router.get('/:id', async (req, res) => { // Rota para buscar uma equipe específ
   try {
     const equipeId = req.params.id;
 
-    const query = 'SELECT id, nome, cidade FROM equipes WHERE id = ?';
+    const query = 'SELECT id, nome, cidade, ativo FROM equipes WHERE id = ?';
     const [equipe] = await db.query(query, [equipeId]);
 
     if (equipe.length === 0) {
@@ -69,7 +69,21 @@ router.post('/cadastrarEquipe', async (req, res) => {
   }
 });
 
-//Rota para buscar treinadores por nome
+// Rota para inativar/ativar equipe
+router.put('/inativarEquipe/:id', async (req, res) => {
+  const equipeId = req.params.id;
+  const { ativo } = req.body;
+
+  try {
+    await db.query('UPDATE equipes SET ativo = ? WHERE id = ?', [ativo, equipeId]);
+    res.status(200).json({ message: 'Status da equipe atualizado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao atualizar status da equipe:', error);
+    res.status(500).json({ error: 'Ocorreu um erro ao atualizar o status da equipe. Por favor, tente novamente mais tarde.' });
+  }
+});
+
+// Rota para buscar treinadores por nome
 router.get('/listarTreinadores', async (req, res) => {
   const query = req.query.query;
   try {

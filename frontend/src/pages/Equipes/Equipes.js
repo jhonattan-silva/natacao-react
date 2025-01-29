@@ -13,6 +13,7 @@ const Equipes = () => {
   const apiListaEquipes = "equipes/listarEquipes";
   const apiCadastraEquipe = `equipes/cadastrarEquipe`;
   const apiListaTreinadores = `equipes/listarTreinadores`;
+  const apiInativarEquipe = `equipes/inativarEquipe`;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,9 +32,14 @@ const Equipes = () => {
     // Lógica de edição aqui
   };
 
-  const handleInativar = (id) => {
-    console.log(`Inativando equipe com ID: ${id}`);
-    // Lógica de inativação aqui
+  const handleInativar = async (id, ativo) => {
+    try {
+      await api.put(`${apiInativarEquipe}/${id}`, { ativo: ativo ? 0 : 1 });
+      const response = await api.get(`${apiListaEquipes}`);
+      setEquipes(response.data);
+    } catch (error) {
+      console.error('Erro ao inativar/ativar equipe:', error);
+    }
   };
 
   const handleAdicionar = () => {
@@ -98,7 +104,16 @@ const Equipes = () => {
     <CabecalhoAdmin/>
       <div className={style.equipesPage}>
         <h2>EQUIPES</h2>
-        <TabelaEdicao dados={equipes} onEdit={handleEdit} onInativar={handleInativar} />
+        <TabelaEdicao 
+          dados={equipes} 
+          onEdit={handleEdit} 
+          onInativar={handleInativar} 
+          funcExtra={(equipe) => (
+            <Botao onClick={() => handleInativar(equipe.id, equipe.ativo)}>
+              {equipe.ativo ? 'Inativar' : 'Ativar'}
+            </Botao>
+          )}
+        />
         <Botao onClick={handleAdicionar}>Adicionar Nova Equipe</Botao>
         {formVisivel && (
           <div>
