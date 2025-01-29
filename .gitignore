@@ -42,3 +42,5 @@ backend/.env.*
 certificados/
 docker-compose.override.yml
 nginx.dev.conf
+
+certbot/

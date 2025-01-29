@@ -14,7 +14,7 @@ router.get('/listarNadadores', authMiddleware, async (req, res) => {
         }
 
         // Busca os nadadores que pertencem à equipe do usuário logado
-        const [rows] = await db.query('SELECT nome, cpf, data_nasc, celular, sexo FROM nadadores WHERE equipes_id = ?', [equipeId]);
+        const [rows] = await db.query('SELECT nome, cpf, data_nasc, celular, sexo, cidade FROM nadadores WHERE equipes_id = ?', [equipeId]);
         res.json(rows);
     } catch (error) {
         console.error('Erro ao buscar nadadores:', error);
@@ -34,7 +34,7 @@ router.get('/listarEquipes', authMiddleware, async (req, res) => {
 
 //Rota para adicionar Nadador
 router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
-    const { nome, cpf, data_nasc, telefone, sexo, equipeId } = req.body;
+    const { nome, cpf, data_nasc, telefone, sexo, equipeId, cidade } = req.body;
 
     const cpfNumeros = cpf.replace(/\D/g, '');
     const telefoneNumeros = telefone.replace(/\D/g, '');
@@ -57,9 +57,9 @@ router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
 
         // Insere o nadador no banco de dados com a categoria correspondente
         const [result] = await db.query(
-            `INSERT INTO nadadores (nome, cpf, data_nasc, celular, sexo, equipes_id, categorias_id) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [nome, cpfNumeros, data_nasc, telefoneNumeros, sexo, equipeId, categoria[0].id]
+            `INSERT INTO nadadores (nome, cpf, data_nasc, celular, sexo, equipes_id, categorias_id, cidade) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [nome, cpfNumeros, data_nasc, telefoneNumeros, sexo, equipeId, categoria[0].id, cidade]
         );
 
         res.status(201).json({ id: result.insertId }); // Retorna o ID do novo nadador
