@@ -21,6 +21,7 @@ const Nadadores = () => {
     const [cpf, setCpf] = useState('');
     const [dataNasc, setDataNasc] = useState('');
     const [celular, setCelular] = useState('');
+    const [cidade, setCidade] = useState(''); // Para input de cidade
 
     /* RADIO GROUP */
     const [sexo, setSexo] = useState('');
@@ -195,6 +196,12 @@ const Nadadores = () => {
             aoAlterar: (valor) => setCpf(aplicarMascaraCPF(valor)) // Aplicando a máscara ao alterar
         },
         {
+            label: "Cidade",
+            placeholder: "Digite a cidade",
+            valor: cidade,
+            aoAlterar: setCidade
+        },
+        {
             obrigatorio: true,
             tipo: "date",
             label: "Data de Nascimento",
@@ -217,6 +224,7 @@ const Nadadores = () => {
         setDataNasc('');
         setCelular('');
         setSexo('');
+        setCidade('');
         setFormVisivel(false);
     };
 
@@ -246,7 +254,8 @@ const Nadadores = () => {
             data_nasc: dataNasc,
             telefone: celular,
             sexo: sexo,
-            equipeId: equipes
+            equipeId: equipes,
+            cidade: cidade
         };
 
         await adicionarNadador(nadadorDados);
