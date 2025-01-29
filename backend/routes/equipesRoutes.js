@@ -6,7 +6,7 @@ const db = require('../config/db');
 router.get('/listarEquipes', async (req, res) => {
   try {
     const [equipes] = await db.query(`
-      SELECT e.nome AS Equipe, e.id AS id, u.nome AS Treinador 
+      SELECT e.nome AS Equipe, e.cidade AS Cidade, e.id AS id, u.nome AS Treinador 
       FROM equipes e 
       LEFT JOIN usuarios_equipes ue ON e.id = ue.equipes_id 
       LEFT JOIN usuarios u ON ue.usuarios_id = u.id
@@ -18,12 +18,11 @@ router.get('/listarEquipes', async (req, res) => {
   }
 });
 
-
 router.get('/:id', async (req, res) => { // Rota para buscar uma equipe específica pelo ID
   try {
     const equipeId = req.params.id;
 
-    const query = 'SELECT id, nome FROM equipes WHERE id = ?';
+    const query = 'SELECT id, nome, cidade FROM equipes WHERE id = ?';
     const [equipe] = await db.query(query, [equipeId]);
 
     if (equipe.length === 0) {
@@ -38,7 +37,7 @@ router.get('/:id', async (req, res) => { // Rota para buscar uma equipe específ
 });
 
 router.post('/cadastrarEquipe', async (req, res) => {
-  const { nome, treinadorId } = req.body;
+  const { nome, cidade, treinadorId } = req.body;
 
   if (!treinadorId) {
     return res.status(400).send('Treinador não foi selecionado');
@@ -49,7 +48,7 @@ router.post('/cadastrarEquipe', async (req, res) => {
     await db.query('START TRANSACTION');
 
     // Insere a equipe e obtém o ID gerado
-    const [resultEquipe] = await db.query('INSERT INTO equipes (nome) VALUES (?)', [nome]);
+    const [resultEquipe] = await db.query('INSERT INTO equipes (nome, cidade) VALUES (?, ?)', [nome, cidade]);
     const equipeId = resultEquipe.insertId;
 
     // Insere o treinador (usuario_id) na tabela usuarios_equipes com a equipe recém-criada
