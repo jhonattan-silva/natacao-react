@@ -5,6 +5,7 @@ import api from '../../servicos/api';
 /*******
  * Componente de lista suspensa
  * fonteDados: URL da API que fornece os dados
+ * opcoes: Lista de opções a serem exibidas (manual, sem consulta à API)
  * onChange: Função a ser chamada quando o valor da lista for alterado
  * textoPlaceholder: Texto a ser exibido quando nenhum item for selecionado
  * obrigatorio: Indica se o campo é obrigatório
