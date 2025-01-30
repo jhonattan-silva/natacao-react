@@ -66,11 +66,11 @@ const CabecalhoAdmin = () => {
                 {userProfile.includes('admin') && (
                     <>
                         <CabecalhoLink url='../Etapas'> Etapas </CabecalhoLink>
-                        <CabecalhoLink url='../balizamento'> Balizamento </CabecalhoLink>
-                        <CabecalhoLink url='../ResultadosEntrada'> Inserir Resultados </CabecalhoLink>
+                        {/* <CabecalhoLink url='../balizamento'> Balizamento </CabecalhoLink> */}
+                        {/* <CabecalhoLink url='../ResultadosEntrada'> Inserir Resultados </CabecalhoLink> */}
                     </>
                 )}
-                <CabecalhoLink url='../Classificacao'> Classificação </CabecalhoLink>
+                {/* <CabecalhoLink url='../Classificacao'> Classificação </CabecalhoLink> */}
                 <CabecalhoLink url='../Admin'> ADMIN </CabecalhoLink>
                 <div className={style.userInfo}> {/* Adicionar classe para estilização */}
                     <div className={style.dadosUsuario}> 
