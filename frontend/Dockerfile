@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Estágio final: Produção com NGINX
-FROM nginx:alpine AS production
+FROM nginx:latest AS production
 COPY nginx/nginx.prod.conf /etc/nginx/nginx.conf
 COPY --from=build /app/build /usr/share/nginx/html
 EXPOSE 80

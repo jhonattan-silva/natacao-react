@@ -53,7 +53,7 @@ const Inicio = () => {
             <Cabecalho />
             <Carrossel />
             <section className={style.container}>
-                <h1>ETAPAS 2025</h1>
+                <h1>ETAPAS DE 2025</h1>
                 <div className={style.cardsContainer}>
                     {etapas.map((etapa) => {
                         const { dataEvento, horario } = formataData(etapa.data);
