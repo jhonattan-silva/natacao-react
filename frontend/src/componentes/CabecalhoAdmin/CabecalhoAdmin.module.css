@@ -70,7 +70,7 @@ nav a:hover {
 
 .userInfo {
     display: flex;
-    align-items: center;
+    align-items: right;
     justify-content: flex-end; /* Alinhar conteúdo à direita */
     gap: 10px; /* Espaçamento entre elementos */
 }
