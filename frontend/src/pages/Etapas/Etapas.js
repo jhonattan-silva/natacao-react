@@ -352,12 +352,23 @@ const Etapas = () => {
             <div className={style.etapasContainer}>
                 <h1>ETAPAS</h1>
                 <ListaSuspensa
+<<<<<<< HEAD
                     textoPlaceholder={"Escolha o torneio"}
                     opcoes={listaTorneios} // Passa a lista de torneios diretamente
                     onChange={torneioSelecionado}
                     obrigatorio={true}
                     selectId="id" // Campo que será usado como valor do `option`
                     selectExibicao="nome" // Campo que será usado como texto visível no `option`
+=======
+                    textoPlaceholder={"Escolha o ano"}
+                    opcoes={[
+                        { id: '2023', value: '2023', label: '2023' },
+                        { id: '2024', value: '2024', label: '2024' },
+                        { id: '2025', value: '2025', label: '2025' }
+                    ]}
+                    valor={anoSelecionado}
+                    onChange={setAnoSelecionado}
+>>>>>>> 9fe8f9ac3142322f2895b5ce437d2f185b51f68e
                 />
                 <TabelaEdicao
                     dados={etapas}

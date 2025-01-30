@@ -72,7 +72,11 @@ const CabecalhoAdmin = () => {
                 )}
                 {/* <CabecalhoLink url='../Classificacao'> Classificação </CabecalhoLink> */}
                 <CabecalhoLink url='../Admin'> ADMIN </CabecalhoLink>
+<<<<<<< HEAD
                 <div className={style.userInfo}> 
+=======
+                <div className={style.userInfo}> {/* Adicionar classe para estilização */}
+>>>>>>> 9fe8f9ac3142322f2895b5ce437d2f185b51f68e
                     <div className={style.dadosUsuario}> 
                         {nome && <p>{nome}</p>}
                         {equipe && <p>{equipe}</p>}

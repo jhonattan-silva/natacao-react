@@ -70,7 +70,11 @@ nav a:hover {
 
 .userInfo {
     display: flex;
+<<<<<<< HEAD
     align-items: right;
+=======
+    align-items: center;
+>>>>>>> 9fe8f9ac3142322f2895b5ce437d2f185b51f68e
     justify-content: flex-end; /* Alinhar conteúdo à direita */
     gap: 10px; /* Espaçamento entre elementos */
 }
