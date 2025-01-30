@@ -18,7 +18,7 @@ router.get('/listarNadadores', authMiddleware, async (req, res) => {
         res.json(rows);
     } catch (error) {
         console.error('Erro ao buscar nadadores:', error);
-        res.status(500).send('Erro ao buscar nadadores');
+        res.status(500).json({ message: 'Erro ao buscar nadadores', error: error.message });
     }
 });
 
