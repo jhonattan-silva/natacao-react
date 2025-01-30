@@ -25,6 +25,8 @@ node_modules/
 .env
 .env.*
 .sql
+versao-jan-25.sql
+
 
 npm-debug.log*
 yarn-debug.log*

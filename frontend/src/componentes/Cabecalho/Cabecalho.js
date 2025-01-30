@@ -20,12 +20,12 @@ const Cabecalho = () => {
             {!menuOpen && <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>}
             {menuOpen && <span className={style.closeButton} onClick={toggleMenu}>&times;</span>}
             <nav className={menuOpen ? style.open : ''}>
-                <CabecalhoLink url='./Noticias'> Noticias </CabecalhoLink>
-                <CabecalhoLink url='./Etapas'> Etapas </CabecalhoLink>
-                <CabecalhoLink url='./Resultados'> Resultados </CabecalhoLink>
-                <CabecalhoLink url='./Classificacao'> Classificação </CabecalhoLink>
-                <CabecalhoLink url='./balizamento'> Balizamento </CabecalhoLink>
-                <CabecalhoLink url='./rankings'>Rankings</CabecalhoLink>
+                {/* <CabecalhoLink url='./Noticias'> Noticias </CabecalhoLink> */}
+                {/* <CabecalhoLink url='./Etapas'> Etapas </CabecalhoLink> */}
+                {/* <CabecalhoLink url='./Resultados'> Resultados </CabecalhoLink> */}
+                {/* <CabecalhoLink url='./Classificacao'> Classificação </CabecalhoLink> */}
+                {/* <CabecalhoLink url='./balizamento'> Balizamento </CabecalhoLink> */}
+                {/* <CabecalhoLink url='./rankings'>Rankings</CabecalhoLink> */}
                 <CabecalhoLink url='./Admin' className={style.adminLink}> Acesso Restrito </CabecalhoLink>
             </nav>
         </header>
