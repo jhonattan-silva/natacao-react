@@ -83,6 +83,34 @@ router.put('/inativarEquipe/:id', async (req, res) => {
   }
 });
 
+// Rota para atualizar uma equipe existente
+router.put('/atualizarEquipe/:id', async (req, res) => {
+  const equipeId = req.params.id;
+  const { nome, cidade, treinadorId } = req.body;
+
+  try {
+    // Iniciar uma transação para garantir que ambas as operações sejam feitas
+    await db.query('START TRANSACTION');
+
+    // Atualiza a equipe
+    await db.query('UPDATE equipes SET nome = ?, cidade = ? WHERE id = ?', [nome, cidade, equipeId]);
+
+    // Atualiza o treinador (usuario_id) na tabela usuarios_equipes
+    await db.query('DELETE FROM usuarios_equipes WHERE equipes_id = ?', [equipeId]);
+    await db.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [treinadorId, equipeId]);
+
+    // Confirma a transação se tudo ocorrer bem
+    await db.query('COMMIT');
+
+    res.status(200).json({ message: 'Equipe atualizada com sucesso' });
+  } catch (error) {
+    // Se houver erro, desfaz a transação
+    await db.query('ROLLBACK');
+    console.error('Erro ao atualizar equipe:', error);
+    res.status(500).json({ error: 'Ocorreu um erro ao atualizar a equipe. Por favor, tente novamente mais tarde.' });
+  }
+});
+
 // Rota para buscar treinadores por nome
 router.get('/listarTreinadores', async (req, res) => {
   const query = req.query.query;
