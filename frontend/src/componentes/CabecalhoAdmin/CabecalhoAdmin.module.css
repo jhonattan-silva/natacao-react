@@ -15,7 +15,8 @@
 nav {
     display: flex;
     align-items: center;
-    justify-content: center; /* Centralizar links */
+    justify-content: center;
+    /* Centralizar links */
     flex-grow: 1;
 }
 
@@ -26,7 +27,8 @@ nav a {
 }
 
 nav a:last-child {
-    margin-left: auto; /* Alinhar o último link à direita */
+    margin-left: auto;
+    /* Alinhar o último link à direita */
     margin-right: 0;
 }
 
@@ -41,9 +43,12 @@ nav a:hover {
 
 .dadosUsuario {
     display: flex;
-    flex-direction: column; /* Organizar em colunas */
-    align-items: flex-end; /* Alinhar à direita */
-    margin-right: 10px; /* Adicionar margem direita */
+    flex-direction: column;
+    /* Organizar em colunas */
+    align-items: flex-end;
+    /* Alinhar à direita */
+    margin-right: 10px;
+    /* Adicionar margem direita */
 }
 
 .dadosUsuario p {
@@ -54,14 +59,18 @@ nav a:hover {
 }
 
 .logoutButton {
-    padding: 10px 20px; /* Aumentar o padding */
+    padding: 10px 20px;
+    /* Aumentar o padding */
     background-color: #dc3545 !important;
     color: white;
     border: none;
-    border-radius: 5px; /* Aumentar o border-radius */
+    border-radius: 5px;
+    /* Aumentar o border-radius */
     cursor: pointer;
-    font-size: 1em; /* Aumentar o tamanho da fonte */
-    transition: background-color 0.3s ease; /* Adicionar transição suave */
+    font-size: 1em;
+    /* Aumentar o tamanho da fonte */
+    transition: background-color 0.3s ease;
+    /* Adicionar transição suave */
 }
 
 .logoutButton:hover {
@@ -70,13 +79,11 @@ nav a:hover {
 
 .userInfo {
     display: flex;
-<<<<<<< HEAD
     align-items: right;
-=======
-    align-items: center;
->>>>>>> 9fe8f9ac3142322f2895b5ce437d2f185b51f68e
-    justify-content: flex-end; /* Alinhar conteúdo à direita */
-    gap: 10px; /* Espaçamento entre elementos */
+    justify-content: flex-end;
+    /* Alinhar conteúdo à direita */
+    gap: 10px;
+    /* Espaçamento entre elementos */
 }
 
 .menuIcon {
@@ -96,11 +103,11 @@ nav a:hover {
     right: 10px;
 }
 
-nav.open + .closeButton {
+nav.open+.closeButton {
     display: block;
 }
 
-nav.open + .menuIcon {
+nav.open+.menuIcon {
     display: none;
 }
 

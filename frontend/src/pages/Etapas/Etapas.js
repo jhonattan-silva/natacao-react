@@ -346,31 +346,40 @@ const Etapas = () => {
         }
     };
 
+    const fecharFormulario = () => {
+        limparFormulario();
+        setFormVisivel(false);
+    };
+
     return (
         <>
             <CabecalhoAdmin />
             <div className={style.etapasContainer}>
                 <h1>ETAPAS</h1>
-                <ListaSuspensa
-                    textoPlaceholder={"Escolha o torneio"}
-                    opcoes={listaTorneios} // Passa a lista de torneios diretamente
-                    onChange={torneioSelecionado}
-                    obrigatorio={true}
-                    selectId="id" // Campo que será usado como valor do `option`
-                    selectExibicao="nome" // Campo que será usado como texto visível no `option`
-                />
-                <TabelaEdicao
-                    dados={etapas}
-                    colunasOcultas={['id', 'Torneios_id']}
-                    onEdit={handleEdit}
-                    onDelete={handleExcluir}
-                    funcExtra={(etapa) => (
-                        <Botao onClick={() => abreInscricao(etapa.id, etapa.inscricao_aberta)}>
-                            {etapa.inscricao_aberta ? 'Fechar Inscrição' : 'Abrir Inscrição'}
-                        </Botao>
-                    )}
-                />
-                <Botao classBtn={style.btnComponente} onClick={handleAdicionar}>Adicionar Nova Etapa</Botao>
+                {!formVisivel && (
+                    <>
+                        <ListaSuspensa
+                            textoPlaceholder={"Escolha o torneio"}
+                            opcoes={listaTorneios} // Passa a lista de torneios diretamente
+                            onChange={torneioSelecionado}
+                            obrigatorio={true}
+                            selectId="id" // Campo que será usado como valor do `option`
+                            selectExibicao="nome" // Campo que será usado como texto visível no `option`
+                        />
+                        <TabelaEdicao
+                            dados={etapas}
+                            colunasOcultas={['id', 'Torneios_id']}
+                            onEdit={handleEdit}
+                            onDelete={handleExcluir}
+                            funcExtra={(etapa) => (
+                                <Botao onClick={() => abreInscricao(etapa.id, etapa.inscricao_aberta)}>
+                                    {etapa.inscricao_aberta ? 'Fechar Inscrição' : 'Abrir Inscrição'}
+                                </Botao>
+                            )}
+                        />
+                        <Botao classBtn={style.btnComponente} onClick={handleAdicionar}>Adicionar Nova Etapa</Botao>
+                    </>
+                )}
                 {formVisivel && (
                     <div className={style.cadastroContainer}>
                         <Formulario inputs={inputs} aoSalvar={aoSalvar} />
@@ -413,7 +422,10 @@ const Etapas = () => {
                                 aoAlterar={aoAlterarFeminino}
                             />
                         </div>
-                        <Botao classBtn={style.btnComponente} onClick={aoSalvar}>SALVAR</Botao>
+                        <div className={style['button-group']}>
+                            <Botao classBtn={style.btnComponente} onClick={aoSalvar}>SALVAR</Botao>
+                            <Botao onClick={fecharFormulario}>Voltar</Botao>
+                        </div>
                     </div>
                 )}
             </div>
