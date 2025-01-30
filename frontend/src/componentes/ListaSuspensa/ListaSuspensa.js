@@ -13,6 +13,7 @@ import api from '../../servicos/api';
  * valorSelecionado: Valor inicial selecionado
  */
 const ListaSuspensa = ({ fonteDados,
+    opcoes: opcoesExternas = [], // Opções passadas diretamente (opcional)
     onChange,
     textoPlaceholder,
     obrigatorio = false,
@@ -21,28 +22,38 @@ const ListaSuspensa = ({ fonteDados,
     valorSelecionado = '' // Valor inicial selecionado
 }) => {
 
-    const [opcoes, setOpcoes] = useState([]);
+    const [opcoes, setOpcoes] = useState(opcoesExternas); // Usa as opções externas como valor inicial
     const [error, setError] = useState(null); // Estado para armazenar o erro
     const [apiEndpoint, setApiEndpoint] = useState(''); // Estado para mostrar a API acessada
     const [valor, setValor] = useState(valorSelecionado); // Estado para o valor selecionado
 
     useEffect(() => {
-        const fetchData = async () => {
-            setApiEndpoint(fonteDados); // Salva o endpoint atual
-            try {
-                const response = await api.get(fonteDados);
-                if (!Array.isArray(response.data)) {
-                    throw new Error(`LS->Resposta não é um array. Dados: ${JSON.stringify(response.data)}`);
+        // Se `fonteDados` for fornecida, busca os dados da API
+        if (fonteDados) {
+            const fetchData = async () => {
+                setApiEndpoint(fonteDados);
+                try {
+                    const response = await api.get(fonteDados);
+                    if (!Array.isArray(response.data)) {
+                        throw new Error(`LS->Resposta não é um array. Dados: ${JSON.stringify(response.data)}`);
+                    }
+                    setOpcoes(response.data);
+                    setError(null);
+                } catch (err) {
+                    console.error(`Erro ao acessar ${fonteDados}:`, err);
+                    setError(`Erro ao acessar ${fonteDados}: ${err.message}`);
                 }
-                setOpcoes(response.data);
-                setError(null); // Limpa o erro caso a chamada seja bem-sucedida
-            } catch (err) {
-                console.error(`Erro ao acessar ${fonteDados}:`, err);
-                setError(`Erro ao acessar ${fonteDados}: ${err.message}`);
-            }
-        };
-        fetchData();
+            };
+            fetchData();
+        }
     }, [fonteDados]);
+
+
+    // Se `opcoesExternas` mudar, atualiza o estado `opcoes`
+    useEffect(() => {
+        setOpcoes(opcoesExternas);
+    }, [opcoesExternas]);
+
 
     //MUDANÇA DE OPÇÃO
     const aoEscolher = (event) => {
