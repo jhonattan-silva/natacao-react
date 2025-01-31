@@ -1,5 +1,3 @@
-# Dockerfile do Backend
-
 # Estágio base
 FROM node:20.12.1 AS base
 
@@ -22,5 +20,6 @@ COPY . .
 # Expõe a porta 5000 (usada pelo backend)
 EXPOSE 5000
 
-# Comando padrão (pode ser sobrescrito no docker-compose.yml)
-CMD ["npm", "start"]
+
+# Comando de entrada
+CMD ["./wait-for.sh", "npm", "start"]
