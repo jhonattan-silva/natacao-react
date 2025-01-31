@@ -48,25 +48,38 @@ const Nadadores = () => {
     const apiListaEquipes = `nadadores/listarEquipes`;
 
     // Busca todos os Nadadores e atualizar a lista
+    useEffect(() => {
+        if (user?.equipeId !== undefined) { // Só executa quando user.equipeId estiver carregado
+            console.log("User equipeId antes do fetch:", user?.equipeId);
+            fetchNadadores();
+        }
+    }, [user]); // Depende do user para evitar chamada antes da hora
+    
     const fetchNadadores = async () => {
         try {
-            let equipeId = Array.isArray(user?.equipeId) && user.equipeId.length === 0
-                ? null  // Se for array vazio, trata como null
-                : user?.equipeId || null; // Se for undefined, trata como null
-
+            let equipeId = user?.equipeId;
+    
+            if (Array.isArray(equipeId) && equipeId.length === 0) {
+                equipeId = null; // Se for array vazio, trata como null
+            } else if (equipeId && !isNaN(equipeId)) {
+                equipeId = Number(equipeId); // Garante que seja número
+            } else {
+                equipeId = null;
+            }
+    
             console.log("Equipe ID usado na API:", equipeId);
-
+    
             const response = await api.get(apiListaNadadores, {
-                params: equipeId ? { equipeId } : {} // Não envia equipeId se for null
+                params: equipeId ? { equipeId } : {} // Só envia se for válido
             });
-
+    
             const nadadoresFormatados = response.data.map(nadador => ({
                 ...nadador,
                 data_nasc: new Date(nadador.data_nasc).toLocaleDateString('pt-BR', {
                     day: '2-digit', month: '2-digit', year: 'numeric',
                 }),
             }));
-
+    
             setNadadores(nadadoresFormatados);
         } catch (error) {
             console.error('Erro ao buscar nadadores:', error);
@@ -76,11 +89,6 @@ const Nadadores = () => {
             }
         }
     };
-
-    // Carregar a lista de Nadadores ao montar o componente
-    useEffect(() => {
-        fetchNadadores();
-    }, [user]);
 
 
     //Botão para abrir o formulario de novo Nadador
