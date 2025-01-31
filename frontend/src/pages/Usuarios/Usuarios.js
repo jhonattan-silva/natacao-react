@@ -249,6 +249,8 @@ const Usuarios = () => {
             equipeId: perfisSelecionados.includes(perfilEspecificoId) ? equipeSelecionada : null // Define como null se não houver equipe selecionada ou se o perfil de treinador foi removido
         };
 
+        console.log("Dados do usuário a serem enviados:", usuarioDados); // Log para verificar os dados do usuário, incluindo a senha
+
         try {
             if (isEditing) {
                 // Edita o usuário
