@@ -9,12 +9,17 @@ router.get('/listarNadadores', authMiddleware, async (req, res) => {
     try {
         const equipeId = req.user.equipeId; // Obtém o equipeId do usuário logado a partir do token JWT
 
-        if (!equipeId || equipeId === '') {
-            return res.status(400).json({ message: 'Usuário não pertence a nenhuma equipe.' });
+        // Modificação para listar todos os nadadores se equipeId não for fornecido
+        let query = 'SELECT nome, cpf, data_nasc, celular, sexo, cidade FROM nadadores';
+        let queryParams = [];
+
+        if (equipeId && equipeId !== '') {
+            query += ' WHERE equipes_id = ?';
+            queryParams.push(equipeId);
         }
 
-        // Busca os nadadores que pertencem à equipe do usuário logado
-        const [rows] = await db.query('SELECT nome, cpf, data_nasc, celular, sexo, cidade FROM nadadores WHERE equipes_id = ?', [equipeId]);
+        // Busca os nadadores com base na equipe do usuário logado ou todos se equipeId não for fornecido
+        const [rows] = await db.query(query, queryParams);
         res.json(rows);
     } catch (error) {
         console.error('Erro ao buscar nadadores:', error);
