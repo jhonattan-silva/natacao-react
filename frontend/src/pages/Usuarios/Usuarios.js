@@ -198,7 +198,7 @@ const Usuarios = () => {
             label: "CPF",
             placeholder: "Somente números",
             valor: cpf,
-            aoAlterar: handleCpfChange // Usar a função de máscara
+            aoAlterar: (valor) => setCpf(aplicarMascaraCPF(valor)) // Aplicando a máscara ao alterar
         },
         {
             obrigatorio: true,
@@ -213,7 +213,7 @@ const Usuarios = () => {
             label: "Celular",
             placeholder: "Celular (com ddd, somente números)",
             valor: celular,
-            aoAlterar: handleCelularChange // Usar a função de máscara
+            aoAlterar: (valor) => setCelular(aplicarMascaraCelular(valor))
         },
         {
             obrigatorio: true,
@@ -269,8 +269,6 @@ const Usuarios = () => {
             perfis: perfisSelecionados.map(id => parseInt(id, 10)), // Converter IDs para números inteiros
             equipeId: perfisSelecionados.includes(perfilEspecificoId) ? equipeSelecionada : null // Define como null se não houver equipe selecionada ou se o perfil de treinador foi removido
         };
-
-        console.log("Dados do usuário a serem enviados:", usuarioDados); // Log para verificar os dados do usuário, incluindo a senha
 
         try {
             if (isEditing) {
