@@ -29,10 +29,10 @@ const Nadadores = () => {
 
 
     useEffect(() => { //para setar a equipe do usuário logado
-        console.log("User equipeId antes do setEquipes:", user?.equipeId);
-        if (user?.equipeId) {
+        if (user && user.equipeId !== undefined) {
+            console.log("User equipeId antes do setEquipes:", user.equipeId);
             setEquipes(user.equipeId);
-            console.log("User equipeId após o setEquipes:", user?.equipeId);
+            console.log("User equipeId após o setEquipes:", user.equipeId);
         }
     }, [user]);
 
@@ -49,8 +49,8 @@ const Nadadores = () => {
 
     // Busca todos os Nadadores e atualizar a lista
     useEffect(() => {
-        if (user?.equipeId !== undefined) { // Só executa quando user.equipeId estiver carregado
-            console.log("User equipeId antes do fetch:", user?.equipeId);
+        if (user && user.equipeId !== undefined) { // Só executa quando user.equipeId estiver carregado
+            console.log("User equipeId antes do fetch:", user.equipeId);
             fetchNadadores();
         }
     }, [user]); // Depende do user para evitar chamada antes da hora
@@ -182,6 +182,12 @@ const Nadadores = () => {
         setFormVisivel(false);
     };
 
+    // Função para limpar o formulário e esconder
+    const handleVoltar = () => {
+        limparFormulario();
+        setFormVisivel(false);
+    };
+
     const aoSalvar = async (evento) => {
         evento.preventDefault();
 
@@ -254,6 +260,7 @@ const Nadadores = () => {
                             />
                         )}
                         <Botao onClick={aoSalvar}>Cadastrar</Botao>
+                        <Botao onClick={handleVoltar}>Voltar</Botao>
                     </div>
                 )}
             </div>

@@ -14,7 +14,13 @@ const Inscricao = () => {
     const [eventoSelecionado, setEventoSelecionado] = useState(null);
     const [selecoes, setSelecoes] = useState({});
     const user = useUser(); // Obter o usuário do contexto do usuário
-    
+
+    // Verificar se o usuário está carregado
+    if (!user) {
+        return <p>Carregando...</p>;
+    }
+
+    console.log("Usuário carregado:", user);
 
     const apiEventos = `/inscricao/listarEventos`;
     const apiListaNadadores = `/inscricao/listarNadadores/${user?.equipeId}`; // Passar equipeId
@@ -27,6 +33,7 @@ const Inscricao = () => {
         const fetchEventos = async () => {
             try {
                 const response = await api.get(apiEventos);
+                console.log("Eventos recebidos:", response.data);
                 setEventos(response.data);
             } catch (error) {
                 console.error("Erro ao buscar eventos:", error);
@@ -60,6 +67,7 @@ const Inscricao = () => {
 
     useEffect(() => {
         if (eventoSelecionado) {
+            console.log("Evento selecionado:", eventoSelecionado);
             fetchDadosEvento();
         }
     }, [eventoSelecionado]);
@@ -99,6 +107,8 @@ const Inscricao = () => {
                 }))
         );
 
+        console.log("Inscrições a serem salvas:", inscricoes);
+
         try {
             await api.post(apiSalvarInscricao, inscricoes);
             alert('Inscrição realizada com sucesso!');
@@ -113,7 +123,7 @@ const Inscricao = () => {
         <>
             <CabecalhoAdmin />
             <div className={styles.inscricaoContainer}>
-                <h1>Inscrição - {user?.equipeNome}</h1>
+                <h1>Inscrição - {user.equipeNome}</h1>
                 <div className={styles.centralizado}>
                     <ListaSuspensa
                         fonteDados={apiEventos}

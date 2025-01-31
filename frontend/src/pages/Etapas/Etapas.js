@@ -368,7 +368,7 @@ const Etapas = () => {
                         />
                         <TabelaEdicao
                             dados={etapas}
-                            colunasOcultas={['id', 'Torneios_id']}
+                            colunasOcultas={['id', 'torneios_id']}
                             onEdit={handleEdit}
                             onDelete={handleExcluir}
                             funcExtra={(etapa) => (
