@@ -299,6 +299,7 @@ const Usuarios = () => {
                                 <Botao onClick={() => handleInativar(usuario.id, usuario.ativo)}>
                                     {usuario.ativo ? 'Inativar' : 'Ativar'}
                                 </Botao>
+                            )}
                         />
                         <Botao onClick={handleAdicionar}>Adicionar Novo Usuário</Botao>
                     </>
