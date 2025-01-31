@@ -69,7 +69,6 @@ module.exports = router;
 // Login
 router.post('/login', async (req, res) => {
     const { cpf, senha } = req.body; // recebe cpf e senha do corpo da requisição
-    console.log("Tentativa de login com CPF:", cpf); // Log para verificar o CPF recebido
 
     try {
         // Busca o usuário pelo CPF
@@ -77,12 +76,10 @@ router.post('/login', async (req, res) => {
         const usuario = rows[0]; // Pega o primeiro usuário retornado
 
         if (!usuario) { // Verifica se o usuário não existe
-            console.log("CPF não encontrado:", cpf); // Log para CPF não encontrado
             return res.status(401).json({ message: 'CPF inválido.' });
         }
 
         if (!(await bcrypt.compare(senha, usuario.senha))) { // Verifica se a senha está incorreta
-            console.log("Senha inválida para CPF:", cpf); // Log para senha inválida
             return res.status(401).json({ message: 'Senha inválida.' });
         }
 
@@ -121,7 +118,6 @@ router.post('/login', async (req, res) => {
             { expiresIn: '2h' } // Expira em 2 horas
         );
 
-        console.log("Login bem-sucedido para CPF:", cpf); // Log para login bem-sucedido
         res.status(200).json({ token });
     } catch (err) {
         console.error("Erro ao fazer login:", err); // Log para erro no login

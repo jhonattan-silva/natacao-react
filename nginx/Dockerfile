@@ -5,4 +5,4 @@ FROM nginx:alpine
 COPY --from=lpn2025-frontend /app/build /usr/share/nginx/html
 
 # Copiar o arquivo de configuração do Nginx
-COPY ./nginx/nginx.prod.conf /etc/nginx/nginx.conf
+COPY nginx.prod.conf /etc/nginx/nginx.conf
