@@ -1,5 +1,8 @@
 services:
   nginx:
+    build: 
+      context: ./nginx
+      dockerfile: Dockerfile
     image: nginx:alpine
     container_name: nginx
     ports:
@@ -54,11 +57,10 @@ services:
   frontend:
     build:
       context: ./frontend
-      target: production
     volumes:
       - ./frontend:/app # Monta o código do frontend
       - /app/node_modules # Evita conflitos de dependências
-    command: sh -c "npm run build && cp -r /app/build/* /usr/share/nginx/html"
+    command: sh -c "npm run build"
     depends_on:
       - backend
 
