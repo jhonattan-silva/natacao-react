@@ -295,7 +295,10 @@ const Usuarios = () => {
                         <TabelaEdicao 
                             dados={usuarios} 
                             onEdit={handleEdit} 
-                            onInativar={(id, ativo) => handleInativar(id, ativo)} 
+                            funcExtra={(usuario) => (
+                                <Botao onClick={() => handleInativar(usuario.id, usuario.ativo)}>
+                                    {usuario.ativo ? 'Inativar' : 'Ativar'}
+                                </Botao>
                         />
                         <Botao onClick={handleAdicionar}>Adicionar Novo Usuário</Botao>
                     </>
