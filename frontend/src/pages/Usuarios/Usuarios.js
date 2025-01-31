@@ -7,7 +7,7 @@ import Botao from '../../componentes/Botao/Botao';
 import Formulario from '../../componentes/Formulario/Formulario';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
-import { validarCPF, validarCelular, aplicarMascaraCPF, aplicarMascaraCelular } from '../../utils/functions'; // Importar funções de validação e máscara
+import { validarCPF, validarCelular, aplicarMascaraCPF, aplicarMascaraCelular } from '../../servicos/functions';
 
 const Usuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
