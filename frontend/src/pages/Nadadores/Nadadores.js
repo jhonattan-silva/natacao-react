@@ -202,12 +202,14 @@ const Nadadores = () => {
             <CabecalhoAdmin />
             <div className={style.nadadores}>
                 <h2>NADADORES</h2>
-                <TabelaEdicao
-                    dados={nadadores}
-                    onEdit={handleEdit}
-                    onInativar={handleInativar}
-                    colunasOcultas={['id', 'ativo']}
-                />
+                {!formVisivel && (
+                    <TabelaEdicao
+                        dados={nadadores}
+                        onEdit={handleEdit}
+                        onInativar={handleInativar}
+                        colunasOcultas={['id', 'ativo']}
+                    />
+                )}
                 <Botao classBtn={style.btnAdd} onClick={handleAdicionar}>Adicionar Novo Nadador</Botao>
                 {formVisivel && (
                     <div className={style.cadastroContainer}>

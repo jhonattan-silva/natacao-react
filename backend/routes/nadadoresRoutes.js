@@ -7,18 +7,20 @@ const { authMiddleware } = require('../middleware/authMiddleware'); // Autentica
 
 router.get('/listarNadadores', authMiddleware, async (req, res) => {
     try {
-        const equipeId = req.user.equipeId; // Obtém o equipeId do usuário logado a partir do token JWT
+        const equipeId = req.user.equipeId;
 
-        // Modificação para listar todos os nadadores se equipeId não for fornecido
+        console.log("Equipe ID:", equipeId); // Debugging
+
+        // Query base
         let query = 'SELECT nome, cpf, data_nasc, celular, sexo, cidade FROM nadadores';
         let queryParams = [];
 
-        if (equipeId && equipeId !== '') {
+        // Adiciona filtro apenas se equipeId for válido
+        if (equipeId && !isNaN(equipeId)) {
             query += ' WHERE equipes_id = ?';
             queryParams.push(equipeId);
         }
 
-        // Busca os nadadores com base na equipe do usuário logado ou todos se equipeId não for fornecido
         const [rows] = await db.query(query, queryParams);
         res.json(rows);
     } catch (error) {
@@ -26,6 +28,7 @@ router.get('/listarNadadores', authMiddleware, async (req, res) => {
         res.status(500).json({ message: 'Erro ao buscar nadadores', error: error.message });
     }
 });
+
 
 router.get('/listarEquipes', authMiddleware, async (req, res) => {
     try {
