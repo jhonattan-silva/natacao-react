@@ -47,11 +47,8 @@ const Nadadores = () => {
     // Busca todos os Nadadores e atualizar a lista
     const fetchNadadores = async () => {
         try {
-            if (!user?.equipeId) {
-                throw new Error('ID da equipe não encontrado.');
-            }
-
-            const response = await api.get(`${apiListaNadadores}?equipeId=${user.equipeId}`);
+            const equipeId = user?.equipeId || ''; // Use empty string if equipeId is not available
+            const response = await api.get(`${apiListaNadadores}?equipeId=${equipeId}`);
             const nadadoresFormatados = response.data.map(nadador => ({
                 ...nadador,
                 data_nasc: new Date(nadador.data_nasc).toLocaleDateString('pt-BR', {
@@ -70,9 +67,7 @@ const Nadadores = () => {
 
     // Carregar a lista de Nadadores ao montar o componente
     useEffect(() => {
-        if (user?.equipeId) {
-            fetchNadadores();
-        }
+        fetchNadadores();
     }, [user]);
 
 
