@@ -35,7 +35,7 @@ const Nadadores = () => {
             console.log("User equipeId após o setEquipes:", user?.equipeId);
         }
     }, [user]);
-    
+
 
     const equipeSelecionada = (id) => { //para capturar a equipe escolhida, caso o usuário não tenha uma equipe (admin)
         setEquipes(id);
@@ -50,23 +50,23 @@ const Nadadores = () => {
     // Busca todos os Nadadores e atualizar a lista
     const fetchNadadores = async () => {
         try {
-            let equipeId = Array.isArray(user?.equipeId) && user.equipeId.length === 0 
-                ? null // Se for array vazio, define como null (listar todos)
-                : user?.equipeId;
-    
+            let equipeId = Array.isArray(user?.equipeId) && user.equipeId.length === 0
+                ? null  // Se for array vazio, trata como null
+                : user?.equipeId || null; // Se for undefined, trata como null
+
             console.log("Equipe ID usado na API:", equipeId);
-    
+
             const response = await api.get(apiListaNadadores, {
-                params: equipeId ? { equipeId } : {} // Não passa equipeId se for null
+                params: equipeId ? { equipeId } : {} // Não envia equipeId se for null
             });
-    
+
             const nadadoresFormatados = response.data.map(nadador => ({
                 ...nadador,
                 data_nasc: new Date(nadador.data_nasc).toLocaleDateString('pt-BR', {
                     day: '2-digit', month: '2-digit', year: 'numeric',
                 }),
             }));
-    
+
             setNadadores(nadadoresFormatados);
         } catch (error) {
             console.error('Erro ao buscar nadadores:', error);
@@ -76,7 +76,6 @@ const Nadadores = () => {
             }
         }
     };
-    
 
     // Carregar a lista de Nadadores ao montar o componente
     useEffect(() => {
@@ -239,7 +238,7 @@ const Nadadores = () => {
                             ]}
                             aoSelecionar={setSexo}
                         />
-                        {(!user?.equipeId || user.equipeId.length === 0) && (
+                        {(!user?.equipeId || (Array.isArray(user.equipeId) && user.equipeId.length === 0)) && (
                             <ListaSuspensa
                                 textoPlaceholder="Escolha uma equipe"
                                 fonteDados={apiListaEquipes}

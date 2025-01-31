@@ -3,19 +3,15 @@ const router = express.Router();
 const db = require('../config/db');
 const { authMiddleware } = require('../middleware/authMiddleware'); // Autenticação
 
-
-
 router.get('/listarNadadores', authMiddleware, async (req, res) => {
     try {
-        const equipeId = req.user.equipeId;
+        const equipeId = req.query.equipeId; // Pega equipeId da query, não do usuário
 
-        console.log("Equipe ID:", equipeId); // Debugging
+        console.log("Equipe ID recebido na API:", equipeId);
 
-        // Query base
         let query = 'SELECT nome, cpf, data_nasc, celular, sexo, cidade FROM nadadores';
         let queryParams = [];
 
-        // Adiciona filtro apenas se equipeId for válido
         if (equipeId && !isNaN(equipeId)) {
             query += ' WHERE equipes_id = ?';
             queryParams.push(equipeId);
@@ -28,6 +24,7 @@ router.get('/listarNadadores', authMiddleware, async (req, res) => {
         res.status(500).json({ message: 'Erro ao buscar nadadores', error: error.message });
     }
 });
+
 
 
 router.get('/listarEquipes', authMiddleware, async (req, res) => {
