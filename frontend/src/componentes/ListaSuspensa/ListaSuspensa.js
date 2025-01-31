@@ -23,7 +23,7 @@ const ListaSuspensa = ({ fonteDados,
     valorSelecionado = '' // Valor inicial selecionado
 }) => {
 
-    const [opcoes, setOpcoes] = useState(opcoesExternas); // Usa as opções externas como valor inicial
+    const [opcoes, setOpcoes] = useState([]); // Inicializa com array vazio
     const [error, setError] = useState(null); // Estado para armazenar o erro
     const [apiEndpoint, setApiEndpoint] = useState(''); // Estado para mostrar a API acessada
     const [valor, setValor] = useState(valorSelecionado); // Estado para o valor selecionado
@@ -46,15 +46,10 @@ const ListaSuspensa = ({ fonteDados,
                 }
             };
             fetchData();
+        } else {
+            setOpcoes(opcoesExternas); // Usa as opções externas se `fonteDados` não for fornecida
         }
-    }, [fonteDados]);
-
-
-    // Se `opcoesExternas` mudar, atualiza o estado `opcoes`
-    useEffect(() => {
-        setOpcoes(opcoesExternas);
-    }, [opcoesExternas]);
-
+    }, [fonteDados, opcoesExternas]);
 
     //MUDANÇA DE OPÇÃO
     const aoEscolher = (event) => {
