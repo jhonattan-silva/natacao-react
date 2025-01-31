@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm ci
 
 # Copia o script wait-for.sh e dá permissão de execução
-COPY wait-for.sh /app/wait-for.sh
+COPY wait-for.sh /app/
 RUN chmod +x /app/wait-for.sh
 
 # Copia o restante do código
@@ -20,6 +20,5 @@ COPY . .
 # Expõe a porta 5000 (usada pelo backend)
 EXPOSE 5000
 
-
 # Comando de entrada
-CMD ["./wait-for.sh", "npm", "start"]
+CMD ["sh", "-c", "./wait-for.sh db 3306 && npm start"]

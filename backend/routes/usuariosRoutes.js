@@ -86,45 +86,54 @@ router.put('/atualizarUsuario/:id', async (req, res) => {
   const userId = req.params.id; // Obtém o ID do usuário a ser atualizado
   const { nome, cpf, celular, email, senha, perfis, equipeId } = req.body; // Obtém os dados do corpo da requisição
 
-  const connection = await db.getConnection(); // Obtém uma conexão do pool para usar o transaction
+  const connection = await db.getConnection(); // Obtém uma conexão do pool para usar a transação
 
   try {
-    // Cria a query de atualização base
+    await connection.beginTransaction(); // Inicia a transação
+
+    // Atualiza os dados do usuário
     let query = 'UPDATE usuarios SET nome = ?, cpf = ?, celular = ?, email = ?';
     const params = [nome, cpf, celular, email];
 
-    // Se a senha foi enviada, adiciona à query
-    if (senha) {
-      const hashedSenha = await bcrypt.hash(senha, 10); // Criptografa a senha antes de atualizar
+    // Se uma nova senha for enviada, ela deve ser criptografada e atualizada
+    if (senha && senha.trim() !== '') {
+      const hashedSenha = await bcrypt.hash(senha, 10);
       query += ', senha = ?';
       params.push(hashedSenha);
     }
 
-    query += ' WHERE id = ?'; // Finaliza a query com o id do usuário a ser atualizado
+    query += ' WHERE id = ?';
     params.push(userId);
 
-    await connection.query(query, params); // Executa a query de atualização
+    await connection.query(query, params); // Executa a atualização do usuário
 
-    // Remove os perfis antigos
+    // Remove os perfis antigos e insere os novos
     await connection.query('DELETE FROM usuarios_perfis WHERE usuarios_id = ?', [userId]);
 
-    // Adiciona os perfis novos
-    const perfilPromises = perfis.map(perfilId => {
-      return connection.query('INSERT INTO usuarios_perfis (usuarios_id, perfis_id) VALUES (?, ?)', [userId, perfilId]);
-    });
+    if (perfis && perfis.length > 0) {
+      const perfilPromises = perfis.map(perfilId => {
+        return connection.query('INSERT INTO usuarios_perfis (usuarios_id, perfis_id) VALUES (?, ?)', [userId, perfilId]);
+      });
 
-    await Promise.all(perfilPromises);
+      await Promise.all(perfilPromises);
+    }
 
     // Verifica se o perfil de treinador foi removido
     const perfilTreinadorId = 2; // ID do perfil de treinador
     if (!perfis.includes(perfilTreinadorId)) {
       // Remove a equipe do usuário se o perfil de treinador foi removido
       await connection.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [userId]);
-    } else if (equipeId) { // Se equipeId for fornecido, atualiza a equipe do usuário
-      await connection.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [userId]); // Remove a equipe antiga
+    } else if (equipeId) {
+      // Atualiza a equipe do usuário somente se ela for diferente da atual
+      const [equipeExistente] = await connection.query(
+        'SELECT equipes_id FROM usuarios_equipes WHERE usuarios_id = ?',
+        [userId]
+      );
 
-      // Adiciona a nova equipe
-      await connection.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [userId, equipeId]);
+      if (equipeExistente.length === 0 || equipeExistente[0].equipes_id !== equipeId) {
+        await connection.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [userId]); // Remove a equipe antiga
+        await connection.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [userId, equipeId]);
+      }
     }
 
     await connection.commit(); // Finaliza a transação
@@ -137,6 +146,7 @@ router.put('/atualizarUsuario/:id', async (req, res) => {
     connection.release(); // Libera a conexão
   }
 });
+
 
 
 router.get('/listarPerfis', async (req, res) => {
