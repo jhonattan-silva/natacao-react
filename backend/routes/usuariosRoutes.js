@@ -9,7 +9,7 @@ const somenteNumeros = (str) => str.replace(/\D/g, '');
 router.get('/listarUsuarios', async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT u.id, u.nome, u.cpf, u.celular, u.email,
+      SELECT u.id, u.nome, u.cpf, u.celular, u.email, u.ativo,  
              COALESCE(GROUP_CONCAT(DISTINCT p.nome SEPARATOR ', '), '') AS perfis,
              COALESCE(GROUP_CONCAT(DISTINCT e.nome SEPARATOR ', '), '') AS equipes
       FROM usuarios u
@@ -17,7 +17,7 @@ router.get('/listarUsuarios', async (req, res) => {
       LEFT JOIN perfis p ON up.perfis_id = p.id
       LEFT JOIN usuarios_equipes ue ON u.id = ue.usuarios_id
       LEFT JOIN equipes e ON ue.equipes_id = e.id
-      GROUP BY u.id, u.nome, u.cpf, u.celular, u.email
+      GROUP BY u.id, u.nome, u.cpf, u.celular, u.email, u.ativo
   `);
     res.json(rows);
   } catch (error) {

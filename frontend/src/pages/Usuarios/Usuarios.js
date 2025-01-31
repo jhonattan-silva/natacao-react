@@ -35,7 +35,8 @@ const Usuarios = () => {
             const usuariosComMascara = response.data.map(usuario => ({
                 ...usuario,
                 cpf: aplicarMascaraCPF(usuario.cpf),
-                celular: aplicarMascaraCelular(usuario.celular)
+                celular: aplicarMascaraCelular(usuario.celular),
+                ativo: usuario.ativo // Inclui o campo ativo
             }));
             setUsuarios(usuariosComMascara);
         } catch (error) {
