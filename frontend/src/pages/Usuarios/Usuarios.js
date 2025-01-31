@@ -175,16 +175,6 @@ const Usuarios = () => {
     const [celular, setCelular] = useState('');
     const [email, setEmail] = useState('');
 
-    const handleCpfChange = (e) => {
-        const value = e.target.value;
-        setCpf(aplicarMascaraCPF(value)); // Aplica a máscara de CPF
-    };
-
-    const handleCelularChange = (e) => {
-        const value = e.target.value;
-        setCelular(aplicarMascaraCelular(value)); // Aplica a máscara de celular
-    };
-
     const inputs = [
         {
             obrigatorio: true,
