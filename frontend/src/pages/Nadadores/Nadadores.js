@@ -8,6 +8,7 @@ import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import style from './Nadadores.module.css';
 import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
 import { useUser } from '../../servicos/UserContext';
+import { validarCPF, aplicarMascaraCPF, aplicarMascaraCelular, validarCelular } from '../../servicos/functions';
 
 const Nadadores = () => {
     const user = useUser(); // Obtém o usuário logado a partir do contexto
@@ -116,68 +117,6 @@ const Nadadores = () => {
             }
         }
     };
-
-    // Função para aplicar máscara de CPF em tempo real
-    function aplicarMascaraCPF(cpf) {
-        // Remove todos os caracteres não numéricos
-        cpf = cpf.replace(/\D/g, '');
-
-        // Aplica a máscara, adicionando pontos e traço conforme necessário
-        cpf = cpf.replace(/(\d{3})(\d)/, '$1.$2');
-        cpf = cpf.replace(/(\d{3})(\d)/, '$1.$2');
-        cpf = cpf.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-
-        return cpf;
-    }
-
-    // Função para validar CPF
-    function validarCPF(cpf) {
-        cpf = cpf.replace(/\D/g, ''); // Remove caracteres não numéricos
-        if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false; // Verifica se tem 11 dígitos ou se todos são iguais
-
-        let soma = 0;
-        for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
-        let digitoVerificador1 = 11 - (soma % 11);
-        if (digitoVerificador1 > 9) digitoVerificador1 = 0;
-        if (digitoVerificador1 !== parseInt(cpf.charAt(9))) return false;
-
-        soma = 0;
-        for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
-        let digitoVerificador2 = 11 - (soma % 11);
-        if (digitoVerificador2 > 9) digitoVerificador2 = 0;
-        return digitoVerificador2 === parseInt(cpf.charAt(10));
-    }
-
-    // Função para validar celular
-    function validarCelular(celular) {
-        celular = celular.replace(/\D/g, ''); // Remove caracteres não numéricos
-
-        // Verifica se o comprimento do número é 10 ou 11
-        if (celular.length !== 10 && celular.length !== 11) return false;
-
-        // Verifica se todos os dígitos são iguais (por exemplo, 11111111111)
-        if (/^(\d)\1+$/.test(celular)) return false;
-
-        // Se passar pelas validações acima, o número é considerado válido
-        return true;
-    }
-
-
-    // Função para aplicar máscara de CPF
-    function aplicarMascaraCPF(cpf) {
-        cpf = cpf.replace(/\D/g, ''); // Remove caracteres não numéricos
-        cpf = cpf.substring(0, 11); // Limita a 11 caracteres
-        return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); // Aplica a máscara
-    }
-    // Função para aplicar máscara de celular
-    function aplicarMascaraCelular(celular) {
-        celular = celular.replace(/\D/g, ''); // Remove caracteres não numéricos
-        celular = celular.substring(0, 11); // Limita a 11 caracteres
-        return celular.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3'); // Aplica a máscara
-    }
-
-
-
 
     const inputs = [
         {
