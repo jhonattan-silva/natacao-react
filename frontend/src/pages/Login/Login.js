@@ -12,10 +12,12 @@ const Login = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        console.log("Tentando fazer login com CPF:", cpf, "e senha:", senha); // Log para verificar os dados de login
 
         try {
             const cpfString = cpf.toString(); // Garantir que o CPF está sendo tratado como string
             const response = await api.post("/auth/login", { cpf: cpfString, senha }); // Envia o CPF como string e a senha para a rota de login
+            console.log("Resposta do servidor:", response); // Log para verificar a resposta do servidor
             const { token } = response.data; // Extrai o token da resposta
 
             // Armazena o token no localStorage
