@@ -132,9 +132,15 @@ const Usuarios = () => {
 
 
     //Botão inativar cadastro
-    const handleInativar = (id) => {
-        console.log(`Inativando usuário com ID: ${id}`);
-        // Lógica de inativação aqui
+    const handleInativar = async (id, ativo) => {
+        try {
+            await api.put(`usuarios/inativarUsuario/${id}`, { ativo: ativo ? 0 : 1 });
+            await fetchUsuarios(); // Atualiza a lista de usuários após a inativação/ativação
+            alert(`Usuário ${ativo ? 'inativado' : 'ativado'} com sucesso!`);
+        } catch (error) {
+            console.error('Erro ao inativar/ativar usuário:', error);
+            alert('Erro ao inativar/ativar usuário. Verifique os logs.');
+        }
     };
 
     // Função para adicionar um novo usuário
@@ -286,7 +292,11 @@ const Usuarios = () => {
                 <h2>USUÁRIOS</h2>
                 {!formVisivel && (
                     <>
-                        <TabelaEdicao dados={usuarios} onEdit={handleEdit} onInativar={handleInativar} />
+                        <TabelaEdicao 
+                            dados={usuarios} 
+                            onEdit={handleEdit} 
+                            onInativar={(id, ativo) => handleInativar(id, ativo)} 
+                        />
                         <Botao onClick={handleAdicionar}>Adicionar Novo Usuário</Botao>
                     </>
                 )}

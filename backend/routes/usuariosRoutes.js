@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const router = express.Router();
 const db = require('../config/db');
 
-// Function to extract numeric characters from a string
+// Limpar a mascara aplicada e salvar somente numeros
 const somenteNumeros = (str) => str.replace(/\D/g, '');
 
 router.get('/listarUsuarios', async (req, res) => {
@@ -238,8 +238,27 @@ router.get('/buscarUsuario/:id', async (req, res) => {
   }
 });
 
+router.put('/inativarUsuario/:id', async (req, res) => {
+  const userId = req.params.id;
+  const { ativo } = req.body;
 
+  const connection = await db.getConnection();
 
+  try {
+    await connection.beginTransaction();
 
+    // Update the status of the user
+    await connection.query('UPDATE usuarios SET ativo = ? WHERE id = ?', [ativo, userId]);
+
+    await connection.commit();
+    res.send(`Usuário ${ativo === 1 ? 'ativado' : 'inativado'} com sucesso`);
+  } catch (error) {
+    await connection.rollback();
+    console.error('Erro ao atualizar status do usuário:', error);
+    res.status(500).send('Erro ao atualizar status do usuário');
+  } finally {
+    connection.release();
+  }
+});
 
 module.exports = router;
