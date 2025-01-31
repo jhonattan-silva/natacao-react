@@ -154,19 +154,6 @@ const Usuarios = () => {
         }
     };
 
-    // Função para adicionar um novo usuário
-    const adicionarUsuario = async (dados) => {
-        try {
-            await api.post(apiCadastraUsuario, dados); // Envia o novo usuário para o backend
-            await fetchUsuarios(); // Recarrega a lista completa de usuários do backend
-            setFormVisivel(false); // Esconde o formulário após salvar
-            alert('Usuário salvo com sucesso!'); // Mover alerta de sucesso para dentro do bloco try
-        } catch (error) {
-            console.error('Erro ao cadastrar usuário:', error);
-            alert('Erro ao cadastrar usuário: ' + error.response.data.message); // Adicionar alerta de erro
-        }
-    };
-
     /* CHECKBOX */
     const aoAlterarPerfis = (id, checked) => {
         SetPerfisSelecionados(prev => {

@@ -28,11 +28,14 @@ const Nadadores = () => {
     const [sexo, setSexo] = useState('');
 
 
-    useEffect(() => { // Define a equipe do usuário logado ao montar o componente
-        if (user?.equipeId) { // Se o usuário já tiver uma equipe, define automaticamente
-            setEquipes(user.equipeId); // Define a equipe automaticamente se o usuário já tiver uma
+    useEffect(() => { //para setar a equipe do usuário logado
+        console.log("User equipeId antes do setEquipes:", user?.equipeId);
+        if (user?.equipeId) {
+            setEquipes(user.equipeId);
+            console.log("User equipeId após o setEquipes:", user?.equipeId);
         }
     }, [user]);
+    
 
     const equipeSelecionada = (id) => { //para capturar a equipe escolhida, caso o usuário não tenha uma equipe (admin)
         setEquipes(id);
@@ -166,7 +169,7 @@ const Nadadores = () => {
         evento.preventDefault();
 
         // Validaç]oes
-        if (!nomeNadador || !cpf || !dataNasc || !celular || !sexo ) {
+        if (!nomeNadador || !cpf || !dataNasc || !celular || !sexo) {
             alert('Por favor, preencha todos os campos obrigatórios.');
             return; // Interrompe o processo de salvamento se houver campos vazios
         }
@@ -226,7 +229,7 @@ const Nadadores = () => {
                             ]}
                             aoSelecionar={setSexo}
                         />
-                        {!user?.equipeId && ( // Apenas exibe ListaSuspensa se não houver equipeId
+                        {(!user?.equipeId || Number(user?.equipeId) === 0) && (
                             <ListaSuspensa
                                 textoPlaceholder="Escolha uma equipe"
                                 fonteDados={apiListaEquipes}
