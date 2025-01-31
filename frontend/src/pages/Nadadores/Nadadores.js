@@ -50,23 +50,33 @@ const Nadadores = () => {
     // Busca todos os Nadadores e atualizar a lista
     const fetchNadadores = async () => {
         try {
-            const equipeId = user?.equipeId || ''; // Use empty string if equipeId is not available
-            const response = await api.get(`${apiListaNadadores}?equipeId=${equipeId}`);
+            let equipeId = Array.isArray(user?.equipeId) && user.equipeId.length === 0 
+                ? null // Se for array vazio, define como null (listar todos)
+                : user?.equipeId;
+    
+            console.log("Equipe ID usado na API:", equipeId);
+    
+            const response = await api.get(apiListaNadadores, {
+                params: equipeId ? { equipeId } : {} // Não passa equipeId se for null
+            });
+    
             const nadadoresFormatados = response.data.map(nadador => ({
                 ...nadador,
                 data_nasc: new Date(nadador.data_nasc).toLocaleDateString('pt-BR', {
                     day: '2-digit', month: '2-digit', year: 'numeric',
                 }),
             }));
+    
             setNadadores(nadadoresFormatados);
         } catch (error) {
             console.error('Erro ao buscar nadadores:', error);
-            if (error.response && error.response.status === 401) {
+            if (error.response?.status === 401) {
                 alert('Sessão expirada. Por favor, faça login novamente.');
                 window.location.href = '/login';
             }
         }
     };
+    
 
     // Carregar a lista de Nadadores ao montar o componente
     useEffect(() => {
@@ -229,7 +239,7 @@ const Nadadores = () => {
                             ]}
                             aoSelecionar={setSexo}
                         />
-                        {(!user?.equipeId || Number(user?.equipeId) === 0) && (
+                        {(!user?.equipeId || user.equipeId.length === 0) && (
                             <ListaSuspensa
                                 textoPlaceholder="Escolha uma equipe"
                                 fonteDados={apiListaEquipes}

@@ -66,6 +66,7 @@ const CabecalhoAdmin = () => {
                 {userProfile.includes('admin') && (
                     <>
                         <CabecalhoLink url='../Etapas'> Etapas </CabecalhoLink>
+                        <CabecalhoLink url='../Usuarios'> Usuários </CabecalhoLink>
                         {/* <CabecalhoLink url='../balizamento'> Balizamento </CabecalhoLink> */}
                         {/* <CabecalhoLink url='../ResultadosEntrada'> Inserir Resultados </CabecalhoLink> */}
                     </>
