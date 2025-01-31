@@ -32,7 +32,12 @@ const Usuarios = () => {
     const fetchUsuarios = async () => {
         try {
             const response = await api.get(apiListaUsuarios);
-            setUsuarios(response.data);
+            const usuariosComMascara = response.data.map(usuario => ({
+                ...usuario,
+                cpf: aplicarMascaraCPF(usuario.cpf),
+                celular: aplicarMascaraCelular(usuario.celular)
+            }));
+            setUsuarios(usuariosComMascara);
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
         }
@@ -134,8 +139,13 @@ const Usuarios = () => {
     //Botão inativar cadastro
     const handleInativar = async (id, ativo) => {
         try {
-            await api.put(`usuarios/inativarUsuario/${id}`, { ativo: ativo ? 0 : 1 });
-            await fetchUsuarios(); // Atualiza a lista de usuários após a inativação/ativação
+            const novoStatus = ativo ? 0 : 1;
+            await api.put(`usuarios/inativarUsuario/${id}`, { ativo: novoStatus });
+            setUsuarios(prevUsuarios => 
+                prevUsuarios.map(usuario => 
+                    usuario.id === id ? { ...usuario, ativo: novoStatus } : usuario
+                )
+            );
             alert(`Usuário ${ativo ? 'inativado' : 'ativado'} com sucesso!`);
         } catch (error) {
             console.error('Erro ao inativar/ativar usuário:', error);
