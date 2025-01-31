@@ -7,6 +7,7 @@ import Botao from '../../componentes/Botao/Botao';
 import Formulario from '../../componentes/Formulario/Formulario';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
+import { validarCPF, validarCelular, aplicarMascaraCPF, aplicarMascaraCelular } from '../../utils/functions'; // Importar funções de validação e máscara
 
 const Usuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
@@ -174,6 +175,16 @@ const Usuarios = () => {
     const [celular, setCelular] = useState('');
     const [email, setEmail] = useState('');
 
+    const handleCpfChange = (e) => {
+        const value = e.target.value;
+        setCpf(aplicarMascaraCPF(value)); // Aplica a máscara de CPF
+    };
+
+    const handleCelularChange = (e) => {
+        const value = e.target.value;
+        setCelular(aplicarMascaraCelular(value)); // Aplica a máscara de celular
+    };
+
     const inputs = [
         {
             obrigatorio: true,
@@ -187,7 +198,7 @@ const Usuarios = () => {
             label: "CPF",
             placeholder: "Somente números",
             valor: cpf,
-            aoAlterar: setCpf
+            aoAlterar: handleCpfChange // Usar a função de máscara
         },
         {
             obrigatorio: true,
@@ -202,7 +213,7 @@ const Usuarios = () => {
             label: "Celular",
             placeholder: "Celular (com ddd, somente números)",
             valor: celular,
-            aoAlterar: setCelular
+            aoAlterar: handleCelularChange // Usar a função de máscara
         },
         {
             obrigatorio: true,
@@ -239,10 +250,20 @@ const Usuarios = () => {
             return; // Interrompe o processo de salvamento se houver campos vazios
         }
 
+        if (!validarCPF(cpf)) {
+            alert('CPF inválido.');
+            return;
+        }
+
+        if (!validarCelular(celular)) {
+            alert('Celular inválido.');
+            return;
+        }
+
         const usuarioDados = {
             nome: nomeUsuario,
             cpf: cpf,
-            senha: isEditing ? undefined : senha, // Define a senha como undefined se estiver editando
+            senha: isEditing && !senha ? undefined : senha, // Define a senha como undefined se estiver editando e a senha estiver vazia
             celular: celular,
             email: email,
             perfis: perfisSelecionados.map(id => parseInt(id, 10)), // Converter IDs para números inteiros
