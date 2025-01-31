@@ -3,6 +3,8 @@ const bcrypt = require('bcrypt');
 const router = express.Router();
 const db = require('../config/db');
 
+// Function to extract numeric characters from a string
+const somenteNumeros = (str) => str.replace(/\D/g, '');
 
 router.get('/listarUsuarios', async (req, res) => {
   try {
@@ -30,7 +32,8 @@ router.post('/cadastrarUsuario', async (req, res) => {
 
   const connection = await db.getConnection(); // Obtém uma conexão do pool para usar o transaction
 
-  console.log('Dados recebidos para cadastro:', req.body); // Verifique os dados recebidos
+  const cpfNumeros = somenteNumeros(cpf);
+  const celularNumeros = somenteNumeros(celular);
 
   try {
     await connection.beginTransaction(); // Inicia uma transação
@@ -52,7 +55,7 @@ router.post('/cadastrarUsuario', async (req, res) => {
     // INSERE O USUÁRIO NA TABELA usuarios
     const [userResult] = await connection.query(
       'INSERT INTO usuarios (nome, cpf, celular, email, senha, ativo) VALUES (?, ?, ?, ?, ?, 1)', //cadastro vira com ativo = 1
-      [nome, cpf, celular, email, hashedSenha, ativo]
+      [nome, cpfNumeros, celularNumeros, email, hashedSenha, ativo]
     );
 
     const userId = userResult.insertId;
@@ -88,12 +91,15 @@ router.put('/atualizarUsuario/:id', async (req, res) => {
 
   const connection = await db.getConnection(); // Obtém uma conexão do pool para usar a transação
 
+  const cpfNumeros = somenteNumeros(cpf);
+  const celularNumeros = somenteNumeros(celular);
+
   try {
     await connection.beginTransaction(); // Inicia a transação
 
     // Atualiza os dados do usuário
     let query = 'UPDATE usuarios SET nome = ?, cpf = ?, celular = ?, email = ?';
-    const params = [nome, cpf, celular, email];
+    const params = [nome, cpfNumeros, celularNumeros, email];
 
     // Se uma nova senha for enviada, ela deve ser criptografada e atualizada
     if (senha && senha.trim() !== '') {
