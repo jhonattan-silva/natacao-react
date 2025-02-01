@@ -1,4 +1,3 @@
-//Para acessar com mais faciliadade os dadods do usuário logado no sistema, como o perfil do usuário, se ele é admin, etc.
 import { createContext, useContext, useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 
@@ -7,17 +6,23 @@ const UserContext = createContext();
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
 
-    useEffect(() => {
+    const atualizarUsuario = () => {
         const token = localStorage.getItem("token");
         if (token) {
             const decodedToken = jwtDecode(token);
-            console.log("Decoded Token:", decodedToken);
+            console.log("Usuário atualizado:", decodedToken);
             setUser(decodedToken);
+        } else {
+            setUser(null);
         }
+    };
+
+    useEffect(() => {
+        atualizarUsuario();
     }, []);
 
     return (
-        <UserContext.Provider value={user}>
+        <UserContext.Provider value={{ user, atualizarUsuario }}>
             {children}
         </UserContext.Provider>
     );
