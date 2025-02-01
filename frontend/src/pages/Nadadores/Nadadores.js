@@ -11,7 +11,7 @@ import { useUser } from '../../servicos/UserContext';
 import { validarCPF, aplicarMascaraCPF, aplicarMascaraCelular, validarCelular } from '../../servicos/functions';
 
 const Nadadores = () => {
-    const user = useUser(); // Obtém o usuário logado a partir do contexto
+    const { user, loading } = useUser(); // Pega o estado de carregamento também
     const [nadadores, setNadadores] = useState([]); //controle de nadadores
     const [equipes, setEquipes] = useState(''); // Controle de equipes listadas
     const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
@@ -27,34 +27,23 @@ const Nadadores = () => {
     /* RADIO GROUP */
     const [sexo, setSexo] = useState('');
 
-
-    useEffect(() => { //para setar a equipe do usuário logado
-        if (user && user.equipeId !== undefined) {
-            console.log("User equipeId antes do setEquipes:", user.equipeId);
-            setEquipes(user.equipeId);
-            console.log("User equipeId após o setEquipes:", user.equipeId);
-        }
-    }, [user]);
-
-
-    const equipeSelecionada = (id) => { //para capturar a equipe escolhida, caso o usuário não tenha uma equipe (admin)
-        setEquipes(id);
-    };
-
-
     /* URLS de API */
     const apiListaNadadores = `nadadores/listarNadadores`;
     const apiCadastraNadador = `nadadores/cadastrarNadador`;
     const apiListaEquipes = `nadadores/listarEquipes`;
 
-    // Busca todos os Nadadores e atualizar a lista
+    const equipeSelecionada = (id) => { //para capturar a equipe escolhida, caso o usuário não tenha uma equipe (admin)
+        setEquipes(id);
+    };
+
     useEffect(() => {
-        if (user?.equipeId !== undefined && user?.equipeId !== null) {
+        if (!loading && user?.equipeId) { 
             console.log("User equipeId atualizado:", user.equipeId);
             setEquipes(user.equipeId);
-            fetchNadadores(user.equipeId); // Chama a função para atualizar os nadadores sempre que equipeId mudar
+            fetchNadadores(user.equipeId);
         }
-    }, [user?.equipeId]); // Agora monitora mudanças específicas em user.equipeId
+    }, [user?.equipeId, loading]); // Aguarda `loading` ser `false` antes de buscar nadadores
+    
     
     const fetchNadadores = async (equipeIdParam) => {
         try {

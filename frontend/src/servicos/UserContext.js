@@ -5,6 +5,7 @@ const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true); // Estado de carregamento
 
     const atualizarUsuario = () => {
         const token = localStorage.getItem("token");
@@ -15,6 +16,7 @@ export const UserProvider = ({ children }) => {
         } else {
             setUser(null);
         }
+        setLoading(false); // Indica que o carregamento terminou
     };
 
     useEffect(() => {
@@ -22,7 +24,7 @@ export const UserProvider = ({ children }) => {
     }, []);
 
     return (
-        <UserContext.Provider value={{ user, atualizarUsuario }}>
+        <UserContext.Provider value={{ user, atualizarUsuario, loading }}>
             {children}
         </UserContext.Provider>
     );
