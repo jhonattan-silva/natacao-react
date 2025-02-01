@@ -49,36 +49,34 @@ const Nadadores = () => {
 
     // Busca todos os Nadadores e atualizar a lista
     useEffect(() => {
-        if (user && user.equipeId !== undefined && user.equipeId !== null) {
-            console.log("User equipeId antes do setEquipes:", user.equipeId);
+        if (user?.equipeId !== undefined && user?.equipeId !== null) {
+            console.log("User equipeId atualizado:", user.equipeId);
             setEquipes(user.equipeId);
-            console.log("User equipeId após o setEquipes:", user.equipeId);
+            fetchNadadores(user.equipeId); // Chama a função para atualizar os nadadores sempre que equipeId mudar
         }
-    }, [user?.equipeId]); // Depender do user.equipeId para garantir atualização correta
+    }, [user?.equipeId]); // Agora monitora mudanças específicas em user.equipeId
     
-    
-    const fetchNadadores = async () => {
+    const fetchNadadores = async (equipeIdParam) => {
         try {
-            let equipeId = user?.equipeId ?? null; // Garante que não seja undefined
+            let equipeId = equipeIdParam ?? user?.equipeId; // Prioriza parâmetro para evitar problemas assíncronos
+    
+            if (!equipeId) return; // Evita chamadas desnecessárias
     
             console.log("Equipe ID usado na API:", equipeId);
     
-            const response = await api.get(apiListaNadadores, {
-                params: equipeId ? { equipeId } : {}
-            });
+            const response = await api.get(apiListaNadadores, { params: { equipeId } });
     
-            const nadadoresFormatados = response.data.map(nadador => ({
+            setNadadores(response.data.map(nadador => ({
                 ...nadador,
                 data_nasc: new Date(nadador.data_nasc).toLocaleDateString('pt-BR', {
                     day: '2-digit', month: '2-digit', year: 'numeric',
                 }),
-            }));
-    
-            setNadadores(nadadoresFormatados);
+            })));
         } catch (error) {
             console.error('Erro ao buscar nadadores:', error);
         }
     };
+    
     
 
 
