@@ -31,6 +31,7 @@ const Nadadores = () => {
     const apiListaNadadores = `nadadores/listarNadadores`;
     const apiCadastraNadador = `nadadores/cadastrarNadador`;
     const apiListaEquipes = `nadadores/listarEquipes`;
+    const apiInativarNadador = `nadadores/inativarNadador`;
 
     const equipeSelecionada = (id) => { //para capturar a equipe escolhida, caso o usuário não tenha uma equipe (admin)
         setEquipes(id);
@@ -82,14 +83,38 @@ const Nadadores = () => {
 
     //Botão inativar cadastro
     const handleInativar = async (id, ativo) => {
+        const novoStatus = ativo === 1 ? 0 : 1;
+    
+        const confirmacao = window.confirm(
+            `Tem certeza que deseja ${ativo ? "inativar" : "ativar"} este nadador?`
+        );
+    
+        if (!confirmacao) return;
+    
         try {
-            const novoStatus = ativo ? 0 : 1;
-            await api.post(`nadadores/alterarStatus`, { id, ativo: novoStatus });
-            await fetchNadadores(); // Recarrega a lista de nadadores
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Token não encontrado. Faça login novamente.");
+                window.location.href = "/login";
+                return;
+            }
+    
+            await api.post(
+                apiInativarNadador,
+                { id, ativo: novoStatus },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+    
+            alert(`Nadador ${ativo ? "inativado" : "ativado"} com sucesso!`);
+            await fetchNadadores(); // Atualiza a lista após a mudança
         } catch (error) {
-            console.error(`Erro ao ${ativo ? 'inativar' : 'ativar'} nadador:`, error);
+            console.error(`Erro ao ${ativo ? "inativar" : "ativar"} nadador:`, error);
+            alert("Erro ao alterar status do nadador.");
         }
     };
+    
 
     // Função para adicionar um novo Nadador
     const adicionarNadador = async (dados) => {

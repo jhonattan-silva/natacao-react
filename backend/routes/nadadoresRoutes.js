@@ -75,7 +75,7 @@ router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
 });
 
 // Rota para alterar o status de um nadador
-router.post('/alterarStatus', authMiddleware, async (req, res) => {
+router.post('/inativarNadador', authMiddleware, async (req, res) => {
     const { id, ativo } = req.body;
 
     try {
