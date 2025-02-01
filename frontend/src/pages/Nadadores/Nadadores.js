@@ -51,9 +51,7 @@ const Nadadores = () => {
             let equipeId = equipeIdParam ?? user?.equipeId; // Prioriza parâmetro para evitar problemas assíncronos
     
             if (!equipeId) return; // Evita chamadas desnecessárias
-    
-            console.log("Equipe ID usado na API:", equipeId);
-    
+       
             const response = await api.get(apiListaNadadores, { params: { equipeId } });
     
             setNadadores(response.data.map(nadador => ({

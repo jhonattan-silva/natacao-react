@@ -9,7 +9,7 @@ router.get('/listarNadadores', authMiddleware, async (req, res) => {
 
         console.log("Equipe ID recebido na API:", equipeId);
 
-        let query = 'SELECT nome, cpf, data_nasc, celular, sexo, cidade FROM nadadores';
+        let query = 'SELECT * FROM nadadores';
         let queryParams = [];
 
         if (equipeId && !isNaN(equipeId)) {
@@ -77,7 +77,9 @@ router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
 // Rota para alterar o status de um nadador
 router.post('/inativarNadador', authMiddleware, async (req, res) => {
     const { id, ativo } = req.body;
-
+    console.log("ID do nadador recebido na API:", id);
+    console.log("Status do nadador recebido na API:", ativo);
+    
     try {
         await db.query('UPDATE nadadores SET ativo = ? WHERE id = ?', [ativo, id]);
         res.status(200).send('Status do nadador atualizado com sucesso.');
