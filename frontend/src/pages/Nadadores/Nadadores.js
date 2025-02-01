@@ -49,28 +49,22 @@ const Nadadores = () => {
 
     // Busca todos os Nadadores e atualizar a lista
     useEffect(() => {
-        if (user && user.equipeId !== undefined) { // Só executa quando user.equipeId estiver carregado
-            console.log("User equipeId antes do fetch:", user.equipeId);
-            fetchNadadores();
+        if (user && user.equipeId !== undefined && user.equipeId !== null) {
+            console.log("User equipeId antes do setEquipes:", user.equipeId);
+            setEquipes(user.equipeId);
+            console.log("User equipeId após o setEquipes:", user.equipeId);
         }
-    }, [user]); // Depende do user para evitar chamada antes da hora
+    }, [user?.equipeId]); // Depender do user.equipeId para garantir atualização correta
+    
     
     const fetchNadadores = async () => {
         try {
-            let equipeId = user?.equipeId;
-    
-            if (Array.isArray(equipeId) && equipeId.length === 0) {
-                equipeId = null; // Se for array vazio, trata como null
-            } else if (equipeId && !isNaN(equipeId)) {
-                equipeId = Number(equipeId); // Garante que seja número
-            } else {
-                equipeId = null;
-            }
+            let equipeId = user?.equipeId ?? null; // Garante que não seja undefined
     
             console.log("Equipe ID usado na API:", equipeId);
     
             const response = await api.get(apiListaNadadores, {
-                params: equipeId ? { equipeId } : {} // Só envia se for válido
+                params: equipeId ? { equipeId } : {}
             });
     
             const nadadoresFormatados = response.data.map(nadador => ({
@@ -83,12 +77,9 @@ const Nadadores = () => {
             setNadadores(nadadoresFormatados);
         } catch (error) {
             console.error('Erro ao buscar nadadores:', error);
-            if (error.response?.status === 401) {
-                alert('Sessão expirada. Por favor, faça login novamente.');
-                window.location.href = '/login';
-            }
         }
     };
+    
 
 
     //Botão para abrir o formulario de novo Nadador
