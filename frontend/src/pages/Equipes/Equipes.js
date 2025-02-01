@@ -67,11 +67,17 @@ const Equipes = () => {
 
   const handleInativar = async (id, ativo) => {
     try {
-      await api.put(`${apiInativarEquipe}/${id}`, { ativo: ativo ? 0 : 1 });
-      const response = await api.get(`${apiListaEquipes}`);
-      setEquipes(response.data);
+      const novoStatus = ativo ? 0 : 1;
+      await api.put(`${apiInativarEquipe}/${id}`, { ativo: novoStatus });
+      setEquipes(prevEquipes => 
+        prevEquipes.map(equipe => 
+            equipe.id === id ? { ...equipe, ativo: novoStatus } : equipe
+        )
+      );
+      alert(`Equipe ${ativo ? 'inativada' : 'ativada'} com sucesso!`);
     } catch (error) {
       console.error('Erro ao inativar/ativar equipe:', error);
+      alert('Erro ao inativar/ativar equipe. Verifique os logs.');
     }
   };
 
@@ -173,6 +179,7 @@ const Equipes = () => {
               dados={equipes} 
               onEdit={handleEdit} 
               onInativar={handleInativar} 
+              colunasOcultas={['id']}
               funcExtra={(equipe) => (
                 <Botao onClick={() => handleInativar(equipe.id, equipe.ativo)}>
                   {equipe.ativo ? 'Inativar' : 'Ativar'}

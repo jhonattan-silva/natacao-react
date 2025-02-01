@@ -27,6 +27,7 @@ const Usuarios = () => {
     const apiCadastraUsuario = `usuarios/cadastrarUsuario`;
     const apiListaPerfis = `usuarios/listarPerfis`;
     const apiListaEquipes = `usuarios/listarEquipes`;
+    const apiInativarUsuario = `usuarios/inativarUsuario`;
 
     // Função para buscar todos os usuários e atualizar a lista
     const fetchUsuarios = async () => {
@@ -141,7 +142,7 @@ const Usuarios = () => {
     const handleInativar = async (id, ativo) => {
         try {
             const novoStatus = ativo ? 0 : 1;
-            await api.put(`usuarios/inativarUsuario/${id}`, { ativo: novoStatus });
+            await api.put(`${apiInativarUsuario}/${id}`, { ativo: novoStatus });
             setUsuarios(prevUsuarios => 
                 prevUsuarios.map(usuario => 
                     usuario.id === id ? { ...usuario, ativo: novoStatus } : usuario
