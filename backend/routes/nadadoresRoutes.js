@@ -74,4 +74,17 @@ router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
     }
 });
 
+// Rota para alterar o status de um nadador
+router.post('/alterarStatus', authMiddleware, async (req, res) => {
+    const { id, ativo } = req.body;
+
+    try {
+        await db.query('UPDATE nadadores SET ativo = ? WHERE id = ?', [ativo, id]);
+        res.status(200).send('Status do nadador atualizado com sucesso.');
+    } catch (error) {
+        console.error('Erro ao alterar status do nadador:', error);
+        res.status(500).send('Erro ao alterar status do nadador');
+    }
+});
+
 module.exports = router;

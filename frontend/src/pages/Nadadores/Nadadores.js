@@ -81,9 +81,14 @@ const Nadadores = () => {
     };
 
     //Botão inativar cadastro
-    const handleInativar = (id) => {
-        console.log(`Inativando Nadador com ID: ${id}`);
-        // Lógica de inativação aqui
+    const handleInativar = async (id, ativo) => {
+        try {
+            const novoStatus = ativo ? 0 : 1;
+            await api.post(`nadadores/alterarStatus`, { id, ativo: novoStatus });
+            await fetchNadadores(); // Recarrega a lista de nadadores
+        } catch (error) {
+            console.error(`Erro ao ${ativo ? 'inativar' : 'ativar'} nadador:`, error);
+        }
     };
 
     // Função para adicionar um novo Nadador
@@ -211,7 +216,15 @@ const Nadadores = () => {
                         dados={nadadores}
                         onEdit={handleEdit}
                         onInativar={handleInativar}
-                        colunasOcultas={['id', 'ativo']}
+                        colunasOcultas={['id']}
+                        renderAcoes={(nadador) => (
+                            <Botao
+                                onClick={() => handleInativar(nadador.id, nadador.ativo)}
+                                style={{ backgroundColor: nadador.ativo ? '#4CAF50' : '#f44336' }}
+                            >
+                                {nadador.ativo ? 'Inativar' : 'Ativar'}
+                            </Botao>
+                        )}
                     />
                 )}
                 <Botao classBtn={style.btnAdd} onClick={handleAdicionar}>Adicionar Novo Nadador</Botao>
