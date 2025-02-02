@@ -82,8 +82,11 @@ const Nadadores = () => {
     //Botão inativar cadastro
     const handleInativar = async (id, ativo) => {
         try {
-            const novoStatus = ativo === 1 ? 0 : 1;
-    
+            console.log(`ID: ${id}, Ativo recebido: ${ativo}, Tipo: ${typeof ativo}`);
+
+            const novoStatus = Number(ativo) === 1 ? 0 : 1;
+            console.log(`NOVOSTATUS: ${novoStatus} Tipo: ${typeof novoStatus}`);
+
             const confirmacao = window.confirm(
                 `Tem certeza que deseja ${ativo ? "inativar" : "ativar"} este nadador?`
             );
