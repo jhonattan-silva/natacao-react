@@ -294,12 +294,16 @@ const Usuarios = () => {
                         <TabelaEdicao 
                             dados={usuarios} 
                             onEdit={handleEdit} 
+                            colunasOcultas={['id', 'ativo' ]}
                             funcExtra={(usuario) => (
                                 <Botao onClick={() => handleInativar(usuario.id, usuario.ativo)}
                                     style={{ backgroundColor: usuario.ativo === 1 ? '#4CAF50' : '#f44336' }}>
                                     {usuario.ativo ? 'Inativar' : 'Ativar'}
                                 </Botao>
                             )}
+                            renderLinha={(usuario) => ({
+                                style: { backgroundColor: usuario.ativo === 0 ? '#f44336' : 'transparent' }
+                            })}
                         />
                         <Botao onClick={handleAdicionar}>Adicionar Novo Usuário</Botao>
                     </>

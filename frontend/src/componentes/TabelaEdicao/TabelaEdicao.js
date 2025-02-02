@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import style from './TabelaEdicao.module.css';
 
-
 /*******
  * Componente de tabela com opções de edição
  * dados: Array de objetos com os dados a serem exibidos
@@ -11,8 +10,9 @@ import style from './TabelaEdicao.module.css';
  * onInativar: Função a ser executada ao clicar no botão de inativar
  * onDelete: Função a ser executada ao clicar no botão de excluir
  * funcExtra: Botão extra com função personalizada 
+ * renderLinha: Função para aplicar estilos personalizados às linhas da tabela
  */
-const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete, funcExtra }) => {
+const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete, funcExtra, renderLinha }) => {
   // Detecta as colunas automaticamente e exclui as especificadas em `colunasOcultas`
   const colunas = dados.length > 0
     ? Object.keys(dados[0]).filter(coluna => !colunasOcultas.includes(coluna))
@@ -34,7 +34,7 @@ const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete
       </thead>
       <tbody>
         {dados.map((linha, index) => (
-          <tr key={index}>
+          <tr key={index} {...(renderLinha ? renderLinha(linha) : {})}>
             {colunas.map((coluna, idx) => (
               <td key={idx}>{linha[coluna]}</td>
             ))}
@@ -60,6 +60,13 @@ TabelaEdicao.propTypes = {
   onInativar: PropTypes.func,
   onDelete: PropTypes.func,
   funcExtra: PropTypes.func,
+  renderLinha: PropTypes.func,
+};
+
+TabelaEdicao.defaultProps = {
+  colunasOcultas: [],
+  funcExtra: null,
+  renderLinha: null,
 };
 
 export default TabelaEdicao;

@@ -243,6 +243,9 @@ const Nadadores = () => {
                                 {nadador.ativo ? 'Inativar' : 'Ativar'}
                             </Botao>
                         )}
+                        renderLinha={(nadador) => ({
+                            style: { backgroundColor: nadador.ativo === 0 ? '#f44336' : 'transparent' }
+                        })}
                     />
                 )}
                 <Botao classBtn={style.btnAdd} onClick={handleAdicionar}>Adicionar Novo Nadador</Botao>
