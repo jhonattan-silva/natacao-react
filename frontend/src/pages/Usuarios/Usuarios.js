@@ -296,7 +296,7 @@ const Usuarios = () => {
                             onEdit={handleEdit} 
                             funcExtra={(usuario) => (
                                 <Botao onClick={() => handleInativar(usuario.id, usuario.ativo)}
-                                    style={{ backgroundColor: nadador.ativo === 1 ? '#4CAF50' : '#f44336' }}>
+                                    style={{ backgroundColor: usuario.ativo === 1 ? '#4CAF50' : '#f44336' }}>
                                     {usuario.ativo ? 'Inativar' : 'Ativar'}
                                 </Botao>
                             )}
