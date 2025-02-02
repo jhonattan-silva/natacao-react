@@ -1,0 +1,22 @@
+button {
+  padding: 10px 20px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btnEditar {
+  background-color: #4CAF50; /* Green */
+  color: white;
+}
+
+.btnInativar {
+  background-color: #FFC107; /* Amber */
+  color: white;
+}
+
+.btnExcluir {
+  background-color: #F44336; /* Red */
+  color: white;
+}

@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import style from './TabelaEdicao.module.css';
+import BotaoTabela from '../BotaoTabela/BotaoTabela';
 
 /*******
  * Componente de tabela com opções de edição
@@ -40,9 +41,9 @@ const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete
             ))}
             {(onEdit || onInativar || onDelete || funcExtra) && (
               <td>
-                {onEdit && <button className={style.btnEditar} onClick={() => onEdit(linha.id)}>Editar</button>}
-                {onInativar && <button className={style.btnExcluir} onClick={() => onInativar(linha.id)}>Inativar</button>}
-                {onDelete && <button className={style.btnExcluir} onClick={() => onDelete(linha.id)}>Excluir</button>}
+                {onEdit && <BotaoTabela tipo="editar" onClick={() => onEdit(linha.id)} />}
+                {onInativar && <BotaoTabela tipo="inativar" onClick={() => onInativar(linha.id)} />}
+                {onDelete && <BotaoTabela tipo="excluir" onClick={() => onDelete(linha.id)} />}
                 {funcExtra && funcExtra(linha)}
               </td>
             )}
