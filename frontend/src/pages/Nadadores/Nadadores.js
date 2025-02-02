@@ -82,23 +82,28 @@ const Nadadores = () => {
     //Botão inativar cadastro
     const handleInativar = async (id, ativo) => {
         try {
-            console.log(`ID: ${id}, Ativo recebido: ${ativo}, Tipo: ${typeof ativo}`);
-
-            const novoStatus = Number(ativo) === 1 ? 0 : 1;
-            console.log(`NOVOSTATUS: ${novoStatus} Tipo: ${typeof novoStatus}`);
-
+            console.log(`🟢 Chamada de handleInativar - ID: ${id}, Ativo recebido: ${ativo}, Tipo: ${typeof ativo}`);
+    
+            // Converter `ativo` para número, caso esteja vindo como string
+            const ativoNumero = Number(ativo);
+            const novoStatus = ativoNumero === 1 ? 0 : 1;
+    
+            console.log(`🔄 Novo Status Calculado: ${novoStatus}, Tipo: ${typeof novoStatus}`);
+    
             const confirmacao = window.confirm(
-                `Tem certeza que deseja ${ativo ? "inativar" : "ativar"} este nadador?`
+                `Tem certeza que deseja ${ativoNumero === 1 ? "inativar" : "ativar"} este nadador?`
             );
     
             if (!confirmacao) return;
     
-            await api.put(`${apiInativarNadador}/${id}`, { ativo: novoStatus }); // Usando método PUT e a mesma estrutura de URL
+            console.log(`🚀 Enviando para API: ID: ${id}, Status Atualizado: ${novoStatus}`);
+            await api.put(`${apiInativarNadador}/${id}`, { ativo: novoStatus });
     
-            alert(`Nadador ${ativo ? "inativado" : "ativado"} com sucesso!`);
-            fetchNadadores(); // Atualiza a lista após a mudança
+            alert(`Nadador ${ativoNumero === 1 ? "inativado" : "ativado"} com sucesso!`);
+    
+            setTimeout(() => fetchNadadores(user?.equipeId), 500);
         } catch (error) {
-            console.error(`Erro ao ${ativo ? "inativar" : "ativar"} nadador:`, error);
+            console.error(`❌ Erro ao ${ativo ? "inativar" : "ativar"} nadador:`, error);
             alert("Erro ao alterar status do nadador.");
         }
     };
