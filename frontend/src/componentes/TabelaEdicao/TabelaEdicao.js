@@ -2,6 +2,16 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import style from './TabelaEdicao.module.css';
 
+
+/*******
+ * Componente de tabela com opções de edição
+ * dados: Array de objetos com os dados a serem exibidos
+ * colunasOcultas: Array de strings com os nomes das colunas a serem ocultadas
+ * onEdit: Função a ser executada ao clicar no botão de editar
+ * onInativar: Função a ser executada ao clicar no botão de inativar
+ * onDelete: Função a ser executada ao clicar no botão de excluir
+ * funcExtra: Botão extra com função personalizada 
+ */
 const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete, funcExtra }) => {
   // Detecta as colunas automaticamente e exclui as especificadas em `colunasOcultas`
   const colunas = dados.length > 0
