@@ -75,7 +75,7 @@ router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
 });
 
 // Rota para alterar o status de um nadador
-router.post('/inativarNadador/:id', authMiddleware, async (req, res) => {
+router.put('/inativarNadador/:id', authMiddleware, async (req, res) => {
     const id = req.params.id;
     const { ativo } = req.body;
     console.log("ID do nadador recebido na API:", id);
