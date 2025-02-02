@@ -137,19 +137,19 @@ const Nadadores = () => {
 
     const inputs = [
         {
-            obrigatorio: true,
-            label: "Nome",
-            placeholder: "Digite o nome",
-            valor: nomeNadador,
-            aoAlterar: setNomeNadador
-        },
-        {
             id: "cpfInput",
             obrigatorio: true,
             label: "CPF",
             placeholder: "Somente números",
             valor: cpf,
             aoAlterar: (valor) => setCpf(aplicarMascaraCPF(valor)) // Aplicando a máscara ao alterar
+        },
+        {
+            obrigatorio: true,
+            label: "Nome",
+            placeholder: "Digite o nome",
+            valor: nomeNadador,
+            aoAlterar: setNomeNadador
         },
         {
             label: "Cidade",
