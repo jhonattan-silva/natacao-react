@@ -234,8 +234,15 @@ const Nadadores = () => {
                     <TabelaEdicao
                         dados={nadadores}
                         onEdit={handleEdit}
-                        onInativar={(id, ativo) => handleInativar(id, ativo)} 
                         colunasOcultas={['id']}
+                        funcExtra={(nadador) => (
+                            <Botao
+                                onClick={() => handleInativar(nadador.id, nadador.ativo)}
+                                style={{ backgroundColor: nadador.ativo ? '#4CAF50' : '#f44336' }}
+                            >
+                                {nadador.ativo ? 'Inativar' : 'Ativar'}
+                            </Botao>
+                        )}
                     />
                 )}
                 <Botao classBtn={style.btnAdd} onClick={handleAdicionar}>Adicionar Novo Nadador</Botao>
