@@ -236,7 +236,7 @@ const Nadadores = () => {
                         onEdit={handleEdit}
                         onInativar={handleInativar}
                         colunasOcultas={['id']}
-                        renderAcoes={(nadador) => (
+                        funcExtra={(nadador) => (
                             <Botao
                                 onClick={() => handleInativar(nadador.id, nadador.ativo)}
                                 style={{ backgroundColor: nadador.ativo ? '#4CAF50' : '#f44336' }}
