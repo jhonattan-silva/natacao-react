@@ -15,6 +15,18 @@
   text-align: center;
 }
 
+.tabela tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.tabela tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+.tabela tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
 .tabela tbody td {
   justify-content: center; /* Centraliza horizontalmente */
   align-items: center; /* Centraliza verticalmente */

@@ -9,6 +9,7 @@ import style from './Nadadores.module.css';
 import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
 import { useUser } from '../../servicos/UserContext';
 import { validarCPF, aplicarMascaraCPF, aplicarMascaraCelular, validarCelular } from '../../servicos/functions';
+import BotaoTabela from '../../componentes/BotaoTabela/BotaoTabela';
 
 const Nadadores = () => {
     const { user, loading } = useUser(); // Pega o estado de carregamento também
@@ -236,12 +237,12 @@ const Nadadores = () => {
                         onEdit={handleEdit}
                         colunasOcultas={['id']}
                         funcExtra={(nadador) => (
-                            <Botao
+                            <BotaoTabela
                                 onClick={() => handleInativar(nadador.id, nadador.ativo)}
                                 style={{ backgroundColor: nadador.ativo === 1 ? '#4CAF50' : '#f44336' }}
                             >
                                 {nadador.ativo ? 'Inativar' : 'Ativar'}
-                            </Botao>
+                            </BotaoTabela>
                         )}
                         renderLinha={(nadador) => ({
                             style: { backgroundColor: nadador.ativo === 0 ? '#f44336' : 'transparent' }
