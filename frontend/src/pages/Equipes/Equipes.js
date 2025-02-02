@@ -178,7 +178,6 @@ const Equipes = () => {
             <TabelaEdicao 
               dados={equipes} 
               onEdit={handleEdit} 
-              onInativar={handleInativar} 
               colunasOcultas={['id']}
               funcExtra={(equipe) => (
                 <Botao onClick={() => handleInativar(equipe.id, equipe.ativo)}>
