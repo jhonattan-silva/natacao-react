@@ -238,7 +238,7 @@ const Nadadores = () => {
                         funcExtra={(nadador) => (
                             <Botao
                                 onClick={() => handleInativar(nadador.id, nadador.ativo)}
-                                style={{ backgroundColor: nadador.ativo ? '#4CAF50' : '#f44336' }}
+                                style={{ backgroundColor: nadador.ativo === 1 ? '#4CAF50' : '#f44336' }}
                             >
                                 {nadador.ativo ? 'Inativar' : 'Ativar'}
                             </Botao>
