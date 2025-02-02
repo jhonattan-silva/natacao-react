@@ -74,13 +74,18 @@ router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
     }
 });
 
-// Rota para alterar o status de um nadador
+//rota para inativar ou reativar nadador
 router.put('/inativarNadador/:id', authMiddleware, async (req, res) => {
-    const id = req.params.id;
+    const id = parseInt(req.params.id); // Converte para número
     const { ativo } = req.body;
+
     console.log("ID do nadador recebido na API:", id);
     console.log("Status do nadador recebido na API:", ativo);
-    
+
+    if (isNaN(id)) {
+        return res.status(400).send("ID inválido.");
+    }
+
     try {
         await db.query('UPDATE nadadores SET ativo = ? WHERE id = ?', [ativo, id]);
         res.status(200).send('Status do nadador atualizado com sucesso.');
@@ -89,5 +94,6 @@ router.put('/inativarNadador/:id', authMiddleware, async (req, res) => {
         res.status(500).send('Erro ao alterar status do nadador');
     }
 });
+
 
 module.exports = router;
