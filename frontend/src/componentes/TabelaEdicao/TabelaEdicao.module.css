@@ -11,12 +11,12 @@
 }
 
 .tabela th {
-  background-color: #f2f2f2;
+  background-color: #67bbff;
   text-align: center;
 }
 
 .tabela tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background-color: #90dbf8;
 }
 
 .tabela tbody tr:nth-child(odd) {
@@ -24,7 +24,7 @@
 }
 
 .tabela tbody tr:hover {
-  background-color: #f1f1f1;
+  background-color: #3fff5f;
 }
 
 .tabela tbody td {
