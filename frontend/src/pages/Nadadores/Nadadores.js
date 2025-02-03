@@ -17,6 +17,8 @@ const Nadadores = () => {
     const [equipes, setEquipes] = useState(''); // Controle de equipes listadas
     const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
     const [editando, setEditando] = useState(false); // Controla se está editando ou não
+    const [editNadadorId, setEditNadadorId] = useState(null); // Guarda o ID do Nadador sendo editado
+    const [equipeNadador, setEquipeNadador] = useState(null); // Guarda a equipe do Nadador sendo editado
     /* INPUTS */
     const [nomeNadador, setNomeNadador] = useState(''); // Para input de nome
     const [cpf, setCpf] = useState('');
@@ -91,6 +93,7 @@ const Nadadores = () => {
             setCelular(nadador.telefone);
             setSexo(nadador.sexo);
 
+            // Busca a equipe do nadador para preencher o campo de equipe
             const equipe = equipes.find(equipe => equipe.id === nadador.equipeId);
             setEquipeNadador(equipe ? equipe.id : null); // Define a equipe do nadador
 
