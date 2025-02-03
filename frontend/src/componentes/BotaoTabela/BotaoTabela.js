@@ -17,7 +17,10 @@ const BotaoTabela = ({ tipo, onClick }) => {
   };
 
   return (
-    <button className={style[`btn${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`]} onClick={onClick}>
+    <button 
+      className={style[`btn${tipo ? tipo.charAt(0).toUpperCase() + tipo.slice(1) : ''}`]} // Adiciona a classe CSS de acordo com o tipo
+      onClick={onClick}
+    >
       {getButtonLabel(tipo)}
     </button>
   );
