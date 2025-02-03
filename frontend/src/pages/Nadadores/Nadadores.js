@@ -16,8 +16,7 @@ const Nadadores = () => {
     const [nadadores, setNadadores] = useState([]); //controle de nadadores
     const [equipes, setEquipes] = useState(''); // Controle de equipes listadas
     const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
-    const [equipesUsuario, setEquipeUsuario] = useState(''); // Controle de equipe do usuário logado
-
+    const [editando, setEditando] = useState(false); // Controla se está editando ou não
     /* INPUTS */
     const [nomeNadador, setNomeNadador] = useState(''); // Para input de nome
     const [cpf, setCpf] = useState('');
@@ -77,34 +76,50 @@ const Nadadores = () => {
     //Botão editar cadastro
     const handleEdit = (id) => {
         console.log(`Editando Nadador com ID: ${id}`);
-        // Lógica de edição aqui
+
+        try {
+            const nadador = nadadores.find(nadador => nadador.id === id);
+            
+            if (!nadador) {
+                throw new Error('Nadador não encontrado.');
+            }
+            
+            setCpf(nadador.cpf);
+            setNomeNadador(nadador.nome);
+            setCidade(nadador.cidade);
+            setDataNasc(nadador.data_nasc);
+            setCelular(nadador.telefone);
+            setSexo(nadador.sexo);
+
+            const equipe = equipes.find(equipe => equipe.id === nadador.equipeId);
+            setEquipeNadador(equipe ? equipe.id : null); // Define a equipe do nadador
+
+            setEditNadadorId(id);
+            setEditando(true);
+            setFormVisivel(true);
+
+        } catch (error) {
+            alert('Erro ao editar nadador: ' + error.message
+            );
+        }
     };
 
     //Botão inativar cadastro
     const handleInativar = async (id, ativo) => {
-        try {
-            console.log(`🟢 Chamada de handleInativar - ID: ${id}, Ativo recebido: ${ativo}, Tipo: ${typeof ativo}`);
-    
+        try {    
             // Converter `ativo` para número, caso esteja vindo como string
             const ativoNumero = Number(ativo);
             const novoStatus = ativoNumero === 1 ? 0 : 1;
-    
-            console.log(`🔄 Novo Status Calculado: ${novoStatus}, Tipo: ${typeof novoStatus}`);
-    
+        
             const confirmacao = window.confirm(
                 `Tem certeza que deseja ${ativoNumero === 1 ? "inativar" : "ativar"} este nadador?`
             );
     
             if (!confirmacao) return;
-    
-            console.log(`🚀 Enviando para API: ID: ${id}, Status Atualizado: ${novoStatus}`);
-            await api.put(`${apiInativarNadador}/${id}`, { ativo: novoStatus });
-    
+            await api.put(`${apiInativarNadador}/${id}`, { ativo: novoStatus });    
             alert(`Nadador ${ativoNumero === 1 ? "inativado" : "ativado"} com sucesso!`);
-    
             setTimeout(() => fetchNadadores(user?.equipeId), 500);
         } catch (error) {
-            console.error(`❌ Erro ao ${ativo ? "inativar" : "ativar"} nadador:`, error);
             alert("Erro ao alterar status do nadador.");
         }
     };
@@ -272,7 +287,9 @@ const Nadadores = () => {
                                 onChange={equipeSelecionada}
                             />
                         )}
-                        <Botao onClick={aoSalvar}>Cadastrar</Botao>
+                        <Botao onClick={aoSalvar}>
+                            {editando ?  'Atualizar' : 'Cadastrar'}
+                        </Botao>
                         <Botao onClick={handleVoltar}>Voltar</Botao>
                     </div>
                 )}
