@@ -289,9 +289,7 @@ const Nadadores = () => {
                                 onChange={equipeSelecionada}
                             />
                         )}
-                        <Botao onClick={aoSalvar}>
-                            {editando ?  'Atualizar' : 'Cadastrar'}
-                        </Botao>
+                        <Botao onClick={aoSalvar}>Saalvar</Botao>
                         <Botao onClick={handleVoltar}>Voltar</Botao>
                     </div>
                 )}
