@@ -102,8 +102,7 @@ const Nadadores = () => {
             setFormVisivel(true);
 
         } catch (error) {
-            alert('Erro ao editar nadador: ' + error.message
-            );
+            alert('Erro ao editar nadador: ' + error.message);
         }
     };
 

@@ -16,7 +16,7 @@
 }
 
 .tabela tbody tr:nth-child(even) {
-  background-color: #90dbf8;
+  background-color: #abe2f8;
 }
 
 .tabela tbody tr:nth-child(odd) {
@@ -24,7 +24,7 @@
 }
 
 .tabela tbody tr:hover {
-  background-color: #3fff5f;
+  background-color: #75f78b;
 }
 
 .tabela tbody td {
