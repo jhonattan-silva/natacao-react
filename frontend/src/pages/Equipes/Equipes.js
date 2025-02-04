@@ -10,13 +10,6 @@ import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 const Equipes = () => {
   const [equipes, setEquipes] = useState([]);
   const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
-  const [editTeamId, setEditTeamId] = useState(null); // Armazena o ID da equipe em edição
-  const [isEditing, setIsEditing] = useState(false); // Controla o modo de edição
-  const [nomeEquipe, setNomeEquipe] = useState(''); // Para input de nome
-  const [cidadeEquipe, setCidadeEquipe] = useState(''); // Para input de cidade
-  const [treinadorEquipe, setTreinadorEquipe] = useState(''); // Para o treinador escolhido
-  const [listaTreinadores, setListaTreinadores] = useState([]); // Para listar os treinadores
-
   const apiListaEquipes = `equipes/listarEquipes`;
   const apiCadastraEquipe = `equipes/cadastrarEquipe`;
   const apiListaTreinadores = `equipes/listarTreinadores`;
@@ -34,40 +27,35 @@ const Equipes = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const fetchTreinadores = async () => {
-      try {
-        const response = await api.get(`${apiListaTreinadores}`);
-        setListaTreinadores(response.data);
-      } catch (error) {
-        console.error('Erro ao buscar treinadores:', error);
-      }
-    };
-    fetchTreinadores();
-  }, []);
-
   const handleEdit = async (id) => {
     try {
       const equipe = equipes.find(equipe => equipe.id === id);
             
       if (!equipe) {
-          throw new Error('Equipe não encontrada.');
+          throw new Error('Equipe não encontrado.');
       }
 
       // Preenche os campos do formulário com os dados da equipe
       setNomeEquipe(equipe.nome);
       setCidadeEquipe(equipe.cidade);
-      setTreinadorEquipe(equipe.treinadorId);
+
+      // Fetch the current trainer for the team
+      const treinadorResponse = await api.get(apiListaTreinadores);
+      const treinador = treinadorResponse.data.find(t => t.id === equipe.treinadorId);
+      setTreinadorEquipe(treinador ? treinador.id : '');
 
       // Ativa o formulário em modo de edição
       setEditTeamId(id);
       setIsEditing(true);
-      setFormVisivel(true); // Abre o formulário
+      setTimeout(() => setFormVisivel(true), 0); // Abre o formulário após o estado ser atualizado
 
     } catch (error) {
       console.error('Erro ao editar equipe:', error);
     }
   };
+
+  const [editTeamId, setEditTeamId] = useState(null); // Armazena o ID da equipe em edição
+  const [isEditing, setIsEditing] = useState(false); // Controla o modo de edição
 
   const fecharFormulario = () => {
     limparFormulario();
@@ -78,8 +66,7 @@ const Equipes = () => {
     setNomeEquipe('');
     setCidadeEquipe('');
     setTreinadorEquipe('');
-    setEditTeamId(null);
-    setIsEditing(false);
+    setFormVisivel(false);
   };
 
   const handleInativar = async (id, ativo) => {
@@ -99,13 +86,29 @@ const Equipes = () => {
   };
 
   const handleAdicionar = () => {
-    limparFormulario();
     setFormVisivel(true);
   };
 
   const treinadorSelecionado = (id) => {
     setTreinadorEquipe(id);
   };
+
+  const [nomeEquipe, setNomeEquipe] = useState(''); // Para input de nome
+  const [cidadeEquipe, setCidadeEquipe] = useState(''); // Para input de cidade
+  const [treinadorEquipe, setTreinadorEquipe] = useState(''); // Para o treinador escolhido
+  const [listaTreinadores, setListaTreinadores] = useState([]); // Para listar os treinadores
+
+  useEffect(() => {
+    const fetchTreinadores = async () => {
+      try {
+        const response = await api.get(`${apiListaTreinadores}`);
+        setListaTreinadores(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar treinadores:', error);
+      }
+    };
+    fetchTreinadores();
+  }, []);
 
   const inputs = [
     {
@@ -184,7 +187,7 @@ const Equipes = () => {
             <Formulario inputs={inputs} aoSalvar={aoSalvar} />
             <ListaSuspensa
               textoPlaceholder={"Escolha o treinador"}
-              fonteDados={listaTreinadores}
+              fonteDados={apiListaTreinadores}
               valorSelecionado={treinadorEquipe} // ID do treinador
               onChange={treinadorSelecionado}
             />
