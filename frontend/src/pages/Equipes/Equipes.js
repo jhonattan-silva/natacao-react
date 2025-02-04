@@ -10,7 +10,7 @@ import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 const Equipes = () => {
   const [equipes, setEquipes] = useState([]);
   const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
-  const apiListaEquipes = "equipes/listarEquipes";
+  const apiListaEquipes = `equipes/listarEquipes`;
   const apiCadastraEquipe = `equipes/cadastrarEquipe`;
   const apiListaTreinadores = `equipes/listarTreinadores`;
   const apiInativarEquipe = `equipes/inativarEquipe`;
@@ -69,9 +69,9 @@ const Equipes = () => {
     try {
       const novoStatus = ativo ? 0 : 1;
       await api.put(`${apiInativarEquipe}/${id}`, { ativo: novoStatus });
-      setEquipes(prevEquipes => 
-        prevEquipes.map(equipe => 
-            equipe.id === id ? { ...equipe, ativo: novoStatus } : equipe
+      setEquipes(prevEquipes =>
+        prevEquipes.map(equipe =>
+          equipe.id === id ? { ...equipe, ativo: novoStatus } : equipe
         )
       );
       alert(`Equipe ${ativo ? 'inativada' : 'ativada'} com sucesso!`);
@@ -160,14 +160,14 @@ const Equipes = () => {
 
   return (
     <>
-    <CabecalhoAdmin/>
+      <CabecalhoAdmin />
       <div className={style.equipesPage}>
         <h2>EQUIPES</h2>
         {!formVisivel && (
           <>
-            <TabelaEdicao 
-              dados={equipes} 
-              onEdit={handleEdit} 
+            <TabelaEdicao
+              dados={equipes}
+              onEdit={handleEdit}
               colunasOcultas={['id']}
               funcExtra={(equipe) => (
                 <Botao onClick={() => handleInativar(equipe.id, equipe.ativo)}>
