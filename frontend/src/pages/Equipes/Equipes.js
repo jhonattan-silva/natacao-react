@@ -6,6 +6,7 @@ import TabelaEdicao from '../../componentes/TabelaEdicao/TabelaEdicao';
 import Formulario from '../../componentes/Formulario/Formulario';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
+import stylesBotao from '../../componentes/Botao/Botao.module.css';
 
 const Equipes = () => {
   const [equipes, setEquipes] = useState([]);
@@ -45,16 +46,12 @@ const Equipes = () => {
       }
 
       // Preenche os campos do formulário com os dados da equipe
-      console.log("Equipe:", equipe);
-      
       setNomeEquipe(equipe.Equipe);
       setCidadeEquipe(equipe.Cidade);
 
       // Busca o treinador da equipe pelo nome
       const treinador = listaTreinadores.find(treinador => treinador.nome === equipe.Treinador);
-      console.log("Treinador:", treinador);
       setTreinadorEquipe(treinador ? treinador.id : null); // Define o ID do treinador
-      console.log("SETTreinadorEquipe:", treinador ? treinador.id : null);
       
       // Ativa o formulário em modo de edição
       setEditTeamId(id);
@@ -187,25 +184,27 @@ const Equipes = () => {
                 </Botao>
               )}
             />
-            <Botao onClick={handleAdicionar}>Adicionar Nova Equipe</Botao>
+            <Botao className={stylesBotao.botao} onClick={handleAdicionar}>Adicionar Nova Equipe</Botao>
           </>
         )}
         {formVisivel && (
-          <div>
-            <Formulario inputs={inputs} aoSalvar={aoSalvar} />
-            <ListaSuspensa
-              textoPlaceholder={"Escolha o treinador"}
-              fonteDados={apiListaTreinadores}
-              valorSelecionado={treinadorEquipe} // ID do treinador
-              onChange={treinadorSelecionado}
-            />
-            <div className={style['button-group']}>
-              <Botao onClick={aoSalvar}>
-                {isEditing ? 'Atualizar' : 'Cadastrar'}
-              </Botao>
-              <Botao onClick={fecharFormulario}>
-                Voltar
-              </Botao>
+          <div className={style.formularioContainer}>
+            <div>
+              <Formulario inputs={inputs} aoSalvar={aoSalvar} />
+              <ListaSuspensa
+                textoPlaceholder={"Escolha o treinador"}
+                fonteDados={apiListaTreinadores}
+                valorSelecionado={treinadorEquipe} // ID do treinador
+                onChange={treinadorSelecionado}
+              />
+              <div className={style['button-group']}>
+                <Botao onClick={aoSalvar}>
+                  {isEditing ? 'Atualizar' : 'Cadastrar'}
+                </Botao>
+                <Botao onClick={fecharFormulario}>
+                  Voltar
+                </Botao>
+              </div>
             </div>
           </div>
         )}
