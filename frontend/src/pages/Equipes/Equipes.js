@@ -41,7 +41,7 @@ const Equipes = () => {
       const equipe = equipes.find(equipe => equipe.id === id);
             
       if (!equipe) {
-          throw new Error('Equipe não encontrado.');
+          throw new Error('Equipe não encontrada.');
       }
 
       // Preenche os campos do formulário com os dados da equipe
@@ -50,13 +50,12 @@ const Equipes = () => {
       setNomeEquipe(equipe.Equipe);
       setCidadeEquipe(equipe.Cidade);
 
-      // Busca o treinador da equipe
-      const treinador = listaTreinadores.find(treinador => treinador.id === equipe.treinadorId);
+      // Busca o treinador da equipe pelo nome
+      const treinador = listaTreinadores.find(treinador => treinador.nome === equipe.Treinador);
       console.log("Treinador:", treinador);
-      setTreinadorEquipe(treinador ? treinador.id : null); // Define a equipe do nadador
+      setTreinadorEquipe(treinador ? treinador.id : null); // Define o ID do treinador
       console.log("SETTreinadorEquipe:", treinador ? treinador.id : null);
       
-
       // Ativa o formulário em modo de edição
       setEditTeamId(id);
       setIsEditing(true);
