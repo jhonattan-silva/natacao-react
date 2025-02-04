@@ -258,7 +258,7 @@ const Nadadores = () => {
                                 onClick={() => handleInativar(nadador.id, nadador.ativo)}
                                 style={{ backgroundColor: nadador.ativo === 1 ? '#4CAF50' : '#f44336' }}
                             >
-                                {nadador.ativo ? 'Inativar' : 'Ativar'}
+                                {nadador.ativo === 1 ? 'Inativar' : 'Ativar'}
                             </BotaoTabela>
                         )}
                         renderLinha={(nadador) => ({

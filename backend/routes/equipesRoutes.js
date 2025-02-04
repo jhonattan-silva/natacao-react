@@ -113,12 +113,8 @@ router.put('/atualizarEquipe/:id', async (req, res) => {
 
 // Rota para buscar treinadores por nome
 router.get('/listarTreinadores', async (req, res) => {
-  const query = req.query.query;
   try {
-      const [treinadores] = await db.query(`
-          SELECT *
-          FROM usuarios`);
-
+      const [treinadores] = await db.query(`SELECT id, nome FROM usuarios`);
       res.json(treinadores);
   } catch (error) {
       console.error('Erro ao buscar treinadores:', error);
