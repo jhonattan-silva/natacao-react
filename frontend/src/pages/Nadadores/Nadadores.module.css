@@ -59,11 +59,11 @@ h2 {
 .nadadores tr:hover {
     background-color: #6de95f;
 }
- */
+
 .nadadores tr.inativo {
     background-color: red;
 }
-
+ */
 .btnAdd {
     width: 30%;
     height: 50px;

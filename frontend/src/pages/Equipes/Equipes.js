@@ -187,7 +187,7 @@ const Equipes = () => {
             <Formulario inputs={inputs} aoSalvar={aoSalvar} />
             <ListaSuspensa
               textoPlaceholder={"Escolha o treinador"}
-              fonteDados={listaTreinadores}
+              fonteDados={apiListaTreinadores}
               valorSelecionado={treinadorEquipe} // ID do treinador
               onChange={treinadorSelecionado}
             />

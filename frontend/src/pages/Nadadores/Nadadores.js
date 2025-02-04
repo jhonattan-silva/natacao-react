@@ -289,7 +289,7 @@ const Nadadores = () => {
                                 onChange={equipeSelecionada}
                             />
                         )}
-                        <Botao onClick={aoSalvar}>Saalvar</Botao>
+                        <Botao onClick={aoSalvar}>Salvar</Botao>
                         <Botao onClick={handleVoltar}>Voltar</Botao>
                     </div>
                 )}
