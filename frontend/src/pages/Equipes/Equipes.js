@@ -29,17 +29,20 @@ const Equipes = () => {
 
   const handleEdit = async (id) => {
     try {
-      const equipe = equipes.find((team) => team.id === id);
-
+      const equipe = equipes.find(equipe => equipe.id === id);
+            
       if (!equipe) {
-        console.error('Equipe não encontrada');
-        return;
+          throw new Error('Equipe não encontrado.');
       }
 
       // Preenche os campos do formulário com os dados da equipe
       setNomeEquipe(equipe.nome);
       setCidadeEquipe(equipe.cidade);
-      setTreinadorEquipe(equipe.treinadorId);
+
+      // Fetch the current trainer for the team
+      const treinadorResponse = await api.get(`equipes/listarTreinadores`);
+      const treinador = treinadorResponse.data.find(t => t.id === equipe.treinadorId);
+      setTreinadorEquipe(treinador ? treinador.id : '');
 
       // Ativa o formulário em modo de edição
       setEditTeamId(id);
