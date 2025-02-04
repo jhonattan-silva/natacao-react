@@ -30,6 +30,7 @@ router.get('/listarNadadores/:equipeId', async (req, res) => {
 // Rota para listar provas de um evento específico
 router.get('/listarProvasEvento/:eventoId', async (req, res) => {
     const eventoId = req.params.eventoId;
+    const equipeId = req.query.equipeId;
 
     if (!eventoId) {
         return res.status(400).json({ message: 'Evento ID é necessário' }); // Retorna erro se não houver ID do evento
@@ -45,7 +46,7 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
         `, [eventoId]);
 
         // Buscar nadadores pelo equipes_id
-        const [nadadores] = await db.query('SELECT * FROM nadadores WHERE equipes_id = ?', [req.query.equipeId]);
+        const [nadadores] = await db.query('SELECT * FROM nadadores WHERE equipes_id = ?', [equipeId]);
 
         console.log('Provas:', provas);
         console.log('Nadadores:', nadadores);

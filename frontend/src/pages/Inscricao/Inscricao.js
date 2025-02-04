@@ -39,7 +39,7 @@ const Inscricao = () => {
         try {
             const nadadoresResponse = await api.get(apiListaNadadores); //lista de nadadores
             console.log("Nadadores:", nadadoresResponse.data);
-            const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}`); //lista de provas - por evento
+            const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${user?.equipeId}`); //lista de provas - por evento
             console.log("Provas:", provasResponse.data);
             const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`); //inscricoes já realizadas do evento
             console.log("Inscrições:", inscricoesResponse.data);
