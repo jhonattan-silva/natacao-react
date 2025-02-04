@@ -22,7 +22,7 @@ h2 {
 }
 
 /* Estilos para a tabela */
-.nadadores table{
+/* .nadadores table{
     width: 70%;
     margin: 20px auto;
     border-collapse: collapse;
@@ -31,7 +31,6 @@ h2 {
     overflow: hidden;
 }
 
-/* Cabeçalho da tabela */
 .nadadores th {
     background-color: #1a73e8;
     color: #ffffff;
@@ -41,7 +40,6 @@ h2 {
     font-size: 1rem;
 }
 
-/* Linhas da tabela */
 .nadadores td {
     padding: 10px;
     text-align: left;
@@ -50,7 +48,6 @@ h2 {
     border-bottom: 1px solid #ddd;
 }
 
-/* Alternância de cor nas linhas da tabela */
 .nadadores tr:nth-child(even) {
     background-color: #9bd5e8;
 }
@@ -59,12 +56,10 @@ h2 {
     background-color: #ffffff;
 }
 
-/* Estilo de foco ao passar o mouse sobre uma linha */
 .nadadores tr:hover {
     background-color: #6de95f;
 }
-
-/* Estilo para linhas de nadadores inativos */
+ */
 .nadadores tr.inativo {
     background-color: red;
 }
