@@ -40,14 +40,15 @@ const Equipes = () => {
       setCidadeEquipe(equipe.cidade);
 
       // Fetch the current trainer for the team
-      const treinadorResponse = await api.get(`equipes/listarTreinadores`);
+      const treinadorResponse = await api.get(apiListaTreinadores);
       const treinador = treinadorResponse.data.find(t => t.id === equipe.treinadorId);
       setTreinadorEquipe(treinador ? treinador.id : '');
 
       // Ativa o formulário em modo de edição
       setEditTeamId(id);
       setIsEditing(true);
-      setFormVisivel(true);
+      setTimeout(() => setFormVisivel(true), 0); // Abre o formulário após o estado ser atualizado
+
     } catch (error) {
       console.error('Erro ao editar equipe:', error);
     }
@@ -186,7 +187,7 @@ const Equipes = () => {
             <Formulario inputs={inputs} aoSalvar={aoSalvar} />
             <ListaSuspensa
               textoPlaceholder={"Escolha o treinador"}
-              fonteDados={apiListaTreinadores}
+              fonteDados={listaTreinadores}
               valorSelecionado={treinadorEquipe} // ID do treinador
               onChange={treinadorSelecionado}
             />
