@@ -52,7 +52,10 @@ const Equipes = () => {
 
       // Busca o treinador da equipe
       const treinador = listaTreinadores.find(treinador => treinador.id === equipe.treinadorId);
+      console.log("Treinador:", treinador);
       setTreinadorEquipe(treinador ? treinador.id : null); // Define a equipe do nadador
+      console.log("SETTreinadorEquipe:", treinador ? treinador.id : null);
+      
 
       // Ativa o formulário em modo de edição
       setEditTeamId(id);

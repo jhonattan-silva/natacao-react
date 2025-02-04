@@ -9,6 +9,8 @@ const BotaoTabela = ({ tipo, onClick }) => {
         return 'Editar';
       case 'inativar':
         return 'Inativar';
+      case 'ativar': // Adicionado caso 'ativar'
+        return 'Ativar';
       case 'excluir':
         return 'Excluir';
       default:
@@ -27,7 +29,7 @@ const BotaoTabela = ({ tipo, onClick }) => {
 };
 
 BotaoTabela.propTypes = {
-  tipo: PropTypes.oneOf(['editar', 'inativar', 'excluir']).isRequired,
+  tipo: PropTypes.oneOf(['editar', 'inativar', 'ativar', 'excluir']).isRequired, // Adicionado 'ativar' ao PropTypes
   onClick: PropTypes.func.isRequired,
 };
 
