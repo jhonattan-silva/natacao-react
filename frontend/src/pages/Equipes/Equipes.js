@@ -89,16 +89,6 @@ const Equipes = () => {
     setTreinadorEquipe(id);
   };
 
-  const adicionarEquipe = async (dados) => {
-    try {
-      const response = await api.post(apiCadastraEquipe, dados);
-      setEquipes([...equipes, response.data]);
-      setFormVisivel(false);
-    } catch (error) {
-      console.error('Erro ao cadastrar equipe:', error);
-    }
-  };
-
   const [nomeEquipe, setNomeEquipe] = useState(''); // Para input de nome
   const [cidadeEquipe, setCidadeEquipe] = useState(''); // Para input de cidade
   const [treinadorEquipe, setTreinadorEquipe] = useState(''); // Para o treinador escolhido
