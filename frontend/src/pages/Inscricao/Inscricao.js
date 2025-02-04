@@ -14,7 +14,6 @@ const Inscricao = () => {
     const [eventoSelecionado, setEventoSelecionado] = useState(null);
     const [selecoes, setSelecoes] = useState({});
     const user = useUser(); // Obter o usuário do contexto do usuário
-    
 
     const apiEventos = `/inscricao/listarEventos`;
     const apiListaNadadores = `/inscricao/listarNadadores/${user?.equipeId}`; // Passar equipeId
@@ -27,6 +26,7 @@ const Inscricao = () => {
         const fetchEventos = async () => {
             try {
                 const response = await api.get(apiEventos);
+                console.log("Eventos:", response.data);
                 setEventos(response.data);
             } catch (error) {
                 console.error("Erro ao buscar eventos:", error);
@@ -38,8 +38,11 @@ const Inscricao = () => {
     const fetchDadosEvento = async () => {
         try {
             const nadadoresResponse = await api.get(apiListaNadadores); //lista de nadadores
+            console.log("Nadadores:", nadadoresResponse.data);
             const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}`); //lista de provas - por evento
+            console.log("Provas:", provasResponse.data);
             const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`); //inscricoes já realizadas do evento
+            console.log("Inscrições:", inscricoesResponse.data);
 
             setNadadores(nadadoresResponse.data); // Lista completa de nadadores
             setProvas(provasResponse.data?.provas || []); // Provas vinculadas ao evento
@@ -60,6 +63,7 @@ const Inscricao = () => {
 
     useEffect(() => {
         if (eventoSelecionado) {
+            console.log("Evento selecionado:", eventoSelecionado);
             fetchDadosEvento();
         }
     }, [eventoSelecionado]);

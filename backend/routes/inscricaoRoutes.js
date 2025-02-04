@@ -6,6 +6,7 @@ const db = require('../config/db');
 router.get('/listarEventos', async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM eventos WHERE inscricao_aberta = 1'); // Busca todos os eventos
+        console.log('Eventos:', rows);
         res.json(rows); // Retorna a lista de eventos em JSON
     } catch (error) {
         console.error('Erro ao buscar eventos:', error); // Loga o erro no servidor
@@ -18,6 +19,7 @@ router.get('/listarNadadores/:equipeId', async (req, res) => {
     try {
         const { equipeId } = req.params; // Extrai o equipeId da rota
         const [rows] = await db.query('SELECT * FROM nadadores WHERE equipes_id = ?', [equipeId]); // Busca todos os nadadores
+        console.log('Nadadores:', rows);
         res.json(rows); // Retorna a lista de nadadores em JSON
     } catch (error) {
         console.error('Erro ao buscar nadadores:', error); // Loga o erro no servidor
@@ -25,10 +27,9 @@ router.get('/listarNadadores/:equipeId', async (req, res) => {
     }
 });
 
-// Rota para listar provas de um evento específico e, opcionalmente, nadadores de uma equipe
+// Rota para listar provas de um evento específico
 router.get('/listarProvasEvento/:eventoId', async (req, res) => {
     const eventoId = req.params.eventoId;
-    const equipeId = req.query.equipeId; // Opcional, para filtrar nadadores por equipe
 
     if (!eventoId) {
         return res.status(400).json({ message: 'Evento ID é necessário' }); // Retorna erro se não houver ID do evento
@@ -43,12 +44,11 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
             WHERE ep.eventos_id = ?
         `, [eventoId]);
 
-        // Buscar nadadores, opcionalmente filtrando por equipe
-        const nadadoresQuery = equipeId 
-            ? 'SELECT * FROM nadadores WHERE equipes_id = ?' 
-            : 'SELECT * FROM nadadores';
+        // Buscar nadadores pelo equipes_id
+        const [nadadores] = await db.query('SELECT * FROM nadadores WHERE equipes_id = ?', [req.query.equipeId]);
 
-        const [nadadores] = await db.query(nadadoresQuery, equipeId ? [equipeId] : []);
+        console.log('Provas:', provas);
+        console.log('Nadadores:', nadadores);
 
         // Retorna os dados no formato esperado pelo frontend
         res.json({ provas, nadadores });
@@ -69,6 +69,8 @@ router.get('/listarInscricoes/:eventoId', async (req, res) => {
             FROM inscricoes
             WHERE Eventos_id = ?
         `, [eventoId]);
+
+        console.log('Inscrições:', inscricoes);
 
         res.json(inscricoes); // Retorna as inscrições encontradas
     } catch (error) {
@@ -97,6 +99,8 @@ router.post('/salvarInscricao', async (req, res) => {
             // Inserção de inscrição para nadador e prova específicos
             await db.query('INSERT INTO inscricoes (Nadadores_id, Eventos_id, Eventos_Provas_id) VALUES (?, ?, ?)', [nadadorId, eventoId, provaId]);
         }
+
+        console.log('Inscrições salvas:', nadadoresInscritos);
 
         res.json({ message: 'Inscrições atualizadas com sucesso!' }); // Retorna mensagem de sucesso
     } catch (error) {
