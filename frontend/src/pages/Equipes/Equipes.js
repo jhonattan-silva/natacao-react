@@ -47,8 +47,8 @@ const Equipes = () => {
       // Preenche os campos do formulário com os dados da equipe
       console.log("Equipe:", equipe);
       
-      setNomeEquipe(equipe.nome);
-      setCidadeEquipe(equipe.cidade);
+      setNomeEquipe(equipe.Equipe);
+      setCidadeEquipe(equipe.Cidade);
 
       // Busca o treinador da equipe
       const treinador = listaTreinadores.find(treinador => treinador.id === equipe.treinadorId);

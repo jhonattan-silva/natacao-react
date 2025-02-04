@@ -6,17 +6,22 @@ button {
   cursor: pointer;
 }
 
-.btnEditar {
+.btnEditar{
   background-color: #4CAF50; /* Green */
   color: white;
 }
 
 .btnInativar {
-  background-color: #FFC107; /* Amber */
+  background-color: #f93d3d; /* Amber */
   color: white;
 }
 
 .btnExcluir {
   background-color: #F44336; /* Red */
+  color: white;
+}
+
+.btnAtivar {
+  background-color: rgb(50, 76, 248);
   color: white;
 }
