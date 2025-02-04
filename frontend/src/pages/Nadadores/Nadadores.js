@@ -39,8 +39,8 @@ const Nadadores = () => {
         setEquipes(id);
     };
 
-    useEffect(() => {
-        if (!loading && user?.equipeId) { 
+    useEffect(() => { // Busca os nadadores ao carregar a página
+        if (!loading && user?.equipeId) { // Verifica se o usuário está carregado e tem equipeId
             console.log("User equipeId atualizado:", user.equipeId);
             setEquipes(user.equipeId);
             fetchNadadores(user.equipeId);
@@ -56,9 +56,9 @@ const Nadadores = () => {
        
             const response = await api.get(apiListaNadadores, { params: { equipeId } });
     
-            setNadadores(response.data.map(nadador => ({
+            setNadadores(response.data.map(nadador => ({ // Mapeia os dados para o formato desejado
                 ...nadador,
-                data_nasc: new Date(nadador.data_nasc).toLocaleDateString('pt-BR', {
+                data_nasc: new Date(nadador.data_nasc).toLocaleDateString('pt-BR', { // Formata a data
                     day: '2-digit', month: '2-digit', year: 'numeric',
                 }),
             })));
@@ -67,8 +67,6 @@ const Nadadores = () => {
         }
     };
     
-    
-
 
     //Botão para abrir o formulario de novo Nadador
     const handleAdicionar = () => {
@@ -255,6 +253,7 @@ const Nadadores = () => {
                         colunasOcultas={['id']}
                         funcExtra={(nadador) => (
                             <BotaoTabela
+                                tipo={nadador.ativo === 1 ? 'inativar' : 'ativar'} // Corrige o uso do tipo
                                 onClick={() => handleInativar(nadador.id, nadador.ativo)}
                                 style={{ backgroundColor: nadador.ativo === 1 ? '#4CAF50' : '#f44336' }}
                             >

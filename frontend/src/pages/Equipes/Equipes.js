@@ -15,11 +15,20 @@ const Equipes = () => {
   const apiListaTreinadores = `equipes/listarTreinadores`;
   const apiInativarEquipe = `equipes/inativarEquipe`;
 
-  useEffect(() => {
+  const [nomeEquipe, setNomeEquipe] = useState(''); // Para input de nome
+  const [cidadeEquipe, setCidadeEquipe] = useState(''); // Para input de cidade
+  const [treinadorEquipe, setTreinadorEquipe] = useState(''); // Para o treinador escolhido
+  const [listaTreinadores, setListaTreinadores] = useState([]); // Para listar os treinadores
+
+
+  useEffect(() => { // Busca as equipes e treinadores ao carregar a página
     const fetchData = async () => {
       try {
         const response = await api.get(`${apiListaEquipes}`);
         setEquipes(response.data);
+
+        const responseTreinadores = await api.get(`${apiListaTreinadores}`);
+        setListaTreinadores(responseTreinadores.data);
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
       }
@@ -36,13 +45,14 @@ const Equipes = () => {
       }
 
       // Preenche os campos do formulário com os dados da equipe
+      console.log("Equipe:", equipe);
+      
       setNomeEquipe(equipe.nome);
       setCidadeEquipe(equipe.cidade);
 
-      // Fetch the current trainer for the team
-      const treinadorResponse = await api.get(apiListaTreinadores);
-      const treinador = treinadorResponse.data.find(t => t.id === equipe.treinadorId);
-      setTreinadorEquipe(treinador ? treinador.id : '');
+      // Busca o treinador da equipe
+      const treinador = listaTreinadores.find(treinador => treinador.id === equipe.treinadorId);
+      setTreinadorEquipe(treinador ? treinador.id : null); // Define a equipe do nadador
 
       // Ativa o formulário em modo de edição
       setEditTeamId(id);
@@ -93,10 +103,6 @@ const Equipes = () => {
     setTreinadorEquipe(id);
   };
 
-  const [nomeEquipe, setNomeEquipe] = useState(''); // Para input de nome
-  const [cidadeEquipe, setCidadeEquipe] = useState(''); // Para input de cidade
-  const [treinadorEquipe, setTreinadorEquipe] = useState(''); // Para o treinador escolhido
-  const [listaTreinadores, setListaTreinadores] = useState([]); // Para listar os treinadores
 
   useEffect(() => {
     const fetchTreinadores = async () => {
