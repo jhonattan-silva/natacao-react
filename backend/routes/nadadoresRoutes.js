@@ -9,7 +9,18 @@ router.get('/listarNadadores', authMiddleware, async (req, res) => {
 
         console.log("Equipe ID recebido na API:", equipeId);
 
-        let query = 'SELECT * FROM nadadores';
+        let query = `
+            SELECT 
+                id, 
+                nome AS Nome, 
+                cpf AS CPF, 
+                data_nasc AS Data Nascimento, 
+                celular AS Celular, 
+                sexo AS Sexo, 
+                cidade AS Cidade, 
+                ativo AS Ativo 
+            FROM nadadores
+        `;
         let queryParams = [];
 
         if (equipeId && !isNaN(equipeId)) {
