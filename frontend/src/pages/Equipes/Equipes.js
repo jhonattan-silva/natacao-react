@@ -184,7 +184,9 @@ const Equipes = () => {
                 </Botao>
               )}
             />
-            <Botao className={stylesBotao.botao} onClick={handleAdicionar}>Adicionar Nova Equipe</Botao>
+            <div className={style.centralizarBotao}>
+              <Botao className={stylesBotao.botao} onClick={handleAdicionar}>Adicionar Nova Equipe</Botao>
+            </div>
           </>
         )}
         {formVisivel && (

@@ -4,3 +4,9 @@
   align-items: center;
   height: 100vh; /* Ajuste conforme necessário */
 }
+
+.centralizarBotao {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0; /* Espaçamento acima e abaixo */
+}

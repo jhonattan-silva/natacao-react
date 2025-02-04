@@ -9,6 +9,8 @@
     color: #fff;
     font-size: 16px;
     cursor: pointer;
+    display: block; /* Faz o botão se comportar como um bloco */
+    margin: 20px auto; /* Centraliza o botão e adiciona espaçamento acima e abaixo */
   }
   
   .botao:hover {
