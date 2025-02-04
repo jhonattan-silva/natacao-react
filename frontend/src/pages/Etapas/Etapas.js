@@ -339,10 +339,12 @@ const Etapas = () => {
 
     const abreInscricao = async (id, inscricaoAberta) => {
         try {
-            await api.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota para abrir/fechar inscrição            
-            fetchData(); // Recarrega a lista de etapas do backend
+            await api.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota para abrir/fechar inscrição
+            alert(`Inscrição ${inscricaoAberta ? 'fechada' : 'aberta'} com sucesso!`);
+            fetchData(anoSelecionado); // Recarrega a lista de etapas do backend
         } catch (error) {
             console.error('Erro ao alterar inscrição:', error);
+            alert('Erro ao alterar inscrição.');
         }
     };
 
@@ -424,7 +426,7 @@ const Etapas = () => {
                         </div>
                         <div className={style['button-group']}>
                             <Botao classBtn={style.btnComponente} onClick={aoSalvar}>SALVAR</Botao>
-                            <Botao onClick={fecharFormulario}>Voltar</Botao>
+                            <Botao classBtn={style.btnVoltar} onClick={fecharFormulario}>Voltar</Botao>
                         </div>
                     </div>
                 )}

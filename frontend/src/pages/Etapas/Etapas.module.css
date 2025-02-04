@@ -56,6 +56,13 @@
 
 
 /* Estilos dos botões */
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 20px;
+}
+
 .btnComponente {
     background: linear-gradient(135deg, #6c63ff, #5a54e5);
     color: white;
@@ -65,10 +72,28 @@
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.3s ease;
+    flex: 1;
+    margin-right: 10px;
 }
 
-button:hover, .btn:hover {
+.btnComponente:hover {
     background: linear-gradient(135deg, #5a54e5, #6c63ff);
+}
+
+.btnVoltar {
+    background: linear-gradient(135deg, #ff7e5f, #ff6b4f);
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    flex: 1;
+}
+
+.btnVoltar:hover {
+    background: linear-gradient(135deg, #ff6b4f, #ff7e5f);
 }
 
 button:disabled, .btn:disabled {
