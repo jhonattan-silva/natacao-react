@@ -47,7 +47,7 @@ form {
 }
 
 /* Estilos dos botões */
-/* button, .btn {
+button, .btn {
     background: linear-gradient(135deg, #6c63ff, #5a54e5);
     color: white;
     padding: 12px 20px;
@@ -57,6 +57,8 @@ form {
     cursor: pointer;
     transition: background 0.3s ease;
     margin-top: 16px;
+    width: 150px; /* Tamanho padronizado */
+    align-self: center; /* Centraliza o botão */
 }
 
 button:hover, .btn:hover {
@@ -66,7 +68,7 @@ button:hover, .btn:hover {
 button:disabled, .btn:disabled {
     background: #cccccc;
     cursor: not-allowed;
-} */
+}
 
 /* Estilos do Select */
 select {
