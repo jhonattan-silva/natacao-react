@@ -56,6 +56,8 @@ const Etapas = () => {
 
             // Atualiza o estado com os dados da etapa
             setEtapaEditando(etapa);
+            console.log("etapa VARIAVEL COMPLETA", etapa);
+            
             setNomeEtapa(etapa.nome);
             setDataEtapa(new Date(etapa.data).toISOString().split('T')[0]);
             setCidadeEtapa(etapa.cidade);
