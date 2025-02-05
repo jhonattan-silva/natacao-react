@@ -38,13 +38,16 @@ const Inscricao = () => {
 
     const fetchDadosEvento = async () => {
         console.log("Chamou o fetchDadosEvento");
-        console.log("Equipe ID dentro do fetch:", user?.equipeId);
-        
+        console.log("Equipe ID dentro do fetch:", user?.user?.equipeId);
         
         try {
-            const nadadoresResponse = await api.get(`${apiListaNadadores}/${user.equipeId}`); //lista de nadadores - por equipe
+            const equipeId = user?.user?.equipeId[0]; // Access the first element of equipeId array
+
+            if (!equipeId) return; // Evita chamadas desnecessárias
+
+            const nadadoresResponse = await api.get(`${apiListaNadadores}/${equipeId}`); //lista de nadadores - por equipe
             console.log("Nadadores:", nadadoresResponse.data);
-            const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${user?.equipeId}`); //lista de provas - por evento
+            const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${equipeId}`); //lista de provas - por evento
             console.log("Provas:", provasResponse.data);
             const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`); //inscricoes já realizadas do evento
             console.log("Inscrições:", inscricoesResponse.data);
