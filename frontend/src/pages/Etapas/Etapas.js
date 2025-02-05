@@ -69,7 +69,7 @@ const Etapas = () => {
             const torneio = listaTorneios.find(torneio => torneio.id === etapa.torneios_id);
             setTorneioEtapa(torneio ? torneio.id : null); // Define a equipe do nadador
 
-            setRaias(etapa.raias ? String(etapa.raias) : '6'); // Define a quantidade de raias ou 6 como padrão
+            setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6'); // Define a quantidade de raias ou 6 como padrão
 
             // Filtra as provas selecionadas com base nos IDs retornados
             const selecionadasMasculino = provasMasculino
@@ -329,7 +329,7 @@ const Etapas = () => {
             endereco: enderecoEtapa,
             Torneios_id: torneioEtapa,
             provas: provas.map(id => ({ provas_id: id })),
-            raias: raias
+            raias: quantidade_raias //FOI AQUI QUE MEXI
         };
 
         if (etapaEditando) {
@@ -404,7 +404,7 @@ const Etapas = () => {
                             aoSelecionar={setRaias}
                             aoAlterar={aoAlterarRaias}
                             classNameRadioOpcoes={style.radioRaias}
-                            valorSelecionado={raias}
+                            valorSelecionado={quantidade_raias} //FOI AQUI QUE MEXI
                         />
                         <ListaSuspensa
                             textoPlaceholder={"Escolha o torneio"}
