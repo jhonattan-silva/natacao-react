@@ -86,12 +86,12 @@ const Nadadores = () => {
             setCpf(nadador.cpf);
             setNomeNadador(nadador.nome);
             setCidade(nadador.cidade);
-            setDataNasc(nadador.data_nasc);
+            setDataNasc(nadador.data_nasc.split('/').reverse().join('-')); // Converte a data para o formato YYYY-MM-DD
             setCelular(nadador.telefone);
             setSexo(nadador.sexo);
 
             // Busca a equipe do nadador para preencher o campo de equipe
-            const equipe = equipes.find(equipe => equipe.id === nadador.equipeId);
+            const equipe = equipes.find(equipe => equipe.id === nadador.equipes_id);
             setEquipeNadador(equipe ? equipe.id : null); // Define a equipe do nadador
 
             setEditNadadorId(id);
@@ -279,6 +279,7 @@ const Nadadores = () => {
                                 { id: 'F', value: 'F', label: 'Feminino' },
                             ]}
                             aoSelecionar={setSexo}
+                            valorSelecionado={sexo} // Passa o valor selecionado
                         />
                         {(!user?.equipeId || (Array.isArray(user.equipeId) && user.equipeId.length === 0)) && (
                             <ListaSuspensa
