@@ -63,11 +63,7 @@ const Etapas = () => {
             setCidadeEtapa(etapa.cidade);
             setSedeEtapa(etapa.sede);
             setEnderecoEtapa(etapa.endereco);
-            //setTorneioEtapa(etapa.Torneios_id);
-
-            // Busca a equipe do nadador para preencher o campo de equipe
-            const torneio = listaTorneios.find(torneio => torneio.id === etapa.torneios_id);
-            setTorneioEtapa(torneio ? torneio.id : null); // Define a equipe do nadador
+            setTorneioEtapa(etapa.torneios_id); // Define a equipe do nadador diretamente
 
             setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6'); // Define a quantidade de raias ou 6 como padrão
 
