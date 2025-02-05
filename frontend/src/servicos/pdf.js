@@ -117,23 +117,32 @@ export const gerarFilipetas = (dadosBalizamento) => {
 
   nadadoresData.forEach((nadador) => {
     const registro = {
-      stack: [
-        { image: logo, width: 50, alignment: 'center', margin: [0, 0, 0, 10] },
-        { text: `Prova: ${nadador.tipoProva}`, style: 'tableHeader' },
-        { text: `Bateria: ${nadador.bateria}`, style: 'tableHeader' },
-        { text: `Raia: ${nadador.raia}`, style: 'tableHeader' },
-        { text: `Nadador: ${nadador.nome}`, style: 'tableHeader' },
-        { text: `CPF: ${nadador.cpf}`, style: 'tableHeader' },
-        { text: `Record: ${nadador.record}`, style: 'tableHeader' },
-        { text: `Categoria: ${nadador.categoria}`, style: 'tableHeader' },
-        { text: `Equipe: ${nadador.equipe}`, style: 'tableHeader' },
-        { text: 'TEMPO: ________________', style: 'tableHeader' } // New field added here
-      ],
-      margin: [5, 5, 5, 5], // Margens para dar espaçamento interno
-      border: [true, true, true, true], // Bordas ao redor do registro
-      width: '45%', // Largura do registro
-      style: 'recordBorder' // Apply border style
-    };
+      table: {
+        widths: ['100%'], // Garante que a tabela ocupe toda a célula
+        body: [[
+          {
+            stack: [
+              { image: logo, width: 50, alignment: 'center', margin: [0, 0, 0, 10] },
+              { text: `Prova: ${nadador.tipoProva}`, style: 'tableHeader' },
+              { text: `Bateria: ${nadador.bateria}`, style: 'tableHeader' },
+              { text: `Raia: ${nadador.raia}`, style: 'tableHeader' },
+              { text: `Nadador: ${nadador.nome}`, style: 'tableHeader' },
+              { text: `Categoria: ${nadador.categoria}`, style: 'tableHeader' },
+              { text: `Equipe: ${nadador.equipe}`, style: 'tableHeader' },
+              { text: 'TEMPO: ________________', style: 'tableHeader' }
+            ],
+            margin: [5, 5, 5, 5]
+          }
+        ]]
+      },
+      layout: {
+        hLineWidth: () => 1, // Define a largura da linha horizontal
+        vLineWidth: () => 1, // Define a largura da linha vertical
+        hLineColor: () => 'black', // Cor da linha horizontal
+        vLineColor: () => 'black'  // Cor da linha vertical
+      },
+      width: '45%' // Mantém o tamanho adequado para 2 colunas
+    };    
 
     currentColumn.push(registro);
 
