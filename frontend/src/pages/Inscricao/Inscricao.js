@@ -14,9 +14,10 @@ const Inscricao = () => {
     const [eventoSelecionado, setEventoSelecionado] = useState(null);
     const [selecoes, setSelecoes] = useState({});
     const user = useUser(); // Obter o usuário do contexto do usuário
+    console.log("UserContext user chamado no inicio do inscricao:", user);
 
     const apiEventos = `/inscricao/listarEventos`;
-    const apiListaNadadores = `/inscricao/listarNadadores/${user?.equipeId}`; // Passar equipeId
+    const apiListaNadadores = `/inscricao/listarNadadores`;
     const apiListaInscricoes = `/inscricao/listarInscricoes`;
     const apiProvasEvento = `/inscricao/listarProvasEvento`;
     const apiSalvarInscricao = `/inscricao/salvarInscricao`;
@@ -41,7 +42,7 @@ const Inscricao = () => {
         
         
         try {
-            const nadadoresResponse = await api.get(apiListaNadadores); //lista de nadadores
+            const nadadoresResponse = await api.get(`${apiListaNadadores}/${user.equipeId}`); //lista de nadadores - por equipe
             console.log("Nadadores:", nadadoresResponse.data);
             const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${user?.equipeId}`); //lista de provas - por evento
             console.log("Provas:", provasResponse.data);
