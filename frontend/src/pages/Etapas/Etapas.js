@@ -329,7 +329,7 @@ const Etapas = () => {
             endereco: enderecoEtapa,
             Torneios_id: torneioEtapa,
             provas: provas.map(id => ({ provas_id: id })),
-            raias: quantidade_raias //FOI AQUI QUE MEXI
+            raias: raias
         };
 
         if (etapaEditando) {
@@ -404,7 +404,7 @@ const Etapas = () => {
                             aoSelecionar={setRaias}
                             aoAlterar={aoAlterarRaias}
                             classNameRadioOpcoes={style.radioRaias}
-                            valorSelecionado={quantidade_raias} //FOI AQUI QUE MEXI
+                            valorSelecionado={raias}
                         />
                         <ListaSuspensa
                             textoPlaceholder={"Escolha o torneio"}
