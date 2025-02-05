@@ -90,9 +90,8 @@ const Nadadores = () => {
             setCelular(nadador.telefone);
             setSexo(nadador.sexo);
 
-            // Busca a equipe do nadador para preencher o campo de equipe
-            const equipe = equipes.find(equipe => equipe.id === nadador.equipes_id);
-            setEquipeNadador(equipe ? equipe.id : null); // Define a equipe do nadador
+            // Define a equipe do nadador diretamente
+            setEquipeNadador(nadador.equipes_id);
 
             setEditNadadorId(id);
             setEditando(true);
@@ -286,6 +285,7 @@ const Nadadores = () => {
                                 textoPlaceholder="Escolha uma equipe"
                                 fonteDados={apiListaEquipes}
                                 onChange={equipeSelecionada}
+                                valorSelecionado={equipeNadador} // Passa o valor selecionado
                             />
                         )}
                         <Botao onClick={aoSalvar}>Salvar</Botao>
