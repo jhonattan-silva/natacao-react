@@ -6,7 +6,6 @@ const db = require('../config/db');
 router.get('/listarEventos', async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM eventos WHERE inscricao_aberta = 1'); // Busca todos os eventos
-        console.log('Eventos:', rows);
         res.json(rows); // Retorna a lista de eventos em JSON
     } catch (error) {
         console.error('Erro ao buscar eventos:', error); // Loga o erro no servidor
@@ -18,6 +17,7 @@ router.get('/listarEventos', async (req, res) => {
 router.get('/listarNadadores/:equipeId', async (req, res) => {
     try {
         const { equipeId } = req.params; // Extrai o equipeId da rota
+        console.log('Equipe ID recebido:', equipeId);
         const [rows] = await db.query('SELECT * FROM nadadores WHERE equipes_id = ?', [equipeId]); // Busca todos os nadadores
         console.log('Nadadores:', rows);
         res.json(rows); // Retorna a lista de nadadores em JSON
@@ -66,9 +66,9 @@ router.get('/listarInscricoes/:eventoId', async (req, res) => {
     try {
         // Consulta para listar inscrições de nadadores para um evento específico
         const [inscricoes] = await db.query(`
-            SELECT Nadadores_id AS nadadorId, Eventos_Provas_id AS provaId 
+            SELECT nadadores_id AS nadadorId, eventos_provas_id AS provaId 
             FROM inscricoes
-            WHERE Eventos_id = ?
+            WHERE eventos_id = ?
         `, [eventoId]);
 
         console.log('Inscrições:', inscricoes);
@@ -91,14 +91,14 @@ router.post('/salvarInscricao', async (req, res) => {
 
     try {
         // Passo 1: Deletar inscrições atuais do evento
-        await db.query('DELETE FROM inscricoes WHERE Eventos_id = ?', [eventoId]); // Remove inscrições para o evento
+        await db.query('DELETE FROM inscricoes WHERE eventos_id = ?', [eventoId]); // Remove inscrições para o evento
 
         // Passo 2: Inserir novas inscrições
         for (const inscricao of nadadoresInscritos) {
             const { nadadorId, provaId } = inscricao;
 
             // Inserção de inscrição para nadador e prova específicos
-            await db.query('INSERT INTO inscricoes (Nadadores_id, Eventos_id, Eventos_Provas_id) VALUES (?, ?, ?)', [nadadorId, eventoId, provaId]);
+            await db.query('INSERT INTO inscricoes (nadadores_id, eventos_id, eventos_provas_id) VALUES (?, ?, ?)', [nadadorId, eventoId, provaId]);
         }
 
         console.log('Inscrições salvas:', nadadoresInscritos);
