@@ -35,38 +35,48 @@ const Inscricao = () => {
         fetchEventos();
     }, []);
 
+    // Buscar nadadores, provas e inscrições do evento selecionado
     const fetchDadosEvento = async () => {
         try {
-            const nadadoresResponse = await api.get(apiListaNadadores); //lista de nadadores
+            if (!user?.equipeId || !eventoSelecionado) {
+                console.error("Equipe ou evento não selecionado.");
+                return;
+            }
+    
+            const nadadoresResponse = await api.get(`/inscricao/listarNadadores/${user.equipeId}`);
             console.log("Nadadores:", nadadoresResponse.data);
-            const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${user?.equipeId}`); //lista de provas - por evento
+    
+            const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${user.equipeId}`);
             console.log("Provas:", provasResponse.data);
-            const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`); //inscricoes já realizadas do evento
+    
+            const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`);
             console.log("Inscrições:", inscricoesResponse.data);
-
-            setNadadores(nadadoresResponse.data); // Lista completa de nadadores
-            setProvas(provasResponse.data?.provas || []); // Provas vinculadas ao evento
-
+    
+            setNadadores(nadadoresResponse.data);
+            setProvas(provasResponse.data?.provas || []);
+    
             const novasSelecoes = {};
-            inscricoesResponse.data.forEach(inscricao => { //para cada inscricao já localizada...
+            inscricoesResponse.data.forEach(inscricao => {
                 if (!novasSelecoes[inscricao.nadadorId]) {
                     novasSelecoes[inscricao.nadadorId] = {};
                 }
-                novasSelecoes[inscricao.nadadorId][inscricao.provaId] = true; //novasSeleções recebe o id do nadador e da prova
+                novasSelecoes[inscricao.nadadorId][inscricao.provaId] = true;
             });
-
+    
             setSelecoes(novasSelecoes || {});
         } catch (error) {
             console.error("Erro ao buscar dados do evento:", error);
         }
     };
-
+    
+    // Buscar dados do evento selecionado ao mudar o evento ou a equipe
     useEffect(() => {
-        if (eventoSelecionado) {
+        if (eventoSelecionado && user?.equipeId) {
             console.log("Evento selecionado:", eventoSelecionado);
             fetchDadosEvento();
         }
-    }, [eventoSelecionado]);
+    }, [eventoSelecionado, user?.equipeId]); 
+    
 
     // Função para atualizar a seleção de checkboxes
     const handleCheckboxChange = (nadadorId, provaId, isChecked) => {
