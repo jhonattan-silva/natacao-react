@@ -61,7 +61,11 @@ const Etapas = () => {
             setCidadeEtapa(etapa.cidade);
             setSedeEtapa(etapa.sede);
             setEnderecoEtapa(etapa.endereco);
-            setTorneioEtapa(etapa.Torneios_id);
+            //setTorneioEtapa(etapa.Torneios_id);
+
+            // Busca a equipe do nadador para preencher o campo de equipe
+            const torneio = listaTorneios.find(torneio => torneio.id === etapa.torneios_id); // Use listaTorneios instead of torneios
+            setTorneioEtapa(torneio ? torneio.id : null); // Define a equipe do nadador
 
             // Filtra as provas selecionadas com base nos IDs retornados
             const selecionadasMasculino = provasMasculino
