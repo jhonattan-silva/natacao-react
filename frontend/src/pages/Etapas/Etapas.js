@@ -67,7 +67,7 @@ const Etapas = () => {
             const torneio = listaTorneios.find(torneio => torneio.id === etapa.torneios_id);
             setTorneioEtapa(torneio ? torneio.id : null); // Define a equipe do nadador
 
-            setRaias(etapa.raias.toString()); // Garante que o valor seja string para os RadioButtons
+            setRaias(etapa.raias ? etapa.raias.toString() : ''); // Garante que o valor seja string para os RadioButtons
 
             // Filtra as provas selecionadas com base nos IDs retornados
             const selecionadasMasculino = provasMasculino
