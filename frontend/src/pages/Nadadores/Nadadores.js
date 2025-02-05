@@ -75,11 +75,10 @@ const Nadadores = () => {
 
     //Botão editar cadastro
     const handleEdit = (id) => {
-        console.log(`Editando Nadador com ID: ${id}`);
-
-        try {
+        try {            
             const nadador = nadadores.find(nadador => nadador.id === id);
-            
+            console.log("O NADADOR É ESSE:", nadador);
+
             if (!nadador) {
                 throw new Error('Nadador não encontrado.');
             }
