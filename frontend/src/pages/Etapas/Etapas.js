@@ -407,6 +407,7 @@ const Etapas = () => {
                             fonteDados={apiListaTorneios}
                             onChange={torneioSelecionado}
                             obrigatorio={true}
+                            valorSelecionado={torneioEtapa}
                         />
                         <h2>Selecione as provas de acordo com sexo</h2>
                         <div className={style.provasContainer}>
