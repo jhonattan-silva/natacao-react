@@ -36,7 +36,7 @@ const RadioButtons = ({ titulo, opcoes, name, aoSelecionar, classNameRadioDiv, c
                             name={name}
                             value={opcao.value}
                             id={opcao.id}
-                            checked={opcao.value === valorSelecionado} // Marca o radio button selecionado
+                            checked={valorSelecionado === opcao.value} // Marca o radio button selecionado
                             onChange={() => aoSelecionar(opcao.value)} // Chama a função aoSelecionar ao selecionar
                         />
                         <label htmlFor={opcao.id}>{opcao.label}</label> {/* Label descritivo */}
