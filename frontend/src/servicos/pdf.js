@@ -103,8 +103,6 @@ export const gerarFilipetas = (dadosBalizamento) => {
           bateria: indiceBateria + 1,
           raia: nadador.raia || 'N/D',
           nome: nadador.nome_nadador || 'N/D',
-          cpf: nadador.cpf || 'N/D',
-          record: nadador.melhor_tempo || 'Sem tempo',
           categoria: nadador.categoria || 'N/D',
           equipe: nadador.equipe || 'N/D'
         });
@@ -128,11 +126,13 @@ export const gerarFilipetas = (dadosBalizamento) => {
         { text: `CPF: ${nadador.cpf}`, style: 'tableHeader' },
         { text: `Record: ${nadador.record}`, style: 'tableHeader' },
         { text: `Categoria: ${nadador.categoria}`, style: 'tableHeader' },
-        { text: `Equipe: ${nadador.equipe}`, style: 'tableHeader' }
+        { text: `Equipe: ${nadador.equipe}`, style: 'tableHeader' },
+        { text: 'TEMPO: ________________', style: 'tableHeader' } // New field added here
       ],
       margin: [5, 5, 5, 5], // Margens para dar espaçamento interno
       border: [true, true, true, true], // Bordas ao redor do registro
-      width: '45%' // Largura do registro
+      width: '45%', // Largura do registro
+      style: 'recordBorder' // Apply border style
     };
 
     currentColumn.push(registro);
@@ -165,6 +165,10 @@ export const gerarFilipetas = (dadosBalizamento) => {
         fontSize: 8,
         color: 'black',
         margin: [0, 2, 0, 2]
+      },
+      recordBorder: {
+        border: [true, true, true, true], // Ensure borders are applied by default
+        margin: [5, 5, 5, 5] // Add margin to separate records
       }
     },
     defaultStyle: {

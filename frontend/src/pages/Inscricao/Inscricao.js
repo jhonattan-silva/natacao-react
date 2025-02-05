@@ -37,9 +37,9 @@ const Inscricao = () => {
     const fetchDadosEvento = async () => {
         
         try {
-            const equipeId = user?.user?.equipeId[0]; // Access the first element of equipeId array
+            const equipeId = user?.user?.equipeId[0]; // Equipe do usuário logado
 
-            if (!equipeId) return; // Evita chamadas desnecessárias
+            if (!equipeId) return; // Evita chamadas desnecessárias se não houver equipe
 
             const nadadoresResponse = await api.get(`${apiListaNadadores}/${equipeId}`); //lista de nadadores - por equipe
             const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${equipeId}`); //lista de provas - por evento
@@ -56,13 +56,13 @@ const Inscricao = () => {
                 novasSelecoes[inscricao.nadadorId][inscricao.provaId] = true; //novasSeleções recebe o id do nadador e da prova
             });
 
-            setSelecoes(novasSelecoes || {});
+            setSelecoes(novasSelecoes || {}); //atualiza o estado de seleções
         } catch (error) {
             console.error("Erro ao buscar dados do evento:", error);
         }
     };
 
-    useEffect(() => {
+    useEffect(() => { 
         if (eventoSelecionado) {
             fetchDadosEvento();
         }
@@ -136,7 +136,7 @@ const Inscricao = () => {
                                     onCheckboxChange={handleCheckboxChange}
                                 />
                             ) : (
-                                <p>Carregando nadadores e provas...</p>
+                                <p>VOCÊ PRECISA FAZER PARTE DE UMA EQUIPE...</p>
                             )}
                             <div className={styles.centralizado}>
                                 <Botao onClick={aoSalvar}>REALIZAR INSCRIÇÃO</Botao>
