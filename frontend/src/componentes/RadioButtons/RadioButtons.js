@@ -8,6 +8,7 @@
     * - classNameRadioDiv: string com as classes CSS do container do conjunto de radio buttons
     * - classNameRadioItem: string com as classes CSS do item do conjunto de radio buttons
     * - classNameRadioOpcoes: string com as classes CSS do container das opções de radio buttons
+    * - valorSelecionado: string com o valor do radio button selecionado
     * Exemplo de uso:
     * <RadioButtons 
     *  titulo="Título do conjunto de radio buttons"
@@ -22,7 +23,7 @@
     * classNameRadioOpcoes="classe1 classe2"
     * />
 */
-const RadioButtons = ({ titulo, opcoes, name, aoSelecionar, classNameRadioDiv, classNameRadioItem, classNameRadioOpcoes }) => {
+const RadioButtons = ({ titulo, opcoes, name, aoSelecionar, classNameRadioDiv, classNameRadioItem, classNameRadioOpcoes, valorSelecionado }) => {
     return (
         <div className={classNameRadioDiv}>
             <h5>{titulo}</h5>
@@ -35,6 +36,7 @@ const RadioButtons = ({ titulo, opcoes, name, aoSelecionar, classNameRadioDiv, c
                             name={name}
                             value={opcao.value}
                             id={opcao.id}
+                            checked={opcao.value === valorSelecionado} // Marca o radio button selecionado
                             onChange={() => aoSelecionar(opcao.value)} // Chama a função aoSelecionar ao selecionar
                         />
                         <label htmlFor={opcao.id}>{opcao.label}</label> {/* Label descritivo */}
