@@ -124,8 +124,7 @@ export const gerarFilipetas = (dadosBalizamento) => {
             stack: [
               { image: logo, width: 50, alignment: 'center', margin: [0, 0, 0, 10] },
               { text: `Prova: ${nadador.tipoProva}`, style: 'tableHeader' },
-              { text: `Bateria: ${nadador.bateria}`, style: 'tableHeader' },
-              { text: `Raia: ${nadador.raia}`, style: 'tableHeader' },
+              { text: `Bateria: ${nadador.bateria} - Raia: ${nadador.raia}`, style: 'tableHeader' },
               { text: `Nadador: ${nadador.nome}`, style: 'tableHeader' },
               { text: `Categoria: ${nadador.categoria}`, style: 'tableHeader' },
               { text: `Equipe: ${nadador.equipe}`, style: 'tableHeader' },
