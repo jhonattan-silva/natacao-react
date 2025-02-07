@@ -173,34 +173,39 @@ const Nadadores = () => {
         },
         {
             obrigatorio: true,
-            tipo: "text", // Mantemos text para permitir entrada manual
+            tipo: "text",
             label: "Data de Nascimento",
             placeholder: "DD/MM/AAAA",
             valor: dataNasc,
             aoAlterar: (valor) => {
-                let valorFormatado = valor.replace(/\D/g, ""); // Remove não numéricos
+                let valorFormatado = valor.replace(/\D/g, ""); // Remove tudo que não for número
         
                 let dia = valorFormatado.substring(0, 2);
                 let mes = valorFormatado.substring(2, 4);
                 let ano = valorFormatado.substring(4, 8);
         
-                if (dia) {
+                // Apenas aplica limite de dia/mês se já estiverem completos
+                if (dia.length === 2) {
                     dia = Math.min(31, parseInt(dia)).toString().padStart(2, "0");
                 }
-        
-                if (mes) {
+                if (mes.length === 2) {
                     mes = Math.min(12, parseInt(mes)).toString().padStart(2, "0");
                 }
         
                 valorFormatado = dia;
-                if (valorFormatado.length >= 2) valorFormatado += "/"; // Adiciona '/' depois do dia
+                if (valorFormatado.length >= 2) valorFormatado += "/"; // Adiciona '/' depois do dia se houver mais dígitos
                 valorFormatado += mes;
-                if (valorFormatado.length >= 5) valorFormatado += "/"; // Adiciona '/' depois do mês
+                if (valorFormatado.length >= 5) valorFormatado += "/"; // Adiciona '/' depois do mês se houver mais dígitos
                 valorFormatado += ano;
         
-                setDataNasc(valorFormatado.slice(0, 10)); // Limita a 10 caracteres (DD/MM/YYYY)
+                // Permite apagar corretamente (se terminar com '/', remove)
+                if (valor.endsWith("/")) {
+                    valorFormatado = valorFormatado.slice(0, -1);
+                }
+        
+                setDataNasc(valorFormatado);
             }
-        },        
+        },             
         {
             obrigatorio: true,
             label: "Celular",
