@@ -92,6 +92,7 @@ const Nadadores = () => {
 
             // Define a equipe do nadador diretamente
             setEquipeNadador(nadador.equipes_id);
+            setEquipes(nadador.equipes_id); // Garante que a equipe seja considerada ao editar
 
             setEditNadadorId(id);
             setEditando(true);
@@ -252,13 +253,19 @@ const Nadadores = () => {
             return;
         }
 
+        // Verifica se `equipes` está definido
+        if (!equipes) {
+            alert('Por favor, selecione uma equipe.');
+            return;
+        }
+
         const nadadorDados = {
             nome: nomeNadador,
             cpf: cpf,
             data_nasc: dataNasc.split('/').reverse().join('-'), // Converte para YYYY-MM-DD            
             telefone: celular,
             sexo: sexo,
-            equipeId: equipes || null, // Se `equipes` estiver vazio, coloca `null`
+            equipeId: equipes, // Garante que `equipes` tenha um valor válido
             cidade: cidade
         };
 
