@@ -354,7 +354,7 @@ const Etapas = () => {
 
         // Converte a data e o horário para o formato esperado
         const [dia, mes, ano] = dataEtapa.split('/');
-        const dataHoraFormatada = new Date(`${ano}-${mes}-${dia}T${horaEtapa}:00`).toISOString(); // Junta data e hora
+        const dataHoraFormatada = `${ano}-${mes}-${dia} ${horaEtapa}:00`; // Junta data e hora no formato esperado pelo MySQL
 
         const provas = [...selecionadasMasculino, ...selecionadasFeminino]; // Combina as provas M e F em um só array
 
