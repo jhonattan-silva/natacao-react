@@ -221,14 +221,14 @@ const Etapas = () => {
             aoAlterar: setCidadeEtapa
         },
         {
-            obrigatorio: true,
+            obrigatorio: false,
             label: "Sede",
             placeholder: "Digite a sede do evento",
             valor: sedeEtapa,
             aoAlterar: setSedeEtapa
         },
         {
-            obrigatorio: true,
+            obrigatorio: false,
             label: "Endereço",
             placeholder: "Digite o endereço",
             valor: enderecoEtapa,
@@ -347,8 +347,14 @@ const Etapas = () => {
         evento.preventDefault();
 
         // Validações
-        if (!nomeEtapa || !dataEtapa || !horaEtapa || !cidadeEtapa || !sedeEtapa || !enderecoEtapa || !torneioEtapa) {
-            alert('Por favor, preencha todos os campos obrigatórios.');
+        if (!nomeEtapa || !dataEtapa || !horaEtapa || !cidadeEtapa || !torneioEtapa) {
+            let mensagemErro = 'Por favor, preencha os seguintes campos obrigatórios:\n';
+            if (!nomeEtapa) mensagemErro += '- Nome do Evento\n';
+            if (!dataEtapa) mensagemErro += '- Data do Evento\n';
+            if (!horaEtapa) mensagemErro += '- Horário do Evento\n';
+            if (!cidadeEtapa) mensagemErro += '- Cidade\n';
+            if (!torneioEtapa) mensagemErro += '- Torneio\n';
+            alert(mensagemErro);
             return; // Interrompe o processo de salvamento se houver campos vazios
         }
 
@@ -380,6 +386,7 @@ const Etapas = () => {
         }
 
         limparFormulario(); // Limpa o formulário após salvar ou atualizar
+        window.scrollTo(0, 0); // Volta ao topo da página
     };
 
     const abreInscricao = async (id, inscricaoAberta) => {
