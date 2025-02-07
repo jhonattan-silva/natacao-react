@@ -150,6 +150,30 @@ const Nadadores = () => {
         }
     };
 
+    const atualizarNadador = async (id, dados) => {
+        try {
+            const token = localStorage.getItem('token'); // Obtém o token do localStorage
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+            await api.put(`${apiCadastraNadador}/${id}`, dados, {
+                headers: {
+                    Authorization: `Bearer ${token}` // Adiciona o token ao cabeçalho
+                }
+            }); // Envia os dados atualizados para o backend
+            await fetchNadadores(); // Recarrega a lista completa de Nadadores do backend
+            setFormVisivel(false); // Esconde o formulário após salvar
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                alert('Sessão expirada. Por favor, faça login novamente.');
+                window.location.href = '/login'; // Redireciona para a página de login
+            } else {
+                console.error('Erro ao atualizar Nadador:', error.message);
+                alert('Erro ao atualizar Nadador: ' + error.message);
+            }
+        }
+    };
+
     const inputs = [
         {
             id: "cpfInput",
@@ -236,7 +260,7 @@ const Nadadores = () => {
     const aoSalvar = async (evento) => {
         evento.preventDefault();
 
-        // Validaç]oes
+        // Validações
         if (!nomeNadador || !cpf || !dataNasc || !celular || !sexo) {
             alert('Por favor, preencha todos os campos obrigatórios.');
             return; // Interrompe o processo de salvamento se houver campos vazios
@@ -269,8 +293,16 @@ const Nadadores = () => {
             cidade: cidade
         };
 
-        await adicionarNadador(nadadorDados);
-        alert('Nadador salvo com sucesso!');
+        if (editando) {
+            // Se `editando` for verdadeiro, atualiza o nadador existente
+            await atualizarNadador(editNadadorId, nadadorDados);
+            alert('Nadador atualizado com sucesso!');
+        } else {
+            // Se não, adiciona um novo nadador
+            await adicionarNadador(nadadorDados);
+            alert('Nadador salvo com sucesso!');
+        }
+
         limparFormulario(); // Limpa o formulário após salvar ou atualizar
     };
 
