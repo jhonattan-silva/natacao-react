@@ -170,10 +170,18 @@ const Etapas = () => {
         },
         {
             obrigatorio: true,
-            tipo: "date",
-            label: "Data",
+            tipo: "text", // date dava problema no mobile
+            label: "Data do Evento",
+            placeholder: "DD/MM/AAAA",
             valor: dataEtapa,
-            aoAlterar: setDataEtapa
+            aoAlterar: (valor) => {
+                const valorFormatado = valor
+                    .replace(/\D/g, '') // Remove tudo que não for número
+                    .replace(/(\d{2})(\d)/, '$1/$2') // Adiciona '/' após dia
+                    .replace(/(\d{2})(\d)/, '$1/$2') // Adiciona '/' após mês
+                    .slice(0, 10); // Limita a 10 caracteres
+                setDataEtapa(valorFormatado);
+            }
         },
         {
             obrigatorio: true,

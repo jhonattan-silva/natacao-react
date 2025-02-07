@@ -173,10 +173,18 @@ const Nadadores = () => {
         },
         {
             obrigatorio: true,
-            tipo: "date",
+            tipo: "text", // date estava dando problema no mobile
             label: "Data de Nascimento",
+            placeholder: "DD/MM/AAAA",
             valor: dataNasc,
-            aoAlterar: setDataNasc
+            aoAlterar: (valor) => {
+                const valorFormatado = valor
+                    .replace(/\D/g, '') // Remove tudo que não for número
+                    .replace(/(\d{2})(\d)/, '$1/$2') // Adiciona '/' após dia
+                    .replace(/(\d{2})(\d)/, '$1/$2') // Adiciona '/' após mês
+                    .slice(0, 10); // Limita a 10 caracteres
+                setDataNasc(valorFormatado);
+            }
         },
         {
             obrigatorio: true,
