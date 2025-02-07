@@ -255,7 +255,7 @@ const Nadadores = () => {
         const nadadorDados = {
             nome: nomeNadador,
             cpf: cpf,
-            data_nasc: dataNasc,
+            data_nasc: dataNasc.split('/').reverse().join('-'), // Converte para YYYY-MM-DD            
             telefone: celular,
             sexo: sexo,
             equipeId: equipes || null, // Se `equipes` estiver vazio, coloca `null`

@@ -176,14 +176,34 @@ const Etapas = () => {
             placeholder: "DD/MM/AAAA",
             valor: dataEtapa,
             aoAlterar: (valor) => {
-                const valorFormatado = valor
-                    .replace(/\D/g, '') // Remove tudo que não for número
-                    .replace(/(\d{2})(\d)/, '$1/$2') // Adiciona '/' após dia
-                    .replace(/(\d{2})(\d)/, '$1/$2') // Adiciona '/' após mês
-                    .slice(0, 10); // Limita a 10 caracteres
+                let valorFormatado = valor.replace(/\D/g, ""); // Remove tudo que não for número
+        
+                let dia = valorFormatado.substring(0, 2);
+                let mes = valorFormatado.substring(2, 4);
+                let ano = valorFormatado.substring(4, 8);
+        
+                // Apenas aplica limite de dia/mês se já estiverem completos
+                if (dia.length === 2) {
+                    dia = Math.min(31, parseInt(dia)).toString().padStart(2, "0");
+                }
+                if (mes.length === 2) {
+                    mes = Math.min(12, parseInt(mes)).toString().padStart(2, "0");
+                }
+        
+                valorFormatado = dia;
+                if (valorFormatado.length >= 2) valorFormatado += "/"; // Adiciona '/' depois do dia se houver mais dígitos
+                valorFormatado += mes;
+                if (valorFormatado.length >= 5) valorFormatado += "/"; // Adiciona '/' depois do mês se houver mais dígitos
+                valorFormatado += ano;
+        
+                // Permite apagar corretamente (se terminar com '/', remove)
+                if (valor.endsWith("/")) {
+                    valorFormatado = valorFormatado.slice(0, -1);
+                }
+        
                 setDataEtapa(valorFormatado);
             }
-        },
+        },             
         {
             obrigatorio: true,
             label: "Cidade",
