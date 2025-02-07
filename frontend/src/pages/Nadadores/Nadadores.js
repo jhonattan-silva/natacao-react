@@ -34,6 +34,7 @@ const Nadadores = () => {
     const apiCadastraNadador = `nadadores/cadastrarNadador`;
     const apiListaEquipes = `nadadores/listarEquipes`;
     const apiInativarNadador = `nadadores/inativarNadador`;
+    const apiAtualizaNadador = `nadadores/atualizarNadador`; // Adicione a URL correta para atualizar nadador
 
     const equipeSelecionada = (id) => { //para capturar a equipe escolhida, caso o usuário não tenha uma equipe (admin)
         setEquipes(id);
@@ -156,7 +157,7 @@ const Nadadores = () => {
             if (!token) {
                 throw new Error('Token não encontrado. Por favor, faça login novamente.');
             }
-            await api.put(`${apiCadastraNadador}/${id}`, dados, {
+            await api.put(`${apiAtualizaNadador}/${id}`, dados, {
                 headers: {
                     Authorization: `Bearer ${token}` // Adiciona o token ao cabeçalho
                 }
