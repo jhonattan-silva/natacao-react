@@ -15,14 +15,13 @@ import api from '../../servicos/api';
 }; */
 
 const formataData = (dateString) => {
-    // Adicionar "Z" se o formato for YYYY-MM-DDTHH:mm:ss para tratar como UTC
-    const adjustedDate = dateString.includes('T') ? dateString : `${dateString}T00:00:00Z`;
+    const adjustedDate = new Date(dateString);
 
     const optionsDate = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Sao_Paulo' };
+    const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: false };
 
-    const dataEvento = new Date(adjustedDate).toLocaleDateString('pt-BR', optionsDate);
-    const horario = new Date(adjustedDate).toLocaleTimeString('pt-BR', optionsTime);
+    const dataEvento = adjustedDate.toLocaleDateString('pt-BR', optionsDate);
+    const horario = adjustedDate.toLocaleTimeString('pt-BR', optionsTime);
 
     return { dataEvento, horario };
 };

@@ -60,8 +60,9 @@ const Etapas = () => {
             console.log("etapa VARIAVEL COMPLETA", etapa);
             
             setNomeEtapa(etapa.nome);
-            setDataEtapa(etapa.data.split('T')[0].split('-').reverse().join('/')); // Ajusta a data
-            setHoraEtapa(etapa.data.split('T')[1].substring(0, 5)); // Ajusta o horário
+            const [date, time] = etapa.data.split('T');
+            setDataEtapa(date.split('-').reverse().join('/')); // Ajusta a data
+            setHoraEtapa(time.substring(0, 5)); // Ajusta o horário
             setCidadeEtapa(etapa.cidade);
             setSedeEtapa(etapa.sede);
             setEnderecoEtapa(etapa.endereco);
@@ -352,8 +353,8 @@ const Etapas = () => {
         }
 
         // Converte a data e o horário para o formato esperado
-        const dataFormatada = dataEtapa.split('/').reverse().join('-'); // Converte para YYYY-MM-DD
-        const dataHoraFormatada = `${dataFormatada}T${horaEtapa}:00`; // Junta data e hora
+        const [dia, mes, ano] = dataEtapa.split('/');
+        const dataHoraFormatada = new Date(`${ano}-${mes}-${dia}T${horaEtapa}:00`).toISOString(); // Junta data e hora
 
         const provas = [...selecionadasMasculino, ...selecionadasFeminino]; // Combina as provas M e F em um só array
 
