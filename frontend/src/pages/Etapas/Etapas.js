@@ -120,9 +120,9 @@ const Etapas = () => {
 
     const adicionarEtapa = async (dados) => {
         try {
-            const response = await api.post(apiCadastraEtapas, dados);// Envia os dados para salvar a nova etapa
-            fetchData(); // Recarrega a lista de etapas do backend
-            setFormVisivel(true); // Esconde o formulário após o salvamento
+            await api.post(apiCadastraEtapas, dados); // Envia os dados para salvar a nova etapa
+            await fetchData(anoSelecionado); // Recarrega a lista de etapas do backend
+            setFormVisivel(false); // Esconde o formulário após o salvamento
         } catch (error) {
             console.error('Erro ao cadastrar etapa:', error);
         }
@@ -130,10 +130,10 @@ const Etapas = () => {
 
     const atualizarEtapa = async (dados) => {
         try {
-            await api.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, dados); //chama a rota de edição equivalente ao id selecionado
-            fetchData(); //Recarrega as etapas após atualizar
-            setFormVisivel(false);//fecha o form
-            setEtapaEditando(null);//limpa o estado de edição
+            await api.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, dados); // Chama a rota de edição equivalente ao id selecionado
+            await fetchData(anoSelecionado); // Recarrega as etapas após atualizar
+            setFormVisivel(false); // Fecha o form
+            setEtapaEditando(null); // Limpa o estado de edição
         } catch (error) {
             console.error('Erro ao editar etapa:', error);
         }

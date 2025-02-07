@@ -8,6 +8,7 @@ import api from '../../servicos/api';
 
 const formataData = (dateString) => {
     const adjustedDate = new Date(dateString);
+    adjustedDate.setHours(adjustedDate.getHours() + 3); // Adiciona 3 horas
 
     const optionsDate = { year: 'numeric', month: '2-digit', day: '2-digit' };
     const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Sao_Paulo' };
