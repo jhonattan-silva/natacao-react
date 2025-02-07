@@ -59,7 +59,8 @@ const Etapas = () => {
             console.log("etapa VARIAVEL COMPLETA", etapa);
             
             setNomeEtapa(etapa.nome);
-            setDataEtapa(new Date(etapa.data).toISOString().split('T')[0]);
+            //setDataEtapa(new Date(etapa.data).toISOString().split('T')[0]);
+            setDataEtapa(etapa.data.split('-').reverse().join('/'));
             setCidadeEtapa(etapa.cidade);
             setSedeEtapa(etapa.sede);
             setEnderecoEtapa(etapa.endereco);

@@ -86,7 +86,7 @@ const Nadadores = () => {
             setCpf(nadador.cpf);
             setNomeNadador(nadador.nome);
             setCidade(nadador.cidade);
-            setDataNasc(nadador.data_nasc.split('/').reverse().join('-')); // Converte a data para o formato YYYY-MM-DD
+            setDataNasc(nadador.data_nasc.split('-').reverse().join('/'));
             setCelular(nadador.telefone);
             setSexo(nadador.sexo);
 
@@ -178,13 +178,21 @@ const Nadadores = () => {
             placeholder: "DD/MM/AAAA",
             valor: dataNasc,
             aoAlterar: (valor) => {
-                const valorFormatado = valor
-                    .replace(/\D/g, '') // Remove tudo que não for número
-                    .replace(/(\d{2})(\d)/, '$1/$2') // Adiciona '/' após dia
-                    .replace(/(\d{2})(\d)/, '$1/$2') // Adiciona '/' após mês
-                    .slice(0, 10); // Limita a 10 caracteres
+                let valorFormatado = valor.replace(/\D/g, ''); // Remove não numéricos
+            
+                if (valorFormatado.length >= 2) {
+                    let dia = Math.min(31, parseInt(valorFormatado.substring(0, 2))); // Limita até 31
+                    valorFormatado = dia.toString().padStart(2, '0') + '/';
+                }
+            
+                if (valorFormatado.length >= 5) {
+                    let mes = Math.min(12, parseInt(valorFormatado.substring(3, 5))); // Limita até 12
+                    valorFormatado = valorFormatado.substring(0, 3) + mes.toString().padStart(2, '0') + '/';
+                }
+            
+                valorFormatado = valorFormatado.slice(0, 10); // Limita a 10 caracteres
                 setDataNasc(valorFormatado);
-            }
+            }            
         },
         {
             obrigatorio: true,
@@ -238,7 +246,7 @@ const Nadadores = () => {
             data_nasc: dataNasc,
             telefone: celular,
             sexo: sexo,
-            equipeId: equipes,
+            equipeId: equipes || null, // Se `equipes` estiver vazio, coloca `null`
             cidade: cidade
         };
 
