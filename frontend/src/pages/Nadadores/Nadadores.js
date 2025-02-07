@@ -173,27 +173,34 @@ const Nadadores = () => {
         },
         {
             obrigatorio: true,
-            tipo: "text", // date estava dando problema no mobile
+            tipo: "text", // Mantemos text para permitir entrada manual
             label: "Data de Nascimento",
             placeholder: "DD/MM/AAAA",
             valor: dataNasc,
             aoAlterar: (valor) => {
-                let valorFormatado = valor.replace(/\D/g, ''); // Remove não numéricos
-            
-                if (valorFormatado.length >= 2) {
-                    let dia = Math.min(31, parseInt(valorFormatado.substring(0, 2))); // Limita até 31
-                    valorFormatado = dia.toString().padStart(2, '0') + '/';
+                let valorFormatado = valor.replace(/\D/g, ""); // Remove não numéricos
+        
+                let dia = valorFormatado.substring(0, 2);
+                let mes = valorFormatado.substring(2, 4);
+                let ano = valorFormatado.substring(4, 8);
+        
+                if (dia) {
+                    dia = Math.min(31, parseInt(dia)).toString().padStart(2, "0");
                 }
-            
-                if (valorFormatado.length >= 5) {
-                    let mes = Math.min(12, parseInt(valorFormatado.substring(3, 5))); // Limita até 12
-                    valorFormatado = valorFormatado.substring(0, 3) + mes.toString().padStart(2, '0') + '/';
+        
+                if (mes) {
+                    mes = Math.min(12, parseInt(mes)).toString().padStart(2, "0");
                 }
-            
-                valorFormatado = valorFormatado.slice(0, 10); // Limita a 10 caracteres
-                setDataNasc(valorFormatado);
-            }            
-        },
+        
+                valorFormatado = dia;
+                if (valorFormatado.length >= 2) valorFormatado += "/"; // Adiciona '/' depois do dia
+                valorFormatado += mes;
+                if (valorFormatado.length >= 5) valorFormatado += "/"; // Adiciona '/' depois do mês
+                valorFormatado += ano;
+        
+                setDataNasc(valorFormatado.slice(0, 10)); // Limita a 10 caracteres (DD/MM/YYYY)
+            }
+        },        
         {
             obrigatorio: true,
             label: "Celular",
