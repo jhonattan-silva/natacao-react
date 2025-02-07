@@ -16,6 +16,7 @@ const Etapas = () => {
     const [provasCarregadas, setProvasCarregadas] = useState(false); //estado para carregamento de provas no editar
     const [raias, setRaias] = useState(''); //estado para quantidade de raias
     const [anoSelecionado, setAnoSelecionado] = useState('2025'); // Estado para o ano selecionado
+    const [horaEtapa, setHoraEtapa] = useState(''); // Novo estado para o horário do evento
 
     const baseURL = 'https://www.ligapaulistadenatacao.com.br:5000/api/';
     const apiListaEtapas = `${baseURL}etapas/listarEtapas`;
@@ -59,8 +60,8 @@ const Etapas = () => {
             console.log("etapa VARIAVEL COMPLETA", etapa);
             
             setNomeEtapa(etapa.nome);
-            //setDataEtapa(new Date(etapa.data).toISOString().split('T')[0]);
-            setDataEtapa(etapa.data.split('-').reverse().join('/'));
+            setDataEtapa(etapa.data.split('T')[0].split('-').reverse().join('/')); // Ajusta a data
+            setHoraEtapa(etapa.data.split('T')[1].substring(0, 5)); // Ajusta o horário
             setCidadeEtapa(etapa.cidade);
             setSedeEtapa(etapa.sede);
             setEnderecoEtapa(etapa.endereco);
@@ -203,7 +204,14 @@ const Etapas = () => {
         
                 setDataEtapa(valorFormatado);
             }
-        },             
+        },
+        {
+            obrigatorio: true,
+            tipo: "time", // Novo campo para horário
+            label: "Horário do Evento",
+            valor: horaEtapa,
+            aoAlterar: setHoraEtapa
+        },
         {
             obrigatorio: true,
             label: "Cidade",
@@ -319,6 +327,7 @@ const Etapas = () => {
     const limparFormulario = () => {
         setNomeEtapa('');
         setDataEtapa('');
+        setHoraEtapa('');
         setCidadeEtapa('');
         setSedeEtapa('');
         setEnderecoEtapa('');
@@ -336,19 +345,21 @@ const Etapas = () => {
     const aoSalvar = async (evento) => {
         evento.preventDefault();
 
-        // Validaç]oes
-        if (!nomeEtapa || !dataEtapa || !cidadeEtapa || !sedeEtapa || !enderecoEtapa || !torneioEtapa) {
+        // Validações
+        if (!nomeEtapa || !dataEtapa || !horaEtapa || !cidadeEtapa || !sedeEtapa || !enderecoEtapa || !torneioEtapa) {
             alert('Por favor, preencha todos os campos obrigatórios.');
             return; // Interrompe o processo de salvamento se houver campos vazios
         }
 
-        // Converte a data para o formato esperado
-        const dataFormatada = new Date(dataEtapa).toISOString().split('T')[0];//formata data para nosso padrão
-        const provas = [...selecionadasMasculino, ...selecionadasFeminino];//combina as provas M e F em um só array
+        // Converte a data e o horário para o formato esperado
+        const dataFormatada = dataEtapa.split('/').reverse().join('-'); // Converte para YYYY-MM-DD
+        const dataHoraFormatada = `${dataFormatada}T${horaEtapa}:00`; // Junta data e hora
+
+        const provas = [...selecionadasMasculino, ...selecionadasFeminino]; // Combina as provas M e F em um só array
 
         const etapaDados = {
             nome: nomeEtapa,
-            data: dataFormatada,
+            data: dataHoraFormatada,
             cidade: cidadeEtapa,
             sede: sedeEtapa,
             endereco: enderecoEtapa,

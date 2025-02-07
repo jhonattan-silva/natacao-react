@@ -133,8 +133,32 @@ router.post('/cadastrarEtapas', async (req, res) => {
     }
 });
 
+// Rota para SALVAR ATUALIZAÇÕES uma etapa e suas provas
+router.put('/atualizarEtapas/:id', async (req, res) => {
+    const etapaId = req.params.id;
+    const { nome, data, cidade, sede, endereco, raias, Torneios_id, provas } = req.body;
 
+    try {
+        // Atualiza os dados básicos da etapa
+        await db.query(
+            'UPDATE eventos SET nome = ?, data = ?, cidade = ?, sede = ?, endereco = ?, quantidade_raias = ?, torneios_id = ? WHERE id = ?',
+            [nome, data, cidade, sede, endereco, raias, Torneios_id, etapaId]
+        );
 
+        // Remove as associações antigas de provas para a etapa
+        await db.query('DELETE FROM eventos_provas WHERE eventos_id = ?', [etapaId]);
+
+        // Insere as novas associações de provas
+        for (const prova of provas) {
+            await db.query('INSERT INTO eventos_provas (eventos_id, provas_id) VALUES (?, ?)', [etapaId, prova.provas_id]);
+        }
+
+        res.json({ message: 'Etapa atualizada com sucesso!' });
+    } catch (error) {
+        console.error('Erro ao atualizar etapa:', error);
+        res.status(500).json({ error: 'Erro ao atualizar etapa' });
+    }
+});
 
 // Rota para BUSCAR uma etapa JÁ CADASTRADA
 router.get('/atualizarEtapas/:id', async (req, res) => {
@@ -168,33 +192,6 @@ router.get('/atualizarEtapas/:id', async (req, res) => {
     } catch (error) {
         console.error('Erro ao buscar etapa:', error);
         res.status(500).json({ error: 'Erro ao buscar etapa' });
-    }
-});
-
-// Rota para SALVAR ATUALIZAÇÕES uma etapa e suas provas
-router.put('/atualizarEtapas/:id', async (req, res) => {
-    const etapaId = req.params.id;
-    const { nome, data, cidade, sede, endereco, raias, Torneios_id, provas } = req.body;
-
-    try {
-        // Atualiza os dados básicos da etapa
-        await db.query(
-            'UPDATE eventos SET nome = ?, data = ?, cidade = ?, sede = ?, endereco = ?, quantidade_raias = ?, torneios_id = ? WHERE id = ?',
-            [nome, data, cidade, sede, endereco, raias, Torneios_id, etapaId]
-        );
-
-        // Remove as associações antigas de provas para a etapa
-        await db.query('DELETE FROM eventos_provas WHERE eventos_id = ?', [etapaId]);
-
-        // Insere as novas associações de provas
-        for (const prova of provas) {
-            await db.query('INSERT INTO eventos_provas (eventos_id, provas_id) VALUES (?, ?)', [etapaId, prova.provas_id]);
-        }
-
-        res.json({ message: 'Etapa atualizada com sucesso!' });
-    } catch (error) {
-        console.error('Erro ao atualizar etapa:', error);
-        res.status(500).json({ error: 'Erro ao atualizar etapa' });
     }
 });
 
