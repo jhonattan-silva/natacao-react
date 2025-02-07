@@ -10,7 +10,7 @@ const formataData = (dateString) => {
     const adjustedDate = new Date(dateString);
 
     const optionsDate = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: false };
+    const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Sao_Paulo' };
 
     const dataEvento = adjustedDate.toLocaleDateString('pt-BR', optionsDate);
     const horario = adjustedDate.toLocaleTimeString('pt-BR', optionsTime);

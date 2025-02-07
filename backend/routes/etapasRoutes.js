@@ -150,7 +150,13 @@ router.put('/atualizarEtapas/:id', async (req, res) => {
         );
 
         // Remove as associações antigas de provas para a etapa
-        await db.query('DELETE FROM eventos_provas WHERE eventos_id = ?', [etapaId]);
+        const [eventosProvas] = await db.query('SELECT id FROM eventos_provas WHERE eventos_id = ?', [etapaId]);
+        const eventosProvasIds = eventosProvas.map(ep => ep.id);
+
+        if (eventosProvasIds.length > 0) {
+            await db.query('DELETE FROM inscricoes WHERE eventos_provas_id IN (?)', [eventosProvasIds]);
+            await db.query('DELETE FROM eventos_provas WHERE eventos_id = ?', [etapaId]);
+        }
 
         // Insere as novas associações de provas
         for (const prova of provas) {
