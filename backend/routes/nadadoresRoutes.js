@@ -74,6 +74,43 @@ router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
     }
 });
 
+// Rota para atualizar Nadador
+router.put('/atualizarNadador/:id', authMiddleware, async (req, res) => {
+    const id = parseInt(req.params.id); // Converte para número
+    const { nome, cpf, data_nasc, telefone, sexo, equipeId, cidade } = req.body;
+
+    const cpfNumeros = cpf.replace(/\D/g, '');
+    const telefoneNumeros = telefone.replace(/\D/g, '');
+
+    try {
+        // Calcula a idade com base apenas no ano de nascimento
+        const anoAtual = new Date().getFullYear();
+        const anoNascimento = new Date(data_nasc).getFullYear();
+        const idade = anoAtual - anoNascimento;
+
+        // Busca a categoria com base na idade
+        const [categoria] = await db.query(
+            `SELECT id FROM categorias WHERE sexo = ? AND idade_min <= ? AND (idade_max >= ? OR idade_max IS NULL) LIMIT 1`,
+            [sexo, idade, idade]
+        );
+
+        if (!categoria.length) {
+            return res.status(400).send('Nenhuma categoria encontrada para este nadador.');
+        }
+
+        // Atualiza o nadador no banco de dados com a categoria correspondente
+        await db.query(
+            `UPDATE nadadores SET nome = ?, cpf = ?, data_nasc = ?, celular = ?, sexo = ?, equipes_id = ?, categorias_id = ?, cidade = ? WHERE id = ?`,
+            [nome, cpfNumeros, data_nasc, telefoneNumeros, sexo, equipeId, categoria[0].id, cidade, id]
+        );
+
+        res.status(200).send('Nadador atualizado com sucesso.');
+    } catch (error) {
+        console.error('Erro ao atualizar nadador:', error);
+        res.status(500).send('Erro ao atualizar nadador');
+    }
+});
+
 //rota para inativar ou reativar nadador
 router.put('/inativarNadador/:id', authMiddleware, async (req, res) => {
     const id = parseInt(req.params.id); // Converte para número
