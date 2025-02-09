@@ -57,44 +57,31 @@ const Etapas = () => {
         try {
             const response = await api.get(`${apiAtualizaEtapas}/${id}`);
             const etapa = response.data;
-
-            // Atualiza o estado com os dados da etapa
+    
+            // Atualiza os estados com os dados da etapa
             setEtapaEditando(etapa);
-            console.log("etapa VARIAVEL COMPLETA", etapa);
-
             setNomeEtapa(etapa.nome);
             const [date, time] = etapa.data.split('T');
-            setDataEtapa(date.split('-').reverse().join('/')); // Ajusta a data
-            setHoraEtapa(time.substring(0, 5)); // Ajusta o horário
+            setDataEtapa(date.split('-').reverse().join('/')); 
+            setHoraEtapa(time.substring(0, 5)); 
             setCidadeEtapa(etapa.cidade);
             setSedeEtapa(etapa.sede);
             setEnderecoEtapa(etapa.endereco);
-            setTorneioEtapa(etapa.torneios_id); // Define a equipe do nadador diretamente
-
-            setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6'); // Define a quantidade de raias ou 6 como padrão
-
-            // Atualiza o estado com as provas selecionadas na ordem correta
-            const provasOrdenadas = etapa.provas
-                .map(prova => {
-                    const provaMasculino = provasMasculino.find(p => p.id === prova.provas_id.toString());
-                    const provaFeminino = provasFeminino.find(p => p.id === prova.provas_id.toString());
-                    const provaDetalhes = provaMasculino || provaFeminino;
-                    return {
-                        ...provaDetalhes,
-                        ordem: prova.ordem,
-                        sexo: provaMasculino ? 'Masculino' : 'Feminino'
-                    };
-                })
-                .sort((a, b) => a.ordem - b.ordem); // 🔥 Agora ordena corretamente pela ordem vinda do backend
-
+            setTorneioEtapa(etapa.torneios_id);
+            setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6'); 
+    
+            // ✅ Usa diretamente os dados do backend sem mapear manualmente
+            const provasOrdenadas = etapa.provas.sort((a, b) => a.ordem - b.ordem);
+    
+            console.log("📌 Provas ordenadas recebidas do backend:", provasOrdenadas);
+            
             setProvasSelecionadas(provasOrdenadas);
-
-
             setFormVisivel(true);
         } catch (error) {
             console.error('Erro ao carregar etapa para edição:', error);
         }
     };
+    
 
 
     const handleExcluir = async (id) => {
