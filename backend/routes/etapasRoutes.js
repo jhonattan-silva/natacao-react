@@ -198,7 +198,6 @@ router.get('/atualizarEtapas/:id', async (req, res) => {
             `SELECT 
                 ep.provas_id AS id,
                 ep.ordem,
-                p.label,
                 p.estilo,
                 p.distancia,
                 p.tipo,
