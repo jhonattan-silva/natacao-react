@@ -562,9 +562,10 @@ const Etapas = () => {
                             <>
                                 <h2>Ordenar Provas</h2>
                                 <ArrastaSolta
-                                    itens={provasOrdenadas}
+                                    itens={provasSelecionadas}
                                     aoReordenar={handleReordenar}
                                     renderItem={(item) => {
+                                        console.log('*****PROVAS SELECIONADAS******:', provasSelecionadas);
                                         console.log('Renderizando item:', item);
                                         return `${item.ordem}. ${item.nome} (${item.sexo})`;
                                     }}
