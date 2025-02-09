@@ -562,11 +562,11 @@ const Etapas = () => {
                             <>
                                 <h2>Ordenar Provas</h2>
                                 <ArrastaSolta
-                                    itens={provasSelecionadas}
+                                    itens={provasOrdenadas}
                                     aoReordenar={handleReordenar}
                                     renderItem={(item) => {
                                         console.log('Renderizando item:', item);
-                                        return `${item.ordem}. ${item.label || item.nome} (${item.sexo})`;
+                                        return `${item.ordem}. ${item.nome} (${item.sexo})`;
                                     }}
                                 />
                                 <Botao onClick={handleVoltar}>Voltar</Botao>
