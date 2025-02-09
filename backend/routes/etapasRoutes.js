@@ -193,14 +193,14 @@ router.get('/atualizarEtapas/:id', async (req, res) => {
             return res.status(404).json({ error: 'Etapa não encontrada' });
         }
 
-        // Busca os IDs das provas vinculadas à etapa
+        // Busca os IDs das provas vinculadas à etapa na ordem correta
         const [provasVinculadas] = await db.query(
-            'SELECT Provas_id FROM eventos_provas WHERE eventos_id = ?',
+            'SELECT provas_id, ordem FROM eventos_provas WHERE eventos_id = ? ORDER BY ordem',
             [etapaId]
         );
 
         // Extrai apenas os IDs das provas
-        const provasIds = provasVinculadas.map(prova => prova.Provas_id);
+        const provasIds = provasVinculadas.map(prova => prova.provas_id);
 
         // Retorna a etapa e as provas vinculadas
         res.json({ ...etapa[0], provas: provasIds });

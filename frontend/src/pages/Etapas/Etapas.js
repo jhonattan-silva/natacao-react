@@ -93,6 +93,18 @@ const Etapas = () => {
             setSelecionadasFeminino(selecionadasFeminino);
             setSelecionadasAmbos(selecionadasAmbos);
 
+            // Atualiza o estado com as provas selecionadas na ordem correta
+            const provasOrdenadas = etapa.provas.map(provaId => {
+                const provaMasculino = provasMasculino.find(prova => prova.id === provaId.toString());
+                const provaFeminino = provasFeminino.find(prova => prova.id === provaId.toString());
+                const prova = provaMasculino || provaFeminino;
+                return {
+                    ...prova,
+                    sexo: provaMasculino ? 'Masculino' : 'Feminino'
+                };
+            });
+            setProvasSelecionadas(provasOrdenadas);
+
             setFormVisivel(true);
         } catch (error) {
             console.error('Erro ao carregar etapa para edição:', error);
