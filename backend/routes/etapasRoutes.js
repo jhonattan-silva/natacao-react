@@ -9,7 +9,7 @@ router.get('/listarEtapas', async (req, res) => {
         const [etapas] = await db.query(`
             SELECT eventos.*, torneios.nome AS Torneio
             FROM eventos
-            JOIN torneios ON eventos.Torneios_id = torneios.id
+            JOIN torneios ON eventos.torneios_id = torneios.id
         `);
 
         res.json(etapas);
@@ -87,23 +87,25 @@ router.get('/listarProvas', async (req, res) => {
 
 //Rota para CADASTRAR NOVA ETAPA
 router.post('/cadastrarEtapas', async (req, res) => {
-    const { nome, data, cidade, sede, endereco, raias, Torneios_id, provas } = req.body;
+    const { nome, data, cidade, sede, endereco, quantidade_raias, torneios_id, provas } = req.body;
 
     try {
         console.log('Dados recebidos para cadastro:', req.body); // Adiciona log para depuração
 
         // Cria o evento na tabela etapas
         const [result] = await db.query(
-            'INSERT INTO eventos (nome, data, cidade, sede, endereco, quantidade_raias, Torneios_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [nome, data, cidade, sede, endereco, raias, Torneios_id]
+            'INSERT INTO eventos (nome, data, cidade, sede, endereco, quantidade_raias, torneios_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [nome, data, cidade, sede, endereco, quantidade_raias, torneios_id]
         );
         const etapaId = result.insertId; // ID do novo evento (etapa) criado
 
         // Insere as provas na tabela eventos_provas
         for (const prova of provas) {
+            console.log('Inserindo prova COMPLETA:', prova); // Adiciona log para depuração
+            
             await db.query(
                 'INSERT INTO eventos_provas (eventos_id, provas_id) VALUES (?, ?)',
-                [etapaId, prova.provas_id]
+                [etapaId, prova.id]
             );
         }
 
@@ -124,8 +126,8 @@ router.post('/cadastrarEtapas', async (req, res) => {
             cidade: etapa[0].cidade,
             sede: etapa[0].sede,
             endereco: etapa[0].endereco,
-            raias: etapa[0].raias,
-            Torneios_id: etapa[0].Torneios_id,
+            quantidade_raias: etapa[0].quantidade_raias,
+            torneios_id: etapa[0].torneios_id,
             provas: provasCadastradas.map(prova => prova.provas_id) // Retorna apenas uma lista de IDs das provas
         });
     } catch (error) {
@@ -138,7 +140,7 @@ router.post('/cadastrarEtapas', async (req, res) => {
 // Rota para SALVAR ATUALIZAÇÕES uma etapa e suas provas
 router.put('/atualizarEtapas/:id', async (req, res) => {
     const etapaId = req.params.id;
-    const { nome, data, cidade, sede, endereco, raias, Torneios_id, provas } = req.body;
+    const { nome, data, cidade, sede, endereco, raias, torneios_id, provas } = req.body;
 
     try {
         console.log('Dados recebidos para atualização:', req.body); // Adiciona log para depuração
@@ -146,7 +148,7 @@ router.put('/atualizarEtapas/:id', async (req, res) => {
         // Atualiza os dados básicos da etapa
         await db.query(
             'UPDATE eventos SET nome = ?, data = ?, cidade = ?, sede = ?, endereco = ?, quantidade_raias = ?, torneios_id = ? WHERE id = ?',
-            [nome, data, cidade, sede, endereco, raias, Torneios_id, etapaId]
+            [nome, data, cidade, sede, endereco, raias, torneios_id, etapaId]
         );
 
         // Remove as associações antigas de provas para a etapa
