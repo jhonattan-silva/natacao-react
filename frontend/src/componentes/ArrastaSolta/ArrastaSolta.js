@@ -16,13 +16,13 @@ const ArrastaSolta = ({ itens, aoReordenar, renderItem }) => {
     return (
         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={itens} strategy={verticalListSortingStrategy}>
-                <ul>
+                <ol>
                     {itens.map((item, index) => (
-                        <ArrastaSoltaItem key={item.id} id={item.id} index={index + 1}>
-                            {renderItem ? renderItem(item) : item.label || item.nome} {/* Permite personalizar o conteúdo */}
+                        <ArrastaSoltaItem key={item.id} id={item.id}>
+                            {index + 1}. {renderItem ? renderItem(item) : `${item.label || item.nome} (${item.sexo})`} {/* Permite personalizar o conteúdo */}
                         </ArrastaSoltaItem>
                     ))}
-                </ul>
+                </ol>
             </SortableContext>
         </DndContext>
     );

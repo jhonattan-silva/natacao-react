@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-const ArrastaSoltaItem = ({ id, index, children }) => {
+const ArrastaSoltaItem = ({ id, children }) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
 
     const style = {
@@ -16,7 +16,7 @@ const ArrastaSoltaItem = ({ id, index, children }) => {
 
     return (
         <li ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            {index}. {children}
+            {children}
         </li>
     );
 };

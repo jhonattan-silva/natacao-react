@@ -429,9 +429,26 @@ const Etapas = () => {
     };
 
     const handleSalvar = async () => {
-        // Salvar a ordem das provas
-        // ...implementação do salvamento...
-        alert('Ordem das provas salva com sucesso!');
+        // Implementação do salvamento da ordem das provas
+        try {
+            const provasOrdenadas = provasSelecionadas.map((prova, index) => ({
+                ...prova,
+                ordem: index + 1,
+            }));
+
+            // Enviar as provas ordenadas para o backend
+            await api.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, {
+                ...etapaEditando,
+                provas: provasOrdenadas,
+            });
+
+            alert('Ordem das provas salva com sucesso!');
+            setEtapaAtual(1);
+            setFormVisivel(false);
+        } catch (error) {
+            console.error('Erro ao salvar a ordem das provas:', error);
+            alert('Erro ao salvar a ordem das provas.');
+        }
     };
 
     return (
@@ -515,7 +532,7 @@ const Etapas = () => {
                         {etapaAtual === 2 && (
                             <>
                                 <h2>Ordenar Provas</h2>
-                                <ArrastaSolta itens={provasSelecionadas} aoReordenar={handleReordenar} renderItem={(item) => item.label || item.nome} />
+                                <ArrastaSolta itens={provasSelecionadas} aoReordenar={handleReordenar} renderItem={(item) => `${item.label || item.nome} (${item.sexo})`} />
                                 <Botao onClick={handleVoltar}>Voltar</Botao>
                                 <Botao onClick={handleSalvar}>Salvar Ordem</Botao>
                             </>
