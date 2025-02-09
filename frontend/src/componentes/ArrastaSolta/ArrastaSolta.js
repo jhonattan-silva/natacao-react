@@ -19,7 +19,7 @@ const ArrastaSolta = ({ itens, aoReordenar, renderItem }) => {
                 <ul>
                     {itens.map((item) => (
                         <ArrastaSoltaItem key={item.id} id={item.id}>
-                            {renderItem ? renderItem(item) : item.nome} {/* Permite personalizar o conteúdo */}
+                            {renderItem ? renderItem(item) : item.label || item.nome} {/* Permite personalizar o conteúdo */}
                         </ArrastaSoltaItem>
                     ))}
                 </ul>

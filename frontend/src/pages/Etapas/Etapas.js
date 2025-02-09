@@ -8,7 +8,6 @@ import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
-import ArrastaSolta from '../../componentes/ArrastaSolta/ArrastaSolta';
 
 const Etapas = () => {
     const [etapas, setEtapas] = useState([]);
@@ -18,8 +17,8 @@ const Etapas = () => {
     const [raias, setRaias] = useState(''); //estado para quantidade de raias
     const [anoSelecionado, setAnoSelecionado] = useState('2025'); // Estado para o ano selecionado
     const [horaEtapa, setHoraEtapa] = useState(''); // Novo estado para o horário do evento
-    const [etapaAtual, setEtapaAtual] = useState(1); // Novo estado para controlar a etapa atual
-    const [provasSelecionadas, setProvasSelecionadas] = useState([]); // Novo estado para armazenar as provas selecionadas
+    const [etapaAtual, setEtapaAtual] = useState(1); // Estado para controlar a etapa atual do formulário
+    const [provasSelecionadas, setProvasSelecionadas] = useState([]); // Estado para armazenar as provas selecionadas
 
     const baseURL = 'https://www.ligapaulistadenatacao.com.br:5000/api/';
     const apiListaEtapas = `${baseURL}etapas/listarEtapas`;
@@ -410,24 +409,18 @@ const Etapas = () => {
 
     const handleAvancar = () => {
         if (etapaAtual === 1) {
-            const provas = [...selecionadasMasculino, ...selecionadasFeminino];
+            const provas = [...selecionadasMasculino, ...selecionadasFeminino].map(id => {
+                const provaMasculino = provasMasculino.find(prova => prova.id === id);
+                const provaFeminino = provasFeminino.find(prova => prova.id === id);
+                return provaMasculino || provaFeminino;
+            });
             setProvasSelecionadas(provas);
             setEtapaAtual(2);
         }
     };
 
-    const handleVoltar = () => {
-        setEtapaAtual(1);
-    };
-
     const handleReordenar = (novasProvas) => {
         setProvasSelecionadas(novasProvas);
-    };
-
-    const handleSalvar = async () => {
-        // Salvar a ordem das provas
-        // ...implementação do salvamento...
-        alert('Ordem das provas salva com sucesso!');
     };
 
     return (
@@ -511,7 +504,7 @@ const Etapas = () => {
                         {etapaAtual === 2 && (
                             <>
                                 <h2>Ordenar Provas</h2>
-                                <ArrastaSolta itens={provasSelecionadas} aoReordenar={handleReordenar} renderItem={(item) => item.label} />
+                                <ArrastaSolta itens={provasSelecionadas} aoReordenar={handleReordenar} renderItem={(item) => item.label || item.nome} />
                                 <Botao onClick={handleVoltar}>Voltar</Botao>
                                 <Botao onClick={handleSalvar}>Salvar Ordem</Botao>
                             </>
