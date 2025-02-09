@@ -17,8 +17,8 @@ const ArrastaSolta = ({ itens, aoReordenar, renderItem }) => {
         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={itens} strategy={verticalListSortingStrategy}>
                 <ul>
-                    {itens.map((item) => (
-                        <ArrastaSoltaItem key={item.id} id={item.id}>
+                    {itens.map((item, index) => (
+                        <ArrastaSoltaItem key={item.id} id={item.id} index={index + 1}>
                             {renderItem ? renderItem(item) : item.label || item.nome} {/* Permite personalizar o conteúdo */}
                         </ArrastaSoltaItem>
                     ))}
