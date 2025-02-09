@@ -58,8 +58,7 @@ const Etapas = () => {
             const response = await api.get(`${apiAtualizaEtapas}/${id}`);
             const etapa = response.data;
 
-            console.log('📌 Etapa recebida do backend##########:', etapa);
-            
+            console.log('📌 Etapa recebida do backend:', etapa);
 
             // Atualiza os estados com os dados da etapa
             setEtapaEditando(etapa);
@@ -73,21 +72,40 @@ const Etapas = () => {
             setTorneioEtapa(etapa.torneios_id);
             setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6');
 
-            // ✅ Corrigir a referência para os campos corretos
+            // Atualiza o estado com as provas selecionadas na ordem correta
             const provasOrdenadas = etapa.provas
                 .map(prova => ({
-                    id: prova.provas_id,
+                    id: prova.provas_id.toString(),
+                    label: `${prova.distancia}m ${prova.estilo} (${prova.tipo})`,
                     estilo: prova.estilo,
                     distancia: prova.distancia,
                     tipo: prova.tipo,
                     sexo: prova.sexo,
                     ordem: prova.ordem
                 }))
-                .sort((a, b) => a.ordem - b.ordem); // 🔥 Agora ordena corretamente pela ordem vinda do backend
+                .sort((a, b) => a.ordem - b.ordem); // Ordena corretamente pela ordem vinda do backend
 
             console.log("📌 Provas ordenadas recebidas do backend:", provasOrdenadas);
 
             setProvasSelecionadas(provasOrdenadas);
+
+            // Atualiza os estados de seleção
+            const selecionadasMasculino = provasOrdenadas
+                .filter(prova => prova.sexo === 'M')
+                .map(prova => prova.id);
+
+            const selecionadasFeminino = provasOrdenadas
+                .filter(prova => prova.sexo === 'F')
+                .map(prova => prova.id);
+
+            const selecionadasAmbos = provasOrdenadas
+                .filter(prova => selecionadasMasculino.includes(prova.id) && selecionadasFeminino.includes(prova.id))
+                .map(prova => prova.id);
+
+            setSelecionadasMasculino(selecionadasMasculino);
+            setSelecionadasFeminino(selecionadasFeminino);
+            setSelecionadasAmbos(selecionadasAmbos);
+
             setFormVisivel(true);
         } catch (error) {
             console.error('Erro ao carregar etapa para edição:', error);
@@ -390,7 +408,7 @@ const Etapas = () => {
 
     const abreInscricao = async (id, inscricaoAberta) => {
         try {
-            await api.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota para abrir/fechar inscrição
+            await api.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota de edição equivalente ao id selecionado
             alert(`Inscrição ${inscricaoAberta ? 'fechada' : 'aberta'} com sucesso!`);
             fetchData(anoSelecionado); // Recarrega a lista de etapas do backend
         } catch (error) {
