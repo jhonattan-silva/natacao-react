@@ -445,10 +445,16 @@ const Etapas = () => {
             const [hora, minuto, segundo] = etapaEditando.data.split('T')[1].split(':');
             const dataFormatada = `${ano}-${mes}-${dia} ${hora}:${minuto}:${segundo.split('.')[0]}`;
 
+            // Garantir que quantidade_raias e torneios_id não sejam nulos
+            const quantidadeRaias = raias || etapaEditando.quantidade_raias;
+            const torneiosId = torneioEtapa || etapaEditando.torneios_id;
+
             // Enviar as provas ordenadas para o backend
             await api.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, {
                 ...etapaEditando,
                 data: dataFormatada,
+                quantidade_raias: quantidadeRaias,
+                torneios_id: torneiosId,
                 provas: provasOrdenadas,
             });
 
