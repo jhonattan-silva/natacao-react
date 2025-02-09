@@ -76,7 +76,7 @@ const Etapas = () => {
             // ✅ Corrigir a referência para os campos corretos
             const provasOrdenadas = etapa.provas
                 .map(prova => ({
-                    id: prova.id, // ✅ Corrige para `id`, não `provas_id`
+                    id: provas_id,
                     label: prova.label,
                     estilo: prova.estilo,
                     distancia: prova.distancia,
