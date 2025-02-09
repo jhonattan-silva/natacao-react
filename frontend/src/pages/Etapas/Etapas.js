@@ -74,17 +74,21 @@ const Etapas = () => {
             setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6'); // Define a quantidade de raias ou 6 como padrão
 
             // Atualiza o estado com as provas selecionadas na ordem correta
-            const provasOrdenadas = etapa.provas.map(prova => {
-                const provaMasculino = provasMasculino.find(p => p.id === prova.provas_id.toString());
-                const provaFeminino = provasFeminino.find(p => p.id === prova.provas_id.toString());
-                const provaDetalhes = provaMasculino || provaFeminino;
-                return {
-                    ...provaDetalhes,
-                    ordem: prova.ordem,
-                    sexo: provaMasculino ? 'Masculino' : 'Feminino'
-                };
-            });
+            const provasOrdenadas = etapa.provas
+                .map(prova => {
+                    const provaMasculino = provasMasculino.find(p => p.id === prova.provas_id.toString());
+                    const provaFeminino = provasFeminino.find(p => p.id === prova.provas_id.toString());
+                    const provaDetalhes = provaMasculino || provaFeminino;
+                    return {
+                        ...provaDetalhes,
+                        ordem: prova.ordem,
+                        sexo: provaMasculino ? 'Masculino' : 'Feminino'
+                    };
+                })
+                .sort((a, b) => a.ordem - b.ordem); // 🔥 Agora ordena corretamente pela ordem vinda do backend
+
             setProvasSelecionadas(provasOrdenadas);
+
 
             setFormVisivel(true);
         } catch (error) {
@@ -371,7 +375,7 @@ const Etapas = () => {
         };
 
         console.log('Dados da etapa VER ISSO AQUI:', etapaDados);
-        
+
 
         if (etapaEditando) {
             // Se `etapaEditando` existir, atualiza a etapa
@@ -542,13 +546,13 @@ const Etapas = () => {
                         {etapaAtual === 2 && (
                             <>
                                 <h2>Ordenar Provas</h2>
-                                <ArrastaSolta 
-                                    itens={provasSelecionadas} 
-                                    aoReordenar={handleReordenar} 
+                                <ArrastaSolta
+                                    itens={provasSelecionadas}
+                                    aoReordenar={handleReordenar}
                                     renderItem={(item) => {
                                         console.log('Renderizando item:', item);
                                         return `${item.ordem}. ${item.label || item.nome} (${item.sexo})`;
-                                    }} 
+                                    }}
                                 />
                                 <Botao onClick={handleVoltar}>Voltar</Botao>
                                 <Botao onClick={handleSalvar}>Salvar Ordem</Botao>
