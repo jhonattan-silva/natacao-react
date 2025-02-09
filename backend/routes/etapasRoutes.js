@@ -195,7 +195,18 @@ router.get('/atualizarEtapas/:id', async (req, res) => {
 
         // Busca os IDs das provas vinculadas à etapa na ordem correta
         const [provasVinculadas] = await db.query(
-            'SELECT provas_id, ordem FROM eventos_provas WHERE eventos_id = ? ORDER BY ordem',
+            `SELECT 
+                ep.provas_id AS id,
+                ep.ordem,
+                p.label,
+                p.estilo,
+                p.distancia,
+                p.tipo,
+                p.sexo
+             FROM eventos_provas ep
+             JOIN provas p ON ep.provas_id = p.id
+             WHERE ep.eventos_id = ?
+             ORDER BY ep.ordem`,
             [etapaId]
         );
 
