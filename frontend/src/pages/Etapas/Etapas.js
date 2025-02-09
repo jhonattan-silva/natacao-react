@@ -8,6 +8,7 @@ import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
+import ArrastaSolta from '../../componentes/ArrastaSolta/ArrastaSolta';
 
 const Etapas = () => {
     const [etapas, setEtapas] = useState([]);
@@ -17,6 +18,8 @@ const Etapas = () => {
     const [raias, setRaias] = useState(''); //estado para quantidade de raias
     const [anoSelecionado, setAnoSelecionado] = useState('2025'); // Estado para o ano selecionado
     const [horaEtapa, setHoraEtapa] = useState(''); // Novo estado para o horário do evento
+    const [etapaAtual, setEtapaAtual] = useState(1); // Novo estado para controlar a etapa atual
+    const [provasSelecionadas, setProvasSelecionadas] = useState([]); // Novo estado para armazenar as provas selecionadas
 
     const baseURL = 'https://www.ligapaulistadenatacao.com.br:5000/api/';
     const apiListaEtapas = `${baseURL}etapas/listarEtapas`;
@@ -58,7 +61,7 @@ const Etapas = () => {
             // Atualiza o estado com os dados da etapa
             setEtapaEditando(etapa);
             console.log("etapa VARIAVEL COMPLETA", etapa);
-            
+
             setNomeEtapa(etapa.nome);
             const [date, time] = etapa.data.split('T');
             setDataEtapa(date.split('-').reverse().join('/')); // Ajusta a data
@@ -179,11 +182,11 @@ const Etapas = () => {
             valor: dataEtapa,
             aoAlterar: (valor) => {
                 let valorFormatado = valor.replace(/\D/g, ""); // Remove tudo que não for número
-        
+
                 let dia = valorFormatado.substring(0, 2);
                 let mes = valorFormatado.substring(2, 4);
                 let ano = valorFormatado.substring(4, 8);
-        
+
                 // Apenas aplica limite de dia/mês se já estiverem completos
                 if (dia.length === 2) {
                     dia = Math.min(31, parseInt(dia)).toString().padStart(2, "0");
@@ -191,18 +194,18 @@ const Etapas = () => {
                 if (mes.length === 2) {
                     mes = Math.min(12, parseInt(mes)).toString().padStart(2, "0");
                 }
-        
+
                 valorFormatado = dia;
                 if (valorFormatado.length >= 2) valorFormatado += "/"; // Adiciona '/' depois do dia se houver mais dígitos
                 valorFormatado += mes;
                 if (valorFormatado.length >= 5) valorFormatado += "/"; // Adiciona '/' depois do mês se houver mais dígitos
                 valorFormatado += ano;
-        
+
                 // Permite apagar corretamente (se terminar com '/', remove)
                 if (valor.endsWith("/")) {
                     valorFormatado = valorFormatado.slice(0, -1);
                 }
-        
+
                 setDataEtapa(valorFormatado);
             }
         },
@@ -405,6 +408,28 @@ const Etapas = () => {
         setFormVisivel(false);
     };
 
+    const handleAvancar = () => {
+        if (etapaAtual === 1) {
+            const provas = [...selecionadasMasculino, ...selecionadasFeminino];
+            setProvasSelecionadas(provas);
+            setEtapaAtual(2);
+        }
+    };
+
+    const handleVoltar = () => {
+        setEtapaAtual(1);
+    };
+
+    const handleReordenar = (novasProvas) => {
+        setProvasSelecionadas(novasProvas);
+    };
+
+    const handleSalvar = async () => {
+        // Salvar a ordem das provas
+        // ...implementação do salvamento...
+        alert('Ordem das provas salva com sucesso!');
+    };
+
     return (
         <>
             <CabecalhoAdmin />
@@ -436,52 +461,61 @@ const Etapas = () => {
                 )}
                 {formVisivel && (
                     <div className={style.cadastroContainer}>
-                        <Formulario inputs={inputs} aoSalvar={aoSalvar} />
-                        <RadioButtons
-                            titulo="Quantidade de Raias da Piscina"
-                            opcoes={[
-                                { id: '5', value: '5', label: '5' },
-                                { id: '6', value: '6', label: '6' },
-                                { id: '7', value: '7', label: '7' },
-                                { id: '8', value: '8', label: '8' },
-                            ]}
-                            aoSelecionar={setRaias}
-                            aoAlterar={aoAlterarRaias}
-                            classNameRadioOpcoes={style.radioRaias}
-                            valorSelecionado={raias}
-                        />
-                        <ListaSuspensa
-                            textoPlaceholder={"Escolha o torneio"}
-                            fonteDados={apiListaTorneios}
-                            onChange={torneioSelecionado}
-                            obrigatorio={true}
-                            valorSelecionado={torneioEtapa}
-                        />
-                        <h2>Selecione as provas de acordo com sexo</h2>
-                        <div className={style.provasContainer}>
-                            <CheckboxGroup
-                                titulo="Masculino"
-                                opcoes={provasMasculino}
-                                selecionadas={selecionadasMasculino}
-                                aoAlterar={aoAlterarMasculino}
-                            />
-                            <CheckboxGroup
-                                titulo="Ambos"
-                                opcoes={provasMasculino}
-                                selecionadas={selecionadasAmbos}
-                                aoAlterar={aoAlterarAmbos}
-                            />
-                            <CheckboxGroup
-                                titulo="Feminino"
-                                opcoes={provasFeminino}
-                                selecionadas={selecionadasFeminino}
-                                aoAlterar={aoAlterarFeminino}
-                            />
-                        </div>
-                        <div className={style['button-group']}>
-                            <Botao classBtn={style.btnComponente} onClick={aoSalvar}>SALVAR</Botao>
-                            <Botao classBtn={style.btnVoltar} onClick={fecharFormulario}>Voltar</Botao>
-                        </div>
+                        {etapaAtual === 1 && (
+                            <>
+                                <Formulario inputs={inputs} aoSalvar={aoSalvar} />
+                                <RadioButtons
+                                    titulo="Quantidade de Raias da Piscina"
+                                    opcoes={[
+                                        { id: '5', value: '5', label: '5' },
+                                        { id: '6', value: '6', label: '6' },
+                                        { id: '7', value: '7', label: '7' },
+                                        { id: '8', value: '8', label: '8' },
+                                    ]}
+                                    aoSelecionar={setRaias}
+                                    aoAlterar={aoAlterarRaias}
+                                    classNameRadioOpcoes={style.radioRaias}
+                                    valorSelecionado={raias}
+                                />
+                                <ListaSuspensa
+                                    textoPlaceholder={"Escolha o torneio"}
+                                    fonteDados={apiListaTorneios}
+                                    onChange={torneioSelecionado}
+                                    obrigatorio={true}
+                                    valorSelecionado={torneioEtapa}
+                                />
+                                <h2>Selecione as provas de acordo com sexo</h2>
+                                <div className={style.provasContainer}>
+                                    <CheckboxGroup
+                                        titulo="Masculino"
+                                        opcoes={provasMasculino}
+                                        selecionadas={selecionadasMasculino}
+                                        aoAlterar={aoAlterarMasculino}
+                                    />
+                                    <CheckboxGroup
+                                        titulo="Ambos"
+                                        opcoes={provasMasculino}
+                                        selecionadas={selecionadasAmbos}
+                                        aoAlterar={aoAlterarAmbos}
+                                    />
+                                    <CheckboxGroup
+                                        titulo="Feminino"
+                                        opcoes={provasFeminino}
+                                        selecionadas={selecionadasFeminino}
+                                        aoAlterar={aoAlterarFeminino}
+                                    />
+                                </div>
+                                <Botao onClick={handleAvancar}>Avançar</Botao>
+                            </>
+                        )}
+                        {etapaAtual === 2 && (
+                            <>
+                                <h2>Ordenar Provas</h2>
+                                <ArrastaSolta itens={provasSelecionadas} aoReordenar={handleReordenar} renderItem={(item) => item.label} />
+                                <Botao onClick={handleVoltar}>Voltar</Botao>
+                                <Botao onClick={handleSalvar}>Salvar Ordem</Botao>
+                            </>
+                        )}
                     </div>
                 )}
             </div>
