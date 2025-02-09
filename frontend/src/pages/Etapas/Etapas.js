@@ -373,9 +373,9 @@ const Etapas = () => {
             cidade: cidadeEtapa,
             sede: sedeEtapa,
             endereco: enderecoEtapa,
-            Torneios_id: torneioEtapa,
+            torneios_id: torneioEtapa,
             provas: provas.map(id => ({ provas_id: id })),
-            raias: raias
+            quantidade_raias: raias
         };
 
         if (etapaEditando) {
