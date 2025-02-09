@@ -565,9 +565,8 @@ const Etapas = () => {
                                     itens={provasSelecionadas}
                                     aoReordenar={handleReordenar}
                                     renderItem={(item) => {
-                                        console.log('*****PROVAS SELECIONADAS******:', provasSelecionadas);
                                         console.log('Renderizando item:', item);
-                                        return `${item.ordem}. ${item.nome} (${item.sexo})`;
+                                        return `${item.ordem}. ${item.label || item.nome} (${item.sexo})`;
                                     }}
                                 />
                                 <Botao onClick={handleVoltar}>Voltar</Botao>
