@@ -57,32 +57,40 @@ const Etapas = () => {
         try {
             const response = await api.get(`${apiAtualizaEtapas}/${id}`);
             const etapa = response.data;
-    
+
             // Atualiza os estados com os dados da etapa
             setEtapaEditando(etapa);
             setNomeEtapa(etapa.nome);
             const [date, time] = etapa.data.split('T');
-            setDataEtapa(date.split('-').reverse().join('/')); 
-            setHoraEtapa(time.substring(0, 5)); 
+            setDataEtapa(date.split('-').reverse().join('/'));
+            setHoraEtapa(time.substring(0, 5));
             setCidadeEtapa(etapa.cidade);
             setSedeEtapa(etapa.sede);
             setEnderecoEtapa(etapa.endereco);
             setTorneioEtapa(etapa.torneios_id);
-            setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6'); 
-    
-            // ✅ Usa diretamente os dados do backend sem mapear manualmente
-            const provasOrdenadas = etapa.provas.sort((a, b) => a.ordem - b.ordem);
-    
+            setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6');
+
+            // ✅ Corrigir a referência para os campos corretos
+            const provasOrdenadas = etapa.provas
+                .map(prova => ({
+                    id: prova.id, // ✅ Corrige para `id`, não `provas_id`
+                    label: prova.label,
+                    estilo: prova.estilo,
+                    distancia: prova.distancia,
+                    tipo: prova.tipo,
+                    sexo: prova.sexo,
+                    ordem: prova.ordem
+                }))
+                .sort((a, b) => a.ordem - b.ordem); // 🔥 Agora ordena corretamente pela ordem vinda do backend
+
             console.log("📌 Provas ordenadas recebidas do backend:", provasOrdenadas);
-            
+
             setProvasSelecionadas(provasOrdenadas);
             setFormVisivel(true);
         } catch (error) {
             console.error('Erro ao carregar etapa para edição:', error);
         }
     };
-    
-
 
     const handleExcluir = async (id) => {
         if (window.confirm("Tem certeza que deseja excluir esta etapa?")) {
