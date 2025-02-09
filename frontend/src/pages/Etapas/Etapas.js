@@ -296,11 +296,10 @@ const Etapas = () => {
     }, []);
 
     const aoAlterarMasculino = (id, checked) => {
-        (setSelecionadasMasculino(prev =>
+        setSelecionadasMasculino(prev =>
             checked ? [...prev, id] : prev.filter(item => item !== id)
-        ));
+        );
     };
-
 
     const aoAlterarFeminino = (id, checked) => {
         setSelecionadasFeminino(prev =>

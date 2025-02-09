@@ -162,7 +162,7 @@ router.put('/atualizarEtapas/:id', async (req, res) => {
 
         // Insere as novas associações de provas
         for (const prova of provas) {
-            await db.query('INSERT INTO eventos_provas (eventos_id, provas_id) VALUES (?, ?)', [etapaId, prova.provas_id]);
+            await db.query('INSERT INTO eventos_provas (eventos_id, provas_id) VALUES (?, ?)', [etapaId, prova.id]);
         }
 
         res.json({ message: 'Etapa atualizada com sucesso!' });
