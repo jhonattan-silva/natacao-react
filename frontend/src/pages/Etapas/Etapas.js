@@ -413,7 +413,11 @@ const Etapas = () => {
             const provas = [...selecionadasMasculino, ...selecionadasFeminino].map(id => {
                 const provaMasculino = provasMasculino.find(prova => prova.id === id);
                 const provaFeminino = provasFeminino.find(prova => prova.id === id);
-                return provaMasculino || provaFeminino;
+                const prova = provaMasculino || provaFeminino;
+                return {
+                    ...prova,
+                    sexo: provaMasculino ? 'Masculino' : 'Feminino'
+                };
             });
             setProvasSelecionadas(provas);
             setEtapaAtual(2);
