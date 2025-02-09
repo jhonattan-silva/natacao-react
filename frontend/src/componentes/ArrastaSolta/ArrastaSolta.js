@@ -1,23 +1,28 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import ArrastaSoltaItem from "../ArrastaSoltaItem/ArrastaSoltaItem";
 
-const ArrastaSolta = ({ itens, aoReordenar, renderItem }) => {
+const ArrastaSolta = ({ itens, aoReordenar, renderItem, ordenarPor = null }) => {
+    // 🔥 Se ordenarPor for fornecido, ordena pelo campo especificado. Senão, mantém a ordem original.
+    const itensOrdenados = useMemo(() => {
+        return ordenarPor ? [...itens].sort((a, b) => a[ordenarPor] - b[ordenarPor]) : [...itens];
+    }, [itens, ordenarPor]);
+
     useEffect(() => {
-        console.log("📌 Itens iniciais recebidos no ArrastaSolta:", itens);
-    }, [itens]); // 🔥 Executa apenas quando `itens` muda
+        console.log("📌 Itens iniciais recebidos no ArrastaSolta:", itensOrdenados);
+    }, [itensOrdenados]);
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
         if (!over || active.id === over.id) return;
 
-        const oldIndex = itens.findIndex((item) => item.id === active.id);
-        const newIndex = itens.findIndex((item) => item.id === over.id);
+        const oldIndex = itensOrdenados.findIndex((item) => item.id === active.id);
+        const newIndex = itensOrdenados.findIndex((item) => item.id === over.id);
 
-        const novosItens = arrayMove(itens, oldIndex, newIndex).map((item, index) => ({
+        const novosItens = arrayMove(itensOrdenados, oldIndex, newIndex).map((item, index) => ({
             ...item,
-            ordem: index + 1, // Garante que a ordem está correta
+            ...(ordenarPor && { [ordenarPor]: index + 1 }), // 🔥 Atualiza a ordem apenas se `ordenarPor` for fornecido
         }));
 
         console.log("📌 Nova ordem após movimentação:", novosItens);
@@ -26,11 +31,11 @@ const ArrastaSolta = ({ itens, aoReordenar, renderItem }) => {
 
     return (
         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext key={JSON.stringify(itens)} items={itens} strategy={verticalListSortingStrategy}>
+            <SortableContext key={JSON.stringify(itensOrdenados)} items={itensOrdenados} strategy={verticalListSortingStrategy}>
                 <ol>
-                    {itens.map((item, index) => (
+                    {itensOrdenados.map((item, index) => (
                         <ArrastaSoltaItem key={item.id} id={item.id}>
-                            {index + 1}. {renderItem ? renderItem(item) : `${item.label || item.nome} (${item.sexo})`}
+                            {renderItem ? renderItem(item) : `${item.label || item.nome}`}
                         </ArrastaSoltaItem>
                     ))}
                 </ol>

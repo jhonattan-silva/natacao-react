@@ -562,10 +562,10 @@ const Etapas = () => {
                             <>
                                 <h2>Ordenar Provas</h2>
                                 <ArrastaSolta
-                                    key={JSON.stringify(provasSelecionadas)} // 🔥 Força re-renderização
-                                    itens={[...provasSelecionadas].sort((a, b) => a.ordem - b.ordem)} // 🔥 Ordena antes de passar
+                                    itens={provasSelecionadas}
                                     aoReordenar={handleReordenar}
                                     renderItem={(item) => `${item.ordem}. ${item.label} (${item.sexo})`}
+                                    ordenarPor="ordem"
                                 />
                                 <Botao onClick={handleVoltar}>Voltar</Botao>
                                 <Botao onClick={handleSalvar}>Salvar Ordem</Botao>
