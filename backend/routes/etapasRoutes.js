@@ -199,11 +199,8 @@ router.get('/atualizarEtapas/:id', async (req, res) => {
             [etapaId]
         );
 
-        // Extrai apenas os IDs das provas
-        const provasIds = provasVinculadas.map(prova => prova.provas_id);
-
-        // Retorna a etapa e as provas vinculadas
-        res.json({ ...etapa[0], provas: provasIds });
+        // Retorna a etapa e as provas vinculadas com a ordem
+        res.json({ ...etapa[0], provas: provasVinculadas });
     } catch (error) {
         console.error('Erro ao buscar etapa:', error);
         res.status(500).json({ error: 'Erro ao buscar etapa' });

@@ -73,33 +73,14 @@ const Etapas = () => {
 
             setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6'); // Define a quantidade de raias ou 6 como padrão
 
-            // Filtra as provas selecionadas com base nos IDs retornados
-            const selecionadasMasculino = provasMasculino
-                .filter(prova => etapa.provas.includes(Number(prova.id)))
-                .map(prova => prova.id);
-
-            const selecionadasFeminino = provasFeminino
-                .filter(prova => etapa.provas.includes(Number(prova.id)))
-                .map(prova => prova.id);
-
-            const selecionadasAmbos = Object.keys(idMap)
-                .filter(idMasculino =>
-                    selecionadasMasculino.includes(idMasculino) &&
-                    selecionadasFeminino.includes(idMap[idMasculino])
-                );
-
-            // Atualiza o estado com as seleções
-            setSelecionadasMasculino(selecionadasMasculino);
-            setSelecionadasFeminino(selecionadasFeminino);
-            setSelecionadasAmbos(selecionadasAmbos);
-
             // Atualiza o estado com as provas selecionadas na ordem correta
-            const provasOrdenadas = etapa.provas.map(provaId => {
-                const provaMasculino = provasMasculino.find(prova => prova.id === provaId.toString());
-                const provaFeminino = provasFeminino.find(prova => prova.id === provaId.toString());
-                const prova = provaMasculino || provaFeminino;
+            const provasOrdenadas = etapa.provas.map(prova => {
+                const provaMasculino = provasMasculino.find(p => p.id === prova.provas_id.toString());
+                const provaFeminino = provasFeminino.find(p => p.id === prova.provas_id.toString());
+                const provaDetalhes = provaMasculino || provaFeminino;
                 return {
-                    ...prova,
+                    ...provaDetalhes,
+                    ordem: prova.ordem,
                     sexo: provaMasculino ? 'Masculino' : 'Feminino'
                 };
             });
@@ -566,7 +547,7 @@ const Etapas = () => {
                                     aoReordenar={handleReordenar} 
                                     renderItem={(item) => {
                                         console.log('Renderizando item:', item);
-                                        return `${item.label || item.nome} (${item.sexo})`;
+                                        return `${item.ordem}. ${item.label || item.nome} (${item.sexo})`;
                                     }} 
                                 />
                                 <Botao onClick={handleVoltar}>Voltar</Botao>
