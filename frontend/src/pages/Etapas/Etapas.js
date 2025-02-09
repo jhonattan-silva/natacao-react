@@ -77,7 +77,6 @@ const Etapas = () => {
             const provasOrdenadas = etapa.provas
                 .map(prova => ({
                     id: prova.provas_id,
-                    label: prova.label,
                     estilo: prova.estilo,
                     distancia: prova.distancia,
                     tipo: prova.tipo,
