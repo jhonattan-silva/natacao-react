@@ -440,9 +440,15 @@ const Etapas = () => {
                 ordem: index + 1,
             }));
 
+            // Converte a data para o formato esperado pelo MySQL
+            const [ano, mes, dia] = etapaEditando.data.split('T')[0].split('-');
+            const [hora, minuto, segundo] = etapaEditando.data.split('T')[1].split(':');
+            const dataFormatada = `${ano}-${mes}-${dia} ${hora}:${minuto}:${segundo.split('.')[0]}`;
+
             // Enviar as provas ordenadas para o backend
             await api.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, {
                 ...etapaEditando,
+                data: dataFormatada,
                 provas: provasOrdenadas,
             });
 
