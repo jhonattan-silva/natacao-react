@@ -160,9 +160,12 @@ router.put('/atualizarEtapas/:id', async (req, res) => {
             await db.query('DELETE FROM eventos_provas WHERE eventos_id = ?', [etapaId]);
         }
 
-        // Insere as novas associações de provas
+        // Insere as novas associações de provas com a ordem correta
         for (const prova of provas) {
-            await db.query('INSERT INTO eventos_provas (eventos_id, provas_id) VALUES (?, ?)', [etapaId, prova.id]);
+            await db.query(
+                'INSERT INTO eventos_provas (eventos_id, provas_id, ordem) VALUES (?, ?, ?)',
+                [etapaId, prova.id, prova.ordem]
+            );
         }
 
         res.json({ message: 'Etapa atualizada com sucesso!' });

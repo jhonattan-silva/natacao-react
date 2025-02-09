@@ -435,7 +435,6 @@ const Etapas = () => {
     };
 
     const handleSalvar = async () => {
-        // Implementação do salvamento da ordem das provas
         try {
             const provasOrdenadas = provasSelecionadas.map((prova, index) => ({
                 ...prova,
