@@ -561,7 +561,14 @@ const Etapas = () => {
                         {etapaAtual === 2 && (
                             <>
                                 <h2>Ordenar Provas</h2>
-                                <ArrastaSolta itens={provasSelecionadas} aoReordenar={handleReordenar} renderItem={(item) => `${item.label || item.nome} (${item.sexo})`} />
+                                <ArrastaSolta 
+                                    itens={provasSelecionadas} 
+                                    aoReordenar={handleReordenar} 
+                                    renderItem={(item) => {
+                                        console.log('Renderizando item:', item);
+                                        return `${item.label || item.nome} (${item.sexo})`;
+                                    }} 
+                                />
                                 <Botao onClick={handleVoltar}>Voltar</Botao>
                                 <Botao onClick={handleSalvar}>Salvar Ordem</Botao>
                             </>
