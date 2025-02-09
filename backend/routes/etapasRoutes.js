@@ -140,7 +140,7 @@ router.post('/cadastrarEtapas', async (req, res) => {
 // Rota para SALVAR ATUALIZAÇÕES uma etapa e suas provas
 router.put('/atualizarEtapas/:id', async (req, res) => {
     const etapaId = req.params.id;
-    const { nome, data, cidade, sede, endereco, raias, torneios_id, provas } = req.body;
+    const { nome, data, cidade, sede, endereco, quantidade_raias, torneios_id, provas } = req.body;
 
     try {
         console.log('Dados recebidos para atualização:', req.body); // Adiciona log para depuração
@@ -148,7 +148,7 @@ router.put('/atualizarEtapas/:id', async (req, res) => {
         // Atualiza os dados básicos da etapa
         await db.query(
             'UPDATE eventos SET nome = ?, data = ?, cidade = ?, sede = ?, endereco = ?, quantidade_raias = ?, torneios_id = ? WHERE id = ?',
-            [nome, data, cidade, sede, endereco, raias, torneios_id, etapaId]
+            [nome, data, cidade, sede, endereco, quantidade_raias, torneios_id, etapaId] // Define quantidade_raias como '6' se estiver vazio
         );
 
         // Remove as associações antigas de provas para a etapa

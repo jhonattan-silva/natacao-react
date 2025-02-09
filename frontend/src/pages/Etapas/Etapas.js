@@ -378,6 +378,9 @@ const Etapas = () => {
             quantidade_raias: raias
         };
 
+        console.log('Dados da etapa VER ISSO AQUI:', etapaDados);
+        
+
         if (etapaEditando) {
             // Se `etapaEditando` existir, atualiza a etapa
             await atualizarEtapa(etapaDados);
