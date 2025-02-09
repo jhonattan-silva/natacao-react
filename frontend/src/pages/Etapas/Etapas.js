@@ -562,12 +562,10 @@ const Etapas = () => {
                             <>
                                 <h2>Ordenar Provas</h2>
                                 <ArrastaSolta
-                                    itens={provasSelecionadas}
+                                    key={JSON.stringify(provasSelecionadas)} // 🔥 Força re-renderização
+                                    itens={[...provasSelecionadas].sort((a, b) => a.ordem - b.ordem)} // 🔥 Ordena antes de passar
                                     aoReordenar={handleReordenar}
-                                    renderItem={(item) => {
-                                        console.log('Renderizando item:', item);
-                                        return `${item.ordem}. ${item.label || item.nome} (${item.sexo})`;
-                                    }}
+                                    renderItem={(item) => `${item.ordem}. ${item.label} (${item.sexo})`}
                                 />
                                 <Botao onClick={handleVoltar}>Voltar</Botao>
                                 <Botao onClick={handleSalvar}>Salvar Ordem</Botao>
