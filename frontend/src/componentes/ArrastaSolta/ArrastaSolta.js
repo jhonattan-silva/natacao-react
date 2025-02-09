@@ -1,6 +1,6 @@
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
-import ArrastaSoltaItem from './ArrastaSoltaItem';
+import ArrastaSoltaItem from '../ArrastaSoltaItem/ArrastaSoltaItem';
 
 const ArrastaSolta = ({ itens, aoReordenar, renderItem }) => {
     const handleDragEnd = (event) => {
