@@ -58,6 +58,9 @@ const Etapas = () => {
             const response = await api.get(`${apiAtualizaEtapas}/${id}`);
             const etapa = response.data;
 
+            console.log('📌 Etapa recebida do backend##########:', etapa);
+            
+
             // Atualiza os estados com os dados da etapa
             setEtapaEditando(etapa);
             setNomeEtapa(etapa.nome);
