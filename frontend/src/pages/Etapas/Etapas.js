@@ -423,21 +423,16 @@ const Etapas = () => {
 
     const handleAvancar = () => {
         if (etapaAtual === 1) {
-            const provas = [...selecionadasMasculino, ...selecionadasFeminino].map(id => {
-                const provaMasculino = provasMasculino.find(prova => prova.id === id);
-                const provaFeminino = provasFeminino.find(prova => prova.id === id);
-                const prova = provaMasculino || provaFeminino;
-                return {
-                    ...prova,
-                    sexo: provaMasculino ? 'Masculino' : 'Feminino'
-                };
-            }).sort((a, b) => a.ordem - b.ordem); 
+            // 🔥 Usa o estado `provasSelecionadas` direto, sem recriar o array
+            const provas = [...provasSelecionadas];
+    
             console.log("PROVAS ANTES DE AVANÇAR:", provas);
-            
+    
             setProvasSelecionadas(provas);
             setEtapaAtual(2);
         }
     };
+    
 
     const handleVoltar = () => {
         setEtapaAtual(1);
