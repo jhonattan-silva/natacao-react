@@ -57,9 +57,9 @@ const Etapas = () => {
         try {
             const response = await api.get(`${apiAtualizaEtapas}/${id}`);
             const etapa = response.data;
-    
+
             console.log('📌 Etapa recebida do backend:', etapa);
-    
+
             // Atualiza os estados com os dados da etapa
             setEtapaEditando(etapa);
             setNomeEtapa(etapa.nome);
@@ -71,25 +71,24 @@ const Etapas = () => {
             setEnderecoEtapa(etapa.endereco);
             setTorneioEtapa(etapa.torneios_id);
             setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6');
-    
-            // 🔥 Atualiza o estado com as provas selecionadas na ordem correta
+
+            // Atualiza o estado com as provas selecionadas na ordem correta
             const provasOrdenadas = etapa.provas
-                .map(prova => {
-                    return {
-                        id: prova.provas_id ? prova.provas_id.toString() : "",
-                        label: prova.label ? prova.label : `${prova.distancia || '??'}m ${prova.estilo || '??'} (${prova.tipo || '??'})`,
-                        estilo: prova.estilo || '',
-                        distancia: prova.distancia || '',
-                        tipo: prova.tipo || '',
-                        sexo: prova.sexo || '',
-                        ordem: prova.ordem || 9999, // 🔥 Garante que a ordem seja sempre numérica
-                    };
-                })
-                .sort((a, b) => a.ordem - b.ordem); // 🔥 Ordena corretamente pela ordem vinda do backend
-    
+                .map(prova => ({
+                    id: prova.provas_id.toString(),
+                    label: `${prova.distancia}m ${prova.estilo} (${prova.tipo})`,
+                    estilo: prova.estilo,
+                    distancia: prova.distancia,
+                    tipo: prova.tipo,
+                    sexo: prova.sexo,
+                    ordem: prova.ordem
+                }))
+                .sort((a, b) => a.ordem - b.ordem); // Ordena corretamente pela ordem vinda do backend
+
             console.log("📌 Provas ordenadas recebidas do backend:", provasOrdenadas);
-    
+
             setProvasSelecionadas(provasOrdenadas);
+
             // Atualiza os estados de seleção
             const selecionadasMasculino = provasOrdenadas
                 .filter(prova => prova.sexo === 'M')
@@ -392,7 +391,6 @@ const Etapas = () => {
 
         console.log('Dados da etapa VER ISSO AQUI:', etapaDados);
 
-
         if (etapaEditando) {
             // Se `etapaEditando` existir, atualiza a etapa
             await atualizarEtapa(etapaDados);
@@ -409,7 +407,7 @@ const Etapas = () => {
 
     const abreInscricao = async (id, inscricaoAberta) => {
         try {
-            await api.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota de edição equivalente ao id selecionado
+            await api.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota para abrir/fechar inscrição
             alert(`Inscrição ${inscricaoAberta ? 'fechada' : 'aberta'} com sucesso!`);
             fetchData(anoSelecionado); // Recarrega a lista de etapas do backend
         } catch (error) {
@@ -448,6 +446,7 @@ const Etapas = () => {
     };
 
     const handleSalvar = async () => {
+        // Implementação do salvamento da ordem das provas
         try {
             const provasOrdenadas = provasSelecionadas.map((prova, index) => ({
                 ...prova,
@@ -556,18 +555,14 @@ const Etapas = () => {
                                         aoAlterar={aoAlterarFeminino}
                                     />
                                 </div>
+                                <Botao onClick={handleVoltar}>Voltar</Botao>
                                 <Botao onClick={handleAvancar}>Avançar</Botao>
                             </>
                         )}
                         {etapaAtual === 2 && (
                             <>
                                 <h2>Ordenar Provas</h2>
-                                <ArrastaSolta
-                                    itens={provasSelecionadas}
-                                    aoReordenar={handleReordenar}
-                                    renderItem={(item) => `${item.ordem}. ${item.label} (${item.sexo})`}
-                                    ordenarPor="ordem"
-                                />
+                                <ArrastaSolta itens={provasSelecionadas} aoReordenar={handleReordenar} renderItem={(item) => `${item.label || item.nome} (${item.sexo})`} />
                                 <Botao onClick={handleVoltar}>Voltar</Botao>
                                 <Botao onClick={handleSalvar}>Salvar Ordem</Botao>
                             </>
