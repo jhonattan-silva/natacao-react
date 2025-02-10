@@ -4,13 +4,13 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-ki
 import ArrastaSoltaItem from "../ArrastaSoltaItem/ArrastaSoltaItem";
 
 const ArrastaSolta = ({ itens, aoReordenar, renderItem, ordenarPor = null }) => {
-    // 🔥 Se ordenarPor for fornecido, ordena pelo campo especificado. Senão, mantém a ordem original.
+    // 🔥 Usa `useMemo` para garantir que os itens são ordenados antes da renderização
     const itensOrdenados = useMemo(() => {
         return ordenarPor ? [...itens].sort((a, b) => a[ordenarPor] - b[ordenarPor]) : [...itens];
     }, [itens, ordenarPor]);
 
     useEffect(() => {
-        console.log("📌 Itens iniciais recebidos no ArrastaSolta:", itensOrdenados);
+        console.log("📌 Itens ordenados antes da renderização no ArrastaSolta:", itensOrdenados);
     }, [itensOrdenados]);
 
     const handleDragEnd = (event) => {
@@ -22,7 +22,7 @@ const ArrastaSolta = ({ itens, aoReordenar, renderItem, ordenarPor = null }) => 
 
         const novosItens = arrayMove(itensOrdenados, oldIndex, newIndex).map((item, index) => ({
             ...item,
-            ...(ordenarPor && { [ordenarPor]: index + 1 }), // 🔥 Atualiza a ordem apenas se `ordenarPor` for fornecido
+            ...(ordenarPor && { [ordenarPor]: index + 1 }),
         }));
 
         console.log("📌 Nova ordem após movimentação:", novosItens);
@@ -33,7 +33,7 @@ const ArrastaSolta = ({ itens, aoReordenar, renderItem, ordenarPor = null }) => 
         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext key={JSON.stringify(itensOrdenados)} items={itensOrdenados} strategy={verticalListSortingStrategy}>
                 <ol>
-                    {itensOrdenados.map((item, index) => (
+                    {itensOrdenados.map((item) => (
                         <ArrastaSoltaItem key={item.id} id={item.id}>
                             {renderItem ? renderItem(item) : `${item.label || item.nome}`}
                         </ArrastaSoltaItem>

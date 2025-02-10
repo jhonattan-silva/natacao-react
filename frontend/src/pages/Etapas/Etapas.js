@@ -57,9 +57,9 @@ const Etapas = () => {
         try {
             const response = await api.get(`${apiAtualizaEtapas}/${id}`);
             const etapa = response.data;
-
+    
             console.log('📌 Etapa recebida do backend:', etapa);
-
+    
             // Atualiza os estados com os dados da etapa
             setEtapaEditando(etapa);
             setNomeEtapa(etapa.nome);
@@ -71,46 +71,49 @@ const Etapas = () => {
             setEnderecoEtapa(etapa.endereco);
             setTorneioEtapa(etapa.torneios_id);
             setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6');
-
-            // Atualiza o estado com as provas selecionadas na ordem correta
+    
+            // 🔥 Atualiza o estado com as provas selecionadas na ordem correta
             const provasOrdenadas = etapa.provas
-                .map(prova => ({
-                    id: prova.provas_id.toString(),
-                    label: `${prova.distancia}m ${prova.estilo} (${prova.tipo})`,
-                    estilo: prova.estilo,
-                    distancia: prova.distancia,
-                    tipo: prova.tipo,
-                    sexo: prova.sexo,
-                    ordem: prova.ordem
-                }))
-                .sort((a, b) => a.ordem - b.ordem); // Ordena corretamente pela ordem vinda do backend
-
+                .map(prova => {
+                    return {
+                        id: prova.provas_id ? prova.provas_id.toString() : "",
+                        label: prova.label ? prova.label : `${prova.distancia || '??'}m ${prova.estilo || '??'} (${prova.tipo || '??'})`,
+                        estilo: prova.estilo || '',
+                        distancia: prova.distancia || '',
+                        tipo: prova.tipo || '',
+                        sexo: prova.sexo || '',
+                        ordem: prova.ordem || 9999, // 🔥 Garante que a ordem seja sempre numérica
+                    };
+                })
+                .sort((a, b) => a.ordem - b.ordem); // 🔥 Ordena corretamente pela ordem vinda do backend
+    
             console.log("📌 Provas ordenadas recebidas do backend:", provasOrdenadas);
-
+    
             setProvasSelecionadas(provasOrdenadas);
-
+    
             // Atualiza os estados de seleção
             const selecionadasMasculino = provasOrdenadas
-                .filter(prova => prova.sexo === 'M')
+                .filter(prova => prova.sexo === 'Masculino') // 🔥 Corrigido para "Masculino"
                 .map(prova => prova.id);
-
+    
             const selecionadasFeminino = provasOrdenadas
-                .filter(prova => prova.sexo === 'F')
+                .filter(prova => prova.sexo === 'Feminino') // 🔥 Corrigido para "Feminino"
                 .map(prova => prova.id);
-
+    
             const selecionadasAmbos = provasOrdenadas
                 .filter(prova => selecionadasMasculino.includes(prova.id) && selecionadasFeminino.includes(prova.id))
                 .map(prova => prova.id);
-
+    
             setSelecionadasMasculino(selecionadasMasculino);
             setSelecionadasFeminino(selecionadasFeminino);
             setSelecionadasAmbos(selecionadasAmbos);
-
+    
             setFormVisivel(true);
         } catch (error) {
             console.error('Erro ao carregar etapa para edição:', error);
         }
     };
+    
 
     const handleExcluir = async (id) => {
         if (window.confirm("Tem certeza que deseja excluir esta etapa?")) {
