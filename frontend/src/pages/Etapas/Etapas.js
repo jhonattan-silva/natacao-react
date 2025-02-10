@@ -431,7 +431,8 @@ const Etapas = () => {
                     ...prova,
                     sexo: provaMasculino ? 'Masculino' : 'Feminino'
                 };
-            });
+            }).sort((a, b) => a.ordem - b.ordem); // Ordena corretamente pela ordem
+
             setProvasSelecionadas(provas);
             setEtapaAtual(2);
         }
