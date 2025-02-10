@@ -431,8 +431,9 @@ const Etapas = () => {
                     ...prova,
                     sexo: provaMasculino ? 'Masculino' : 'Feminino'
                 };
-            }).sort((a, b) => a.ordem - b.ordem); // Ordena corretamente pela ordem
-
+            }).sort((a, b) => a.ordem - b.ordem); 
+            console.log("PROVAS ANTES DE AVANÇAR:", provas);
+            
             setProvasSelecionadas(provas);
             setEtapaAtual(2);
         }
@@ -556,7 +557,7 @@ const Etapas = () => {
                                         aoAlterar={aoAlterarFeminino}
                                     />
                                 </div>
-                                <Botao onClick={handleVoltar}>Voltar</Botao>
+                                <Botao onClick={fecharFormulario}>Voltar</Botao>
                                 <Botao onClick={handleAvancar}>Avançar</Botao>
                             </>
                         )}
