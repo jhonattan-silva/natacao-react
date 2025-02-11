@@ -128,8 +128,8 @@ const Inscricao = () => {
                     />
                     {eventoSelecionado && (
                         <div>
-                            <div className={styles.provasContainer}>
-                                <h2>Provas do Evento</h2>
+                            <div className={styles.provasLegenda}>
+                                <h3>Provas do Evento</h3>
                                 <ul>
                                     {provas.map(prova => (
                                         <li key={prova.id}>{prova.ordem} - {prova.distancia}m {prova.estilo} {prova.sexo} {prova.tipo}</li>

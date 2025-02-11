@@ -16,6 +16,38 @@
     outline: none;
 }
 
+.provasLegenda {
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    max-width: 600px;
+    text-align: left;
+}
+
+.provasLegenda h3 {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: #333;
+}
+
+.provasLegenda ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.provasLegenda li {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.provasLegenda li:last-child {
+    border-bottom: none;
+}
+
 /* button {
     padding: 12px 24px;
     font-size: 18px;
