@@ -43,6 +43,7 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
             FROM eventos_provas ep
             JOIN provas p ON ep.provas_id = p.id
             WHERE ep.eventos_id = ?
+ORDER BY ep.ordem
         `, [eventoId]);
 
         // Buscar nadadores pelo equipes_id

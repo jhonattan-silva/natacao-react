@@ -128,6 +128,14 @@ const Inscricao = () => {
                     />
                     {eventoSelecionado && (
                         <div>
+                            <div className={styles.provasContainer}>
+                                <h2>Provas do Evento</h2>
+                                <ul>
+                                    {provas.map(prova => (
+                                        <li key={prova.id}>{prova.nome}</li>
+                                    ))}
+                                </ul>
+                            </div>
                             {nadadores.length > 0 && provas.length > 0 ? (
                                 <TabelaInscricao
                                     nadadores={nadadores}
