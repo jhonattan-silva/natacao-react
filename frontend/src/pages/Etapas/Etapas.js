@@ -425,9 +425,27 @@ const Etapas = () => {
         if (etapaAtual === 1) {
             // Combina as provas selecionadas atualmente
             const provas = [
-                ...selecionadasMasculino.map(id => provasMasculino.find(prova => prova.id === id)),
-                ...selecionadasFeminino.map(id => provasFeminino.find(prova => prova.id === id)),
-                ...selecionadasAmbos.map(id => provasMasculino.find(prova => prova.id === id))
+                ...selecionadasMasculino.map(id => {
+                    const prova = provasMasculino.find(prova => prova.id === id);
+                    return {
+                        ...prova,
+                        sexo: 'M'
+                    };
+                }),
+                ...selecionadasFeminino.map(id => {
+                    const prova = provasFeminino.find(prova => prova.id === id);
+                    return {
+                        ...prova,
+                        sexo: 'F'
+                    };
+                }),
+                ...selecionadasAmbos.map(id => {
+                    const prova = provasMasculino.find(prova => prova.id === id);
+                    return {
+                        ...prova,
+                        sexo: 'A'
+                    };
+                })
             ];
     
             console.log("PROVAS ANTES DE AVANÇAR:", provas);
@@ -566,7 +584,7 @@ const Etapas = () => {
                                 <ArrastaSolta 
                                     itens={provasSelecionadas} 
                                     aoReordenar={handleReordenar} 
-                                    renderItem={(item) => `${item.label} (${item.tipo}) (${item.sexo})`} 
+                                    renderItem={(item) => `${item.label} (${item.sexo})`} 
                                 />
                                 <Botao onClick={handleVoltar}>Voltar</Botao>
                                 <Botao onClick={handleSalvar}>Salvar Ordem</Botao>
