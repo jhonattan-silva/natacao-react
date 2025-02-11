@@ -423,8 +423,12 @@ const Etapas = () => {
 
     const handleAvancar = () => {
         if (etapaAtual === 1) {
-            // 🔥 Usa o estado `provasSelecionadas` direto, sem recriar o array
-            const provas = [...provasSelecionadas];
+            // Combina as provas selecionadas atualmente
+            const provas = [
+                ...selecionadasMasculino.map(id => provasMasculino.find(prova => prova.id === id)),
+                ...selecionadasFeminino.map(id => provasFeminino.find(prova => prova.id === id)),
+                ...selecionadasAmbos.map(id => provasMasculino.find(prova => prova.id === id))
+            ];
     
             console.log("PROVAS ANTES DE AVANÇAR:", provas);
     
