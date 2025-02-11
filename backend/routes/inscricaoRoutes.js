@@ -44,9 +44,6 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
             ORDER BY ep.ordem
         `, [eventoId]);
 
-        // Log para verificar os dados de provas
-        console.log('Dados de provas retornados pela consulta:', provas);
-
 // Buscar nadadores pelo equipes_id
         const [nadadores] = await db.query('SELECT * FROM nadadores WHERE equipes_id = ?', [equipeId]);
 

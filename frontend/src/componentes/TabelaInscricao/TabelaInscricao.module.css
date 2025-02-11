@@ -23,9 +23,17 @@ th {
     font-size: 14px; /* Opcional: reduz tamanho da fonte */
 }
 
-
 @media (max-width: 768px) {
+    .containerTabela {
+        overflow-x: scroll; /* Permite rolagem horizontal */
+        -webkit-overflow-scrolling: touch; /* Suaviza a rolagem em dispositivos móveis */
+    }
+
     th, td {
         padding: 6px;
+    }
+
+    table {
+        min-width: 600px; /* Define uma largura mínima para a tabela */
     }
 }

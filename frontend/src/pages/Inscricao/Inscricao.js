@@ -45,12 +45,6 @@ const Inscricao = () => {
             const nadadoresResponse = await api.get(`${apiListaNadadores}/${equipeId}`);
             const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${equipeId}`);
             const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`);
-
-            // Log para verificar os dados recebidos
-            console.log('Dados de nadadores recebidos:', nadadoresResponse.data);
-            console.log('Dados de provas recebidos:', provasResponse.data);
-            console.log('Dados de inscrições recebidos:', inscricoesResponse.data);
-
             setNadadores(nadadoresResponse.data);
 
             const todasProvas = provasResponse.data.provas || [];
@@ -137,18 +131,11 @@ const Inscricao = () => {
     };
 
     const handleRevezamentoChange = (provaId, value) => {
-        console.log(`handleRevezamentoChange - provaId: ${provaId}, value: ${value}`);
-        
         setSelecoesRevezamento(prevSelecoes => {
-            console.log('Estado anterior de selecoesRevezamento:', prevSelecoes);
-    
             const novoEstado = {
                 ...prevSelecoes,
                 [provaId]: value
             };
-    
-            console.log('Novo estado de selecoesRevezamento:', novoEstado);
-    
             return novoEstado;
         });
     };
@@ -174,10 +161,6 @@ const Inscricao = () => {
                 equipeId: user?.user?.equipeId[0] // A equipe do usuário logado
             }));
             
-        // 🛑 LOG PARA DEBUGAR OS DADOS ANTES DO ENVIO
-        console.log("Inscrições individuais enviadas:", inscricoes);
-        console.log("Inscrições de revezamento enviadas:", inscricoesRevezamento);
-
         try {
             await api.post(apiSalvarInscricao, [...inscricoes, ...inscricoesRevezamento]); // Envia ambos
             alert('Inscrição realizada com sucesso!');
@@ -222,15 +205,12 @@ const Inscricao = () => {
                                     <div className={styles.revezamentoContainer}>
                                         <h3>Revezamentos</h3>
                                         {revezamentos.map(prova => {
-                                            console.log('PROVA COMPLETO:', prova);
-                                            console.log(`Renderizando revezamento - prova.id: ${prova.id}`);
                                             return (
                                                 <div key={prova.id} className={styles.inscricaoRevezamento}>
                                                     <span>{prova.ordem} - {prova.distancia}m {prova.estilo}</span>
                                                     <ListaSuspensa
                                                         opcoes={[{ id: "Sim", nome: "Sim" }, { id: "Não", nome: "Não" }]} // ✅ Passando opções diretamente
                                                         onChange={(value) => {
-                                                            console.log(`ListaSuspensa onChange - prova.id: ${prova.id}, value: ${value}`);
                                                             handleRevezamentoChange(prova.id, value);
                                                         }}
                                                         valorSelecionado={selecoesRevezamento[prova.id] || "Não"}
