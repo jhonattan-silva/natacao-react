@@ -9,7 +9,6 @@
     justify-content: center;
 }
 
-
 .listaSuspensa:focus {
     border-color: #007bff;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
@@ -69,6 +68,15 @@ button:active {
 }
  */
 
+.inscricaoRevezamento {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 40%;
+    margin: 0 auto;
+}
+
 @media (max-width: 768px) {
     .inscricaoContainer {
         padding: 10px;
@@ -98,6 +106,10 @@ button:active {
     }
 
     .revezamentoContainer {
+        width: 100%;
+    }
+
+    .inscricaoRevezamento {
         width: 100%;
     }
 }

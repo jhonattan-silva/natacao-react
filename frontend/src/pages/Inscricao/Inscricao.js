@@ -125,6 +125,10 @@ const Inscricao = () => {
                 provaId,
                 equipeId: user?.user?.equipeId[0] // A equipe do usuário logado
             }));
+            
+        // 🛑 LOG PARA DEBUGAR OS DADOS ANTES DO ENVIO
+        console.log("Inscrições individuais enviadas:", inscricoes);
+        console.log("Inscrições de revezamento enviadas:", inscricoesRevezamento);
 
         try {
             await api.post(apiSalvarInscricao, [...inscricoes, ...inscricoesRevezamento]); // Envia ambos
@@ -170,7 +174,7 @@ const Inscricao = () => {
                                     <div className={styles.revezamentoContainer}>
                                         <h3>Revezamentos</h3>
                                         {revezamentos.map(prova => (
-                                            <div key={prova.id}>
+                                            <div key={prova.id} className={styles.inscricaoRevezamento}>
                                                 <span>{prova.ordem} - {prova.distancia}m {prova.estilo}</span>
                                                 <ListaSuspensa
                                                     opcoes={[{ id: "Sim", nome: "Sim" }, { id: "Não", nome: "Não" }]} // ✅ Passando opções diretamente
