@@ -77,6 +77,27 @@ button:active {
     margin: 0 auto;
 }
 
+.revezamentoContainer {
+    background-color: #f0f8ff; /* Light blue background */
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.revezamentoContainer h3 {
+    color: #333;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+.inscricaoRevezamento span {
+    display: block;
+    font-size: 1.1em;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
 @media (max-width: 768px) {
     .inscricaoContainer {
         padding: 10px;
