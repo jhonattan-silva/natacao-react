@@ -164,9 +164,11 @@ const Inscricao = () => {
                                             <div key={prova.id}>
                                                 <span>{prova.ordem} - {prova.distancia}m {prova.estilo}</span>
                                                 <ListaSuspensa
-                                                    fonteDados={["Sim", "Não"]}
+                                                    opcoes={[{ id: "Sim", nome: "Sim" }, { id: "Não", nome: "Não" }]} // ✅ Passando opções diretamente
                                                     onChange={(value) => handleRevezamentoChange(prova.id, value)}
-                                                    valor={selecoesRevezamento[prova.id] || "Não"}
+                                                    valorSelecionado={selecoesRevezamento[prova.id] || "Não"}
+                                                    selectId="id"
+                                                    selectExibicao="nome"
                                                 />
                                             </div>
                                         ))}
