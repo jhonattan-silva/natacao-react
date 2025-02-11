@@ -46,6 +46,11 @@ const Inscricao = () => {
             const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${equipeId}`);
             const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`);
 
+            // Log para verificar os dados recebidos
+            console.log('Dados de nadadores recebidos:', nadadoresResponse.data);
+            console.log('Dados de provas recebidos:', provasResponse.data);
+            console.log('Dados de inscrições recebidos:', inscricoesResponse.data);
+
             setNadadores(nadadoresResponse.data);
 
             const todasProvas = provasResponse.data.provas || [];
@@ -189,6 +194,7 @@ const Inscricao = () => {
                                     <div className={styles.revezamentoContainer}>
                                         <h3>Revezamentos</h3>
                                         {revezamentos.map(prova => {
+                                            console.log('PROVA COMPLETO:', prova);
                                             console.log(`Renderizando revezamento - prova.id: ${prova.id}`);
                                             return (
                                                 <div key={prova.id} className={styles.inscricaoRevezamento}>
