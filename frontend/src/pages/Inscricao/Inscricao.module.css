@@ -68,3 +68,36 @@ button:active {
     background-color: #004494;
 }
  */
+
+@media (max-width: 768px) {
+    .inscricaoContainer {
+        padding: 10px;
+    }
+
+    .centralizado {
+        width: 100%;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border: 1px solid #ddd;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    .provasLegenda {
+        max-width: 100%;
+    }
+
+    .revezamentoContainer {
+        width: 100%;
+    }
+}

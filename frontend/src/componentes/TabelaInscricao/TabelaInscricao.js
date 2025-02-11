@@ -1,5 +1,6 @@
 import React from 'react';
 import LinhaInscricao from '../LinhaInscricao/LinhaInscricao';
+import styles from './TabelaInscricao.module.css';
 
 const TabelaInscricao = ({ nadadores, provas, selecoes, onCheckboxChange }) => {
     if (!Array.isArray(provas) || !Array.isArray(nadadores)) {
@@ -16,7 +17,7 @@ const TabelaInscricao = ({ nadadores, provas, selecoes, onCheckboxChange }) => {
     const nadadoresFeminino = nadadores.filter(nadador => nadador.sexo === 'F');
 
     return (
-        <div>
+        <div className={styles.containerTabela}>
             {/* Seção Masculina */}
             {nadadoresMasculino.length > 0 && (
                 <table>
