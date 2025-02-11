@@ -92,9 +92,37 @@ const Inscricao = () => {
             // Verificando se o nadador já tem 2 inscrições
             const numeroDeInscricoes = Object.values(selecoesNadador).filter(Boolean).length;
             if (numeroDeInscricoes >= 2 && isChecked) {
-                // Não permite inscrever mais de 2 provas
                 alert("O nadador já tem o máximo de 2 provas.");
                 return prevSelecoes;
+            }
+
+            // Verificando se a prova selecionada é de 25 metros
+            const provaSelecionada = provas.find(prova => prova.id === provaId);
+            if (provaSelecionada.distancia === 25 && isChecked) {
+                // Verificando se já existe uma prova de estilo "LIVRE" selecionada
+                const temProvaLivre = Object.keys(selecoesNadador).some(id => {
+                    const prova = provas.find(prova => prova.id === parseInt(id));
+                    return prova && prova.estilo === "LIVRE";
+                });
+
+                if (temProvaLivre) {
+                    alert("Não é possível selecionar uma prova de 25 metros e uma prova de estilo LIVRE.");
+                    return prevSelecoes;
+                }
+            }
+
+            // Verificando se a prova selecionada é de estilo "LIVRE"
+            if (provaSelecionada.estilo === "LIVRE" && isChecked) {
+                // Verificando se já existe uma prova de 25 metros selecionada
+                const temProva25 = Object.keys(selecoesNadador).some(id => {
+                    const prova = provas.find(prova => prova.id === parseInt(id));
+                    return prova && prova.distancia === 25;
+                });
+
+                if (temProva25) {
+                    alert("Não é possível selecionar uma prova de estilo LIVRE e uma prova de 25 metros.");
+                    return prevSelecoes;
+                }
             }
 
             const novasSelecoes = {
