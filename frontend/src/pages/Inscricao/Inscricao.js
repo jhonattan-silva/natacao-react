@@ -49,8 +49,8 @@ const Inscricao = () => {
             setNadadores(nadadoresResponse.data); //atualiza o estado de nadadores
 
             const todasProvas = provasResponse.data?.provas || []; //todas as provas do evento
-            setProvas(todasProvas.filter(prova => prova.tipo !== "Revezamento")); //recebe as provas que não são revezamento
-            setRevezamentos(todasProvas.filter(prova => prova.tipo === "Revezamento")); //recebe as provas só os revezamentos
+            setProvas(todasProvas.filter(prova => prova.tipo !== "revezamento")); //recebe as provas que não são revezamento
+            setRevezamentos(todasProvas.filter(prova => prova.tipo === "revezamento")); //recebe as provas só os revezamentos
 
             const novasSelecoes = {};
             const novasSelecoesRevezamento = {};
