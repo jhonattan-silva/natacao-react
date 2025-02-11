@@ -104,11 +104,9 @@ const Inscricao = () => {
     };
 
     const handleRevezamentoChange = (provaId, value) => {
-        // Log para verificar os parâmetros de entrada
         console.log(`handleRevezamentoChange - provaId: ${provaId}, value: ${value}`);
         
         setSelecoesRevezamento(prevSelecoes => {
-            // Log para verificar o estado anterior
             console.log('Estado anterior de selecoesRevezamento:', prevSelecoes);
     
             const novoEstado = {
@@ -116,7 +114,6 @@ const Inscricao = () => {
                 [provaId]: value
             };
     
-            // Log para verificar o novo estado antes de atualizar
             console.log('Novo estado de selecoesRevezamento:', novoEstado);
     
             return novoEstado;
@@ -191,18 +188,24 @@ const Inscricao = () => {
                                     />
                                     <div className={styles.revezamentoContainer}>
                                         <h3>Revezamentos</h3>
-                                        {revezamentos.map(prova => (
-                                            <div key={prova.id} className={styles.inscricaoRevezamento}>
-                                                <span>{prova.ordem} - {prova.distancia}m {prova.estilo}</span>
-                                                <ListaSuspensa
-                                                    opcoes={[{ id: "Sim", nome: "Sim" }, { id: "Não", nome: "Não" }]} // ✅ Passando opções diretamente
-                                                    onChange={(value) => handleRevezamentoChange(prova.id, value)}
-                                                    valorSelecionado={selecoesRevezamento[prova.id] || "Não"}
-                                                    selectId="id"
-                                                    selectExibicao="nome"
-                                                />
-                                            </div>
-                                        ))}
+                                        {revezamentos.map(prova => {
+                                            console.log(`Renderizando revezamento - prova.id: ${prova.id}`);
+                                            return (
+                                                <div key={prova.id} className={styles.inscricaoRevezamento}>
+                                                    <span>{prova.ordem} - {prova.distancia}m {prova.estilo}</span>
+                                                    <ListaSuspensa
+                                                        opcoes={[{ id: "Sim", nome: "Sim" }, { id: "Não", nome: "Não" }]} // ✅ Passando opções diretamente
+                                                        onChange={(value) => {
+                                                            console.log(`ListaSuspensa onChange - prova.id: ${prova.id}, value: ${value}`);
+                                                            handleRevezamentoChange(prova.id, value);
+                                                        }}
+                                                        valorSelecionado={selecoesRevezamento[prova.id] || "Não"}
+                                                        selectId="id"
+                                                        selectExibicao="nome"
+                                                    />
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </>
                             ) : (
