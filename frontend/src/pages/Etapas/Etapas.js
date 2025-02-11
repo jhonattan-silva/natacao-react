@@ -438,17 +438,10 @@ const Etapas = () => {
                         ...prova,
                         sexo: 'F'
                     };
-                }),
-                ...selecionadasAmbos.map(id => {
-                    const prova = provasMasculino.find(prova => prova.id === id);
-                    return {
-                        ...prova,
-                        sexo: 'A'
-                    };
                 })
             ];
 
-            // Remove duplicatas
+            // Remove duplicatas e provas com sexo 'A'
             const provasUnicas = provas.filter((prova, index, self) =>
                 index === self.findIndex((p) => (
                     p.id === prova.id && p.sexo === prova.sexo
