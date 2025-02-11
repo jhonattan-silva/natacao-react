@@ -104,11 +104,25 @@ const Inscricao = () => {
     };
 
     const handleRevezamentoChange = (provaId, value) => {
-        setSelecoesRevezamento(prevSelecoes => ({
-            ...prevSelecoes,
-            [provaId]: value
-        }));
+        // Log para verificar os parâmetros de entrada
+        console.log(`handleRevezamentoChange - provaId: ${provaId}, value: ${value}`);
+        
+        setSelecoesRevezamento(prevSelecoes => {
+            // Log para verificar o estado anterior
+            console.log('Estado anterior de selecoesRevezamento:', prevSelecoes);
+    
+            const novoEstado = {
+                ...prevSelecoes,
+                [provaId]: value
+            };
+    
+            // Log para verificar o novo estado antes de atualizar
+            console.log('Novo estado de selecoesRevezamento:', novoEstado);
+    
+            return novoEstado;
+        });
     };
+    
 
     const aoSalvar = async () => {
         const inscricoes = Object.entries(selecoes).flatMap(([nadadorId, provas]) =>
