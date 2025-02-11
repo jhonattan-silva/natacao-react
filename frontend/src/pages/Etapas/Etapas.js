@@ -447,10 +447,17 @@ const Etapas = () => {
                     };
                 })
             ];
-    
-            console.log("PROVAS ANTES DE AVANÇAR:", provas);
-    
-            setProvasSelecionadas(provas);
+
+            // Remove duplicatas
+            const provasUnicas = provas.filter((prova, index, self) =>
+                index === self.findIndex((p) => (
+                    p.id === prova.id && p.sexo === prova.sexo
+                ))
+            );
+
+            console.log("PROVAS ANTES DE AVANÇAR:", provasUnicas);
+
+            setProvasSelecionadas(provasUnicas);
             setEtapaAtual(2);
         }
     };
