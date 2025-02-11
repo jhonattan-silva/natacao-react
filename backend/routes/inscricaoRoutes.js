@@ -35,7 +35,7 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
     }
 
     try {
-        // Buscar provas associadas ao evento específico
+// Buscar provas associadas ao evento específico
         const [provas] = await db.query(`
             SELECT p.*, ep.*
             FROM eventos_provas ep
@@ -44,10 +44,10 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
             ORDER BY ep.ordem
         `, [eventoId]);
 
-        // Buscar nadadores pelo equipes_id
+// Buscar nadadores pelo equipes_id
         const [nadadores] = await db.query('SELECT * FROM nadadores WHERE equipes_id = ?', [equipeId]);
 
-        // Retorna os dados no formato esperado pelo frontend
+// Retorna os dados no formato esperado pelo frontend
         res.json({ provas, nadadores });
     } catch (error) {
         console.error('Erro ao buscar provas e nadadores:', error);

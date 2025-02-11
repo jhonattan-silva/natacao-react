@@ -38,32 +38,36 @@ const Inscricao = () => {
 
     const fetchDadosEvento = async () => {
         try {
-            const equipeId = user?.user?.equipeId[0]; // Equipe do usuário logado
+            const equipeId = user?.user?.equipeId[0];
 
-            if (!equipeId) return; // Evita chamadas desnecessárias se não houver equipe
+            if (!equipeId) return;
 
-            const nadadoresResponse = await api.get(`${apiListaNadadores}/${equipeId}`); //lista de nadadores - por equipe
-            const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${equipeId}`); //lista de provas - por evento
-            const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`); //inscricoes já realizadas do evento
+            const nadadoresResponse = await api.get(`${apiListaNadadores}/${equipeId}`);
+            const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${equipeId}`);
+            const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`);
 
-            setNadadores(nadadoresResponse.data); //atualiza o estado de nadadores
+            setNadadores(nadadoresResponse.data);
 
-            const todasProvas = provasResponse.data?.provas || []; //todas as provas do evento
-            setProvas(todasProvas.filter(prova => prova.tipo !== "revezamento")); //recebe as provas que não são revezamento
-            setRevezamentos(todasProvas.filter(prova => prova.tipo === "revezamento")); //recebe as provas só os revezamentos
+            const todasProvas = provasResponse.data.provas || [];
+            setProvas(todasProvas.filter(prova => prova.tipo !== "revezamento"));
+            setRevezamentos(todasProvas.filter(prova => prova.tipo === "revezamento"));
 
             const novasSelecoes = {};
             const novasSelecoesRevezamento = {};
 
-            inscricoesResponse.data.forEach(inscricao => { //para cada inscricao já localizada...
+            inscricoesResponse.data.inscricoesIndividuais.forEach(inscricao => {
                 if (!novasSelecoes[inscricao.nadadorId]) {
                     novasSelecoes[inscricao.nadadorId] = {};
                 }
-                novasSelecoes[inscricao.nadadorId][inscricao.provaId] = true; //novasSeleções recebe o id do nadador e da prova
+                novasSelecoes[inscricao.nadadorId][inscricao.provaId] = true;
             });
 
-            setSelecoes(novasSelecoes || {}); //atualiza o estado de seleções
-            setSelecoesRevezamento(novasSelecoesRevezamento || {}); //atualiza o estado de seleções de revezamento
+            inscricoesResponse.data.inscricoesRevezamento.forEach(inscricao => {
+                novasSelecoesRevezamento[inscricao.provaId] = "Sim";
+            });
+
+            setSelecoes(novasSelecoes);
+            setSelecoesRevezamento(novasSelecoesRevezamento);
         } catch (error) {
             console.error("Erro ao buscar dados do evento:", error);
         }
