@@ -13,6 +13,8 @@ const Inscricao = () => {
     const [eventos, setEventos] = useState([]);
     const [eventoSelecionado, setEventoSelecionado] = useState(null);
     const [selecoes, setSelecoes] = useState({});
+    const [revezamentos, setRevezamentos] = useState([]); // Lista de revezamentos
+    const [selecoesRevezamento, setSelecoesRevezamento] = useState({}); // Estado para participação em revezamento
     const user = useUser(); // Obter o usuário do contexto do usuário
 
     const apiEventos = `/inscricao/listarEventos`;
@@ -35,7 +37,6 @@ const Inscricao = () => {
     }, []);
 
     const fetchDadosEvento = async () => {
-        
         try {
             const equipeId = user?.user?.equipeId[0]; // Equipe do usuário logado
 
@@ -45,10 +46,15 @@ const Inscricao = () => {
             const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${equipeId}`); //lista de provas - por evento
             const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`); //inscricoes já realizadas do evento
 
-            setNadadores(nadadoresResponse.data); // Lista completa de nadadores
-            setProvas(provasResponse.data?.provas || []); // Provas vinculadas ao evento
+            setNadadores(nadadoresResponse.data); //atualiza o estado de nadadores
+
+            const todasProvas = provasResponse.data?.provas || []; //todas as provas do evento
+            setProvas(todasProvas.filter(prova => prova.tipo !== "Revezamento")); //recebe as provas que não são revezamento
+            setRevezamentos(todasProvas.filter(prova => prova.tipo === "Revezamento")); //recebe as provas só os revezamentos
 
             const novasSelecoes = {};
+            const novasSelecoesRevezamento = {};
+
             inscricoesResponse.data.forEach(inscricao => { //para cada inscricao já localizada...
                 if (!novasSelecoes[inscricao.nadadorId]) {
                     novasSelecoes[inscricao.nadadorId] = {};
@@ -57,12 +63,13 @@ const Inscricao = () => {
             });
 
             setSelecoes(novasSelecoes || {}); //atualiza o estado de seleções
+            setSelecoesRevezamento(novasSelecoesRevezamento || {}); //atualiza o estado de seleções de revezamento
         } catch (error) {
             console.error("Erro ao buscar dados do evento:", error);
         }
     };
 
-    useEffect(() => { 
+    useEffect(() => {
         if (eventoSelecionado) {
             fetchDadosEvento();
         }
@@ -90,6 +97,13 @@ const Inscricao = () => {
             };
             return novasSelecoes;
         });
+    };
+
+    const handleRevezamentoChange = (provaId, value) => {
+        setSelecoesRevezamento(prevSelecoes => ({
+            ...prevSelecoes,
+            [provaId]: value
+        }));
     };
 
     const aoSalvar = async () => {
@@ -137,12 +151,27 @@ const Inscricao = () => {
                                 </ul>
                             </div>
                             {nadadores.length > 0 && provas.length > 0 ? (
-                                <TabelaInscricao
-                                    nadadores={nadadores}
-                                    provas={provas}
-                                    selecoes={selecoes}
-                                    onCheckboxChange={handleCheckboxChange}
-                                />
+                                <>
+                                    <TabelaInscricao
+                                        nadadores={nadadores}
+                                        provas={provas}
+                                        selecoes={selecoes}
+                                        onCheckboxChange={handleCheckboxChange}
+                                    />
+                                    <div className={styles.revezamentoContainer}>
+                                        <h3>Revezamentos</h3>
+                                        {revezamentos.map(prova => (
+                                            <div key={prova.id}>
+                                                <span>{prova.ordem} - {prova.distancia}m {prova.estilo}</span>
+                                                <ListaSuspensa
+                                                    fonteDados={["Sim", "Não"]}
+                                                    onChange={(value) => handleRevezamentoChange(prova.id, value)}
+                                                    valor={selecoesRevezamento[prova.id] || "Não"}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
                             ) : (
                                 <p>VOCÊ PRECISA FAZER PARTE DE UMA EQUIPE...</p>
                             )}
