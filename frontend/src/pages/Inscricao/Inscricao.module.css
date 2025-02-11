@@ -96,6 +96,7 @@ button:active {
     font-size: 1.1em;
     color: #007bff;
     margin-bottom: 10px;
+    font-weight: bold; 
 }
 
 @media (max-width: 768px) {
@@ -105,6 +106,7 @@ button:active {
 
     .centralizado {
         width: 100%;
+        display: block; /* Remove flex display for mobile */
     }
 
     table {
@@ -128,8 +130,8 @@ button:active {
 
     .revezamentoContainer {
         width: 100%;
-        padding: 10px; /* Adjust padding for mobile */
-        margin: 10px 0; /* Adjust margin for mobile */
+        padding: 10px; 
+        margin: 10px 0; 
     }
 
     .inscricaoRevezamento {
