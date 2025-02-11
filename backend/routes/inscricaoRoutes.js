@@ -17,9 +17,7 @@ router.get('/listarEventos', async (req, res) => {
 router.get('/listarNadadores/:equipeId', async (req, res) => {
     try {
         const { equipeId } = req.params; // Extrai o equipeId da rota
-        console.log('Equipe ID recebido:', equipeId);
         const [rows] = await db.query('SELECT * FROM nadadores WHERE equipes_id = ?', [equipeId]); // Busca todos os nadadores
-        console.log('Nadadores:', rows);
         res.json(rows); // Retorna a lista de nadadores em JSON
     } catch (error) {
         console.error('Erro ao buscar nadadores:', error); // Loga o erro no servidor
@@ -43,14 +41,11 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
             FROM eventos_provas ep
             JOIN provas p ON ep.provas_id = p.id
             WHERE ep.eventos_id = ?
-ORDER BY ep.ordem
+            ORDER BY ep.ordem
         `, [eventoId]);
 
         // Buscar nadadores pelo equipes_id
         const [nadadores] = await db.query('SELECT * FROM nadadores WHERE equipes_id = ?', [equipeId]);
-
-        console.log('Provas:', provas);
-        console.log('Nadadores:', nadadores);
 
         // Retorna os dados no formato esperado pelo frontend
         res.json({ provas, nadadores });

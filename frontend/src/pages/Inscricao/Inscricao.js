@@ -132,7 +132,7 @@ const Inscricao = () => {
                                 <h2>Provas do Evento</h2>
                                 <ul>
                                     {provas.map(prova => (
-                                        <li key={prova.id}>{prova.nome}</li>
+                                        <li key={prova.id}>{prova.ordem} - {prova.distancia}m {prova.estilo} {prova.sexo} {prova.tipo}</li>
                                     ))}
                                 </ul>
                             </div>
