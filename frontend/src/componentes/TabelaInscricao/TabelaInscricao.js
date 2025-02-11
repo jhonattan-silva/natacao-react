@@ -26,7 +26,7 @@ const TabelaInscricao = ({ nadadores, provas, selecoes, onCheckboxChange }) => {
                             <th>Nadadores (Masculino)</th>
                             {provasMasculino.map(prova => (
                                 <th key={prova.id}>
-                                    {`${prova.distancia}m ${prova.estilo} (${prova.tipo})`}
+                                    {`${prova.distancia}m ${prova.estilo}`}
                                 </th>
                             ))}
                         </tr>
@@ -57,7 +57,7 @@ const TabelaInscricao = ({ nadadores, provas, selecoes, onCheckboxChange }) => {
                             <th>Nadadores (Feminino)</th>
                             {provasFeminino.map(prova => (
                                 <th key={prova.id}>
-                                    {`${prova.distancia}m ${prova.estilo} (${prova.tipo})`}
+                                    {`${prova.distancia}m ${prova.estilo}`}
                                 </th>
                             ))}
                         </tr>
