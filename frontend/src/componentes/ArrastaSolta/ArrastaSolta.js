@@ -1,5 +1,12 @@
 import { useEffect, useMemo } from "react";
-import { DndContext, closestCenter } from "@dnd-kit/core";
+import { 
+    DndContext, 
+    closestCenter, 
+    TouchSensor, 
+    MouseSensor, 
+    useSensor, 
+    useSensors 
+} from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import ArrastaSoltaItem from "../ArrastaSoltaItem/ArrastaSoltaItem";
 
@@ -13,13 +20,23 @@ import ArrastaSoltaItem from "../ArrastaSoltaItem/ArrastaSoltaItem";
 const ArrastaSolta = ({ itens, aoReordenar, renderItem, ordenarPor = null }) => {
     // Usa `useMemo` para garantir que os itens são ordenados antes da renderização
     const itensOrdenados = useMemo(() => { 
-        // Ordena os itens de acordo com o campo especificado
         return ordenarPor ? [...itens].sort((a, b) => a[ordenarPor] - b[ordenarPor]) : [...itens];
-    }, [itens, ordenarPor]); // Atualiza a ordenação quando os itens ou o campo de ordenação mudam
+    }, [itens, ordenarPor]);
 
     useEffect(() => {
         console.log("📌 Itens ordenados antes da renderização no ArrastaSolta:", itensOrdenados);
     }, [itensOrdenados]);
+
+    // 🔥 Adiciona suporte para mouse e toque no mobile
+    const sensors = useSensors(
+        useSensor(MouseSensor),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 250, // Aguarda 250ms antes de ativar o arraste no mobile
+                tolerance: 5, // Pequeno movimento permitido antes do arraste
+            }
+        })
+    );
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
@@ -38,7 +55,7 @@ const ArrastaSolta = ({ itens, aoReordenar, renderItem, ordenarPor = null }) => 
     };
 
     return (
-        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext key={JSON.stringify(itensOrdenados)} items={itensOrdenados} strategy={verticalListSortingStrategy}>
                 <ol>
                     {itensOrdenados.map((item) => (
