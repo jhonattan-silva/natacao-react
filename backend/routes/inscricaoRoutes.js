@@ -55,54 +55,61 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
     }
 });
 
-// Nova rota para buscar inscrições existentes de um evento específico
+// Nova rota para buscar inscrições (nadadores e revezamento) existentes de um evento específico
 router.get('/listarInscricoes/:eventoId', async (req, res) => {
-    const eventoId = req.params.eventoId;
+    const { eventoId } = req.params;
 
     try {
-        // Consulta para listar inscrições de nadadores para um evento específico
-        const [inscricoes] = await db.query(`
+        const [inscricoesIndividuais] = await db.query(`
             SELECT nadadores_id AS nadadorId, eventos_provas_id AS provaId 
             FROM inscricoes
             WHERE eventos_id = ?
         `, [eventoId]);
 
-        console.log('Inscrições:', inscricoes);
+        const [inscricoesRevezamento] = await db.query(`
+            SELECT equipes_id AS equipeId, provas_id AS provaId
+            FROM revezamentos_inscricoes
+            WHERE eventos_id = ?
+        `, [eventoId]);
 
-        res.json(inscricoes); // Retorna as inscrições encontradas
+        res.json({ inscricoesIndividuais, inscricoesRevezamento });
     } catch (error) {
-        console.error('Erro ao buscar inscrições:', error); // Loga o erro no servidor
-        res.status(500).json({ message: 'Erro ao buscar inscrições.' }); // Retorna mensagem de erro ao cliente
+        console.error('Erro ao buscar inscrições:', error);
+        res.status(500).json({ message: 'Erro ao buscar inscrições.' });
     }
 });
 
-// Rota para salvar as inscrições dos nadadores nas provas
+// Rota para salvar as inscrições dos nadadores nas provas e da equipe nos revezamentos
 router.post('/salvarInscricao', async (req, res) => {
-    const nadadoresInscritos = req.body; // Espera receber um array de objetos com os dados de inscrição
-    const eventoId = nadadoresInscritos[0]?.eventoId; // Extrai o eventoId para realizar operações em lote
+    const inscricoes = req.body;
+    const eventoId = inscricoes[0]?.eventoId;
 
     if (!eventoId) {
-        return res.status(400).json({ message: 'Evento ID é necessário para salvar inscrições.' }); // Valida se o eventoId existe
+        return res.status(400).json({ message: 'Evento ID é necessário para salvar inscrições.' });
     }
 
     try {
-        // Passo 1: Deletar inscrições atuais do evento
-        await db.query('DELETE FROM inscricoes WHERE eventos_id = ?', [eventoId]); // Remove inscrições para o evento
+        await db.query('DELETE FROM inscricoes WHERE eventos_id = ?', [eventoId]);
+        await db.query('DELETE FROM revezamentos_inscricoes WHERE eventos_id = ?', [eventoId]); // Limpa revezamentos também
 
-        // Passo 2: Inserir novas inscrições
-        for (const inscricao of nadadoresInscritos) {
-            const { nadadorId, provaId } = inscricao;
-
-            // Inserção de inscrição para nadador e prova específicos
-            await db.query('INSERT INTO inscricoes (nadadores_id, eventos_id, eventos_provas_id) VALUES (?, ?, ?)', [nadadorId, eventoId, provaId]);
+        for (const inscricao of inscricoes) {
+            if (inscricao.nadadorId) {
+                await db.query(
+                    'INSERT INTO inscricoes (nadadores_id, eventos_id, eventos_provas_id) VALUES (?, ?, ?)',
+                    [inscricao.nadadorId, eventoId, inscricao.provaId]
+                );
+            } else if (inscricao.equipeId) {
+                await db.query(
+                    'INSERT INTO revezamentos_inscricoes (eventos_id, provas_id, equipes_id) VALUES (?, ?, ?)',
+                    [eventoId, inscricao.provaId, inscricao.equipeId]
+                );
+            }
         }
 
-        console.log('Inscrições salvas:', nadadoresInscritos);
-
-        res.json({ message: 'Inscrições atualizadas com sucesso!' }); // Retorna mensagem de sucesso
+        res.json({ message: 'Inscrições atualizadas com sucesso!' });
     } catch (error) {
-        console.error('Erro ao atualizar inscrições:', error); // Loga o erro no servidor
-        res.status(500).json({ message: 'Erro ao atualizar inscrições.' }); // Retorna mensagem de erro ao cliente
+        console.error('Erro ao atualizar inscrições:', error);
+        res.status(500).json({ message: 'Erro ao atualizar inscrições.' });
     }
 });
 

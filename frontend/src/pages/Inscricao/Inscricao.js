@@ -117,8 +117,17 @@ const Inscricao = () => {
                 }))
         );
 
+        // Adiciona revezamentos na lista de inscrições
+        const inscricoesRevezamento = Object.entries(selecoesRevezamento)
+            .filter(([, valor]) => valor === "Sim")
+            .map(([provaId]) => ({
+                eventoId: eventoSelecionado,
+                provaId,
+                equipeId: user?.user?.equipeId[0] // A equipe do usuário logado
+            }));
+
         try {
-            await api.post(apiSalvarInscricao, inscricoes);
+            await api.post(apiSalvarInscricao, [...inscricoes, ...inscricoesRevezamento]); // Envia ambos
             alert('Inscrição realizada com sucesso!');
             await fetchDadosEvento(); // Recarrega os dados do evento após salvar
         } catch (error) {
