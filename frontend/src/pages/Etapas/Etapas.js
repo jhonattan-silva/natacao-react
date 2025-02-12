@@ -60,7 +60,6 @@ const Etapas = () => {
 
             console.log('📌 Etapa recebida do backend:', etapa);
 
-            // Atualiza os estados com os dados da etapa
             setEtapaEditando(etapa);
             setNomeEtapa(etapa.nome);
             const [date, time] = etapa.data.split('T');
@@ -72,7 +71,6 @@ const Etapas = () => {
             setTorneioEtapa(etapa.torneios_id);
             setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6');
 
-            // Atualiza o estado com as provas selecionadas na ordem correta
             const provasOrdenadas = etapa.provas
                 .map(prova => ({
                     id: prova.provas_id.toString(),
@@ -83,13 +81,12 @@ const Etapas = () => {
                     sexo: prova.sexo,
                     ordem: prova.ordem
                 }))
-                .sort((a, b) => a.ordem - b.ordem); // Ordena corretamente pela ordem vinda do backend
+                .sort((a, b) => a.ordem - b.ordem);
 
             console.log("📌 Provas ordenadas recebidas do backend:", provasOrdenadas);
 
             setProvasSelecionadas(provasOrdenadas);
 
-            // Atualiza os estados de seleção
             const selecionadasMasculino = provasOrdenadas
                 .filter(prova => prova.sexo === 'M')
                 .map(prova => prova.id);
@@ -423,39 +420,33 @@ const Etapas = () => {
 
     const handleAvancar = () => {
         if (etapaAtual === 1) {
-            // Combina as provas selecionadas atualmente
-            const provas = [
-                ...selecionadasMasculino.map(id => {
-                    const prova = provasMasculino.find(prova => prova.id === id);
-                    return {
-                        ...prova,
-                        sexo: 'M'
-                    };
-                }),
-                ...selecionadasFeminino.map(id => {
-                    const prova = provasFeminino.find(prova => prova.id === id);
-                    return {
-                        ...prova,
-                        sexo: 'F'
-                    };
-                })
-            ];
-
-            // Remove duplicatas e provas com sexo 'A'
-            const provasUnicas = provas.filter((prova, index, self) =>
-                index === self.findIndex((p) => (
-                    p.id === prova.id && p.sexo === prova.sexo
-                ))
-            );
-
-            console.log("PROVAS ANTES DE AVANÇAR:", provasUnicas);
-
-            setProvasSelecionadas(provasUnicas);
+            // Criamos um Map para preservar a ordem original do backend
+            const provasMap = new Map(provasMasculino.concat(provasFeminino).map(prova => [prova.id, prova]));
+    
+            // Criamos um array com as provas selecionadas
+            const provasSelecionadas = [...selecionadasMasculino, ...selecionadasFeminino]
+                .map(id => ({
+                    ...provasMap.get(id),
+                    sexo: provasMap.get(id)?.sexo || 'M' // Usa o sexo da prova ou define 'M' como padrão
+                }));
+    
+            // Ordena as provas mantendo a ordem original do banco e jogando as sem ordem para o final
+            const provasOrdenadas = provasSelecionadas.sort((a, b) => {
+                const indexA = [...provasMap.keys()].indexOf(a.id);
+                const indexB = [...provasMap.keys()].indexOf(b.id);
+    
+                if (indexA === -1) return 1; // Se A não tem ordem definida, joga para o final
+                if (indexB === -1) return -1; // Se B não tem ordem definida, mantém A na frente
+                return indexA - indexB; // Mantém a ordem do banco
+            });
+    
+            console.log("PROVAS ANTES DE AVANÇAR (corrigido):", provasOrdenadas);
+    
+            setProvasSelecionadas(provasOrdenadas);
             setEtapaAtual(2);
         }
     };
     
-
     const handleVoltar = () => {
         setEtapaAtual(1);
     };

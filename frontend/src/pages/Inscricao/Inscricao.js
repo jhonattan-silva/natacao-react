@@ -48,8 +48,8 @@ const Inscricao = () => {
             setNadadores(nadadoresResponse.data);
 
             const todasProvas = provasResponse.data.provas || [];
-            setProvas(todasProvas.filter(prova => prova.tipo !== "revezamento"));
-            setRevezamentos(todasProvas.filter(prova => prova.tipo === "revezamento"));
+            setProvas(todasProvas.filter(prova => prova.tipo !== "revezamento").sort((a, b) => a.ordem - b.ordem));
+            setRevezamentos(todasProvas.filter(prova => prova.tipo === "revezamento").sort((a, b) => a.ordem - b.ordem));
 
             const novasSelecoes = {};
             const novasSelecoesRevezamento = {};
