@@ -92,7 +92,7 @@ const Inscricao = () => {
 
             // Verificando se a prova selecionada é de 25 metros
             const provaSelecionada = provas.find(prova => prova.id === provaId);
-            if (provaSelecionada.distancia === 25 && isChecked) {
+            if (provaSelecionada.distancia === "25" && isChecked) {
                 // Verificando se já existe uma prova de estilo "LIVRE" selecionada
                 const temProvaLivre = Object.keys(selecoesNadador).some(id => {
                     const prova = provas.find(prova => prova.id === parseInt(id));
@@ -110,7 +110,7 @@ const Inscricao = () => {
                 // Verificando se já existe uma prova de 25 metros selecionada
                 const temProva25 = Object.keys(selecoesNadador).some(id => {
                     const prova = provas.find(prova => prova.id === parseInt(id));
-                    return prova && prova.distancia === 25;
+                    return prova && prova.distancia === "25";
                 });
 
                 if (temProva25) {
