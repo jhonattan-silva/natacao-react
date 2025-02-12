@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import api from '../../servicos/api';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import style from './CabecalhoAdmin.module.css';
 import CabecalhoLink from '../CabecalhoLink/CabecalhoLink';
 
@@ -13,6 +13,7 @@ const CabecalhoAdmin = () => {
     const [userProfile, setUserProfile] = useState([]);
     const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate(); // Hook de navegação do React Router
+    const location = useLocation(); // Get the current location
 
     useEffect(() => { // Hook de efeito para buscar informações do usuário
         const token = localStorage.getItem('token');
@@ -52,27 +53,33 @@ const CabecalhoAdmin = () => {
         setMenuOpen(!menuOpen);
     };
 
+    const handleLinkClick = (url) => {
+        if (location.pathname === url) {
+            window.location.reload();
+        }
+    };
+
     return (
         <header className={style.cabecalho}>
-            <Link to="/"> {/* Alterar o link para redirecionar para a home */}
+            <Link to="/" onClick={() => handleLinkClick('/')}> {/* Alterar o link para redirecionar para a home */}
                 <img src={logo} alt='LPN logo' className={style.logo}></img>
             </Link>
             <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>
             <span className={style.closeButton} onClick={toggleMenu}>&times;</span>
             <nav className={menuOpen ? style.open : ''}>
-                <CabecalhoLink url='../../'> Home </CabecalhoLink>
-                <CabecalhoLink url='../Nadadores'> Nadadores </CabecalhoLink>
-                <CabecalhoLink url='../Inscricao'> Inscrição </CabecalhoLink>
+                <CabecalhoLink url='../../' onClick={() => handleLinkClick('../../')}> Home </CabecalhoLink>
+                <CabecalhoLink url='../Nadadores' onClick={() => handleLinkClick('../Nadadores')}> Nadadores </CabecalhoLink>
+                <CabecalhoLink url='../Inscricao' onClick={() => handleLinkClick('../Inscricao')}> Inscrição </CabecalhoLink>
                 {userProfile.includes('admin') && (
                     <>
-                        <CabecalhoLink url='../Etapas'> Etapas </CabecalhoLink>
-                        <CabecalhoLink url='../Usuarios'> Usuários </CabecalhoLink>
-                        {/* <CabecalhoLink url='../balizamento'> Balizamento </CabecalhoLink> */}
-                        {/* <CabecalhoLink url='../ResultadosEntrada'> Inserir Resultados </CabecalhoLink> */}
+                        <CabecalhoLink url='../Etapas' onClick={() => handleLinkClick('../Etapas')}> Etapas </CabecalhoLink>
+                        <CabecalhoLink url='../Usuarios' onClick={() => handleLinkClick('../Usuarios')}> Usuários </CabecalhoLink>
+                        {/* <CabecalhoLink url='../balizamento' onClick={() => handleLinkClick('../balizamento')}> Balizamento </CabecalhoLink> */}
+                        {/* <CabecalhoLink url='../ResultadosEntrada' onClick={() => handleLinkClick('../ResultadosEntrada')}> Inserir Resultados </CabecalhoLink> */}
                     </>
                 )}
-                {/* <CabecalhoLink url='../Classificacao'> Classificação </CabecalhoLink> */}
-                <CabecalhoLink url='../Admin'> ADMIN </CabecalhoLink>
+                {/* <CabecalhoLink url='../Classificacao' onClick={() => handleLinkClick('../Classificacao')}> Classificação </CabecalhoLink> */}
+                <CabecalhoLink url='../Admin' onClick={() => handleLinkClick('../Admin')}> ADMIN </CabecalhoLink>
                 <div className={style.userInfo}> 
                     <div className={style.dadosUsuario}> 
                         {nome && <p>{nome}</p>}

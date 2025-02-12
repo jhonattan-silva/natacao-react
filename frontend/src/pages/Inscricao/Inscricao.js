@@ -165,6 +165,7 @@ const Inscricao = () => {
             await api.post(apiSalvarInscricao, [...inscricoes, ...inscricoesRevezamento]); // Envia ambos
             alert('Inscrição realizada com sucesso!');
             await fetchDadosEvento(); // Recarrega os dados do evento após salvar
+            window.location.reload(); // Atualiza a página
         } catch (error) {
             console.error('Erro ao realizar a inscrição:', error);
             alert('Erro ao salvar a inscrição.');
@@ -175,7 +176,7 @@ const Inscricao = () => {
         <>
             <CabecalhoAdmin />
             <div className={styles.inscricaoContainer}>
-                <h1>Inscrição</h1>
+                <h1>INSCRIÇÃO</h1>
                 <div className={styles.centralizado}>
                     <ListaSuspensa
                         fonteDados={apiEventos}
