@@ -420,7 +420,7 @@ const Etapas = () => {
 
     const handleAvancar = () => {
         if (etapaAtual === 1) {
-            // Criamos um Map para preservar a ordem original do backend
+            // Criamos um Map para preservar os dados da prova
             const provasMap = new Map(provasMasculino.concat(provasFeminino).map(prova => [prova.id, prova]));
     
             // Criamos um array com as provas selecionadas
@@ -432,12 +432,15 @@ const Etapas = () => {
     
             // Ordena as provas mantendo a ordem original do banco e jogando as sem ordem para o final
             const provasOrdenadas = provasSelecionadas.sort((a, b) => {
-                const indexA = [...provasMap.keys()].indexOf(a.id);
-                const indexB = [...provasMap.keys()].indexOf(b.id);
-    
-                if (indexA === -1) return 1; // Se A não tem ordem definida, joga para o final
-                if (indexB === -1) return -1; // Se B não tem ordem definida, mantém A na frente
-                return indexA - indexB; // Mantém a ordem do banco
+                // Prioriza a ordenação por 'ordem', caso exista
+                if (a.ordem !== undefined && b.ordem !== undefined) {
+                    return a.ordem - b.ordem;
+                }
+                if (a.ordem !== undefined) return -1; // Mantém 'a' antes de 'b' se 'a' tem ordem e 'b' não
+                if (b.ordem !== undefined) return 1;  // Mantém 'b' antes de 'a' se 'b' tem ordem e 'a' não
+                
+                // Se nenhum tem ordem, ordena pelo ID
+                return a.id - b.id;
             });
     
             console.log("PROVAS ANTES DE AVANÇAR (corrigido):", provasOrdenadas);
@@ -446,6 +449,7 @@ const Etapas = () => {
             setEtapaAtual(2);
         }
     };
+    
     
     const handleVoltar = () => {
         setEtapaAtual(1);
