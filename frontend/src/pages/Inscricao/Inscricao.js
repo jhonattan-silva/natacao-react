@@ -175,7 +175,7 @@ const Inscricao = () => {
         <>
             <CabecalhoAdmin />
             <div className={styles.inscricaoContainer}>
-                <h1>Inscrição - {user?.user?.equipeNome}</h1>
+                <h1>Inscrição</h1>
                 <div className={styles.centralizado}>
                     <ListaSuspensa
                         fonteDados={apiEventos}

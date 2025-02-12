@@ -420,36 +420,25 @@ const Etapas = () => {
 
     const handleAvancar = () => {
         if (etapaAtual === 1) {
-            // Criamos um Map para preservar os dados da prova
-            const provasMap = new Map(provasMasculino.concat(provasFeminino).map(prova => [prova.id, prova]));
+            // Mantém a ordem original do backend ao invés de criar um novo array misturado
+            const provasMap = new Map(provasSelecionadas.map(prova => [prova.id, prova]));
     
-            // Criamos um array com as provas selecionadas
-            const provasSelecionadas = [...selecionadasMasculino, ...selecionadasFeminino]
-                .map(id => ({
-                    ...provasMap.get(id),
-                    sexo: provasMap.get(id)?.sexo || 'M' // Usa o sexo da prova ou define 'M' como padrão
-                }));
+            const provasSelecionadasOrdenadas = [...selecionadasMasculino, ...selecionadasFeminino]
+                .map(id => provasMap.get(id))
+                .filter(prova => prova) // Remove undefined caso alguma prova não esteja no Map
+                .sort((a, b) => {
+                    if (a.ordem !== undefined && b.ordem !== undefined) {
+                        return a.ordem - b.ordem;
+                    }
+                    return a.id - b.id; // Se não tiver ordem, ordena por ID
+                });
     
-            // Ordena as provas mantendo a ordem original do banco e jogando as sem ordem para o final
-            const provasOrdenadas = provasSelecionadas.sort((a, b) => {
-                // Prioriza a ordenação por 'ordem', caso exista
-                if (a.ordem !== undefined && b.ordem !== undefined) {
-                    return a.ordem - b.ordem;
-                }
-                if (a.ordem !== undefined) return -1; // Mantém 'a' antes de 'b' se 'a' tem ordem e 'b' não
-                if (b.ordem !== undefined) return 1;  // Mantém 'b' antes de 'a' se 'b' tem ordem e 'a' não
-                
-                // Se nenhum tem ordem, ordena pelo ID
-                return a.id - b.id;
-            });
+            console.log("📌 PROVAS ANTES DE AVANÇAR (corrigido):", provasSelecionadasOrdenadas);
     
-            console.log("PROVAS ANTES DE AVANÇAR (corrigido):", provasOrdenadas);
-    
-            setProvasSelecionadas(provasOrdenadas);
+            setProvasSelecionadas(provasSelecionadasOrdenadas);
             setEtapaAtual(2);
         }
-    };
-    
+    };    
     
     const handleVoltar = () => {
         setEtapaAtual(1);
