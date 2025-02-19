@@ -106,10 +106,17 @@ router.get('/listarInscritosEquipeSexo', async (req, res) => {
         COUNT(DISTINCT CASE WHEN n.sexo IN ('M','m') THEN i.nadadores_id END) AS atletas_masculinos,
         COUNT(DISTINCT CASE WHEN n.sexo IN ('F','f') THEN i.nadadores_id END) AS atletas_femininas,
         COUNT(DISTINCT i.nadadores_id) AS total_atletas,
-        COUNT(DISTINCT CASE 
+        (
+          COUNT(DISTINCT CASE 
             WHEN LOWER(CONCAT(p.estilo, ' ', p.distancia, 'm ', p.tipo, ' ', p.sexo)) LIKE '%revezamento%' 
             THEN i.nadadores_id 
-         END) AS revezamentos
+          END)
+          + IFNULL((
+              SELECT COUNT(*) 
+              FROM revezamentos_inscricoes ri 
+              WHERE ri.eventos_id = i.eventos_id AND ri.equipes_id = e.id
+            ), 0)
+        ) AS revezamentos
       FROM inscricoes i
       INNER JOIN nadadores n ON i.nadadores_id = n.id
       LEFT JOIN equipes e ON n.equipes_id = e.id
@@ -121,7 +128,8 @@ router.get('/listarInscritosEquipeSexo', async (req, res) => {
       sql += ' WHERE i.eventos_id = ? ';
       params.push(eventoId);
     }
-    sql += ' GROUP BY equipe ';
+    // Modificado: incluir e.id no GROUP BY para atender only_full_group_by
+    sql += ' GROUP BY e.id, equipe ';
     const [rows] = await db.query(sql, params);
     res.json(rows);
   } catch (error) {
