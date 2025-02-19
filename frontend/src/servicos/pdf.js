@@ -6,7 +6,14 @@ const logo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKcAAABQCAYAAAB8gWVN
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 //***************** */ Função para gerar o PDF de balizamento /******************************* */
-export const balizamentoPDF = (dados) => {
+export const balizamentoPDF = (dados, etapa) => { // Alteração para receber etapa
+  // Formatação da data e hora com ajuste de fuso horário (+3 horas)
+  const eventDate = etapa?.data ? new Date(etapa.data) : new Date();
+  const adjustedDate = new Date(eventDate);
+  adjustedDate.setHours(adjustedDate.getHours() + 3);
+  const formattedDate = eventDate.toLocaleDateString('pt-BR');
+  const formattedTime = adjustedDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
   // Formata os dados para exibir no PDF, agora incluindo categoria e equipe
   const formattedData = Object.keys(dados).map(prova => ({
     nome: prova,
@@ -21,7 +28,7 @@ export const balizamentoPDF = (dados) => {
     ))
   }));
 
-  // Definição do conteúdo do PDF com a nova ordem de colunas
+  // Definição do conteúdo do PDF com informações do evento em maiúsculas
   const docDefinition = {
     header:{
       columns:[
@@ -33,6 +40,23 @@ export const balizamentoPDF = (dados) => {
       ],
     },
     content: [
+      // Espacador para descer o conteúdo
+      { text: '', margin: [0, 60, 0, 0] },
+      // Bloco de informações do evento em maiúsculas
+      { text: 'INFORMAÇÕES DO EVENTO', style: 'eventHeader', margin: [0, 0, 0, 5] },
+      { 
+        columns: [
+          { text: `${etapa?.nome ? etapa.nome.toUpperCase() : 'ETAPA I - TUPÃ'}`, style: 'eventInfo' },
+          { text: `CIDADE: ${etapa?.cidade ? etapa.cidade.toUpperCase() : 'TUPÃ'}`, style: 'eventInfo' }
+        ]
+      },
+      { 
+        columns: [
+          { text: `DATA: ${formattedDate}`, style: 'eventInfo' },
+          { text: `HORA: ${formattedTime}`, style: 'eventInfo' }
+        ], margin: [0, 0, 0, 20]
+      },
+      // Título padrão
       { text: 'Balizamento de Prova', style: 'header' },
       // Mapeia cada prova para exibir o nome
       ...formattedData.map((prova, provaIndex) => [
@@ -77,6 +101,15 @@ export const balizamentoPDF = (dados) => {
       },
       tableExample: {
         margin: [0, 5, 0, 15]
+      },
+      // Estilos adicionados para as informações do evento
+      eventHeader: {
+        fontSize: 20,
+        bold: true
+      },
+      eventInfo: {
+        fontSize: 12,
+        margin: [0, 2, 0, 2]
       }
     }
   };

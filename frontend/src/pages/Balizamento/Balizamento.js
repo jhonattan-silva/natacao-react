@@ -18,6 +18,7 @@ const Balizamento = () => {
     const [inscritosOriginais, setInscritosOriginais] = useState([]);
     const [inscritosEquipe, setInscritosEquipe] = useState([]);
     const [inscritosEquipeSexo, setInscritosEquipeSexo] = useState([]);
+    const [etapa, setEtapa] = useState({}); // Estado para as infos do evento
 
     const apiEventos = `/balizamento/listarEventos`;
     const apiInscritos = `/balizamento/listarInscritos`;
@@ -36,13 +37,30 @@ const Balizamento = () => {
                 console.error('Erro ao buscar dados:', error);
             }
         };
-        fetchEventos();
-    }, [apiEventos]);
+        fetchEventos(); // Executa a função
+    }, [apiEventos]); // Executa quando o componente é montado
 
     /* Capturar id do evento*/
-    const eventoSelecionado = (id) => {
-        setEventoId(id);
+    const eventoSelecionado = async (selected) => {
+        if (typeof selected === 'object' && selected.id) {
+            setEventoId(selected.id);
+            // Armazena os dados completos do evento em "etapa"
+            setEtapa({ nome: selected.nome, data: selected.data /*, outros dados se necessário */ });
+            console.log("Evento selecionado IF:", selected);
+        } else {
+            setEventoId(selected);
+            try {
+                const response = await api.get(apiEventos);
+                // Procura o evento que possui o id igual a `selected`
+                const eventoEncontrado = response.data.find(e => e.id === selected) || response.data[0];
+                setEtapa(eventoEncontrado);
+                console.log("Evento selecionado ELSE:", eventoEncontrado);
+            } catch (error) {
+                console.error("Erro ao buscar dados completos do evento:", error);
+            }
+        }
     };
+    
 
     const fetchInscritosPorEquipe = async () => {
         try {
@@ -91,7 +109,8 @@ const Balizamento = () => {
             });
 
             setInscritos(resultado);
-            balizamentoPDF(resultado);
+            console.log("Dados enviados para balizamentoPDF:", resultado, etapa);
+            balizamentoPDF(resultado, etapa);
             gerarFilipetas(resultado);
 
             // Agora busca os inscritos por equipe e gera o relatório com ambos os conjuntos
@@ -147,7 +166,7 @@ const Balizamento = () => {
                         <Botao onClick={() => gerarFilipetas(inscritos)} className={style.baixarBotao}>
                             Baixar Filipetas
                         </Botao>
-                        <Botao onClick={() => balizamentoPDF(inscritos)} className={style.baixarBotao}>
+                        <Botao onClick={() => balizamentoPDF(inscritos, etapa)} className={style.baixarBotao}>
                             Baixar Balizamento
                         </Botao>
                         <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo)} className={style.baixarBotao}>
@@ -184,7 +203,7 @@ const Balizamento = () => {
                         <Botao onClick={() => gerarFilipetas(inscritos)} className={style.baixarBotao}>
                             Baixar Filipetas
                         </Botao>
-                        <Botao onClick={() => balizamentoPDF(inscritos)} className={style.baixarBotao}>
+                        <Botao onClick={() => balizamentoPDF(inscritos, etapa)} className={style.baixarBotao}>
                             Baixar Balizamento
                         </Botao>
                         <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo)} className={style.baixarBotao}>
