@@ -169,7 +169,7 @@ const Inscricao = () => {
             return;
         }
     
-        // Construção correta do payload
+        // Verificando se o nadador já tem inscrições
         const inscricoesIndividuais = Object.entries(selecoes).flatMap(([nadadorId, provas]) =>
             Object.entries(provas)
                 .filter(([, isChecked]) => isChecked)
@@ -189,15 +189,14 @@ const Inscricao = () => {
                 equipeId
             }));
     
+            // Criando o payload com as inscrições individuais e de revezamento
         const payload = [...inscricoesIndividuais, ...inscricoesRevezamento];
     
         if (payload.length === 0) {
             alert("Nenhuma inscrição foi selecionada.");
             return;
         }
-    
-        console.log("Payload para salvar inscrição:", payload);
-    
+        
         try {
             await api.post(apiSalvarInscricao, payload);
             alert('Inscrição realizada com sucesso!');
