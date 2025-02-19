@@ -26,13 +26,17 @@ router.get('/listarInscritos/:eventoId', async (req, res) => {
               n.nome AS nome_nadador,
               n.id AS nadador_id,
               COALESCE(r.tempo, 'Sem recorde') AS melhor_tempo,
-              i.id AS inscricao_id
+              i.id AS inscricao_id,
+              e.nome AS equipe,
+              c.nome AS categoria    /* novo campo */
           FROM
               inscricoes i
           INNER JOIN nadadores n ON i.nadadores_id = n.id
           INNER JOIN eventos_provas ep ON i.eventos_provas_id = ep.id
           INNER JOIN provas p ON ep.provas_id = p.id
           LEFT JOIN records r ON n.id = r.nadadores_id AND ep.provas_id = r.provas_id
+          LEFT JOIN equipes e ON n.equipes_id = e.id
+          LEFT JOIN categorias c ON n.categorias_id = c.id   /* novo join */
           WHERE
               i.eventos_id = ?
           ORDER BY p.estilo, p.distancia, p.tipo, p.sexo, r.tempo;
