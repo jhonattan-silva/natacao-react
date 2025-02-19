@@ -18,6 +18,7 @@ const Balizamento = () => {
     const apiInscritos = `/balizamento/listarInscritos`;
     const apiInscritosEquipe = `/balizamento/listarInscritosEquipe`;
     const apiInscritosUnicosEquipe = `/balizamento/listarInscritosUnicosEquipe`;
+    const apiInscritosEquipeSexo = `/balizamento/listarInscritosEquipeSexo`;
     const apiSalvarBalizamento = '/balizamento/salvarBalizamento';
 
     //buscar eventos para a listasuspensa = SELECT
@@ -81,7 +82,12 @@ const Balizamento = () => {
             // Agora busca os inscritos por equipe e gera o relatório com ambos os conjuntos
             const respEquipe = await api.get(`${apiInscritosUnicosEquipe}`, { params: { eventoId } });
             const inscritosEquipe = respEquipe.data;
-            relatorioInscritosPDF(inscritosOriginais, inscritosEquipe);
+            
+            const respEquipeSexo = await api.get(apiInscritosEquipeSexo, { params: { eventoId } });
+            const inscritosEquipeSexo = respEquipeSexo.data;
+            
+            // Passe os três conjuntos para a função (orginais, dados brutos e equipe/sexo)
+            relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo);
 
             setBalizamentoGerado(true); // Indica que o balizamento foi gerado
         } catch (error) {
