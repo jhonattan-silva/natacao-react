@@ -20,27 +20,26 @@ router.get('/listarInscritos/:eventoId', async (req, res) => {
   }
   try {
     const [rows] = await db.query(`
-          SELECT 
-              p.id AS prova_id, 
-              CONCAT(p.estilo, ' ', p.distancia, 'm ', p.tipo, ' ', p.sexo) AS nome_prova,
-              n.nome AS nome_nadador,
-              n.id AS nadador_id,
-              COALESCE(r.tempo, 'Sem recorde') AS melhor_tempo,
-              i.id AS inscricao_id,
-              e.nome AS equipe,
-              c.nome AS categoria    /* novo campo */
-          FROM
-              inscricoes i
-          INNER JOIN nadadores n ON i.nadadores_id = n.id
-          INNER JOIN eventos_provas ep ON i.eventos_provas_id = ep.id
-          INNER JOIN provas p ON ep.provas_id = p.id
-          LEFT JOIN records r ON n.id = r.nadadores_id AND ep.provas_id = r.provas_id
-          LEFT JOIN equipes e ON n.equipes_id = e.id
-          LEFT JOIN categorias c ON n.categorias_id = c.id   /* novo join */
-          WHERE
-              i.eventos_id = ?
-          ORDER BY p.estilo, p.distancia, p.tipo, p.sexo, r.tempo;
-      `, [eventoId]);
+      SELECT 
+          p.id AS prova_id, 
+          CONCAT(p.estilo, ' ', p.distancia, 'm ', p.tipo, ' ', p.sexo) AS nome_prova,
+          ep.ordem,
+          n.nome AS nome_nadador,
+          n.id AS nadador_id,
+          COALESCE(r.tempo, 'Sem recorde') AS melhor_tempo,
+          i.id AS inscricao_id,
+          e.nome AS equipe,
+          c.nome AS categoria
+      FROM inscricoes i
+      INNER JOIN nadadores n ON i.nadadores_id = n.id
+      INNER JOIN eventos_provas ep ON i.eventos_provas_id = ep.id
+      INNER JOIN provas p ON ep.provas_id = p.id
+      LEFT JOIN records r ON n.id = r.nadadores_id AND ep.provas_id = r.provas_id
+      LEFT JOIN equipes e ON n.equipes_id = e.id
+      LEFT JOIN categorias c ON n.categorias_id = c.id
+      WHERE i.eventos_id = ?
+      ORDER BY ep.ordem ASC;
+    `, [eventoId]);
     res.json(rows); // Retorna as inscrições com o ID da prova
   } catch (error) {
     console.error('Erro ao buscar inscritos:', error);

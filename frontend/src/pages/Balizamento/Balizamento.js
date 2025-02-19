@@ -56,25 +56,34 @@ const Balizamento = () => {
         try { //tendo selecionado um evento...
             const response = await api.get(`${apiInscritos}/${eventoId}`); //api+idEvento
             const inscritosOriginais = response.data; // Captura os inscritos originais
+
+            // Agrupar inscrições pela prova, armazenando também a ordem
             const nadadoresPorProva = {};
-
             inscritosOriginais.forEach(inscrito => {
-                if (!nadadoresPorProva[inscrito.nome_prova]) { //se a prova atual ainda não tem um array
-                    nadadoresPorProva[inscrito.nome_prova] = []; //cria o array do balizamento da prova especifica
+                if (!nadadoresPorProva[inscrito.nome_prova]) {
+                    nadadoresPorProva[inscrito.nome_prova] = { ordem: inscrito.ordem, inscritos: [] };
                 }
-                nadadoresPorProva[inscrito.nome_prova].push(inscrito); //joga o nadador dentro do array da prova em que ele ta inscrito
+                nadadoresPorProva[inscrito.nome_prova].inscritos.push(inscrito);
             });
+            
+            // Transformar em array ordenado pela ordem da prova
+            const provasOrdenadas = Object.keys(nadadoresPorProva)
+              .map(prova => ({
+                  nome_prova: prova,
+                  ordem: nadadoresPorProva[prova].ordem,
+                  inscritos: nadadoresPorProva[prova].inscritos
+              }))
+              .sort((a, b) => a.ordem - b.ordem);
 
+            // Processar cada prova conforme a ordem
             const resultado = {};
-            Object.keys(nadadoresPorProva).forEach(prova => {
-                const nadadores = nadadoresPorProva[prova];
-                const provaId = nadadoresPorProva[prova][0]?.prova_id; // Obtém o prova_id da primeira inscrição
-
-                const todosNadadores = ordenarNadadoresPorTempo(nadadores); // Rankear nadadores
-                const baterias = dividirEmBaterias(todosNadadores); // Dividir em baterias
-
-                resultado[prova] = baterias.map(bateria => distribuirNadadoresNasRaias(bateria, provaId)); // Distribuir nas raias com o id da prova junto
+            provasOrdenadas.forEach(item => {
+                const provaId = item.inscritos[0]?.prova_id;
+                const todosNadadores = ordenarNadadoresPorTempo(item.inscritos);
+                const baterias = dividirEmBaterias(todosNadadores);
+                resultado[item.nome_prova] = baterias.map(bateria => distribuirNadadoresNasRaias(bateria, provaId));
             });
+            
             setInscritos(resultado);
             balizamentoPDF(resultado);
             gerarFilipetas(resultado);
