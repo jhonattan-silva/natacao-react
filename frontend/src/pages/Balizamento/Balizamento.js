@@ -14,6 +14,11 @@ const Balizamento = () => {
     const [inscritos, setInscritos] = useState([]); //listagem dos inscritos
     const [balizamentoGerado, setBalizamentoGerado] = useState(false); //controla se já foi gerado balizamento (separa listar e salvar)
 
+    // NEW STATE VARIABLES:
+    const [inscritosOriginais, setInscritosOriginais] = useState([]);
+    const [inscritosEquipe, setInscritosEquipe] = useState([]);
+    const [inscritosEquipeSexo, setInscritosEquipeSexo] = useState([]);
+
     const apiEventos = `/balizamento/listarEventos`;
     const apiInscritos = `/balizamento/listarInscritos`;
     const apiInscritosEquipe = `/balizamento/listarInscritosEquipe`;
@@ -55,11 +60,12 @@ const Balizamento = () => {
         }
         try { //tendo selecionado um evento...
             const response = await api.get(`${apiInscritos}/${eventoId}`); //api+idEvento
-            const inscritosOriginais = response.data; // Captura os inscritos originais
+            const originais = response.data; // Captura os inscritos originais
+            setInscritosOriginais(originais); // Store data in state
 
             // Agrupar inscrições pela prova, armazenando também a ordem
             const nadadoresPorProva = {};
-            inscritosOriginais.forEach(inscrito => {
+            originais.forEach(inscrito => {
                 if (!nadadoresPorProva[inscrito.nome_prova]) {
                     nadadoresPorProva[inscrito.nome_prova] = { ordem: inscrito.ordem, inscritos: [] };
                 }
@@ -90,13 +96,13 @@ const Balizamento = () => {
 
             // Agora busca os inscritos por equipe e gera o relatório com ambos os conjuntos
             const respEquipe = await api.get(`${apiInscritosUnicosEquipe}`, { params: { eventoId } });
-            const inscritosEquipe = respEquipe.data;
-            
+            setInscritosEquipe(respEquipe.data);
+
             const respEquipeSexo = await api.get(apiInscritosEquipeSexo, { params: { eventoId } });
-            const inscritosEquipeSexo = respEquipeSexo.data;
+            setInscritosEquipeSexo(respEquipeSexo.data);
             
             // Passe os três conjuntos para a função (orginais, dados brutos e equipe/sexo)
-            relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo);
+            relatorioInscritosPDF(originais, respEquipe.data, respEquipeSexo.data);
 
             setBalizamentoGerado(true); // Indica que o balizamento foi gerado
         } catch (error) {
@@ -144,6 +150,9 @@ const Balizamento = () => {
                         <Botao onClick={() => balizamentoPDF(inscritos)} className={style.baixarBotao}>
                             Baixar Balizamento
                         </Botao>
+                        <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo)} className={style.baixarBotao}>
+                            Baixar Relatório de Inscritos
+                        </Botao>   
                     </div>
                 )}
                 {Object.keys(inscritos).map(prova => (
@@ -168,6 +177,9 @@ const Balizamento = () => {
                         <Botao onClick={() => balizamentoPDF(inscritos)} className={style.baixarBotao}>
                             Baixar Balizamento
                         </Botao>
+                        <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo)} className={style.baixarBotao}>
+                            Baixar Relatório de Inscritos
+                        </Botao>   
                     </div>
                 )}
             </div>
