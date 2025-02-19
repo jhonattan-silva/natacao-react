@@ -1,39 +1,54 @@
 .containerTabela {
+    padding: 0 20px;  /* Adiciona espaço em ambos os lados */
     width: 100%;
-    overflow-x: auto;
+    max-height: 400px; /* Define uma altura máxima para permitir rolagem */
+    overflow-y: auto; /* Habilita a rolagem vertical */
+    overflow-x: auto; /* Permite rolagem horizontal caso necessário */
+    margin-bottom: 20px; /* Adiciona espaço entre as divs */
+}
+
+.tabelaIndividuais {
+    max-height: 400px; /* Define altura máxima */
+    overflow-y: auto; /* Permite rolagem vertical independente */
+    display: block; /* Necessário para sticky funcionar */
+    position: relative; /* Garante alinhamento correto */
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed; /* Mantém o layout estável */
+}
+
+thead {
+    position: sticky;
+    top: 0;
+    background-color: #fff; /* Mantém a cor ao fixar */
+    z-index: 10; /* Garante que o cabeçalho fique acima do conteúdo */
 }
 
 th, td {
     padding: 8px;
     text-align: left;
     border: 1px solid #ddd;
+    min-width: 120px; /* Aumenta largura mínima das colunas */
 }
 
 th {
     background-color: #f2f2f2;
-    white-space: normal; /* Permite quebra de linha */
-    word-wrap: break-word;
-    text-align: center; /* Melhor alinhamento para quebras */
-    max-width: 80px; /* Ajuste conforme necessário */
-    font-size: 14px; /* Opcional: reduz tamanho da fonte */
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 @media (max-width: 768px) {
     .containerTabela {
-        overflow-x: scroll; /* Permite rolagem horizontal */
-        -webkit-overflow-scrolling: touch; /* Suaviza a rolagem em dispositivos móveis */
-    }
-
-    th, td {
-        padding: 6px;
+        max-height: 300px; /* Reduz altura em telas menores */
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     table {
-        min-width: 600px; /* Define uma largura mínima para a tabela */
+        min-width: 600px; /* Garante que a tabela não se contraia demais */
     }
 }

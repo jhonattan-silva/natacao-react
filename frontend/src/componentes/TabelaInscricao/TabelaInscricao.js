@@ -17,68 +17,72 @@ const TabelaInscricao = ({ nadadores, provas, selecoes, onCheckboxChange }) => {
     const nadadoresFeminino = nadadores.filter(nadador => nadador.sexo === 'F');
 
     return (
-        <div className={styles.containerTabela}>
-            {/* Seção Masculina */}
-            {nadadoresMasculino.length > 0 && (
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nadadores (Masculino)</th>
-                            {provasMasculino.map(prova => (
-                                <th key={prova.id}>
-                                    {`${prova.distancia}m ${prova.estilo}`}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {nadadoresMasculino.map(nadador => {
-                            const numProvasSelecionadas = Object.values(selecoes[nadador.id] || {}).filter(Boolean).length;
-                            return (
-                                <LinhaInscricao
-                                    key={nadador.id}
-                                    nadador={nadador}
-                                    provas={provasMasculino}
-                                    selecoes={selecoes[nadador.id] || {}}
-                                    onCheckboxChange={onCheckboxChange}
-                                    maxReached={numProvasSelecionadas >= 2}
-                                />
-                            );
-                        })}
-                    </tbody>
-                </table>
-            )}
+        <div>
+            <div className={styles.containerTabela}>
+                {/* Seção Masculina */}
+                {nadadoresMasculino.length > 0 && (
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nadadores (Masculino)</th>
+                                {provasMasculino.map(prova => (
+                                    <th key={prova.id}>
+                                        {`${prova.distancia}m ${prova.estilo}`}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {nadadoresMasculino.map(nadador => {
+                                const numProvasSelecionadas = Object.values(selecoes[nadador.id] || {}).filter(Boolean).length;
+                                return (
+                                    <LinhaInscricao
+                                        key={nadador.id}
+                                        nadador={nadador}
+                                        provas={provasMasculino}
+                                        selecoes={selecoes[nadador.id] || {}}
+                                        onCheckboxChange={onCheckboxChange}
+                                        maxReached={numProvasSelecionadas >= 2}
+                                    />
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+            </div>
 
-            {/* Seção Feminina */}
-            {nadadoresFeminino.length > 0 && (
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nadadores (Feminino)</th>
-                            {provasFeminino.map(prova => (
-                                <th key={prova.id}>
-                                    {`${prova.distancia}m ${prova.estilo}`}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {nadadoresFeminino.map(nadador => {
-                            const numProvasSelecionadas = Object.values(selecoes[nadador.id] || {}).filter(Boolean).length;
-                            return (
-                                <LinhaInscricao
-                                    key={nadador.id}
-                                    nadador={nadador}
-                                    provas={provasFeminino}
-                                    selecoes={selecoes[nadador.id] || {}}
-                                    onCheckboxChange={onCheckboxChange}
-                                    maxReached={numProvasSelecionadas >= 2}
-                                />
-                            );
-                        })}
-                    </tbody>
-                </table>
-            )}
+            <div className={styles.containerTabela}>
+                {/* Seção Feminina */}
+                {nadadoresFeminino.length > 0 && (
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nadadores (Feminino)</th>
+                                {provasFeminino.map(prova => (
+                                    <th key={prova.id}>
+                                        {`${prova.distancia}m ${prova.estilo}`}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {nadadoresFeminino.map(nadador => {
+                                const numProvasSelecionadas = Object.values(selecoes[nadador.id] || {}).filter(Boolean).length;
+                                return (
+                                    <LinhaInscricao
+                                        key={nadador.id}
+                                        nadador={nadador}
+                                        provas={provasFeminino}
+                                        selecoes={selecoes[nadador.id] || {}}
+                                        onCheckboxChange={onCheckboxChange}
+                                        maxReached={numProvasSelecionadas >= 2}
+                                    />
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+            </div>
         </div>
     );
 };

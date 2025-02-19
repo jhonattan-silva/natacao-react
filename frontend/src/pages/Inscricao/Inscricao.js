@@ -23,6 +23,11 @@ const Inscricao = () => {
     const apiProvasEvento = `/inscricao/listarProvasEvento`;
     const apiSalvarInscricao = `/inscricao/salvarInscricao`;
 
+    // Nova função para formatar o sexo
+    const formatSexo = (sexo) => {
+        return sexo === "F" ? "FEMININO" : sexo === "M" ? "MASCULINO" : sexo;
+    };
+
     // Buscar eventos para a ListaSuspensa
     useEffect(() => {
         const fetchEventos = async () => {
@@ -175,7 +180,6 @@ const Inscricao = () => {
     return (
         <>
             <CabecalhoAdmin />
-            <div className={styles.inscricaoContainer}>
                 <h1>INSCRIÇÃO</h1>
                 <div className={styles.centralizado}>
                     <ListaSuspensa
@@ -191,7 +195,9 @@ const Inscricao = () => {
                                 <h3>Provas do Evento</h3>
                                 <ul>
                                     {provas.map(prova => (
-                                        <li key={prova.id}>{prova.ordem} - {prova.distancia}m {prova.estilo} {prova.sexo} {prova.tipo}</li>
+                                        <li key={prova.id}>
+                                            {prova.ordem} - {prova.distancia}m {prova.estilo} {formatSexo(prova.sexo)} {prova.tipo}
+                                        </li>
                                     ))}
                                 </ul>
                             </div>
@@ -203,24 +209,22 @@ const Inscricao = () => {
                                         selecoes={selecoes}
                                         onCheckboxChange={handleCheckboxChange}
                                     />
-                                    <div className={styles.revezamentoContainer}>
+                                    <div className={styles.containerTabelaRevezamentos}>
                                         <h3>Revezamentos</h3>
-                                        {revezamentos.map(prova => {
-                                            return (
-                                                <div key={prova.id} className={styles.inscricaoRevezamento}>
-                                                    <span>{prova.ordem} - {prova.distancia}m {prova.estilo}</span>
-                                                    <ListaSuspensa
-                                                        opcoes={[{ id: "Sim", nome: "Sim" }, { id: "Não", nome: "Não" }]} // ✅ Passando opções diretamente
-                                                        onChange={(value) => {
-                                                            handleRevezamentoChange(prova.id, value);
-                                                        }}
-                                                        valorSelecionado={selecoesRevezamento[prova.id] || "Não"}
-                                                        selectId="id"
-                                                        selectExibicao="nome"
-                                                    />
-                                                </div>
-                                            );
-                                        })}
+                                        {revezamentos.map(prova => (
+                                            <div key={prova.id} className={styles.inscricaoRevezamento}>
+                                                <span>
+                                                    {prova.ordem} - {prova.distancia}m {prova.estilo} {formatSexo(prova.sexo)}
+                                                </span>
+                                                <ListaSuspensa
+                                                    opcoes={[{ id: "Sim", nome: "Sim" }, { id: "Não", nome: "Não" }]}
+                                                    onChange={(value) => handleRevezamentoChange(prova.id, value)}
+                                                    valorSelecionado={selecoesRevezamento[prova.id] || "Não"}
+                                                    selectId="id"
+                                                    selectExibicao="nome"
+                                                />
+                                            </div>
+                                        ))}
                                     </div>
                                 </>
                             ) : (
@@ -232,7 +236,6 @@ const Inscricao = () => {
                         </div>
                     )}
                 </div>
-            </div>
         </>
     );
 };

@@ -44,3 +44,4 @@ docker-compose.override.yml
 nginx.dev.conf
 
 certbot/
+backupSEMANA1.sql

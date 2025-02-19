@@ -1,51 +1,84 @@
 const express = require('express');
-const dotenv = require('dotenv'); //salva credenciais em outro arquivo
-const app = express(); // backend/server.js
-const db = require('./config/db');// Conexão com banco de dados
-const cors = require('cors'); // Garante permissao de requisições front->backend
-const bodyParser = require('body-parser'); //backend interpreta os json nas requisições
-const https = require('https'); // Para servir o frontend em produção
-const http = require('http'); // Para servidor HTTP local
-const helmet = require('helmet'); // Helmet para defesa http
-const fs = require('fs'); // Para carregar certificados SSL
-const path = require('path'); // Para lidar com caminhos de arquivos
+const dotenv = require('dotenv'); // Salva credenciais em outro arquivo
+const app = express();
+const db = require('./config/db'); // Conexão com banco de dados
+const cors = require('cors'); // CORS entre frontend e backend
+const bodyParser = require('body-parser');
+const https = require('https');
+const http = require('http');
+const helmet = require('helmet');
+const fs = require('fs');
+const path = require('path');
 
-// Definindo porta e inicializando dotenv
-dotenv.config({ path: '../../.env' });  // Carrega variáveis de ambiente
+// Carrega as variáveis de ambiente (certifique-se de que o caminho esteja correto)
+dotenv.config({ path: '../../.env' });
+
+// Define a porta (priorizando a variável de ambiente)
 const port = process.env.PORT || 5000;
 
-/* // Carregando certificados SSL desenvolvimento
-const privateKey = fs.readFileSync(path.join(__dirname, '../certificados/privkey.pem'), 'utf8');
-const certificate = fs.readFileSync(path.join(__dirname, '../certificados/fullchain.pem'), 'utf8');
-const credentials = { key: privateKey, cert: certificate }; */
+// Configuração de certificado para produção
+const PROD_CERT_PATH = "/etc/letsencrypt/live/ligapaulistadenatacao.com.br/";
 
-// Caminhos dos certificados no container
-const CERT_PATH = "/etc/letsencrypt/live/ligapaulistadenatacao.com.br/";
-
-
-const privateKey = fs.readFileSync(path.join(CERT_PATH, "privkey.pem"), "utf8");
-const certificate = fs.readFileSync(path.join(CERT_PATH, "fullchain.pem"), "utf8");
-const credentials = { key: privateKey, cert: certificate };
-try {
-  https.createServer(credentials, app).listen(port, () => {
-    console.log(`Servidor HTTPS rodando`);
-  });
-} catch (err) {
-  console.error("Certificados não encontrados. Executando servidor em HTTP.");
+// Função para iniciar o servidor HTTP
+const startHttpServer = () => {
   http.createServer(app).listen(port, () => {
-    console.log(`Servidor HTTP rodando`);
+    console.log(`Servidor HTTP rodando na porta ${port}`);
+    console.log(`Ambiente: ${process.env.NODE_ENV}`);
   });
+};
+
+// Função para iniciar o servidor HTTPS, tentando carregar os certificados
+const startHttpsServer = (keyPath, certPath) => {
+  try {
+    const privateKey = fs.readFileSync(path.join(keyPath), "utf8");
+    const certificate = fs.readFileSync(path.join(certPath), "utf8");
+    const credentials = { key: privateKey, cert: certificate };
+    https.createServer(credentials, app).listen(port, () => {
+      console.log(`Servidor HTTPS rodando na porta ${port}`);
+      console.log(`Ambiente: ${process.env.NODE_ENV}`);
+    });
+  } catch (err) {
+    console.error("Certificados não encontrados. Executando servidor em HTTP.");
+    startHttpServer();
+  }
+};
+
+/* Inicializando o servidor com base no ambiente e variáveis de controle:
+   1. Se DISABLE_SSL estiver definido (true), executa HTTP.
+   2. Se estiver em produção, utiliza os certificados reais.
+   3. Se estiver em desenvolvimento e os caminhos SSL estiverem informados, tenta
+      iniciar o HTTPS local; caso contrário, utiliza HTTP.
+*/
+if (process.env.DISABLE_SSL === 'true') {
+  console.log("SSL desabilitado. Iniciando servidor HTTP.");
+  startHttpServer();
+} else if (process.env.NODE_ENV === 'production') {
+  // Em produção, utiliza os certificados do diretório padrão
+  startHttpsServer(path.join(PROD_CERT_PATH, "privkey.pem"), path.join(PROD_CERT_PATH, "fullchain.pem"));
+} else if (process.env.NODE_ENV === 'development') {
+  // Em desenvolvimento, tenta usar os certificados informados nas variáveis SSL_CERT_PATH/SSL_KEY_PATH,
+  // se estiverem definidos; caso contrário, roda HTTP.
+  if (process.env.SSL_CERT_PATH && process.env.SSL_KEY_PATH) {
+    startHttpsServer(process.env.SSL_KEY_PATH, process.env.SSL_CERT_PATH);
+  } else {
+    console.log("Certificados locais não configurados. Iniciando servidor HTTP.");
+    startHttpServer();
+  }
+} else {
+  // Default fallback
+  startHttpServer();
 }
 
-
-
-// Adicionando CORS e body-parser
+// Configuração de CORS
 const allowedOrigins = [
-  'https://localhost',                 // Adicione esta linha (sem porta)
-  'https://localhost:8080',            // Para desenvolvimento local
-  'https://localhost:3000',            // Para desenvolvimento local
-  'https://www.ligapaulistadenatacao.com.br', // Para produção
-  'https://ligapaulistadenatacao.com.br', // Para produção
+  'http://localhost',
+  'http://localhost:8080',
+  'http://localhost:3000',
+  'https://localhost',
+  'https://localhost:8080',
+  'https://localhost:3000',
+  'https://www.ligapaulistadenatacao.com.br',
+  'https://ligapaulistadenatacao.com.br'
 ];
 
 app.use(cors({
@@ -61,30 +94,13 @@ app.use(cors({
 }));
 
 app.use(bodyParser.json());
-app.use(helmet()); // Ativando Helmet
+app.use(helmet());
 
 app.get('/', (req, res) => {
   res.send(`'Backend está funcionando!'`);
 });
 
-// Inicializando servidor HTTPS ou HTTP, dependendo do ambiente
-/* if (process.env.NODE_ENV === 'production') {
-  // Em produção, usamos HTTPS
-  https.createServer(credentials, app).listen(port, () => {
-    console.log(`Servidor HTTPS rodando na porta ${port}`);
-    console.log(`Ambiente: ${process.env.NODE_ENV}`);
-    console.log(`Origens permitidas: ${allowedOrigins.join(', ')}`);
-  });
-} else {
-  // Em desenvolvimento, usamos HTTP
-  http.createServer(app).listen(port, () => {
-    console.log(`Servidor HTTP rodando na porta ${port}`);
-    console.log(`Ambiente: ${process.env.NODE_ENV}`);
-    console.log(`Origens permitidas: ${allowedOrigins.join(', ')}`);
-  });
-} */
-
-// Importando e utilizando rotas
+// Rotas da API
 const authRoutes = require('./routes/authRoutes');
 const balizamentoRoutes = require('./routes/balizamentoRoutes');
 const equipesRoutes = require('./routes/equipesRoutes');
@@ -93,8 +109,8 @@ const usuariosRoutes = require('./routes/usuariosRoutes');
 const nadadoresRoutes = require('./routes/nadadoresRoutes');
 const inscricaoRoutes = require('./routes/inscricaoRoutes');
 const rankingsRoutes = require('./routes/rankingsRoutes');
-const uploadRoutes = require('./uploads'); // Importa o arquivo uploads.js
-const migracao = require('./routes/migracaoRoute'); //rota para ajudar na migração dos dados
+const uploadRoutes = require('./uploads'); // Rotas de upload
+const migracao = require('./routes/migracaoRoute');
 const resultadosEntrada = require('./routes/resultadosEntradaRoutes');
 
 app.use('/api/auth', authRoutes);
@@ -105,24 +121,22 @@ app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/nadadores', nadadoresRoutes);
 app.use('/api/inscricao', inscricaoRoutes);
 app.use('/api/rankings', rankingsRoutes);
-app.use(uploadRoutes); // Adiciona as rotas de upload
+app.use(uploadRoutes);
 app.use('/api/migracao', migracao);
 app.use('/api/resultadosEntrada', resultadosEntrada);
 
 // Servir o frontend em produção
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, 'frontend', 'build')));
-
-  // Captura todas as requisições que não sejam da API e serve o React
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'));
   });
 }
 
-// Página não encontrada
+// Middleware para página não encontrada
 app.use((req, res) => {
   res.status(404).send('Desculpe, não pode passar por aqui!');
 });
 
-// Exportando conexão com banco de dados
+// Exporta a conexão com o banco de dados
 module.exports = db;
