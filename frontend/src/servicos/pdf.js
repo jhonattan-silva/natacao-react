@@ -7,62 +7,59 @@ pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 //***************** */ Função para gerar o PDF de balizamento /******************************* */
 export const balizamentoPDF = (dados) => {
-  // Formata os dados para exibir no PDF
+  // Formata os dados para exibir no PDF, agora incluindo categoria e equipe
   const formattedData = Object.keys(dados).map(prova => ({
     nome: prova,
     baterias: dados[prova].map(bateria => (
       bateria.flat().map(nadador => ({
-        nome_nadador: nadador.nome_nadador || 'N/D', 
-        melhor_tempo: nadador.melhor_tempo || 'N/D', 
-        raia: nadador.raia || 'N/D'
+        nome_nadador: nadador.nome_nadador || 'N/D',
+        melhor_tempo: nadador.melhor_tempo || 'N/D',
+        raia: nadador.raia || 'N/D',
+        categoria: nadador.categoria || 'N/D',
+        equipe: nadador.equipe || 'N/D'
       }))
     ))
   }));
-  
 
-  // Definição do conteúdo do PDF
+  // Definição do conteúdo do PDF com a nova ordem de colunas
   const docDefinition = {
     header:{
-        columns:[
-            {
-                image: logo,
-                width: 130,
-                margin: [40, 5, 0 , 0],//left, top, right, bottom
-            },
-        ],
+      columns:[
+        {
+          image: logo,
+          width: 130,
+          margin: [40, 5, 0 , 0],
+        },
+      ],
     },
     content: [
       { text: 'Balizamento de Prova', style: 'header' },
-
-      // Mapeia cada prova para exibir o nome e as Séries
+      // Mapeia cada prova para exibir o nome
       ...formattedData.map((prova, provaIndex) => [
         { text: `Prova: ${prova.nome}`, style: 'subheader', pageBreak: provaIndex === 0 ? undefined : 'before', margin: provaIndex === 0 ? [0, 0, 0, 0] : [0, 50, 0, 0] },
-
-        // Mapeia cada Série e exibe seu índice
+        // Para cada bateria, gera uma tabela com as colunas: Série, Raia, Nome, Categoria, Equipe, Tempo
         ...prova.baterias.map((bateria, index) => [
-          { text: `Série ${index + 1}`, style: 'tableHeader', margin: [0, 10, 0, 5] },
-
-          // Define a tabela com o cabeçalho e linhas para cada nadador
           {
             table: {
               body: [
-                ['Nadador', 'Tempo', 'Raia'], // Cabeçalho da tabela
-
-                // Mapeia cada nadador na Série para preencher as linhas
+                // Cabeçalho com a nova ordem de colunas
+                ['Série', 'Raia', 'Nome', 'Categoria', 'Equipe', 'Tempo'],
+                // Preenche cada linha com os dados
                 ...bateria.map(nadador => [
-                  nadador.nome_nadador || 'N/D',   // Nome do nadador
-                  nadador.melhor_tempo || 'N/D',   // Melhor tempo
-                  nadador.raia || 'N/D'            // Raia
+                  index + 1,
+                  nadador.raia,
+                  nadador.nome_nadador,
+                  nadador.categoria,
+                  nadador.equipe,
+                  nadador.melhor_tempo
                 ])
               ]
             },
-            layout: 'lightHorizontalLines' // Layout com linhas horizontais leves
+            layout: 'lightHorizontalLines'
           }
         ])
       ])
     ],
-
-    // Estilos para cabeçalho, subcabeçalho e tabelas
     styles: {
       header: {
         fontSize: 22,
@@ -84,7 +81,6 @@ export const balizamentoPDF = (dados) => {
     }
   };
 
-  // Gera e faz o download do PDF com o nome 'Balizamento.pdf'
   pdfMake.createPdf(docDefinition).download('Balizamento.pdf');
 };
 

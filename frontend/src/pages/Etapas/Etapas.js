@@ -21,16 +21,15 @@ const Etapas = () => {
     const [etapaAtual, setEtapaAtual] = useState(1); // Novo estado para controlar a etapa atual
     const [provasSelecionadas, setProvasSelecionadas] = useState([]); // Novo estado para armazenar as provas selecionadas
 
-    const baseURL = 'https://www.ligapaulistadenatacao.com.br:5000/api/';
-    const apiListaEtapas = `${baseURL}etapas/listarEtapas`;
-    const apiCadastraEtapas = `${baseURL}etapas/cadastrarEtapas`;
-    const apiListaTorneios = `${baseURL}etapas/listarTorneios`;
-    const apiListaProvasMasculino = `${baseURL}etapas/listarProvas?sexo=M`;
-    const apiListaProvasFeminino = `${baseURL}etapas/listarProvas?sexo=F`;
-    const apiAtualizaEtapas = `${baseURL}etapas/atualizarEtapas`;
-    const apiExcluiEtapa = `${baseURL}etapas/excluiEtapa`;
-    const apiAbreInscricao = `${baseURL}etapas/abreInscricao`;
-    const apiListaEtapasAno = `${baseURL}etapas/listarEtapasAno`;
+    const apiListaEtapas = `/etapas/listarEtapas`;
+    const apiCadastraEtapas = `/etapas/cadastrarEtapas`;
+    const apiListaTorneios = `/etapas/listarTorneios`;
+    const apiListaProvasMasculino = `/etapas/listarProvas?sexo=M`;
+    const apiListaProvasFeminino = `/etapas/listarProvas?sexo=F`;
+    const apiAtualizaEtapas = `/etapas/atualizarEtapas`;
+    const apiExcluiEtapa = `/etapas/excluiEtapa`;
+    const apiAbreInscricao = `/etapas/abreInscricao`;
+    const apiListaEtapasAno = `/etapas/listarEtapasAno`;
 
     useEffect(() => {
         fetchData(anoSelecionado); // Chama a função `fetchData` ao montar o componente
@@ -431,10 +430,7 @@ const Etapas = () => {
                         return a.ordem - b.ordem;
                     }
                     return a.id - b.id; // Se não tiver ordem, ordena por ID
-                });
-    
-            console.log("📌 PROVAS ANTES DE AVANÇAR (corrigido):", provasSelecionadasOrdenadas);
-    
+                });    
             setProvasSelecionadas(provasSelecionadasOrdenadas);
             setEtapaAtual(2);
         }
