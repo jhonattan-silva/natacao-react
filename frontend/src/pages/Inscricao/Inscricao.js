@@ -22,6 +22,7 @@ const Inscricao = () => {
     const apiListaInscricoes = `/inscricao/listarInscricoes`;
     const apiProvasEvento = `/inscricao/listarProvasEvento`;
     const apiSalvarInscricao = `/inscricao/salvarInscricao`;
+    const apiVerificarRevezamento = `/inscricao/verificarRevezamento`;
 
     // Nova função para formatar o sexo
     const formatSexo = (sexo) => {
@@ -44,30 +45,40 @@ const Inscricao = () => {
     const fetchDadosEvento = async () => {
         try {
             const equipeId = user?.user?.equipeId[0];
-
             if (!equipeId) return;
 
             const nadadoresResponse = await api.get(`${apiListaNadadores}/${equipeId}`);
             const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${equipeId}`);
+            // Buscando inscrições individuais
             const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`);
+            // Buscando inscrições de revezamento via a nova rota
+            const revezamentoResponse = await api.get(`${apiVerificarRevezamento}/${eventoSelecionado}?equipeId=${equipeId}`);
             setNadadores(nadadoresResponse.data);
 
             const todasProvas = provasResponse.data.provas || [];
-            setProvas(todasProvas.filter(prova => prova.tipo !== "revezamento").sort((a, b) => a.ordem - b.ordem));
-            setRevezamentos(todasProvas.filter(prova => prova.tipo === "revezamento").sort((a, b) => a.ordem - b.ordem));
+            const provasFiltradas = todasProvas.filter(prova => prova.tipo !== "revezamento").sort((a, b) => a.ordem - b.ordem);
+            setProvas(provasFiltradas);
+            const revezamentosFiltrados = todasProvas.filter(prova => prova.tipo === "revezamento").sort((a, b) => a.ordem - b.ordem);
+            setRevezamentos(revezamentosFiltrados);
 
             const novasSelecoes = {};
             const novasSelecoesRevezamento = {};
+            // Atribuir "Sim" se existir inscrição de revezamento para a prova
+            revezamentoResponse.data.forEach(inscricao => {
+                novasSelecoesRevezamento[inscricao.provaId] = "Sim";
+            });
+            // Se não houver inscrição para alguma prova de revezamento, atribuir "Não"
+            revezamentosFiltrados.forEach(prova => {
+                if (!novasSelecoesRevezamento[prova.id]) {
+                    novasSelecoesRevezamento[prova.id] = "Não";
+                }
+            });
 
             inscricoesResponse.data.inscricoesIndividuais.forEach(inscricao => {
                 if (!novasSelecoes[inscricao.nadadorId]) {
                     novasSelecoes[inscricao.nadadorId] = {};
                 }
                 novasSelecoes[inscricao.nadadorId][inscricao.provaId] = true;
-            });
-
-            inscricoesResponse.data.inscricoesRevezamento.forEach(inscricao => {
-                novasSelecoesRevezamento[inscricao.provaId] = "Sim";
             });
 
             setSelecoes(novasSelecoes);
@@ -147,35 +158,57 @@ const Inscricao = () => {
     
 
     const aoSalvar = async () => {
-        const inscricoes = Object.entries(selecoes).flatMap(([nadadorId, provas]) =>
+        if (!eventoSelecionado) {
+            alert("Selecione um evento para continuar.");
+            return;
+        }
+        
+        const equipeId = user?.user?.equipeId?.[0];
+        if (!equipeId) {
+            alert("Você precisa fazer parte de uma equipe para realizar a inscrição.");
+            return;
+        }
+    
+        // Construção correta do payload
+        const inscricoesIndividuais = Object.entries(selecoes).flatMap(([nadadorId, provas]) =>
             Object.entries(provas)
                 .filter(([, isChecked]) => isChecked)
                 .map(([provaId]) => ({
                     nadadorId,
                     provaId,
-                    eventoId: eventoSelecionado
+                    eventoId: eventoSelecionado,
+                    equipeId
                 }))
         );
-
-        // Adiciona revezamentos na lista de inscrições
+    
         const inscricoesRevezamento = Object.entries(selecoesRevezamento)
             .filter(([, valor]) => valor === "Sim")
             .map(([provaId]) => ({
                 eventoId: eventoSelecionado,
                 provaId,
-                equipeId: user?.user?.equipeId[0] // A equipe do usuário logado
+                equipeId
             }));
-            
+    
+        const payload = [...inscricoesIndividuais, ...inscricoesRevezamento];
+    
+        if (payload.length === 0) {
+            alert("Nenhuma inscrição foi selecionada.");
+            return;
+        }
+    
+        console.log("Payload para salvar inscrição:", payload);
+    
         try {
-            await api.post(apiSalvarInscricao, [...inscricoes, ...inscricoesRevezamento]); // Envia ambos
+            await api.post(apiSalvarInscricao, payload);
             alert('Inscrição realizada com sucesso!');
-            await fetchDadosEvento(); // Recarrega os dados do evento após salvar
-            window.location.reload(); // Atualiza a página
+            await fetchDadosEvento();
+            window.location.reload(); // Atualiza a tela
         } catch (error) {
-            console.error('Erro ao realizar a inscrição:', error);
+            console.error("Erro ao realizar a inscrição:", error);
             alert('Erro ao salvar a inscrição.');
         }
     };
+    
 
     return (
         <>

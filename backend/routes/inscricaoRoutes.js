@@ -79,38 +79,112 @@ router.get('/listarInscricoes/:eventoId', async (req, res) => {
     }
 });
 
+// Nova rota para verificar inscrições de revezamento diretamente
+router.get('/verificarRevezamento/:eventoId', async (req, res) => {
+    const { eventoId } = req.params;
+    const { equipeId } = req.query;
+    if (!equipeId) {
+        return res.status(400).json({ message: 'Equipe ID é necessário' });
+    }
+    try {
+        const [rows] = await db.query(
+            'SELECT provas_id AS provaId FROM revezamentos_inscricoes WHERE eventos_id = ? AND equipes_id = ?',
+            [eventoId, equipeId]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error('Erro ao buscar inscrições de revezamento:', error);
+        res.status(500).json({ message: 'Erro ao buscar inscrições de revezamento.' });
+    }
+});
+
 // Rota para salvar as inscrições dos nadadores nas provas e da equipe nos revezamentos
 router.post('/salvarInscricao', async (req, res) => {
     const inscricoes = req.body;
+
+    if (!inscricoes.length) {
+        return res.status(400).json({ message: 'Nenhuma inscrição enviada.' });
+    }
+
     const eventoId = inscricoes[0]?.eventoId;
+    const equipeId = inscricoes[0]?.equipeId;
 
     if (!eventoId) {
         return res.status(400).json({ message: 'Evento ID é necessário para salvar inscrições.' });
     }
+    if (!equipeId) {
+        return res.status(400).json({ message: 'Equipe ID é necessário para salvar inscrições.' });
+    }
+
+    const connection = await db.getConnection();
 
     try {
-        await db.query('DELETE FROM inscricoes WHERE eventos_id = ?', [eventoId]);
-        await db.query('DELETE FROM revezamentos_inscricoes WHERE eventos_id = ?', [eventoId]); // Limpa revezamentos também
+        await connection.beginTransaction(); // Inicia a transação
+
+        // Excluir apenas as inscrições INDIVIDUAIS da equipe no evento
+        await connection.query(
+            `DELETE FROM inscricoes 
+             WHERE eventos_id = ? 
+             AND nadadores_id IN (SELECT id FROM nadadores WHERE equipes_id = ?)`,
+            [eventoId, equipeId]
+        );
+
+        // Excluir apenas as inscrições de REVEZAMENTO da equipe no evento
+        await connection.query(
+            `DELETE FROM revezamentos_inscricoes 
+             WHERE eventos_id = ? 
+             AND equipes_id = ?`,
+            [eventoId, equipeId]
+        );
+
+        // Inserir novas inscrições individuais, evitando duplicações
+        const queryIndividual = `
+            INSERT INTO inscricoes (nadadores_id, eventos_id, eventos_provas_id)
+            SELECT * FROM (SELECT ?, ?, ?) AS tmp
+            WHERE NOT EXISTS (
+                SELECT 1 FROM inscricoes 
+                WHERE nadadores_id = ? 
+                AND eventos_id = ? 
+                AND eventos_provas_id = ?
+            ) LIMIT 1;`;
+
+        // Inserir novas inscrições de revezamento, evitando duplicações
+        const queryRevezamento = `
+            INSERT INTO revezamentos_inscricoes (eventos_id, provas_id, equipes_id)
+            SELECT * FROM (SELECT ?, ?, ?) AS tmp
+            WHERE NOT EXISTS (
+                SELECT 1 FROM revezamentos_inscricoes 
+                WHERE eventos_id = ? 
+                AND provas_id = ? 
+                AND equipes_id = ?
+            ) LIMIT 1;`;
 
         for (const inscricao of inscricoes) {
-            if (inscricao.nadadorId) {
-                await db.query(
-                    'INSERT INTO inscricoes (nadadores_id, eventos_id, eventos_provas_id) VALUES (?, ?, ?)',
-                    [inscricao.nadadorId, eventoId, inscricao.provaId]
-                );
-            } else if (inscricao.equipeId) {
-                await db.query(
-                    'INSERT INTO revezamentos_inscricoes (eventos_id, provas_id, equipes_id) VALUES (?, ?, ?)',
-                    [eventoId, inscricao.provaId, inscricao.equipeId]
-                );
+            if (inscricao.nadadorId) { // Inscrição individual
+                await connection.query(queryIndividual, [
+                    inscricao.nadadorId, eventoId, inscricao.provaId, 
+                    inscricao.nadadorId, eventoId, inscricao.provaId
+                ]);
+            }
+            if (inscricao.equipeId && !inscricao.nadadorId) { // Inscrição em revezamento
+                await connection.query(queryRevezamento, [
+                    eventoId, inscricao.provaId, inscricao.equipeId, 
+                    eventoId, inscricao.provaId, inscricao.equipeId
+                ]);
             }
         }
 
+        await connection.commit(); // Confirma a transação
         res.json({ message: 'Inscrições atualizadas com sucesso!' });
+
     } catch (error) {
+        await connection.rollback(); // Reverte alterações em caso de erro
         console.error('Erro ao atualizar inscrições:', error);
         res.status(500).json({ message: 'Erro ao atualizar inscrições.' });
+    } finally {
+        connection.release(); // Libera a conexão
     }
 });
+
 
 module.exports = router;
