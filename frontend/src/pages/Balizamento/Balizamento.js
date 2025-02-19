@@ -71,15 +71,15 @@ const Balizamento = () => {
                 }
                 nadadoresPorProva[inscrito.nome_prova].inscritos.push(inscrito);
             });
-            
+
             // Transformar em array ordenado pela ordem da prova
             const provasOrdenadas = Object.keys(nadadoresPorProva)
-              .map(prova => ({
-                  nome_prova: prova,
-                  ordem: nadadoresPorProva[prova].ordem,
-                  inscritos: nadadoresPorProva[prova].inscritos
-              }))
-              .sort((a, b) => a.ordem - b.ordem);
+                .map(prova => ({
+                    nome_prova: prova,
+                    ordem: nadadoresPorProva[prova].ordem,
+                    inscritos: nadadoresPorProva[prova].inscritos
+                }))
+                .sort((a, b) => a.ordem - b.ordem);
 
             // Processar cada prova conforme a ordem
             const resultado = {};
@@ -89,7 +89,7 @@ const Balizamento = () => {
                 const baterias = dividirEmBaterias(todosNadadores);
                 resultado[item.nome_prova] = baterias.map(bateria => distribuirNadadoresNasRaias(bateria, provaId));
             });
-            
+
             setInscritos(resultado);
             balizamentoPDF(resultado);
             gerarFilipetas(resultado);
@@ -100,7 +100,7 @@ const Balizamento = () => {
 
             const respEquipeSexo = await api.get(apiInscritosEquipeSexo, { params: { eventoId } });
             setInscritosEquipeSexo(respEquipeSexo.data);
-            
+
             // Passe os três conjuntos para a função (orginais, dados brutos e equipe/sexo)
             relatorioInscritosPDF(originais, respEquipe.data, respEquipeSexo.data);
 
@@ -152,7 +152,7 @@ const Balizamento = () => {
                         </Botao>
                         <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo)} className={style.baixarBotao}>
                             Baixar Relatório de Inscritos
-                        </Botao>   
+                        </Botao>
                     </div>
                 )}
                 {Object.keys(inscritos).map(prova => (
@@ -161,7 +161,17 @@ const Balizamento = () => {
                         {inscritos[prova].map((bateria, index) => (
                             <div key={index}>
                                 <h3>{`Série ${index + 1}`}</h3>
-                                <Tabela dados={bateria.flat()} />
+                                <Tabela
+                                    dados={bateria.flat()}
+                                    colunasOcultas={['prova_id', 'nadador_id', 'inscricao_id']}
+                                    textoExibicao={{
+                                        nome_prova: 'PROVA',
+                                        nome_nadador: 'NADADOR',
+                                        melhor_tempo: 'RECORD',
+                                        equipe: 'EQUIPE',
+                                        raia: 'RAIA'
+                                    }}
+                                />
                             </div>
                         ))}
                     </div>
@@ -179,7 +189,7 @@ const Balizamento = () => {
                         </Botao>
                         <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo)} className={style.baixarBotao}>
                             Baixar Relatório de Inscritos
-                        </Botao>   
+                        </Botao>
                     </div>
                 )}
             </div>

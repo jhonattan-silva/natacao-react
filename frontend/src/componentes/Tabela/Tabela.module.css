@@ -1,6 +1,7 @@
 .tabela {
-    width: 100%;
+    width: calc(100% - 40px); /* largura ajustada conforme as margens */
     border-collapse: collapse;
+    margin: 20px auto; /* margem vertical 20px e centralização horizontal */
   }
   
   .tabela th, .tabela td {
@@ -10,6 +11,5 @@
   
   .tabela th {
     background-color: #f2f2f2;
-    text-align: left;
+    text-align: center;
   }
-  
