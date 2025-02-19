@@ -4,7 +4,7 @@ import Botao from '../../componentes/Botao/Botao';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import Tabela from '../../componentes/Tabela/Tabela';
 import api from '../../servicos/api';
-import { ordenarNadadoresPorTempo, dividirEmBaterias, distribuirNadadoresNasRaias } from '../../servicos/functions'; // Importe as funções
+import { ordenarNadadoresPorIdade, dividirEmBaterias, distribuirNadadoresNasRaias } from '../../servicos/functions'; // Modificado
 import { balizamentoPDF, gerarFilipetas } from '../../servicos/pdf';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import { relatorioInscritosPDF } from '../../servicos/relatoriosPDF';
@@ -103,13 +103,13 @@ const Balizamento = () => {
             const resultado = {};
             provasOrdenadas.forEach(item => {
                 const provaId = item.inscritos[0]?.prova_id;
-                const todosNadadores = ordenarNadadoresPorTempo(item.inscritos);
+                // Alterado: ordena nadadores por idade em vez de por tempo
+                const todosNadadores = ordenarNadadoresPorIdade(item.inscritos);
                 const baterias = dividirEmBaterias(todosNadadores);
                 resultado[item.nome_prova] = baterias.map(bateria => distribuirNadadoresNasRaias(bateria, provaId));
             });
 
             setInscritos(resultado);
-            console.log("Dados enviados para balizamentoPDF:", resultado, etapa);
             balizamentoPDF(resultado, etapa);
             gerarFilipetas(resultado);
 
@@ -182,12 +182,13 @@ const Balizamento = () => {
                                 <h3>{`Série ${index + 1}`}</h3>
                                 <Tabela
                                     dados={bateria.flat()}
-                                    colunasOcultas={['prova_id', 'nadador_id', 'inscricao_id']}
+                                    colunasOcultas={['prova_id', 'nadador_id', 'inscricao_id', 'data_nasc']}
                                     textoExibicao={{
                                         nome_prova: 'PROVA',
-                                        nome_nadador: 'NADADOR',
+                                        nome: 'NADADOR',
                                         melhor_tempo: 'RECORD',
                                         equipe: 'EQUIPE',
+                                        categoria: 'CATEGORIA',
                                         raia: 'RAIA'
                                     }}
                                 />

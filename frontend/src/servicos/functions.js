@@ -5,6 +5,20 @@ export function timeToMilliseconds(time) {
     return (minutes * 60 + seconds + centiseconds / 100) * 1000;
 }
 
+// Helper: Calcula a idade a partir da data de nascimento
+function getAge(dataNasc) {
+    const diff = Date.now() - new Date(dataNasc).getTime();
+    return new Date(diff).getUTCFullYear() - 1970;
+}
+
+// Nova função: Ordena nadadores por idade (dos mais jovens para os mais velhos)
+export function ordenarNadadoresPorIdade(nadadores) {
+    const sorted = [...nadadores].sort((a, b) => getAge(a.data_nasc) - getAge(b.data_nasc));
+    console.log("Nadadores ordenados por idade (dos mais jovens para os mais velhos):");
+    sorted.forEach(n => console.log(`${n.nome} - Idade: ${getAge(n.data_nasc)}`));
+    return sorted;
+}
+
 // Função para ordenar nadadores com e sem tempo registrado
 export function ordenarNadadoresPorTempo(nadadores) {
     // Separar nadadores sem recorde e com tempo
@@ -18,8 +32,8 @@ export function ordenarNadadoresPorTempo(nadadores) {
 
 // Função para dividir nadadores em baterias com o mínimo de 3 nadadores na última bateria
 export function dividirEmBaterias(nadadores) {
-    // Ordenar os nadadores por tempo
-    const nadadoresOrdenados = ordenarNadadoresPorTempo(nadadores);
+    // Ordenar os nadadores por idade
+    const nadadoresOrdenados = ordenarNadadoresPorIdade(nadadores);
     const totalNadadores = nadadoresOrdenados.length;
     const baterias = [];
 
@@ -84,15 +98,17 @@ export function distribuirNadadoresNasRaias(nadadores, provaId) {
             console.error(`Raia não encontrada para índice ${index}`);
             return;
         }
-
         nadadoresPorRaia[raias[raiaIndex] - 1].push({
             ...nadador,
             raia: raias[raiaIndex],
             prova_id: provaId,
         });
+        console.log(`Nadador ${nadador.nome} (Idade: ${getAge(nadador.data_nasc)}) atribuído à raia ${raias[raiaIndex]}`);
     });
 
-    return nadadoresPorRaia.filter(raia => raia.length > 0); // Retorna somente raias com nadadores
+    const resultado = nadadoresPorRaia.filter(raia => raia.length > 0);
+    console.log("Distribuição final nas raias:", resultado.map((r, idx) => `Raia ${idx + 1}: ${r.map(n => n.nome).join(", ")}`).join(" | "));
+    return resultado;
 }
 
 // Função para validar CPF
