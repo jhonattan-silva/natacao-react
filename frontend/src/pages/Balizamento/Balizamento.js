@@ -7,6 +7,7 @@ import api from '../../servicos/api';
 import { ordenarNadadoresPorTempo, dividirEmBaterias, distribuirNadadoresNasRaias } from '../../servicos/functions'; // Importe as funções
 import { balizamentoPDF, gerarFilipetas } from '../../servicos/pdf';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
+import { relatorioInscritosPDF } from '../../servicos/relatoriosPDF';
 
 const Balizamento = () => {
     const [eventoId, setEventoId] = useState(''); //captura o id do evento
@@ -15,6 +16,8 @@ const Balizamento = () => {
 
     const apiEventos = `/balizamento/listarEventos`;
     const apiInscritos = `/balizamento/listarInscritos`;
+    const apiInscritosEquipe = `/balizamento/listarInscritosEquipe`;
+    const apiInscritosUnicosEquipe = `/balizamento/listarInscritosUnicosEquipe`;
     const apiSalvarBalizamento = '/balizamento/salvarBalizamento';
 
     //buscar eventos para a listasuspensa = SELECT
@@ -35,6 +38,15 @@ const Balizamento = () => {
         setEventoId(id);
     };
 
+    const fetchInscritosPorEquipe = async () => {
+        try {
+            const response = await api.get(apiInscritosEquipe);
+            console.log("Dados dos inscritos por equipe:", response.data);
+        } catch (error) {
+            console.error("Erro ao buscar inscritos por equipe:", error);
+        }
+    };
+
     const gerarBalizamento = async () => {
         if (!eventoId) {
             alert("Por favor, selecione um evento.");
@@ -42,10 +54,10 @@ const Balizamento = () => {
         }
         try { //tendo selecionado um evento...
             const response = await api.get(`${apiInscritos}/${eventoId}`); //api+idEvento
-            const inscritos = response.data; //inscritos recebe os todos os dados retornados
+            const inscritosOriginais = response.data; // Captura os inscritos originais
             const nadadoresPorProva = {};
 
-            inscritos.forEach(inscrito => {
+            inscritosOriginais.forEach(inscrito => {
                 if (!nadadoresPorProva[inscrito.nome_prova]) { //se a prova atual ainda não tem um array
                     nadadoresPorProva[inscrito.nome_prova] = []; //cria o array do balizamento da prova especifica
                 }
@@ -61,38 +73,37 @@ const Balizamento = () => {
                 const baterias = dividirEmBaterias(todosNadadores); // Dividir em baterias
 
                 resultado[prova] = baterias.map(bateria => distribuirNadadoresNasRaias(bateria, provaId)); // Distribuir nas raias com o id da prova junto
-                console.log("Só resultado=>", todosNadadores);
-                console.log("Só as baterias=>", baterias);
-
             });
             setInscritos(resultado);
             balizamentoPDF(resultado);
             gerarFilipetas(resultado);
-            console.log('Estrutura de dadosBalizamento:', JSON.stringify(resultado, null, 2));
+
+            // Agora busca os inscritos por equipe e gera o relatório com ambos os conjuntos
+            const respEquipe = await api.get(`${apiInscritosUnicosEquipe}`, { params: { eventoId } });
+            const inscritosEquipe = respEquipe.data;
+            relatorioInscritosPDF(inscritosOriginais, inscritosEquipe);
+
             setBalizamentoGerado(true); // Indica que o balizamento foi gerado
         } catch (error) {
             console.error('Erro ao buscar inscritos:', error);
         }
     };
 
-        // Salvar balizamento no banco
-        const salvarBalizamento = async () => {
-            console.log("FRONT: EVNETO ID===>", eventoId);
-            console.log("FRONT: BALÇIZAMENTO: INSCRITOS", inscritos);
-            
-            if (!balizamentoGerado) {
-                alert('Nenhum balizamento foi gerado ainda.');
-                return;
-            }
-            try {
-                await api.post(apiSalvarBalizamento, { eventoId, balizamento: inscritos });
-                alert('Balizamento salvo com sucesso!');
-                setBalizamentoGerado(false); // Reseta o estado de balizamento gerado
-            } catch (error) {
-                console.error('Erro ao salvar balizamento:', error);
-                alert('Erro ao salvar o balizamento. Tente novamente.');
-            }
-        };
+    // Salvar balizamento no banco
+    const salvarBalizamento = async () => {
+        if (!balizamentoGerado) {
+            alert('Nenhum balizamento foi gerado ainda.');
+            return;
+        }
+        try {
+            await api.post(apiSalvarBalizamento, { eventoId, balizamento: inscritos });
+            alert('Balizamento salvo com sucesso!');
+            setBalizamentoGerado(false); // Reseta o estado de balizamento gerado
+        } catch (error) {
+            console.error('Erro ao salvar balizamento:', error);
+            alert('Erro ao salvar o balizamento. Tente novamente.');
+        }
+    };
 
     return (
         <>
@@ -125,9 +136,9 @@ const Balizamento = () => {
                         <h2>{`Balizamento - ${prova}`}</h2>
                         {inscritos[prova].map((bateria, index) => (
                             <div key={index}>
-                                <h3>{`Bateria ${index + 1}`}</h3>
+                                <h3>{`Série ${index + 1}`}</h3>
                                 <Tabela dados={bateria.flat()} />
-                                </div>
+                            </div>
                         ))}
                     </div>
                 ))}

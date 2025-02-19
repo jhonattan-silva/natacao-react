@@ -34,13 +34,13 @@ export const balizamentoPDF = (dados) => {
     content: [
       { text: 'Balizamento de Prova', style: 'header' },
 
-      // Mapeia cada prova para exibir o nome e as baterias
+      // Mapeia cada prova para exibir o nome e as Séries
       ...formattedData.map((prova, provaIndex) => [
         { text: `Prova: ${prova.nome}`, style: 'subheader', pageBreak: provaIndex === 0 ? undefined : 'before', margin: provaIndex === 0 ? [0, 0, 0, 0] : [0, 50, 0, 0] },
 
-        // Mapeia cada bateria e exibe seu índice
+        // Mapeia cada Série e exibe seu índice
         ...prova.baterias.map((bateria, index) => [
-          { text: `Bateria ${index + 1}`, style: 'tableHeader', margin: [0, 10, 0, 5] },
+          { text: `Série ${index + 1}`, style: 'tableHeader', margin: [0, 10, 0, 5] },
 
           // Define a tabela com o cabeçalho e linhas para cada nadador
           {
@@ -48,7 +48,7 @@ export const balizamentoPDF = (dados) => {
               body: [
                 ['Nadador', 'Tempo', 'Raia'], // Cabeçalho da tabela
 
-                // Mapeia cada nadador na bateria para preencher as linhas
+                // Mapeia cada nadador na Série para preencher as linhas
                 ...bateria.map(nadador => [
                   nadador.nome_nadador || 'N/D',   // Nome do nadador
                   nadador.melhor_tempo || 'N/D',   // Melhor tempo
@@ -94,7 +94,7 @@ export const balizamentoPDF = (dados) => {
 export const gerarFilipetas = (dadosBalizamento) => {
   const nadadoresData = [];
 
-  // Extrai as informações de cada nadador para cada bateria e raia
+  // Extrai as informações de cada nadador para cada Série e raia
   Object.keys(dadosBalizamento).forEach((tipoProva) => {
     dadosBalizamento[tipoProva].forEach((bateria, indiceBateria) => {
       bateria.flat().forEach((nadador) => {
@@ -124,7 +124,7 @@ export const gerarFilipetas = (dadosBalizamento) => {
             stack: [
               { image: logo, width: 50, alignment: 'center', margin: [0, 0, 0, 10] },
               { text: `Prova: ${nadador.tipoProva}`, style: 'tableHeader' },
-              { text: `Bateria: ${nadador.bateria} - Raia: ${nadador.raia}`, style: 'tableHeader' },
+              { text: `Série: ${nadador.bateria} - Raia: ${nadador.raia}`, style: 'tableHeader' },
               { text: `Nadador: ${nadador.nome}`, style: 'tableHeader' },
               { text: `Categoria: ${nadador.categoria}`, style: 'tableHeader' },
               { text: `Equipe: ${nadador.equipe}`, style: 'tableHeader' },

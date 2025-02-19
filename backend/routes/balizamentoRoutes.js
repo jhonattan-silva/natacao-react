@@ -44,6 +44,91 @@ router.get('/listarInscritos/:eventoId', async (req, res) => {
   }
 });
 
+// Nova rota para listar inscritos por equipe
+router.get('/listarInscritosEquipe', async (req, res) => {
+  const { eventoId } = req.query; // opcional: filtro por evento
+  try {
+    let sql = `
+      SELECT 
+        COALESCE(e.nome, 'N/D') AS equipe,
+        COUNT(*) AS total_inscritos
+      FROM inscricoes i
+      INNER JOIN nadadores n ON i.nadadores_id = n.id
+      LEFT JOIN equipes e ON n.equipes_id = e.id
+    `;
+    const params = [];
+    if (eventoId) {
+      sql += ' WHERE i.eventos_id = ? ';
+      params.push(eventoId);
+    }
+    sql += ' GROUP BY equipe ';
+    const [rows] = await db.query(sql, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('Erro ao buscar inscritos por equipe:', error);
+    res.status(500).json({ message: 'Erro ao buscar inscritos por equipe.' });
+  }
+});
+
+// Nova rota para listar inscritos únicos por equipe
+router.get('/listarInscritosUnicosEquipe', async (req, res) => {
+  const { eventoId } = req.query; // opcional: filtro por evento
+  try {
+    let sql = `
+      SELECT 
+        COALESCE(e.nome, 'N/D') AS equipe,
+        COUNT(DISTINCT i.nadadores_id) AS total_inscritos
+      FROM inscricoes i
+      INNER JOIN nadadores n ON i.nadadores_id = n.id
+      LEFT JOIN equipes e ON n.equipes_id = e.id
+    `;
+    const params = [];
+    if (eventoId) {
+      sql += ' WHERE i.eventos_id = ? ';
+      params.push(eventoId);
+    }
+    sql += ' GROUP BY equipe ';
+    const [rows] = await db.query(sql, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('Erro ao buscar inscritos únicos por equipe:', error);
+    res.status(500).json({ message: 'Erro ao buscar inscritos únicos por equipe.' });
+  }
+});
+
+// Nova rota para listar inscritos por equipe com detalhamento de sexo e revezamentos
+router.get('/listarInscritosEquipeSexo', async (req, res) => {
+  const { eventoId } = req.query; // opcional: filtro por evento
+  try {
+    let sql = `
+      SELECT 
+        COALESCE(e.nome, 'N/D') AS equipe,
+        COUNT(DISTINCT CASE WHEN n.sexo IN ('M','m') THEN i.nadadores_id END) AS atletas_masculinos,
+        COUNT(DISTINCT CASE WHEN n.sexo IN ('F','f') THEN i.nadadores_id END) AS atletas_femininas,
+        COUNT(DISTINCT i.nadadores_id) AS total_atletas,
+        COUNT(DISTINCT CASE 
+            WHEN LOWER(CONCAT(p.estilo, ' ', p.distancia, 'm ', p.tipo, ' ', p.sexo)) LIKE '%revezamento%' 
+            THEN i.nadadores_id 
+         END) AS revezamentos
+      FROM inscricoes i
+      INNER JOIN nadadores n ON i.nadadores_id = n.id
+      LEFT JOIN equipes e ON n.equipes_id = e.id
+      INNER JOIN eventos_provas ep ON i.eventos_provas_id = ep.id
+      INNER JOIN provas p ON ep.provas_id = p.id
+    `;
+    const params = [];
+    if (eventoId) {
+      sql += ' WHERE i.eventos_id = ? ';
+      params.push(eventoId);
+    }
+    sql += ' GROUP BY equipe ';
+    const [rows] = await db.query(sql, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('Erro ao buscar inscritos por equipe (sexo):', error);
+    res.status(500).json({ message: 'Erro ao buscar inscritos por equipe (sexo).' });
+  }
+});
 
 router.post('/salvarBalizamento', async (req, res) => {
   const { eventoId, balizamento } = req.body;

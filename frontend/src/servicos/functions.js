@@ -20,7 +20,6 @@ export function ordenarNadadoresPorTempo(nadadores) {
 export function dividirEmBaterias(nadadores) {
     // Ordenar os nadadores por tempo
     const nadadoresOrdenados = ordenarNadadoresPorTempo(nadadores);
-    console.log(nadadoresOrdenados);
     const totalNadadores = nadadoresOrdenados.length;
     const baterias = [];
 
@@ -51,7 +50,6 @@ export function dividirEmBaterias(nadadores) {
         baterias.push(grupo);
         index += tamanhoBateria;
     }
-    console.log("!BATERIAS______", baterias);
     return baterias;
 }
 
@@ -79,8 +77,6 @@ export function distribuirNadadoresNasRaias(nadadores, provaId) {
             return []; // Retorna vazio para números não suportados
     }
 
-    console.log("RAIAS DEFINIDAS:", raias);
-
     // Distribui os nadadores nas raias
     nadadores.forEach((nadador, index) => {
         const raiaIndex = index; // O índice corresponde diretamente ao índice de "raias"
@@ -94,8 +90,6 @@ export function distribuirNadadoresNasRaias(nadadores, provaId) {
             raia: raias[raiaIndex],
             prova_id: provaId,
         });
-
-        console.log(`Nadador ${nadador.nome_nadador} posicionado na raia ${raias[raiaIndex]} para a prova ${provaId}`);
     });
 
     return nadadoresPorRaia.filter(raia => raia.length > 0); // Retorna somente raias com nadadores
