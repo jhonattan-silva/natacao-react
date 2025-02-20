@@ -19,7 +19,7 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
     nome: prova,
     baterias: dados[prova].map(bateria => (
       bateria.flat().map(nadador => ({
-        nome_nadador: nadador.nome_nadador || 'N/D',
+        nome_nadador: nadador.nome || nadador.nome_nadador || 'N/D',
         melhor_tempo: nadador.melhor_tempo || 'N/D',
         raia: nadador.raia || 'N/D',
         categoria: nadador.categoria || 'N/D',
@@ -40,8 +40,8 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
       ],
     },
     content: [
-      // Espacador para descer o conteúdo
-      { text: '', margin: [0, 60, 0, 0] },
+      // Aumentado espaçamento para evitar sobreposição do header
+      { text: '', margin: [0, 100, 0, 0] },
       // Bloco de informações do evento em maiúsculas
       { text: 'INFORMAÇÕES DO EVENTO', style: 'eventHeader', margin: [0, 0, 0, 5] },
       { 
@@ -65,6 +65,7 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
         ...prova.baterias.map((bateria, index) => [
           {
             table: {
+              dontBreakRows: true, // Impede quebra da tabela entre páginas
               body: [
                 // Cabeçalho com a nova ordem de colunas
                 ['Série', 'Raia', 'Nome', 'Categoria', 'Equipe', 'Tempo'],
@@ -79,7 +80,8 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
                 ])
               ]
             },
-            layout: 'lightHorizontalLines'
+            layout: 'lightHorizontalLines',
+            margin: [0, 20, 0, 20] // Acrescentado espaçamento entre as séries
           }
         ])
       ])
@@ -131,7 +133,7 @@ export const gerarFilipetas = (dadosBalizamento) => {
           tipoProva,
           bateria: indiceBateria + 1,
           raia: nadador.raia || 'N/D',
-          nome: nadador.nome_nadador || 'N/D',
+          nome: nadador.nome || nadador.nome_nadador || 'N/D', // Alterado para buscar 'nome'
           categoria: nadador.categoria || 'N/D',
           equipe: nadador.equipe || 'N/D'
         });
@@ -147,6 +149,7 @@ export const gerarFilipetas = (dadosBalizamento) => {
   nadadoresData.forEach((nadador) => {
     const registro = {
       table: {
+        dontBreakRows: true, // Impede quebra da tabela entre páginas
         widths: ['100%'], // Garante que a tabela ocupe toda a célula
         body: [[
           {
@@ -194,14 +197,15 @@ export const gerarFilipetas = (dadosBalizamento) => {
   // Definição do conteúdo do PDF
   const docDefinition = {
     pageSize: 'A4',
-    pageMargins: [10, 10, 10, 10],
+    // Aumentado top margin para evitar que o texto invada o cabeçalho
+    pageMargins: [10, 70, 10, 10],
     content: pages,
     styles: {
       tableHeader: {
         bold: true,
         fontSize: 8,
         color: 'black',
-        margin: [0, 2, 0, 2]
+        margin: [0, 5, 0, 5] // Aumentado o margin vertical
       },
       recordBorder: {
         border: [true, true, true, true], // Ensure borders are applied by default

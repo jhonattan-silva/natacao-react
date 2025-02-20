@@ -46,7 +46,6 @@ const Balizamento = () => {
             setEventoId(selected.id);
             // Armazena os dados completos do evento em "etapa"
             setEtapa({ nome: selected.nome, data: selected.data /*, outros dados se necessário */ });
-            console.log("Evento selecionado IF:", selected);
         } else {
             setEventoId(selected);
             try {
@@ -54,7 +53,6 @@ const Balizamento = () => {
                 // Procura o evento que possui o id igual a `selected`
                 const eventoEncontrado = response.data.find(e => e.id === selected) || response.data[0];
                 setEtapa(eventoEncontrado);
-                console.log("Evento selecionado ELSE:", eventoEncontrado);
             } catch (error) {
                 console.error("Erro ao buscar dados completos do evento:", error);
             }
@@ -65,7 +63,6 @@ const Balizamento = () => {
     const fetchInscritosPorEquipe = async () => {
         try {
             const response = await api.get(apiInscritosEquipe);
-            console.log("Dados dos inscritos por equipe:", response.data);
         } catch (error) {
             console.error("Erro ao buscar inscritos por equipe:", error);
         }
