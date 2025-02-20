@@ -27,7 +27,7 @@ router.get('/listarInscritos/:eventoId', async (req, res) => {
           n.nome AS nome,       -- Alterado: alias para "nome"
           n.data_nasc,         -- Adicionado: data de nascimento
           n.id AS nadador_id,
-          COALESCE(r.tempo, 'Sem recorde') AS melhor_tempo,
+          COALESCE(r.tempo, '00:00') AS melhor_tempo, 
           i.id AS inscricao_id,
           e.nome AS equipe,
           c.nome AS categoria

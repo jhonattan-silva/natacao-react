@@ -1,6 +1,6 @@
 // Converter o tempo para milissegundos
 export function timeToMilliseconds(time) {
-    if (time === "Sem recorde") return Infinity; // Para ordenar nadadores sem tempo registrado no final
+    if (time === "00:00") return Infinity; // Alterado: agora compara "00:00"
     const [minutes, seconds, centiseconds] = time.split(':').map(Number);
     return (minutes * 60 + seconds + centiseconds / 100) * 1000;
 }
@@ -21,9 +21,9 @@ export function ordenarNadadoresPorIdade(nadadores) {
 
 // Função para ordenar nadadores com e sem tempo registrado
 export function ordenarNadadoresPorTempo(nadadores) {
-    // Separar nadadores sem recorde e com tempo
-    const nadadoresSemTempo = nadadores.filter(n => n.melhor_tempo === "Sem recorde");
-    const nadadoresComTempo = nadadores.filter(n => n.melhor_tempo !== "Sem recorde")
+    // Separar nadadores com tempo "00:00" e com tempo definido
+    const nadadoresSemTempo = nadadores.filter(n => n.melhor_tempo === "00:00");
+    const nadadoresComTempo = nadadores.filter(n => n.melhor_tempo !== "00:00")
         .sort((a, b) => timeToMilliseconds(b.melhor_tempo) - timeToMilliseconds(a.melhor_tempo)); // Ordenação decrescente dos tempos
 
     // Combina a lista dos sem recorde com a dos tempos ordenados
