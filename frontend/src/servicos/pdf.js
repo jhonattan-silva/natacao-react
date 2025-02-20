@@ -6,6 +6,23 @@ const logo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKcAAABQCAYAAAB8gWVN
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 //***************** */ Função para gerar o PDF de balizamento /******************************* */
+// Alteração: header definido como função para diferenciar primeira página das demais
+const headerFunction = (currentPage, pageCount) => {
+  if (currentPage === 1) {
+    return {
+      columns: [
+        { image: logo, width: 130, margin: [40, 5, 0, 0] }
+      ]
+    };
+  } else {
+    return {
+      columns: [
+        { image: logo, width: 130, margin: [40, 5, 0, 120] } // margem inferior aumentada
+      ]
+    };
+  }
+};
+
 export const balizamentoPDF = (dados, etapa) => { // Alteração para receber etapa
   // Formatação da data e hora com ajuste de fuso horário (+3 horas)
   const eventDate = etapa?.data ? new Date(etapa.data) : new Date();
@@ -30,18 +47,9 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
 
   // Definição do conteúdo do PDF com informações do evento em maiúsculas
   const docDefinition = {
-    header:{
-      columns:[
-        {
-          image: logo,
-          width: 130,
-          margin: [40, 5, 0 , 0],
-        },
-      ],
-    },
+    header: headerFunction, // usada a função do header
+    pageMargins: [10, 80, 10, 10], 
     content: [
-      // Aumentado espaçamento para evitar sobreposição do header
-      { text: '', margin: [0, 100, 0, 0] },
       // Bloco de informações do evento em maiúsculas
       { text: 'INFORMAÇÕES DO EVENTO', style: 'eventHeader', margin: [0, 0, 0, 5] },
       { 
@@ -54,18 +62,20 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
         columns: [
           { text: `DATA: ${formattedDate}`, style: 'eventInfo' },
           { text: `HORA: ${formattedTime}`, style: 'eventInfo' }
-        ], margin: [0, 0, 0, 20]
+        ], margin: [0, 0, 0, 0]
       },
       // Título padrão
       { text: 'Balizamento de Prova', style: 'header' },
       // Mapeia cada prova para exibir o nome
       ...formattedData.map((prova, provaIndex) => [
-        { text: `Prova: ${prova.nome}`, style: 'subheader', pageBreak: provaIndex === 0 ? undefined : 'before', margin: provaIndex === 0 ? [0, 0, 0, 0] : [0, 50, 0, 0] },
+        { text: `Prova: ${prova.nome}`, style: 'subheader', margin: provaIndex === 0 ? [0, 0, 0, 0] : [0, 50, 0, 0] },
         // Para cada bateria, gera uma tabela com as colunas: Série, Raia, Nome, Categoria, Equipe, Tempo
         ...prova.baterias.map((bateria, index) => [
           {
             table: {
               dontBreakRows: true, // Impede quebra da tabela entre páginas
+              // Adicionada propriedade widths com valores fixos para padronizar o tamanho
+              widths: [30, 25, 150, 100, 100, 80],
               body: [
                 // Cabeçalho com a nova ordem de colunas
                 ['Série', 'Raia', 'Nome', 'Categoria', 'Equipe', 'Tempo'],
@@ -81,7 +91,7 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
               ]
             },
             layout: 'lightHorizontalLines',
-            margin: [0, 20, 0, 20] // Acrescentado espaçamento entre as séries
+            margin: [0, 5, 0, 5] // Acrescentado espaçamento entre as séries
           }
         ])
       ])
@@ -160,7 +170,7 @@ export const gerarFilipetas = (dadosBalizamento) => {
               { text: `Nadador: ${nadador.nome}`, style: 'tableHeader' },
               { text: `Categoria: ${nadador.categoria}`, style: 'tableHeader' },
               { text: `Equipe: ${nadador.equipe}`, style: 'tableHeader' },
-              { text: 'TEMPO: ________________', style: 'tableHeader' }
+              { text: 'TEMPO: ______________________', style: 'tableHeader' }
             ],
             margin: [5, 5, 5, 5]
           }
