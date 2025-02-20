@@ -164,15 +164,17 @@ export const gerarFilipetas = (dadosBalizamento) => {
         body: [[
           {
             stack: [
-              { image: logo, width: 50, alignment: 'center', margin: [0, 0, 0, 10] },
-              { text: `Prova: ${nadador.tipoProva}`, style: 'tableHeader' },
-              { text: `Série: ${nadador.bateria} - Raia: ${nadador.raia}`, style: 'tableHeader' },
-              { text: `Nadador: ${nadador.nome}`, style: 'tableHeader' },
-              { text: `Categoria: ${nadador.categoria}`, style: 'tableHeader' },
-              { text: `Equipe: ${nadador.equipe}`, style: 'tableHeader' },
-              { text: 'TEMPO: ______________________', style: 'tableHeader' }
+              { image: logo, width: 70, alignment: 'center', margin: [0, 0, 0, 2] },
+              { text: `Prova: ${nadador.tipoProva}`, style: 'tableHeader', margin: [0, 2, 0, 2] },
+              { text: `Série: ${nadador.bateria} - Raia: ${nadador.raia}`, style: 'tableHeader', margin: [0, 2, 0, 2] },
+              { text: `Nadador: ${nadador.nome}`, style: 'tableHeader', margin: [0, 2, 0, 2] },
+              { text: `Categoria: ${nadador.categoria}`, style: 'tableHeader', margin: [0, 2, 0, 2] },
+              { text: `Equipe: ${nadador.equipe}`, style: 'tableHeader', margin: [0, 2, 0, 2] },
+              { text: 'TEMPO: ______________________', style: 'tableHeader', margin: [0, 2, 0, 2] }
             ],
-            margin: [5, 5, 5, 5]
+            margin: [2, 2, 2, 2],
+            // Alteração: definir a altura fixa para 5,5cm (≈156 pontos)
+            fixedHeight: 200 
           }
         ]]
       },
@@ -182,38 +184,40 @@ export const gerarFilipetas = (dadosBalizamento) => {
         hLineColor: () => 'black', // Cor da linha horizontal
         vLineColor: () => 'black'  // Cor da linha vertical
       },
-      width: '45%' // Mantém o tamanho adequado para 2 colunas
+      // Alteração: definir a largura fixa para 8,5cm (≈241 pontos)
+      width: 241 
     };    
 
     currentColumn.push(registro);
 
     // Verifica se a coluna atingiu 2 registros
     if (currentColumn.length === 2) {
-      currentPage.push({ columnGap: 10, columns: currentColumn });
+      // Aumente o valor de columnGap para aumentar o espaçamento lateral entre as colunas
+      currentPage.push({ columnGap: 40, columns: currentColumn, margin: [40, 0, 20, 20] });
       currentColumn = [];
     }
 
     // Verifica se a página atingiu 5 linhas completas
-    if (currentPage.length === 5) {
+    if (currentPage.length === 4) {
       pages.push({ stack: currentPage, pageBreak: 'after' });
       currentPage = [];
     }
   });
 
   // Adiciona a última coluna e página, se não estiver vazia
-  if (currentColumn.length > 0) currentPage.push({ columnGap: 10, columns: currentColumn });
+  if (currentColumn.length > 0) currentPage.push({ columnGap: 10, columns: currentColumn, margin: [0, 0, 20, 20] });
   if (currentPage.length > 0) pages.push({ stack: currentPage });
 
   // Definição do conteúdo do PDF
   const docDefinition = {
     pageSize: 'A4',
-    // Aumentado top margin para evitar que o texto invada o cabeçalho
-    pageMargins: [10, 70, 10, 10],
+    // Alteração: diminua o top margin (segundo valor) de 70 para 10
+    pageMargins: [10, 40, 10, 10],
     content: pages,
     styles: {
       tableHeader: {
         bold: true,
-        fontSize: 8,
+        fontSize: 10,
         color: 'black',
         margin: [0, 5, 0, 5] // Aumentado o margin vertical
       },
