@@ -140,7 +140,9 @@ router.post('/salvarInscricao', async (req, res) => {
         // Inserir novas inscrições individuais, evitando duplicações
         const queryIndividual = `
             INSERT INTO inscricoes (nadadores_id, eventos_id, eventos_provas_id)
-            SELECT * FROM (SELECT ?, ?, ?) AS tmp
+            SELECT * FROM (
+                SELECT ? AS nadadores_id, ? AS eventos_id, ? AS eventos_provas_id
+            ) AS tmp
             WHERE NOT EXISTS (
                 SELECT 1 FROM inscricoes 
                 WHERE nadadores_id = ? 
@@ -151,7 +153,9 @@ router.post('/salvarInscricao', async (req, res) => {
         // Inserir novas inscrições de revezamento, evitando duplicações
         const queryRevezamento = `
             INSERT INTO revezamentos_inscricoes (eventos_id, provas_id, equipes_id)
-            SELECT * FROM (SELECT ?, ?, ?) AS tmp
+            SELECT * FROM (
+                SELECT ? AS eventos_id, ? AS provas_id, ? AS equipes_id
+            ) AS tmp
             WHERE NOT EXISTS (
                 SELECT 1 FROM revezamentos_inscricoes 
                 WHERE eventos_id = ? 
