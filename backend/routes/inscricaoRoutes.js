@@ -190,5 +190,4 @@ router.post('/salvarInscricao', async (req, res) => {
     }
 });
 
-
 module.exports = router;
