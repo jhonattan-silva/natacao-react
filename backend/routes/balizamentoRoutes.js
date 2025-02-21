@@ -154,7 +154,12 @@ router.post('/salvarBalizamento', async (req, res) => {
     await connection.beginTransaction();
 
     for (const [prova, baterias] of Object.entries(balizamento)) {
-    
+      // Verifica se a prova possui pelo menos 3 inscritos
+      const totalInscritos = baterias.reduce((acc, bateria) => acc + bateria.length, 0);
+      if (totalInscritos < 3) {
+        throw new Error(`A prova ${prova} possui menos que 3 inscritos e não pode ser balizada.`);
+      }
+
       for (const [bateriaIndex, bateria] of baterias.entries()) {
         // Acessa o primeiro nadador dentro do array aninhado para obter `prova_id` e `Nadadores_id`
         const prova_id = bateria[0]?.[0]?.prova_id;

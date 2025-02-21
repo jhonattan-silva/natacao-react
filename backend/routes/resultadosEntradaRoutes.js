@@ -28,7 +28,8 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
                 p.estilo AS prova_estilo,
                 p.distancia,
                 p.tipo,
-                p.sexo
+                p.sexo,
+                ep.ordem
             FROM 
                 inscricoes i
             JOIN 
@@ -36,7 +37,8 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
             JOIN 
                 provas p ON ep.provas_id = p.id
             WHERE 
-                i.Eventos_id = ?;
+                i.Eventos_id = ?
+            ORDER BY ep.ordem ASC;
         `;
         const [rows] = await db.query(query, [eventoId]);
 
@@ -77,7 +79,7 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
             [provaId]
         );
 
-        // Organiza os dados por baterias
+        // Organiza os dados por Séries
         const bateriasOrganizadas = baterias.reduce((acc, row) => {
             const { bateriaId, numeroBateria, raia, nadadorId, nomeNadador, tempo } = row;
 
@@ -103,21 +105,23 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
 
         res.status(200).json(bateriasOrganizadas);
     } catch (error) {
-        console.error('Erro ao listar baterias da prova:', error.message);
+        console.error('Erro ao listar Séries da prova:', error.message);
         res.status(500).json({
             success: false,
-            message: 'Erro ao buscar baterias da prova.',
+            message: 'Erro ao buscar Séries da prova.',
         });
     }
 });
 
 router.post('/salvarResultados', async (req, res) => {
     const { provaId, dados } = req.body;
+    console.log('Dados recebidos:', req.body);
+    console.log('Dados das baterias:', dados); // Log completo das baterias
 
     if (!provaId || !dados || !Array.isArray(dados)) {
         return res.status(400).json({
             success: false,
-            message: 'Prova ID e dados das baterias são obrigatórios.',
+            message: 'Prova ID e dados das Séries são obrigatórios.',
         });
     }
 
@@ -126,33 +130,27 @@ router.post('/salvarResultados', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // Itera sobre os dados enviados
+        // Itera sobre os dados enviados e insere na tabela "resultados"
         for (const bateria of dados) {
-            const { bateriaId, nadadores } = bateria;
+            console.log('Processando bateria:', bateria); // Log bateria atual
+            const { nadadores } = bateria;
 
             if (!nadadores || !Array.isArray(nadadores)) {
                 throw new Error('Dados de nadadores estão ausentes ou incorretos.');
             }
 
             for (const nadador of nadadores) {
-                const { id: nadadorId, tempo } = nadador;
+                console.log('Processando nadador:', nadador); // Log cada nadador processado
+                const { id: nadadorId, tempo, status } = nadador;
 
-                if (!nadadorId || !tempo) {
+                if (!nadadorId || (!tempo && tempo !== null)) {
                     throw new Error('ID do nadador e tempo são obrigatórios.');
                 }
 
-                // Atualiza ou insere o tempo do nadador na tabela `baterias_inscricoes`
                 await connection.query(
-                    `
-                    UPDATE baterias_inscricoes
-                    SET tempo = ?
-                    WHERE Inscricoes_id = (
-                        SELECT id
-                        FROM inscricoes
-                        WHERE Nadadores_id = ? AND Eventos_Provas_id = ?
-                    )
-                    `,
-                    [tempo, nadadorId, provaId]
+                    `INSERT INTO resultados (tempo, pontos, nadadores_id, eventos_provas_id, status)
+                     VALUES (?, ?, ?, ?, ?)`,
+                    [tempo, null, nadadorId, provaId, status]
                 );
             }
         }
@@ -167,6 +165,5 @@ router.post('/salvarResultados', async (req, res) => {
         connection.release();
     }
 });
-
 
 module.exports = router;

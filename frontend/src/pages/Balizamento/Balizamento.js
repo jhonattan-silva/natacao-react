@@ -138,7 +138,8 @@ const Balizamento = () => {
             setBalizamentoGerado(false); // Reseta o estado de balizamento gerado
         } catch (error) {
             console.error('Erro ao salvar balizamento:', error);
-            alert('Erro ao salvar o balizamento. Tente novamente.');
+            // Mostra a mensagem de erro retornada pelo backend ao usuário, se existir.
+            alert(error.response?.data?.error || 'Erro ao salvar o balizamento. Tente novamente.');
         }
     };
 

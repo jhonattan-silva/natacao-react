@@ -3,13 +3,11 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    width: 80%; /* Aumentar a largura do container */
     margin: 0 auto; /* Centralizar o container */
 }
 
 .opcoesContainer.opcoesContainer, .listagemContainer.listagemContainer {
-    width: 100%;
-    max-width: 600px;
+    width: 80%;
     margin: 0 auto;
     text-align: center;
 }
@@ -28,6 +26,7 @@
     padding: 16px;
     margin-bottom: 16px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Altera para preencher 100% do container pai */
 }
 
 .bateriaContainer.bateriaContainer h2 {
@@ -72,9 +71,21 @@
     margin-bottom: 8px;
 }
 
+/* Adicione a regra para alternar o fundo dos elementos .nadadorContainer */
+.nadadorContainer:nth-child(odd) {
+    background-color: #ffffff; /* Fundo claro */
+}
+
+.nadadorContainer:nth-child(even) {
+    background-color: #c8b1b1; /* Fundo alternado */
+}
+
 .nadadorNome {
     flex: 1;
     text-align: left;
+    font-weight: bold;
+    color: #333;
+    font-size: 24px; /* Adicionado: define o tamanho do texto para 24px */
 }
 
 .nadadorNome {
@@ -90,7 +101,7 @@
 }
 
 .nadadorInput {
-    flex: 2;
+    flex: 0.5;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -105,7 +116,11 @@
 }
 
 .inputSalvo {
-    border: 4px solid green; /* Adicionado */
+    border: 4px solid green;  /* Mantém a borda */
+    padding: 2px;             /* Menor padding para input mais compacto */
+    font-size: 24px;          /* Tamanho do texto */
+    width: 120px;             /* Largura fixa para manter o input pequeno */
+    box-sizing: border-box;   /* Inclui padding e borda no cálculo da largura */
 }
 
 label {

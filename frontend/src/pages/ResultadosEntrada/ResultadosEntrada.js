@@ -15,6 +15,8 @@ const ResultadosEntrada = () => {
     const [erro, setErro] = useState(null); // Estado para erros
     const { resultados, salvarTempo } = useContext(ResultadosContext); // Contexto com os resultados
     const [inputSalvo, setInputSalvo] = useState(null); // Estado para controlar a estilização do input
+    const [checkboxes, setCheckboxes] = useState({}); // Estado para os checkboxes
+    const [valoresBanco, setValoresBanco] = useState({}); // Novo estado para os tempos do banco
 
     const apiEventos = '/resultadosEntrada/listarEventos';
     const apiProvasEvento = '/resultadosEntrada/listarProvasEvento';
@@ -73,7 +75,7 @@ const ResultadosEntrada = () => {
         fetchProvas();
     }, [eventoId]);
 
-    // Listar baterias da prova escolhida
+    // Listar Séries da prova escolhida
     useEffect(() => {
         if (!provaId) return;
 
@@ -89,14 +91,26 @@ const ResultadosEntrada = () => {
                         }),
                     }));
                     setBaterias(bateriasComTempos);
+
+                    // Armazena os tempos carregados do banco
+                    const dbMapping = {};
+                    response.data.forEach((bateria) => {
+                        bateria.nadadores.forEach((nadador) => {
+                            if (nadador.tempo) {
+                                dbMapping[nadador.id] = nadador.tempo;
+                            }
+                        });
+                    });
+                    setValoresBanco({ [provaId]: dbMapping });
+
                     setErro(null);
                 } else {
-                    console.error('ERRO: A resposta das baterias não é array');
+                    console.error('ERRO: A resposta das Séries não é array');
                     setErro('Erro nos dados vindos do banco');
                 }
             } catch (err) {
-                console.error('Erro ao buscar baterias:', err.message);
-                setErro('Erro ao buscar baterias');
+                console.error('Erro ao buscar Séries:', err.message);
+                setErro('Erro ao buscar Séries');
             }
         };
 
@@ -121,7 +135,7 @@ const ResultadosEntrada = () => {
         );
     };
 
-    // Carregar valores salvos do contexto ao atualizar baterias
+    // Carregar valores salvos do contexto ao atualizar Séries
     useEffect(() => {
         if (!resultados || !provaId || baterias.length === 0) return;
 
@@ -134,7 +148,7 @@ const ResultadosEntrada = () => {
         }));
 
         setBaterias(novasBaterias);
-    }, [resultados, provaId, baterias.length]); // Add 'baterias.length' to dependencies
+    }, [resultados, provaId, baterias.length]); // Add 'Séries.length' to dependencies
 
     const handleBlur = (bateriaId, nadadorId, tempo) => {
         salvarTempo(provaId, nadadorId, tempo);
@@ -157,17 +171,34 @@ const ResultadosEntrada = () => {
         salvarTempo(provaId, nadadorId, tempoFormatado); // Save the formatted time to context
     };
 
+    const handleCheckboxChange = (nadadorId, tipo, value) => {
+        setCheckboxes(prev => {
+            const atual = prev[nadadorId] || { nc: false, desc: false };
+            return { ...prev, [nadadorId]: { ...atual, [tipo]: value } };
+        });
+    };
+
     const aoSalvar = async () => {
         try {
             const dados = baterias.map((bateria) => ({
-                bateriaId: bateria.id,
-                nadadores: bateria.nadadores.map((nadador) => ({
-                    id: nadador.id,
-                    tempo: nadador.tempo,
-                })),
+                bateriaId: bateria.id,                
+                nadadores: bateria.nadadores.map((nadador) => {
+                    const cb = checkboxes[nadador.id] || { nc: false, desc: false };
+                    const status = cb.nc ? "NC" : (cb.desc ? "DESC" : "OK");
+                    // Fornece tempo padrão se inexistente (para status "NC" ou "DESC")
+                    return { id: nadador.id, tempo: nadador.tempo || null, status };
+                }),
             }));
-            await api.post('/resultadosEntrada/salvarResultados', { provaId, dados });
+            // Lookup the selected prova object to get the correct eventos_provas_id
+            const selectedProva = provas.find(prova => String(prova.prova_id) === String(provaId));
+            if (!selectedProva) {
+                throw new Error('Prova selecionada não encontrada.');
+            }
+            const eventosProvasId = selectedProva.eventos_provas_id;
+            console.log('Dados a serem salvos:', { provaId: eventosProvasId, dados });
+            await api.post('/resultadosEntrada/salvarResultados', { provaId: eventosProvasId, dados });
             alert('Resultados salvos com sucesso!');
+            window.location.reload();
         } catch (err) {
             console.error('Erro ao salvar resultados:', err.message);
             alert('Erro ao salvar resultados. Tente novamente.');
@@ -201,41 +232,45 @@ const ResultadosEntrada = () => {
                         {baterias.map((bateria) => (
                             <div key={bateria.id} className={style.bateriaContainer}>
                                 <h2>{bateria.numeroBateria}</h2>
-                                {bateria.nadadores.map((nadador) => (
-                                    <div key={nadador.id} className={style.nadadorContainer}>
-                                        <span className={style.nadadorNome}>{nadador.nome}</span>
-                                        <input
-                                            type="text"
-                                            placeholder="Digite o tempo realizado"
-                                            value={nadador.tempo || ''}
-                                            onChange={(e) => handleTempoChange(bateria.id, nadador.id, e.target.value)}
-                                            onBlur={() => handleBlur(bateria.id, nadador.id, nadador.tempo)}
-                                            className={`${style.nadadorInput} ${
-                                                inputSalvo?.bateriaId === bateria.id && inputSalvo?.nadadorId === nadador.id
-                                                    ? style.inputSalvo
-                                                    : ''
-                                            } ${
-                                                resultados[provaId]?.[nadador.id] ? style.inputSalvo : ''
-                                            }`}
-                                        />
-                                        <label>
+                                {bateria.nadadores.map((nadador) => {
+                                    // Define a classe do input de acordo com o valor: azul se igual ao do banco, senão verde se temporário
+                                    const isSalvoBanco = valoresBanco[provaId] && valoresBanco[provaId][nadador.id] && nadador.tempo === valoresBanco[provaId][nadador.id];
+                                    const isTemporario = inputSalvo?.bateriaId === bateria.id && inputSalvo?.nadadorId === nadador.id || resultados[provaId]?.[nadador.id];
+                                    return (
+                                        <div key={nadador.id} className={style.nadadorContainer}>
+                                            <span className={style.nadadorNome}>{nadador.nome}</span>
                                             <input
-                                                type="checkbox"
-                                                name={`nc-${nadador.id}`}
-                                                value="NC"
+                                                type="text"
+                                                placeholder="Digite o tempo realizado"
+                                                value={nadador.tempo || ''}
+                                                onChange={(e) => handleTempoChange(bateria.id, nadador.id, e.target.value)}
+                                                onBlur={() => handleBlur(bateria.id, nadador.id, nadador.tempo)}
+                                                disabled={checkboxes[nadador.id]?.nc || checkboxes[nadador.id]?.desc}
+                                                className={`${style.nadadorInput} ${
+                                                    isSalvoBanco ? style.inputBanco : isTemporario ? style.inputSalvo : ''
+                                                }`}
                                             />
-                                            NC
-                                        </label>
-                                        <label>
-                                            <input
-                                                type="checkbox"
-                                                name={`desc-${nadador.id}`}
-                                                value="DESC"
-                                            />
-                                            DESC
-                                        </label>
-                                    </div>
-                                ))}
+                                            <label>
+                                                <input
+                                                    type="checkbox"
+                                                    name={`nc-${nadador.id}`}
+                                                    value="NC"
+                                                    onChange={(e) => handleCheckboxChange(nadador.id, 'nc', e.target.checked)}
+                                                />
+                                                NC
+                                            </label>
+                                            <label>
+                                                <input
+                                                    type="checkbox"
+                                                    name={`desc-${nadador.id}`}
+                                                    value="DESC"
+                                                    onChange={(e) => handleCheckboxChange(nadador.id, 'desc', e.target.checked)}
+                                                />
+                                                DESC
+                                            </label>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         ))}
                     </section>
