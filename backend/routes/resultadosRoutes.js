@@ -2,6 +2,22 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
+// Atualiza a função auxiliar para converter o tempo para segundos com frações
+function formatTime(timeStr) {
+    const parts = timeStr.split(':');
+    const secondsParts = parts[2].split('.');
+    
+    let hours = parseInt(parts[0], 10);
+    let minutes = parseInt(parts[1], 10);
+    let seconds = parseInt(secondsParts[0], 10);
+    let centiseconds = parseInt(secondsParts[1] || '00', 10); // Pega os centésimos de segundo
+
+    // Converte tudo para segundos
+    const totalSeconds = (hours * 3600) + (minutes * 60) + seconds + (centiseconds / 100);
+    
+    return totalSeconds.toFixed(2); // Retorna o tempo em segundos com duas casas decimais
+}
+
 router.get('/resultadosEvento/:eventoId', async (req, res) => {
   const { eventoId } = req.params;
   try {
@@ -49,12 +65,14 @@ router.get('/resultadosEvento/:eventoId', async (req, res) => {
       // Para cada nadador, buscar seu resultado para esta prova
       for (let row of baterias) {
         const [resultadoRows] = await db.query(
-          'SELECT tempo, status FROM resultados WHERE nadadores_id = ? AND eventos_provas_id = ?',
+          'SELECT minutos, segundos, centesimos, status FROM resultados WHERE nadadores_id = ? AND eventos_provas_id = ?',
           [row.nadadorId, prova.eventos_provas_id]
         );
         if (resultadoRows.length > 0) {
-          row.tempo = resultadoRows[0].tempo;
-          row.status = resultadoRows[0].status;
+          const { minutos, segundos, centesimos, status } = resultadoRows[0];
+          // Concatena os campos em um formato "mm:ss:cc"
+          row.tempo = `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}:${String(centesimos).padStart(2, '0')}`;
+          row.status = status;
         } else {
           row.tempo = "A DISPUTAR";
           row.status = null;

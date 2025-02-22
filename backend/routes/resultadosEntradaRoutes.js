@@ -92,15 +92,17 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
         // Verifica se existem resultados para os nadadores usando eventosProvasId
         for (const row of baterias) {
             console.log(`Buscando resultados para nadadorId: ${row.nadadorId}, eventosProvasId: ${eventosProvasId}`);
+            // Atualiza a query para selecionar os novos campos
             const [resultados] = await db.query(
-                'SELECT tempo, status FROM resultados WHERE nadadores_id = ? AND eventos_provas_id = ?',
+                'SELECT minutos, segundos, centesimos, status FROM resultados WHERE nadadores_id = ? AND eventos_provas_id = ?',
                 [row.nadadorId, eventosProvasId]
             );
             console.log(`Resultados retornados para nadadorId ${row.nadadorId}:`, resultados);
             if (resultados.length > 0) {
-                console.log(`Encontrado resultado para nadadorId ${row.nadadorId}:`, resultados[0]);
-                row.tempo = resultados[0].tempo;
-                row.status = resultados[0].status;
+                const { minutos, segundos, centesimos, status } = resultados[0];
+                // Formata os campos para "mm:ss:cc"
+                row.tempo = `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}:${String(centesimos).padStart(2, '0')}`;
+                row.status = status;
             } else {
                 console.log(`Nenhum resultado encontrado para nadadorId ${row.nadadorId}`);
                 row.tempo = null;
@@ -146,9 +148,29 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
     }
 });
 
+// Atualiza a função auxiliar para manter o formato "mm:ss:cc" conforme entrada
+function formatTime(timeStr) {
+    if (!timeStr || typeof timeStr !== 'string') return '00:00:00';
+    const parts = timeStr.split(':');
+    if (parts.length < 3) return '00:00:00';
+    return `${parts[0].padStart(2,'0')}:${parts[1].padStart(2,'0')}:${parts[2].padStart(2,'0')}`;
+}
+
+// Nova função auxiliar para converter "mm:ss:cc" em objeto { minutos, segundos, centesimos }
+function parseTime(timeStr) {
+    if (!timeStr || typeof timeStr !== 'string') return { minutos: 0, segundos: 0, centesimos: 0 };
+    const parts = timeStr.split(':');
+    if (parts.length < 3) return { minutos: 0, segundos: 0, centesimos: 0 };
+    return {
+        minutos: parseInt(parts[0], 10),
+        segundos: parseInt(parts[1], 10),
+        centesimos: parseInt(parts[2], 10)
+    };
+}
 
 router.post('/salvarResultados', async (req, res) => {
-    const { provaId, dados } = req.body;
+    // Agora espera: { provaId, (opcional etapaId), dados }
+    const { provaId, etapaId, dados } = req.body;
     console.log('Dados recebidos no backend:', req.body);
 
     if (!provaId || !dados || !Array.isArray(dados)) {
@@ -163,49 +185,60 @@ router.post('/salvarResultados', async (req, res) => {
 
     try {
         await connection.beginTransaction();
-
+        // ...existing processing dos dados e inserção/atualização de resultados...
         for (const bateria of dados) {
-            console.log('Processando bateria:', bateria);
+            // ...existing code...
             const { nadadores } = bateria;
             if (!nadadores || !Array.isArray(nadadores)) {
                 throw new Error('Dados de nadadores estão ausentes ou incorretos na bateria: ' + JSON.stringify(bateria));
             }
-
             for (const nadador of nadadores) {
-                console.log('Processando nadador:', nadador);
+                // ...existing code...
                 const { id: nadadorId, tempo, status } = nadador;
                 if (!nadadorId || (tempo === undefined)) {
                     throw new Error('ID do nadador e tempo são obrigatórios. Nadador: ' + JSON.stringify(nadador));
                 }
-
-                // Log dos parâmetros para a query SELECT
-                console.log(`Verificando existência para nadadorId ${nadadorId} e provaId ${provaId}`);
-
+                const parsedTime = parseTime(tempo);
                 const [existingRows] = await connection.query(
                     'SELECT id FROM resultados WHERE nadadores_id = ? AND eventos_provas_id = ? LIMIT 1',
                     [nadadorId, provaId]
                 );
-                console.log('Resultado da verificação:', existingRows);
-
                 if (existingRows.length > 0) {
-                    console.log(`Atualizando resultado para nadadorId ${nadadorId}`);
                     await connection.query(
-                        'UPDATE resultados SET tempo = ?, status = ? WHERE id = ?',
-                        [tempo, status, existingRows[0].id]
+                        'UPDATE resultados SET minutos = ?, segundos = ?, centesimos = ?, status = ? WHERE id = ?',
+                        [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, status, existingRows[0].id]
                     );
                 } else {
-                    console.log(`Inserindo novo resultado para nadadorId ${nadadorId}`);
                     await connection.query(
-                        `INSERT INTO resultados (tempo, nadadores_id, eventos_provas_id, status)
-                         VALUES (?, ?, ?, ?)`,
-                        [tempo, nadadorId, provaId, status]
+                        `INSERT INTO resultados (minutos, segundos, centesimos, nadadores_id, eventos_provas_id, status)
+                         VALUES (?, ?, ?, ?, ?, ?)`,
+                        [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, nadadorId, provaId, status]
                     );
                 }
             }
         }
+        
+        // Atualiza teve_resultados
+        if (etapaId) {
+            await connection.query(
+                'UPDATE eventos SET teve_resultados = 1 WHERE id = ?',
+                [etapaId]
+            );
+        } else {
+            // Caso etapaId não seja informado, buscar Eventos_id da tabela eventos_provas usando provaId
+            const [rows] = await connection.query(
+                'SELECT Eventos_id FROM eventos_provas WHERE id = ?',
+                [provaId]
+            );
+            if (rows.length > 0) {
+                await connection.query(
+                    'UPDATE eventos SET teve_resultados = 1 WHERE id = ?',
+                    [rows[0].Eventos_id]
+                );
+            }
+        }
 
         await connection.commit();
-        console.log('Transação commitada com sucesso.');
         res.status(200).json({ success: true, message: 'Resultados salvos com sucesso!' });
     } catch (error) {
         await connection.rollback();
