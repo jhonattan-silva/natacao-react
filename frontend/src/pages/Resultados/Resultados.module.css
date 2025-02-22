@@ -9,7 +9,7 @@
   text-align: center;
   margin-bottom: 2rem;
   font-size: 2.5rem;
-  color: #2c3e50;
+  color: #fff !important; /* Changed to white */
 }
 
 .provaContainer {
@@ -67,4 +67,46 @@
   .nadador {
     flex-direction: column;
   }
+}
+
+.tabelaPersonalizada table {
+  text-align: center !important;
+}
+
+.tabelaPersonalizada tbody tr:nth-child(odd) {
+  background-color: #fababa !important;
+}
+
+.tabelaPersonalizada tbody tr:nth-child(even) {
+  background-color: #9ecdf1 !important;
+}
+
+.tabelaPersonalizada thead {
+  background-color: #FF5733 !important; /* New background color */
+  font-size: 1.2rem !important;          /* Increased font size */
+  text-align: center !important;
+  border-bottom: 3px solid #1558b0 !important;
+}
+
+.tabelaPersonalizada thead th {
+  text-align: center !important;
+}
+
+.tabelaPersonalizada tbody tr {
+  transition: background-color 0.3s ease !important;
+}
+
+.tabelaPersonalizada tbody td {
+  text-align: center !important;
+}
+
+/* Optional: add a subtle hover effect on rows */
+.tabelaPersonalizada tbody tr:hover {
+  background-color: #cce4f7 !important;
+}
+
+.tabelaPersonalizada table th {
+  background-color: #f86f50 !important; /* New background color */
+  color: #fff !important;              /* New text color */
+  font-size: 18px;
 }
