@@ -4,11 +4,11 @@ import CabecalhoLink from '../CabecalhoLink/CabecalhoLink';
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom'; // Import useLocation
 
-const logo = ['./imagens/logo_noBG.png'];
+const logo = '/imagens/logo_noBG.png';
 
 const Cabecalho = () => {
     const [menuOpen, setMenuOpen] = useState(false);
-    const location = useLocation(); // Get the current location
+    const location = useLocation(); //recupera a localização atual para recarregar a página
 
     const toggleMenu = () => {
         setMenuOpen(!menuOpen);
@@ -22,7 +22,7 @@ const Cabecalho = () => {
 
     return (
         <header className={style.cabecalho}>
-            <Link to="./" onClick={() => handleLinkClick('./')}>
+            <Link to="/" onClick={() => handleLinkClick('/')}>
                 <img src={logo} alt='LPN logo' className={style.logo}></img>
             </Link>
             {!menuOpen && <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>}
@@ -34,7 +34,7 @@ const Cabecalho = () => {
                 {/* <CabecalhoLink url='./Classificacao' onClick={() => handleLinkClick('./Classificacao')}> Classificação </CabecalhoLink> */}
                 {/* <CabecalhoLink url='./balizamento' onClick={() => handleLinkClick('./balizamento')}> Balizamento </CabecalhoLink> */}
                 {/* <CabecalhoLink url='./rankings' onClick={() => handleLinkClick('./rankings')}>Rankings</CabecalhoLink> */}
-                <CabecalhoLink url='./Admin' className={style.adminLink} onClick={() => handleLinkClick('./Admin')}> Acesso Restrito </CabecalhoLink>
+                <CabecalhoLink url='/admin' className={style.adminLink} onClick={() => handleLinkClick('/admin')}> Acesso Restrito </CabecalhoLink>
             </nav>
         </header>
     )

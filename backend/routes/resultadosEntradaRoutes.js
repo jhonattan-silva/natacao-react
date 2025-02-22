@@ -91,27 +91,21 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
 
         // Verifica se existem resultados para os nadadores usando eventosProvasId
         for (const row of baterias) {
-            console.log(`Buscando resultados para nadadorId: ${row.nadadorId}, eventosProvasId: ${eventosProvasId}`);
             // Atualiza a query para selecionar os novos campos
             const [resultados] = await db.query(
                 'SELECT minutos, segundos, centesimos, status FROM resultados WHERE nadadores_id = ? AND eventos_provas_id = ?',
                 [row.nadadorId, eventosProvasId]
             );
-            console.log(`Resultados retornados para nadadorId ${row.nadadorId}:`, resultados);
             if (resultados.length > 0) {
                 const { minutos, segundos, centesimos, status } = resultados[0];
                 // Formata os campos para "mm:ss:cc"
                 row.tempo = `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}:${String(centesimos).padStart(2, '0')}`;
                 row.status = status;
             } else {
-                console.log(`Nenhum resultado encontrado para nadadorId ${row.nadadorId}`);
                 row.tempo = null;
                 row.status = null;
             }
         }
-
-        // Log para ver os dados vindos de resultados
-        console.log('Dados das baterias com resultados:', baterias);
 
         // Organiza os dados por Séries
         const bateriasOrganizadas = baterias.reduce((acc, row) => {
@@ -171,7 +165,6 @@ function parseTime(timeStr) {
 router.post('/salvarResultados', async (req, res) => {
     // Agora espera: { provaId, (opcional etapaId), dados }
     const { provaId, etapaId, dados } = req.body;
-    console.log('Dados recebidos no backend:', req.body);
 
     if (!provaId || !dados || !Array.isArray(dados)) {
         console.error('Parâmetros inválidos recebidos no endpoint salvarResultados');

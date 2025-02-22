@@ -30,7 +30,7 @@ const Resultados = () => {
 
   return (
     <>
-      <Cabecalho /> {/* Added header component */}
+      <Cabecalho />
       <div className={style.resultadosContainer}>
         <h1>Resultados</h1>
         {erro && <div>{erro}</div>}
@@ -80,7 +80,7 @@ const Resultados = () => {
           <p>Nenhum resultado encontrado.</p>
         )}
       </div>
-      <Rodape /> {/* Added footer component */}
+      <Rodape />
     </>
   );
 };
