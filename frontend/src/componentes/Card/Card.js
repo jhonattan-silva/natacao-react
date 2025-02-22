@@ -1,7 +1,6 @@
 import React from 'react';
 import style from './Card.module.css';
 
-
 /*
     Componente Card
     Props:
@@ -9,20 +8,20 @@ import style from './Card.module.css';
         data: string
         horario: string
         balizamento: string
-        resultado: string
+        resultados: string
 */
-const Card = ({ nome, cidade, data, horario, endereco, balizamento, resultado }) => {
+const Card = ({ nome, cidade, data, horario, endereco, balizamento, resultados }) => {
     return (
         <div className={style.card}>
             <h3>{nome}</h3>
             <p>{cidade}</p>
             <p>{data}</p>
             <p>{horario}</p>
+            {balizamento && <div>{balizamento}</div>}
+            {resultados && <div>{resultados}</div>}
             <div className={style.endereco}>
                 <p>{endereco}</p>
             </div>
-            {/* <a href={balizamento} target='_blank'>Ver Balizamento</a> */}
-            {/* <a href={resultado} target='_blank'>Resultados</a> */}
         </div>
     );
 }

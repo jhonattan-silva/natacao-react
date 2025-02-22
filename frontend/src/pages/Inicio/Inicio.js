@@ -58,6 +58,16 @@ const Inicio = () => {
                                 local={`Sede: ${etapa.sede}`} 
                                 cidade={`Cidade: ${etapa.cidade}`}
                                 endereco={<a href={mapsLink} target="_blank" rel="noopener noreferrer">Endereço: {etapa.endereco}</a>} 
+                                balizamento={etapa.teve_balizamento === 1 && (
+                                    <a href={`/balizamento/${etapa.id}`} target="_blank" rel="noopener noreferrer">
+                                        Balizamento
+                                    </a>
+                                )}
+                                resultados={etapa.teve_resultados === 1 && (
+                                    <a href={`/resultados/${etapa.id}`} target="_blank" rel="noopener noreferrer">
+                                        Resultados
+                                    </a>
+                                )}
                             />
                         );
                     })}
