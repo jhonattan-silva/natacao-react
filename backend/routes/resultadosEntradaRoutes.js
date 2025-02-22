@@ -4,7 +4,7 @@ const db = require('../config/db');
 
 router.get('/listarEventos', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM eventos');
+        const [rows] = await db.query('SELECT * FROM eventos where torneios_id = 3');
         res.json(rows);
     } catch (erro) {
         console.error('Erro ao buscar eventos ==> ', erro);
@@ -60,6 +60,16 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
     }
 
     try {
+        // Obter o eventos_provas_id correspondente ao provaId
+        const [evRows] = await db.query(
+            "SELECT id as eventosProvasId FROM eventos_provas WHERE provas_id = ?",
+            [provaId]
+        );
+        if (evRows.length === 0) {
+            throw new Error("Eventos_Provas não encontrado para provaId " + provaId);
+        }
+        const eventosProvasId = evRows[0].eventosProvasId;
+
         // Consulta as baterias e os nadadores associados à prova
         const [baterias] = await db.query(
             `
@@ -79,9 +89,31 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
             [provaId]
         );
 
+        // Verifica se existem resultados para os nadadores usando eventosProvasId
+        for (const row of baterias) {
+            console.log(`Buscando resultados para nadadorId: ${row.nadadorId}, eventosProvasId: ${eventosProvasId}`);
+            const [resultados] = await db.query(
+                'SELECT tempo, status FROM resultados WHERE nadadores_id = ? AND eventos_provas_id = ?',
+                [row.nadadorId, eventosProvasId]
+            );
+            console.log(`Resultados retornados para nadadorId ${row.nadadorId}:`, resultados);
+            if (resultados.length > 0) {
+                console.log(`Encontrado resultado para nadadorId ${row.nadadorId}:`, resultados[0]);
+                row.tempo = resultados[0].tempo;
+                row.status = resultados[0].status;
+            } else {
+                console.log(`Nenhum resultado encontrado para nadadorId ${row.nadadorId}`);
+                row.tempo = null;
+                row.status = null;
+            }
+        }
+
+        // Log para ver os dados vindos de resultados
+        console.log('Dados das baterias com resultados:', baterias);
+
         // Organiza os dados por Séries
         const bateriasOrganizadas = baterias.reduce((acc, row) => {
-            const { bateriaId, numeroBateria, raia, nadadorId, nomeNadador, tempo } = row;
+            const { bateriaId, numeroBateria, raia, nadadorId, nomeNadador, tempo, status } = row;
 
             let bateria = acc.find((b) => b.bateriaId === bateriaId);
             if (!bateria) {
@@ -98,6 +130,7 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
                 nome: nomeNadador,
                 raia,
                 tempo,
+                status,
             });
 
             return acc;
@@ -113,12 +146,13 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
     }
 });
 
+
 router.post('/salvarResultados', async (req, res) => {
     const { provaId, dados } = req.body;
-    console.log('Dados recebidos:', req.body);
-    console.log('Dados das baterias:', dados); // Log completo das baterias
+    console.log('Dados recebidos no backend:', req.body);
 
     if (!provaId || !dados || !Array.isArray(dados)) {
+        console.error('Parâmetros inválidos recebidos no endpoint salvarResultados');
         return res.status(400).json({
             success: false,
             message: 'Prova ID e dados das Séries são obrigatórios.',
@@ -130,36 +164,52 @@ router.post('/salvarResultados', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // Itera sobre os dados enviados e insere na tabela "resultados"
         for (const bateria of dados) {
-            console.log('Processando bateria:', bateria); // Log bateria atual
+            console.log('Processando bateria:', bateria);
             const { nadadores } = bateria;
-
             if (!nadadores || !Array.isArray(nadadores)) {
-                throw new Error('Dados de nadadores estão ausentes ou incorretos.');
+                throw new Error('Dados de nadadores estão ausentes ou incorretos na bateria: ' + JSON.stringify(bateria));
             }
 
             for (const nadador of nadadores) {
-                console.log('Processando nadador:', nadador); // Log cada nadador processado
+                console.log('Processando nadador:', nadador);
                 const { id: nadadorId, tempo, status } = nadador;
-
-                if (!nadadorId || (!tempo && tempo !== null)) {
-                    throw new Error('ID do nadador e tempo são obrigatórios.');
+                if (!nadadorId || (tempo === undefined)) {
+                    throw new Error('ID do nadador e tempo são obrigatórios. Nadador: ' + JSON.stringify(nadador));
                 }
 
-                await connection.query(
-                    `INSERT INTO resultados (tempo, pontos, nadadores_id, eventos_provas_id, status)
-                     VALUES (?, ?, ?, ?, ?)`,
-                    [tempo, null, nadadorId, provaId, status]
+                // Log dos parâmetros para a query SELECT
+                console.log(`Verificando existência para nadadorId ${nadadorId} e provaId ${provaId}`);
+
+                const [existingRows] = await connection.query(
+                    'SELECT id FROM resultados WHERE nadadores_id = ? AND eventos_provas_id = ? LIMIT 1',
+                    [nadadorId, provaId]
                 );
+                console.log('Resultado da verificação:', existingRows);
+
+                if (existingRows.length > 0) {
+                    console.log(`Atualizando resultado para nadadorId ${nadadorId}`);
+                    await connection.query(
+                        'UPDATE resultados SET tempo = ?, status = ? WHERE id = ?',
+                        [tempo, status, existingRows[0].id]
+                    );
+                } else {
+                    console.log(`Inserindo novo resultado para nadadorId ${nadadorId}`);
+                    await connection.query(
+                        `INSERT INTO resultados (tempo, nadadores_id, eventos_provas_id, status)
+                         VALUES (?, ?, ?, ?)`,
+                        [tempo, nadadorId, provaId, status]
+                    );
+                }
             }
         }
 
         await connection.commit();
+        console.log('Transação commitada com sucesso.');
         res.status(200).json({ success: true, message: 'Resultados salvos com sucesso!' });
     } catch (error) {
         await connection.rollback();
-        console.error('Erro ao salvar resultados:', error.message);
+        console.error('Erro ao salvar resultados:', error);
         res.status(500).json({ success: false, message: 'Erro ao salvar resultados.' });
     } finally {
         connection.release();

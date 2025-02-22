@@ -128,3 +128,9 @@ label {
     font-weight: bold;
     color: #333;
 }
+
+.provaSalva {
+    color: purple;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
