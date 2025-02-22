@@ -32,11 +32,15 @@ router.get('/resultadosEvento/:eventoId', async (req, res) => {
           b.descricao AS numeroBateria,
           bi.raia,
           n.id AS nadadorId,
-          n.nome AS nomeNadador
+          n.nome AS nomeNadador,
+          e.nome AS equipe,
+          c.nome AS categoria
         FROM baterias b
         INNER JOIN baterias_inscricoes bi ON bi.Baterias_id = b.id
         INNER JOIN inscricoes i ON bi.Inscricoes_id = i.id
         INNER JOIN nadadores n ON i.Nadadores_id = n.id
+        INNER JOIN equipes e ON n.equipes_id = e.id
+        INNER JOIN categorias c ON n.categorias_id = c.id
         WHERE b.Provas_id = ?
         ORDER BY b.id, bi.raia
       `;
@@ -74,6 +78,8 @@ router.get('/resultadosEvento/:eventoId', async (req, res) => {
           raia: row.raia,
           tempo: row.tempo,
           status: row.status,
+          equipe: row.equipe,
+          categoria: row.categoria,
         });
         return acc;
       }, []);

@@ -47,8 +47,10 @@ const Resultados = () => {
                   }
                   return (
                     <div key={nadador.id} className={style.nadador}>
-                      <span>Raia: {nadador.raia} | </span>
-                      <span>{nadador.nome} | </span>
+                      <span>Raia: {nadador.raia} </span>
+                      <span>{nadador.nome} </span>
+                      <span>Equipe: {nadador.equipe} </span>
+                      <span>Categoria: {nadador.categoria} </span>
                       <span>Tempo: {exibicaoTempo}</span>
                     </div>
                   );
