@@ -4,18 +4,18 @@ import api from '../../servicos/api';
 import style from './Resultados.module.css';
 
 const Resultados = () => {
-  const { provaId } = useParams();
-  const [prova, setProva] = useState(null);
-  const [resultados, setResultados] = useState([]);
+  const { eventoId } = useParams();
+  const [dados, setDados] = useState([]);
   const [erro, setErro] = useState(null);
+
+  const apiResultados = '/resultados/resultadosEvento';
 
   useEffect(() => {
     const fetchResultados = async () => {
       try {
-        const response = await api.get(`/resultadosRoutes/obterResultados/${provaId}`);
+        const response = await api.get(`${apiResultados}/${eventoId}`);
         if (response.data) {
-          setProva(response.data.prova);
-          setResultados(response.data.resultados || []);
+          setDados(response.data);
           setErro(null);
         }
       } catch (err) {
@@ -24,19 +24,37 @@ const Resultados = () => {
       }
     };
 
-    if (provaId) fetchResultados();
-  }, [provaId]);
+    if (eventoId) fetchResultados();
+  }, [eventoId]);
 
   return (
     <div className={style.resultadosContainer}>
-      <h1>Resultados - {prova ? prova.nome : ''}</h1>
+      <h1>Resultados</h1>
       {erro && <div>{erro}</div>}
-      {resultados.length > 0 ? (
-        resultados.map(resultado => (
-          <div key={resultado.id}>
-            <div><span>Nadador ID:</span> {resultado.nadadores_id}</div>
-            <div><span>Tempo:</span> {resultado.tempo}</div>
-            <div><span>Pontos:</span> {resultado.pontos}</div>
+      {dados.length > 0 ? (
+        dados.map(item => (
+          <div key={item.prova.eventos_provas_id} className={style.provaContainer}>
+            <h2>{item.prova.nome}</h2>
+            {item.baterias.map(bateria => (
+              <div key={bateria.bateriaId} className={style.bateriaContainer}>
+                <h3>SÉRIE: {bateria.numeroBateria}</h3>
+                {bateria.nadadores.map(nadador => {
+                  let exibicaoTempo = nadador.tempo;
+                  if (nadador.status === 'NC') {
+                    exibicaoTempo = 'NÃO COMPETIU';
+                  } else if (nadador.status === 'DESC') {
+                    exibicaoTempo = 'DESCLASSIFICADO';
+                  }
+                  return (
+                    <div key={nadador.id} className={style.nadador}>
+                      <span>Raia: {nadador.raia} | </span>
+                      <span>{nadador.nome} | </span>
+                      <span>Tempo: {exibicaoTempo}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         ))
       ) : (

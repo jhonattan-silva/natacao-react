@@ -9,6 +9,7 @@ import Nadadores from "./pages/Nadadores/Nadadores";
 import Inscricao from "./pages/Inscricao/Inscricao";
 import Rankings from "./pages/Rankings/Rankings";
 import ResultadosEntrada from "./pages/ResultadosEntrada/ResultadosEntrada";
+import Resultados from "./pages/Resultados/Resultados";
 import ProtecaoRota from "./componentes/ProtecaoRota";
 import Login from "./pages/Login/Login"; // Página de login para autenticação
 
@@ -20,6 +21,8 @@ const App = () => {
                 {/* Rotas públicas */}
                 <Route path="/" element={<Inicio />}/> {/* Avisa o caminho inicial onde tem meu componente Inicio */}
                 <Route path="/login" element={<Login />} />
+                <Route path="/resultados" element={<Resultados />} />
+                <Route path="/resultados/:eventoId" element={<Resultados />} /> {/* alterado de :provaId para :eventoId */}
 
                 {/* Rotas protegidas */}
                 <Route

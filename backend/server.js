@@ -112,6 +112,7 @@ const rankingsRoutes = require('./routes/rankingsRoutes');
 const uploadRoutes = require('./uploads'); // Rotas de upload
 const migracao = require('./routes/migracaoRoute');
 const resultadosEntrada = require('./routes/resultadosEntradaRoutes');
+const resultadosRoutes = require('./routes/resultadosRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/balizamento', balizamentoRoutes);
@@ -124,6 +125,7 @@ app.use('/api/rankings', rankingsRoutes);
 app.use(uploadRoutes);
 app.use('/api/migracao', migracao);
 app.use('/api/resultadosEntrada', resultadosEntrada);
+app.use('/api/resultados', resultadosRoutes);
 
 // Servir o frontend em produção
 if (process.env.NODE_ENV === 'production') {

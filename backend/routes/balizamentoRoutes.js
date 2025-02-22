@@ -174,7 +174,7 @@ router.post('/salvarBalizamento', async (req, res) => {
 
         const [result] = await connection.query(
           `INSERT INTO baterias (descricao, Eventos_id, Provas_id, Nadadores_id) VALUES (?, ?, ?, ?)`,
-          [`Bateria ${bateriaIndex + 1}`, eventoId, prova_id, nadador_id]
+          [`Série ${bateriaIndex + 1}`, eventoId, prova_id, nadador_id]
         );        
 
         // Fechar inscrições para o evento
