@@ -39,12 +39,6 @@ h1 {
     font-weight: bold;
 }
 
-h2 {
-    font-size: 2rem;
-    color: #ccc;
-    text-align: center;
-}
-
 /* Estilos para a tabela */
 .rankings table {
     width: 70%;

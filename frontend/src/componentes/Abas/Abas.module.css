@@ -1,0 +1,50 @@
+.abasContainer {
+  width: 80%;
+  margin: 0 auto;
+}
+
+.tabs {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0; /* Remover margem inferior */
+}
+
+.tabs .tabButton {
+  flex: 1;
+  padding: 10px;
+  cursor: pointer;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 0; /* Remove bottom border-radius */
+  border-bottom-right-radius: 0; /* Remove bottom border-radius */
+  margin: 0; /* Remover margem */
+  font-size: 2.5rem; /* Increase font size */
+  font-weight: bold; /* Increase font weight */
+  color: #f0f0f0 !important; /* Change text color to a lighter shade */
+}
+
+.tabs .tabButton.active {
+  background-color: #007BFF !important;
+  color: #ffffff !important; /* Ensure text color is white */
+}
+
+.tabContent {
+  margin-top: 0; /* Remover margem superior */
+  border-top: none;
+}
+
+.abasContainer .tabs .tab1 {
+  background-color: #488ac3 !important;
+}
+
+.abasContainer .tabs .tab2 {
+  background-color: #4b8445 !important;
+}
+
+.abasContainer .tabContent .content1 {
+  background-color: #488ac3 !important;
+}
+
+.abasContainer .tabContent .content2 {
+  background-color: #4b8445 !important;
+}

@@ -57,8 +57,6 @@ const Etapas = () => {
             const response = await api.get(`${apiAtualizaEtapas}/${id}`);
             const etapa = response.data;
 
-            console.log('📌 Etapa recebida do backend:', etapa);
-
             setEtapaEditando(etapa);
             setNomeEtapa(etapa.nome);
             const [date, time] = etapa.data.split('T');
@@ -73,16 +71,13 @@ const Etapas = () => {
             const provasOrdenadas = etapa.provas
                 .map(prova => ({
                     id: prova.provas_id.toString(),
-                    label: `${prova.distancia}m ${prova.estilo} (${prova.tipo})`,
+                    label: `${prova.distancia}m ${prova.estilo}`,
                     estilo: prova.estilo,
                     distancia: prova.distancia,
-                    tipo: prova.tipo,
                     sexo: prova.sexo,
                     ordem: prova.ordem
                 }))
                 .sort((a, b) => a.ordem - b.ordem);
-
-            console.log("📌 Provas ordenadas recebidas do backend:", provasOrdenadas);
 
             setProvasSelecionadas(provasOrdenadas);
 
@@ -204,9 +199,9 @@ const Etapas = () => {
                 }
 
                 valorFormatado = dia;
-                if (valorFormatado.length >= 2) valorFormatado += "/"; // Adiciona '/' depois do dia se houver mais dígitos
+                if (valorFormatado.length >= 2) valorFormatado += "/"; 
                 valorFormatado += mes;
-                if (valorFormatado.length >= 5) valorFormatado += "/"; // Adiciona '/' depois do mês se houver mais dígitos
+                if (valorFormatado.length >= 5) valorFormatado += "/"; 
                 valorFormatado += ano;
 
                 // Permite apagar corretamente (se terminar com '/', remove)
@@ -263,19 +258,17 @@ const Etapas = () => {
                 if (responseMasculino.data && responseFeminino.data) {
                     const formattedMasculino = responseMasculino.data.map(prova => ({
                         id: prova.id.toString(),
-                        label: `${prova.distancia}m ${prova.estilo} (${prova.tipo})`,
+                        label: `${prova.distancia}m ${prova.estilo}`,
                         estilo: prova.estilo,
                         distancia: prova.distancia,
-                        tipo: prova.tipo
                     }));
                     setProvasMasculino(formattedMasculino);
 
                     const formattedFeminino = responseFeminino.data.map(prova => ({
                         id: prova.id.toString(),
-                        label: `${prova.distancia}m ${prova.estilo} (${prova.tipo})`,
+                        label: `${prova.distancia}m ${prova.estilo}`,
                         estilo: prova.estilo,
                         distancia: prova.distancia,
-                        tipo: prova.tipo
                     }));
                     setProvasFeminino(formattedFeminino);
 
@@ -385,8 +378,6 @@ const Etapas = () => {
             quantidade_raias: raias
         };
 
-        console.log('Dados da etapa VER ISSO AQUI:', etapaDados);
-
         if (etapaEditando) {
             // Se `etapaEditando` existir, atualiza a etapa
             await atualizarEtapa(etapaDados);
@@ -479,6 +470,15 @@ const Etapas = () => {
         }
     };
 
+    const gerarPontuacao = async (id) => {
+        try {
+            alert(`Pontuação gerada para a etapa ${id}!`);
+        } catch (error) {
+            console.error('Erro ao gerar pontuação:', error);
+            alert('Erro ao gerar pontuação.');
+        }
+    };
+
     return (
         <>
             <CabecalhoAdmin />
@@ -500,9 +500,14 @@ const Etapas = () => {
                             onEdit={handleEdit}
                             onDelete={handleExcluir}
                             funcExtra={(etapa) => (
-                                <Botao onClick={() => abreInscricao(etapa.id, etapa.inscricao_aberta)}>
-                                    {etapa.inscricao_aberta ? 'Fechar Inscrição' : 'Abrir Inscrição'}
-                                </Botao>
+                                <>
+                                    <Botao onClick={() => abreInscricao(etapa.id, etapa.inscricao_aberta)}>
+                                        {etapa.inscricao_aberta ? 'Fechar Inscrição' : 'Abrir Inscrição'}
+                                    </Botao>
+                                    <Botao onClick={() => gerarPontuacao(etapa.id)}>
+                                        Gerar Pontuação
+                                    </Botao>
+                                </>
                             )}
                         />
                         <Botao classBtn={style.btnComponente} onClick={handleAdicionar}>Adicionar Nova Etapa</Botao>

@@ -163,18 +163,17 @@ router.post('/salvarBalizamento', async (req, res) => {
       for (const [bateriaIndex, bateria] of baterias.entries()) {
         // Acessa o primeiro nadador dentro do array aninhado para obter `prova_id` e `Nadadores_id`
         const prova_id = bateria[0]?.[0]?.prova_id;
-        const nadador_id = bateria[0]?.[0]?.nadador_id;
         const inscricao_id = bateria[0]?.[0]?.inscricao_id;
 
-        if (!prova_id || !nadador_id || !inscricao_id) {
+        if (!prova_id || !inscricao_id) {
           console.error(`Erro: Dados incompletos para a prova: ${prova}`);
           console.error(`Dados da bateria:`, JSON.stringify(bateria, null, 2));
           throw new Error(`Dados incompletos para a prova: ${prova}`);
         }
 
         const [result] = await connection.query(
-          `INSERT INTO baterias (descricao, Eventos_id, Provas_id, Nadadores_id) VALUES (?, ?, ?, ?)`,
-          [`Série ${bateriaIndex + 1}`, eventoId, prova_id, nadador_id]
+          `INSERT INTO baterias (descricao, Eventos_id, Provas_id) VALUES (?, ?, ?)`,
+          [`Série ${bateriaIndex + 1}`, eventoId, prova_id]
         );        
 
         // Fechar inscrições para o evento

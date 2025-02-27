@@ -67,7 +67,7 @@ router.get('/listarTorneios', async (req, res) => {
 router.get('/listarProvas', async (req, res) => {
     try {
         const sexo = req.query.sexo; // Obtém o parâmetro 'sexo' da query string
-        let query = 'SELECT id, estilo, distancia, tipo FROM provas';
+        let query = 'SELECT id, estilo, distancia FROM provas';
 
         if (sexo) {
             query += ' WHERE sexo = ?'; // Adiciona a cláusula WHERE se 'sexo' for fornecido
@@ -200,7 +200,6 @@ router.get('/atualizarEtapas/:id', async (req, res) => {
                 ep.ordem,
                 p.estilo,
                 p.distancia,
-                p.tipo,
                 p.sexo
              FROM eventos_provas ep
              JOIN provas p ON ep.provas_id = p.id

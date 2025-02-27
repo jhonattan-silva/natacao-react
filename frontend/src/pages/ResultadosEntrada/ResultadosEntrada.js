@@ -91,6 +91,10 @@ const ResultadosEntrada = () => {
                             const tempoSalvo = resultados[provaId]?.[nadador.id];
                             return tempoSalvo ? { ...nadador, tempo: tempoSalvo } : nadador;
                         }),
+                        equipes: bateria.equipes.map((equipe) => {
+                            const tempoSalvo = resultados[provaId]?.[equipe.id];
+                            return tempoSalvo ? { ...equipe, tempo: tempoSalvo } : equipe;
+                        }),
                     }));
                     setBaterias(bateriasComTempos);
 
@@ -100,6 +104,11 @@ const ResultadosEntrada = () => {
                         bateria.nadadores.forEach((nadador) => {
                             if (nadador.tempo) {
                                 dbMapping[nadador.id] = nadador.tempo;
+                            }
+                        });
+                        bateria.equipes.forEach((equipe) => {
+                            if (equipe.tempo) {
+                                dbMapping[equipe.id] = equipe.tempo;
                             }
                         });
                     });
@@ -131,6 +140,13 @@ const ResultadosEntrada = () => {
                         desc: nadador.status === 'DESC', // Define o estado do checkbox DESC
                     };
                 });
+                bateria.equipes.forEach(equipe => {
+                    console.log(`Equipe ${equipe.id} - Status do banco: ${equipe.status}`);
+                    newStates[equipe.id] = {
+                        nc: equipe.status === 'NC', // Define o estado do checkbox NC
+                        desc: equipe.status === 'DESC', // Define o estado do checkbox DESC
+                    };
+                });
             });
             console.log("Novos estados dos checkboxes:", newStates);
             setCheckboxes(newStates);
@@ -138,17 +154,26 @@ const ResultadosEntrada = () => {
     }, [baterias]);
 
     // Atualizar tempos no estado local
-    const atualizarTempo = (bateriaId, nadadorId, novoTempo) => {
+    const atualizarTempo = (bateriaId, id, novoTempo, isEquipe = false) => {
         setBaterias((prev) =>
             prev.map((bateria) =>
                 bateria.id === bateriaId
                     ? {
                         ...bateria,
-                        nadadores: bateria.nadadores.map((nadador) =>
-                            nadador.id === nadadorId
-                                ? { ...nadador, tempo: novoTempo }
-                                : nadador
-                        ),
+                        nadadores: isEquipe
+                            ? bateria.nadadores
+                            : bateria.nadadores.map((nadador) =>
+                                nadador.id === id
+                                    ? { ...nadador, tempo: novoTempo }
+                                    : nadador
+                            ),
+                        equipes: isEquipe
+                            ? bateria.equipes.map((equipe) =>
+                                equipe.id === id
+                                    ? { ...equipe, tempo: novoTempo }
+                                    : equipe
+                            )
+                            : bateria.equipes,
                     }
                     : bateria
             )
@@ -165,14 +190,18 @@ const ResultadosEntrada = () => {
                 const tempoSalvo = resultados[provaId]?.[nadador.id];
                 return tempoSalvo ? { ...nadador, tempo: tempoSalvo } : nadador;
             }),
+            equipes: bateria.equipes.map((equipe) => {
+                const tempoSalvo = resultados[provaId]?.[equipe.id];
+                return tempoSalvo ? { ...equipe, tempo: tempoSalvo } : equipe;
+            }),
         }));
 
         setBaterias(novasBaterias);
     }, [resultados, provaId, baterias.length]); // Add 'Séries.length' to dependencies
 
-    const handleBlur = (bateriaId, nadadorId, tempo) => {
-        salvarTempo(provaId, nadadorId, tempo);
-        setInputSalvo({ bateriaId, nadadorId });
+    const handleBlur = (bateriaId, id, tempo, isEquipe = false) => {
+        salvarTempo(provaId, id, tempo);
+        setInputSalvo({ bateriaId, id, isEquipe });
     };
 
     const formatarTempo = (tempo) => {
@@ -185,16 +214,16 @@ const ResultadosEntrada = () => {
         return `${minutos}:${segundos}:${centesimos}`;
     };
 
-    const handleTempoChange = (bateriaId, nadadorId, valor) => {
+    const handleTempoChange = (bateriaId, id, valor, isEquipe = false) => {
         const tempoFormatado = formatarTempo(valor);
-        atualizarTempo(bateriaId, nadadorId, tempoFormatado);
-        salvarTempo(provaId, nadadorId, tempoFormatado); // Save the formatted time to context
+        atualizarTempo(bateriaId, id, tempoFormatado, isEquipe);
+        salvarTempo(provaId, id, tempoFormatado); // Save the formatted time to context
     };
 
     // Atualiza estados no handleCheckboxChange com logs para ver as mudanças
-    const handleCheckboxChange = (nadadorId, tipo, value) => {
+    const handleCheckboxChange = (id, tipo, value) => {
         setCheckboxes(prev => {
-             const atual = prev[nadadorId] || { nc: false, desc: false };
+             const atual = prev[id] || { nc: false, desc: false };
              let novoEstado;
              if (tipo === 'nc' && value) {
                  novoEstado = { nc: true, desc: false };
@@ -203,12 +232,12 @@ const ResultadosEntrada = () => {
              } else {
                  novoEstado = { ...atual, [tipo]: value };
              }
-             return { ...prev, [nadadorId]: novoEstado };
+             return { ...prev, [id]: novoEstado };
         });
     };
 
     const aoSalvar = async () => {
-        // Validação: cada nadador deve ter um tempo ou exatamente um checkbox marcado
+        // Validação: cada nadador ou equipe deve ter um tempo ou exatamente um checkbox marcado
         for (const bateria of baterias) {
             for (const nadador of bateria.nadadores) {
                 const cb = checkboxes[nadador.id] || { nc: false, desc: false };
@@ -221,6 +250,17 @@ const ResultadosEntrada = () => {
                     return;
                 }
             }
+            for (const equipe of bateria.equipes) {
+                const cb = checkboxes[equipe.id] || { nc: false, desc: false };
+                if (!equipe.tempo && !(cb.nc || cb.desc)) {
+                    alert("SALVAR APÓS PREENCHER TODAS AS EQUIPES");
+                    return;
+                }
+                if (cb.nc && cb.desc) {
+                    alert("SALVAR APÓS PREENCHER TODAS AS EQUIPES");
+                    return;
+                }
+            }
         }
         try {
             const dados = baterias.map((bateria) => ({
@@ -230,6 +270,12 @@ const ResultadosEntrada = () => {
                     const status = cb.nc ? "NC" : (cb.desc ? "DESC" : "OK");
                     // Fornece tempo padrão se inexistente (para status "NC" ou "DESC")
                     return { id: nadador.id, tempo: nadador.tempo || null, status };
+                }),
+                equipes: bateria.equipes.map((equipe) => {
+                    const cb = checkboxes[equipe.id] || { nc: false, desc: false };
+                    const status = cb.nc ? "NC" : (cb.desc ? "DESC" : "OK");
+                    // Fornece tempo padrão se inexistente (para status "NC" ou "DESC")
+                    return { id: equipe.id, tempo: equipe.tempo || null, status };
                 }),
             }));
             // Lookup the selected prova object to get the correct eventos_provas_id
@@ -273,11 +319,15 @@ const ResultadosEntrada = () => {
                     <section>
                         <h1>Prova: {nomeProvaSelecionada}</h1>
                         {baterias.map((bateria) => {
-                            // Calcula se todos os nadadores já possuem resultado salvo
+                            // Calcula se todos os nadadores e equipes já possuem resultado salvo
                             const provaSalva = bateria.nadadores.every(nadador => 
                                 valoresBanco[provaId] && 
                                 valoresBanco[provaId][nadador.id] && 
                                 nadador.tempo === valoresBanco[provaId][nadador.id]
+                            ) && bateria.equipes.every(equipe => 
+                                valoresBanco[provaId] && 
+                                valoresBanco[provaId][equipe.id] && 
+                                equipe.tempo === valoresBanco[provaId][equipe.id]
                             );
                             return (
                                 <div key={bateria.id} className={style.bateriaContainer}>
@@ -286,7 +336,7 @@ const ResultadosEntrada = () => {
                                     {bateria.nadadores.map((nadador) => {
                                         // Define a classe do input de acordo com o valor: azul se igual ao do banco, senão verde se temporário
                                         const isSalvoBanco = valoresBanco[provaId] && valoresBanco[provaId][nadador.id] && nadador.tempo === valoresBanco[provaId][nadador.id];
-                                        const isTemporario = inputSalvo?.bateriaId === bateria.id && inputSalvo?.nadadorId === nadador.id || resultados[provaId]?.[nadador.id];
+                                        const isTemporario = inputSalvo?.bateriaId === bateria.id && inputSalvo?.id === nadador.id || resultados[provaId]?.[nadador.id];
                                         return (
                                             <div key={nadador.id} className={style.nadadorContainer}>
                                                 <span className={style.nadadorNome}>{nadador.nome}</span>
@@ -300,7 +350,6 @@ const ResultadosEntrada = () => {
                                                     className={`${style.nadadorInput} ${isSalvoBanco ? style.inputBanco : isTemporario ? style.inputSalvo : ''
                                                         }`}
                                                 />
-                                                {/* Substituído os checkboxes antigos pelo CheckboxGroup */}
                                                 <CheckboxGroup
                                                     titulo=""
                                                     opcoes={[{ id: 'nc', label: 'NC' }, { id: 'desc', label: 'DESC' }]}
@@ -313,6 +362,39 @@ const ResultadosEntrada = () => {
                                                         })()
                                                     }
                                                     aoAlterar={(value, checked) => handleCheckboxChange(nadador.id, value, checked)}
+                                                />
+                                            </div>
+                                        );
+                                    })}
+                                    {bateria.equipes.map((equipe) => {
+                                        // Define a classe do input de acordo com o valor: azul se igual ao do banco, senão verde se temporário
+                                        const isSalvoBanco = valoresBanco[provaId] && valoresBanco[provaId][equipe.id] && equipe.tempo === valoresBanco[provaId][equipe.id];
+                                        const isTemporario = inputSalvo?.bateriaId === bateria.id && inputSalvo?.id === equipe.id || resultados[provaId]?.[equipe.id];
+                                        return (
+                                            <div key={equipe.id} className={style.nadadorContainer}>
+                                                <span className={style.nadadorNome}>{equipe.nome}</span>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Digite o tempo realizado"
+                                                    value={equipe.tempo || ''}
+                                                    onChange={(e) => handleTempoChange(bateria.id, equipe.id, e.target.value, true)}
+                                                    onBlur={() => handleBlur(bateria.id, equipe.id, equipe.tempo, true)}
+                                                    disabled={checkboxes[equipe.id]?.nc || checkboxes[equipe.id]?.desc}
+                                                    className={`${style.nadadorInput} ${isSalvoBanco ? style.inputBanco : isTemporario ? style.inputSalvo : ''
+                                                        }`}
+                                                />
+                                                <CheckboxGroup
+                                                    titulo=""
+                                                    opcoes={[{ id: 'nc', label: 'NC' }, { id: 'desc', label: 'DESC' }]}
+                                                    selecionadas={
+                                                        (() => {
+                                                            const selecionadas = [];
+                                                            if (checkboxes[equipe.id]?.nc) selecionadas.push('nc');
+                                                            if (checkboxes[equipe.id]?.desc) selecionadas.push('desc');
+                                                            return selecionadas;
+                                                        })()
+                                                    }
+                                                    aoAlterar={(value, checked) => handleCheckboxChange(equipe.id, value, checked)}
                                                 />
                                             </div>
                                         );

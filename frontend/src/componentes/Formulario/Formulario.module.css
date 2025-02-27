@@ -1,4 +1,4 @@
-h1, h2 {
+.formulario h1, .formulario h2 {
     text-align: center;
     color: #343a40;
 }
@@ -13,7 +13,7 @@ h1, h2 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-form {
+.formulario form {
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -46,8 +46,8 @@ form {
     outline: none;
 }
 
-/* Estilos dos botões */
-button, .btn {
+/* Estilos dos botões específicos do formulário */
+.formulario button, .formulario .btn {
     background: linear-gradient(135deg, #6c63ff, #5a54e5);
     color: white;
     padding: 12px 20px;
@@ -61,17 +61,17 @@ button, .btn {
     align-self: center; /* Centraliza o botão */
 }
 
-button:hover, .btn:hover {
+.formulario button:hover, .formulario .btn:hover {
     background: linear-gradient(135deg, #5a54e5, #6c63ff);
 }
 
-button:disabled, .btn:disabled {
+.formulario button:disabled, .formulario .btn:disabled {
     background: #cccccc;
     cursor: not-allowed;
 }
 
 /* Estilos do Select */
-select {
+.formulario select {
     width: 300px;
     padding: 12px;
     margin: 10px 0;

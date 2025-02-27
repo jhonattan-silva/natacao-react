@@ -24,20 +24,17 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
             SELECT DISTINCT
                 ep.id AS eventos_provas_id,
                 p.id AS prova_id,
-                CONCAT(p.estilo, ' ', p.distancia, 'm ', p.tipo, ' (', p.sexo, ')') AS nome,
+                CONCAT(p.estilo, ' ', p.distancia, 'm ', ' (', p.sexo, ')') AS nome,
                 p.estilo AS prova_estilo,
                 p.distancia,
-                p.tipo,
                 p.sexo,
                 ep.ordem
             FROM 
-                inscricoes i
-            JOIN 
-                eventos_provas ep ON i.Eventos_Provas_id = ep.id
+                eventos_provas ep
             JOIN 
                 provas p ON ep.provas_id = p.id
             WHERE 
-                i.Eventos_id = ?
+                ep.eventos_id = ?
             ORDER BY ep.ordem ASC;
         `;
         const [rows] = await db.query(query, [eventoId]);
@@ -78,15 +75,19 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
                 b.descricao AS numeroBateria,
                 bi.raia,
                 n.id AS nadadorId,
-                n.nome AS nomeNadador
+                n.nome AS nomeNadador,
+                e.id AS equipeId,
+                e.nome AS nomeEquipe
             FROM baterias b
-            INNER JOIN baterias_inscricoes bi ON bi.Baterias_id = b.id
-            INNER JOIN inscricoes i ON bi.Inscricoes_id = i.id
-            INNER JOIN nadadores n ON i.Nadadores_id = n.id
-            WHERE b.Provas_id = ?
-            ORDER BY b.id, bi.raia
+            INNER JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
+            LEFT JOIN inscricoes i ON bi.inscricoes_id = i.id
+            LEFT JOIN nadadores n ON i.nadadores_id = n.id
+            LEFT JOIN revezamentos_inscricoes ri ON bi.revezamentos_inscricoes_id = ri.id
+            LEFT JOIN equipes e ON ri.equipes_id = e.id
+            WHERE b.eventos_provas_id = ?
+            ORDER BY b.id, bi.raia;
             `,
-            [provaId]
+            [eventosProvasId] // Passa o eventos_provas_id como parâmetro
         );
 
         // Verifica se existem resultados para os nadadores usando eventosProvasId
@@ -109,7 +110,7 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
 
         // Organiza os dados por Séries
         const bateriasOrganizadas = baterias.reduce((acc, row) => {
-            const { bateriaId, numeroBateria, raia, nadadorId, nomeNadador, tempo, status } = row;
+            const { bateriaId, numeroBateria, raia, nadadorId, nomeNadador, tempo, status, equipeId, nomeEquipe } = row;
 
             let bateria = acc.find((b) => b.bateriaId === bateriaId);
             if (!bateria) {
@@ -117,17 +118,30 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
                     bateriaId,
                     numeroBateria,
                     nadadores: [],
+                    equipes: []
                 };
                 acc.push(bateria);
             }
 
-            bateria.nadadores.push({
-                id: nadadorId,
-                nome: nomeNadador,
-                raia,
-                tempo,
-                status,
-            });
+            if (nadadorId) {
+                bateria.nadadores.push({
+                    id: nadadorId,
+                    nome: nomeNadador,
+                    raia,
+                    tempo,
+                    status,
+                });
+            }
+
+            if (equipeId) {
+                bateria.equipes.push({
+                    id: equipeId,
+                    nome: nomeEquipe,
+                    raia,
+                    tempo,
+                    status,
+                });
+            }
 
             return acc;
         }, []);
@@ -181,32 +195,59 @@ router.post('/salvarResultados', async (req, res) => {
         // ...existing processing dos dados e inserção/atualização de resultados...
         for (const bateria of dados) {
             // ...existing code...
-            const { nadadores } = bateria;
-            if (!nadadores || !Array.isArray(nadadores)) {
-                throw new Error('Dados de nadadores estão ausentes ou incorretos na bateria: ' + JSON.stringify(bateria));
+            const { nadadores, equipes } = bateria;
+            if (!nadadores && !equipes) {
+                throw new Error('Dados de nadadores ou equipes estão ausentes na bateria: ' + JSON.stringify(bateria));
             }
-            for (const nadador of nadadores) {
-                // ...existing code...
-                const { id: nadadorId, tempo, status } = nadador;
-                if (!nadadorId || (tempo === undefined)) {
-                    throw new Error('ID do nadador e tempo são obrigatórios. Nadador: ' + JSON.stringify(nadador));
+            if (nadadores) {
+                for (const nadador of nadadores) {
+                    // ...existing code...
+                    const { id: nadadorId, tempo, status } = nadador;
+                    if (!nadadorId || (tempo === undefined)) {
+                        throw new Error('ID do nadador e tempo são obrigatórios. Nadador: ' + JSON.stringify(nadador));
+                    }
+                    const parsedTime = parseTime(tempo);
+                    const [existingRows] = await connection.query(
+                        'SELECT id FROM resultados WHERE nadadores_id = ? AND eventos_provas_id = ? LIMIT 1',
+                        [nadadorId, provaId]
+                    );
+                    if (existingRows.length > 0) {
+                        await connection.query(
+                            'UPDATE resultados SET minutos = ?, segundos = ?, centesimos = ?, status = ?, equipes_id = NULL WHERE id = ?',
+                            [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, status, existingRows[0].id]
+                        );
+                    } else {
+                        await connection.query(
+                            `INSERT INTO resultados (minutos, segundos, centesimos, nadadores_id, eventos_provas_id, status, equipes_id)
+                             VALUES (?, ?, ?, ?, ?, ?, NULL)`,
+                            [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, nadadorId, provaId, status]
+                        );
+                    }
                 }
-                const parsedTime = parseTime(tempo);
-                const [existingRows] = await connection.query(
-                    'SELECT id FROM resultados WHERE nadadores_id = ? AND eventos_provas_id = ? LIMIT 1',
-                    [nadadorId, provaId]
-                );
-                if (existingRows.length > 0) {
-                    await connection.query(
-                        'UPDATE resultados SET minutos = ?, segundos = ?, centesimos = ?, status = ? WHERE id = ?',
-                        [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, status, existingRows[0].id]
+            }
+            if (equipes) {
+                for (const equipe of equipes) {
+                    const { id: equipeId, tempo, status } = equipe;
+                    if (!equipeId || (tempo === undefined)) {
+                        throw new Error('ID da equipe e tempo são obrigatórios. Equipe: ' + JSON.stringify(equipe));
+                    }
+                    const parsedTime = parseTime(tempo);
+                    const [existingRows] = await connection.query(
+                        'SELECT id FROM resultados WHERE equipes_id = ? AND eventos_provas_id = ? LIMIT 1',
+                        [equipeId, provaId]
                     );
-                } else {
-                    await connection.query(
-                        `INSERT INTO resultados (minutos, segundos, centesimos, nadadores_id, eventos_provas_id, status)
-                         VALUES (?, ?, ?, ?, ?, ?)`,
-                        [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, nadadorId, provaId, status]
-                    );
+                    if (existingRows.length > 0) {
+                        await connection.query(
+                            'UPDATE resultados SET minutos = ?, segundos = ?, centesimos = ?, status = ?, nadadores_id = NULL WHERE id = ?',
+                            [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, status, existingRows[0].id]
+                        );
+                    } else {
+                        await connection.query(
+                            `INSERT INTO resultados (minutos, segundos, centesimos, equipes_id, eventos_provas_id, status, nadadores_id)
+                             VALUES (?, ?, ?, ?, ?, ?, NULL)`,
+                            [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, equipeId, provaId, status]
+                        );
+                    }
                 }
             }
         }

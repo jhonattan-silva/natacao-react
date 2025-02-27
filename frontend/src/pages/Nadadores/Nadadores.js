@@ -311,7 +311,7 @@ const Nadadores = () => {
         <>
             <CabecalhoAdmin />
             <div className={style.nadadores}>
-                <h2>NADADORES</h2>
+                <h2 className={style.titulo}>NADADORES</h2>
                 {!formVisivel && (
                     <TabelaEdicao
                         dados={nadadores}

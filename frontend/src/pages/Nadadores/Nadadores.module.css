@@ -12,7 +12,7 @@
 /* Nadadores.module.css */
 
 /* Estilo para o título */
-h2 {
+.titulo {
     font-size: 4rem;
     color: #e3e9f1;
     text-align: center;

@@ -56,9 +56,9 @@ const Inscricao = () => {
             setNadadores(nadadoresResponse.data);
 
             const todasProvas = provasResponse.data.provas || [];
-            const provasFiltradas = todasProvas.filter(prova => prova.tipo !== "revezamento").sort((a, b) => a.ordem - b.ordem);
+            const provasFiltradas = todasProvas.filter(prova => prova.eh_revezamento === 0).sort((a, b) => a.ordem - b.ordem);
             setProvas(provasFiltradas);
-            const revezamentosFiltrados = todasProvas.filter(prova => prova.tipo === "revezamento").sort((a, b) => a.ordem - b.ordem);
+            const revezamentosFiltrados = todasProvas.filter(prova => prova.eh_revezamento === 1).sort((a, b) => a.ordem - b.ordem);
             setRevezamentos(revezamentosFiltrados);
 
             const novasSelecoes = {};
@@ -228,7 +228,7 @@ const Inscricao = () => {
                                 <ul>
                                     {provas.map(prova => (
                                         <li key={prova.id}>
-                                            {prova.ordem} - {prova.distancia}m {prova.estilo} {formatSexo(prova.sexo)} {prova.tipo}
+                                            {prova.ordem} - {prova.distancia}m {prova.estilo} {formatSexo(prova.sexo)} {prova.eh_revezamento ? "Revezamento" : "Individual"}
                                         </li>
                                     ))}
                                 </ul>

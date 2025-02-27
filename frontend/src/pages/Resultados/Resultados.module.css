@@ -12,6 +12,19 @@
   color: #fff !important; /* Changed to white */
 }
 
+.resultadosContainer h1, .resultadosContainer h2, .resultadosContainer h3 {
+  text-align: center;
+  color: #fff;
+}
+
+.titulo h1 {
+  size: 4rm;
+}
+
+.titulo h2 {
+  size: 3rm;
+} 
+
 .provaContainer {
   background-color: #ffffff;
   border-radius: 8px;
@@ -29,7 +42,7 @@
   margin-bottom: 1rem;
   border-bottom: 2px solid #3498db;
   padding-bottom: 0.5rem;
-  color: #3498db;
+  color: #ffffff; 
 }
 
 .bateriaContainer {
@@ -109,4 +122,19 @@
   background-color: #f86f50 !important; /* New background color */
   color: #fff !important;              /* New text color */
   font-size: 18px;
+}
+
+.classificacaoTabela {
+  text-align: center;
+}
+
+.classificacaoTabela th, .classificacaoTabela td {
+  text-align: center;
+}
+
+.loadingMessage {
+  font-size: 2rem;
+  color: #fff;
+  text-align: center;
+  margin-top: 2rem;
 }
