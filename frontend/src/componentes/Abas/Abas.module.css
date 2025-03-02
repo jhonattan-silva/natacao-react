@@ -41,10 +41,18 @@
   background-color: #4b8445 !important;
 }
 
+.abasContainer .tabs .tab3 {
+  background-color: #964cd6 !important;
+}
+
 .abasContainer .tabContent .content1 {
   background-color: #488ac3 !important;
 }
 
 .abasContainer .tabContent .content2 {
   background-color: #4b8445 !important;
+}
+
+.abasContainer .tabContent .content3 {
+  background-color: #964cd6 !important;
 }

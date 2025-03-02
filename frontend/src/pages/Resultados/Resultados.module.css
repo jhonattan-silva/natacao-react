@@ -12,7 +12,7 @@
   color: #fff !important; /* Changed to white */
 }
 
-.resultadosContainer h1, .resultadosContainer h2, .resultadosContainer h3 {
+.resultadosContainer h1, .resultadosContainer h2{
   text-align: center;
   color: #fff;
 }
@@ -124,6 +124,12 @@
   font-size: 18px;
 }
 
+.tabelaClassificacaoFinal table,
+.tabelaResultadosBalizamento table,
+.tabelaClassificacaoCategoria table {
+  text-align: center !important;
+}
+
 .classificacaoTabela {
   text-align: center;
 }
@@ -137,4 +143,40 @@
   color: #fff;
   text-align: center;
   margin-top: 2rem;
+}
+
+/* Styles for the new "Absoluto" tab */
+.absolutoContainer {
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.3s;
+}
+
+.absolutoContainer:hover {
+  transform: translateY(-5px);
+}
+
+.absolutoContainer h2 {
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #964cd6;
+  padding-bottom: 0.5rem;
+  color: #ffffff; 
+}
+
+.absolutoTabela {
+  text-align: center;
+}
+
+.absolutoTabela th, .absolutoTabela td {
+  text-align: center;
+}
+
+.cardContainer h3 {
+  color: #000 !important;
+}
+
+.cardContainer {
+  cursor: pointer;
 }

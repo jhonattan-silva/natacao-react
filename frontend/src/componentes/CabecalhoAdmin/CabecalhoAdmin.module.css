@@ -27,7 +27,7 @@ nav a {
 }
 
 nav a:last-child {
-    margin-left: auto;
+    /*margin-left: auto;
     /* Alinhar o último link à direita */
     margin-right: 0;
 }

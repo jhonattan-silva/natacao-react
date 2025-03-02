@@ -5,7 +5,25 @@
     background-color: #003366;
     padding: 10px 20px;
     border-bottom: 1px solid #dee2e6;
+}
 
+.left, .center, .right {
+    display: flex;
+    align-items: center;
+}
+
+.left {
+    flex: 1;
+}
+
+.center {
+    flex: 2;
+    justify-content: center;
+}
+
+.right {
+    flex: 1;
+    justify-content: flex-end;
 }
 
 .logo {

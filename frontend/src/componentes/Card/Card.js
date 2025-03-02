@@ -9,10 +9,11 @@ import style from './Card.module.css';
         horario: string
         balizamento: string
         resultados: string
+        onClick: function
 */
-const Card = ({ nome, cidade, data, horario, endereco, balizamento, resultados }) => {
+const Card = ({ nome, cidade, data, horario, endereco, balizamento, resultados, onClick }) => {
     return (
-        <div className={style.card}>
+        <div className={style.card} onClick={onClick}>
             <h3>{nome}</h3>
             <p>{cidade}</p>
             <p>{data}</p>

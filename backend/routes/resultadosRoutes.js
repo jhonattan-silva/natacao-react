@@ -18,6 +18,21 @@ function formatTime(timeStr) {
     return totalSeconds.toFixed(2); // Retorna o tempo em segundos com duas casas decimais
 }
 
+//Página inicial, sem evento selecionado
+router.get('/listarEventosComResultados', async (req, res) => {
+  try {
+      const [rows] = await db.query('SELECT * FROM eventos WHERE teve_resultados = true');
+      res.json(rows);
+  } catch (error) {
+      console.error('Erro ao buscar eventos com resultados:', error);
+      res.status(500).json({
+          success: false,
+          message: 'Erro ao buscar eventos com resultados',
+          details: error.message,
+      });
+  }
+});
+
 router.get('/resultadosEvento/:eventoId', async (req, res) => {
   const { eventoId } = req.params;
   try {
@@ -176,7 +191,8 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
                 r.segundos,
                 r.centesimos,
                 r.status,
-                p.eh_revezamento
+                p.eh_revezamento,
+                p.eh_prova_categoria  -- Ensure this field is selected
             FROM resultados r
             LEFT JOIN nadadores n ON r.nadadores_id = n.id
             LEFT JOIN categorias c ON n.categorias_id = c.id
@@ -242,142 +258,256 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
     }
 });
 
-// Rota para gerar pontuação com base no eventos_id
-router.post('/gerarPontuacao/:eventosId', async (req, res) => {
-  const { eventosId } = req.params;
+router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
+    const { eventoId } = req.params;
 
-  // Consulta para buscar todas as provas associadas a um evento
-  const queryBuscarProvas = `
-    SELECT id 
-    FROM eventos_provas 
-    WHERE eventos_id = ?;
-  `;
+    try {
+        // Buscar resultados com provas, sexo e categoria
+        const [resultados] = await db.query(`
+          SELECT 
+              c.id, 
+              c.eventos_provas_id, 
+              p.id AS prova_id, 
+              CONCAT(p.distancia, 'm', ' ', p.estilo) AS prova_nome, 
+              c.nadadores_id, 
+              n.nome AS nome_nadador, 
+              c.equipes_id, 
+              e.nome AS nome_equipe, 
+              c.tempo, 
+              c.classificacao, 
+              c.status, 
+              c.tipo,
+              p.eh_revezamento,
+              p.sexo AS sexo_prova,
+              n.sexo AS sexo_nadador,
+              cat.nome AS categoria_nadador,  
+              c.pontuacao_individual,  -- 👈 Adicionamos a pontuação individual
+              c.pontuacao_equipe,      -- 👈 Adicionamos a pontuação da equipe
+              ep.ordem  
+          FROM classificacoes c
+          JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
+          JOIN provas p ON ep.provas_id = p.id
+          LEFT JOIN nadadores n ON c.nadadores_id = n.id
+          LEFT JOIN equipes e ON c.equipes_id = e.id
+          LEFT JOIN categorias cat ON n.categorias_id = cat.id  
+          WHERE ep.eventos_id = ?
+          ORDER BY ep.ordem ASC, c.tipo ASC, c.eventos_provas_id ASC, c.classificacao ASC; 
+        `, [eventoId]);
 
-  // Consulta para atualizar a pontuação
-  const queryAtualizarPontuacao = `
-    UPDATE resultados r
-    JOIN (
-        SELECT 
-            r.id,
-            CASE 
-                WHEN p.eh_revezamento = 1 THEN 
-                    CASE 
-                        WHEN r.status = 'OK' THEN 
-                            CASE 
-                                WHEN (@row_number := @row_number + 1) = 1 THEN 18
-                                WHEN @row_number = 2 THEN 14
-                                WHEN @row_number = 3 THEN 12
-                                WHEN @row_number = 4 THEN 10
-                                WHEN @row_number = 5 THEN 8
-                                WHEN @row_number = 6 THEN 6
-                                WHEN @row_number = 7 THEN 4
-                                WHEN @row_number = 8 THEN 2
-                                ELSE 0
-                            END
-                        ELSE 0
-                    END
-                ELSE 
-                    CASE 
-                        WHEN r.status = 'OK' THEN 
-                            CASE 
-                                WHEN (@row_number := @row_number + 1) = 1 THEN 9
-                                WHEN @row_number = 2 THEN 7
-                                WHEN @row_number = 3 THEN 6
-                                WHEN @row_number = 4 THEN 5
-                                WHEN @row_number = 5 THEN 4
-                                WHEN @row_number = 6 THEN 3
-                                WHEN @row_number = 7 THEN 2
-                                WHEN @row_number = 8 THEN 1
-                                ELSE 0
-                            END
-                        ELSE 0
-                    END
-            END AS pontos
-        FROM resultados r
-        JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
-        JOIN provas p ON ep.provas_id = p.id
-        WHERE r.eventos_provas_id = ?
-        ORDER BY p.eh_revezamento DESC, r.minutos ASC, r.segundos ASC, r.centesimos ASC
-    ) AS ranking ON r.id = ranking.id
-    SET r.pontos = ranking.pontos;
-  `;
+        // Agrupar por prova e sexo (revezamento separado por sexo)
+        const classificacao = {};
+        resultados.forEach(row => {
+            const provaKey = row.eh_revezamento 
+                ? `Revezamento - ${row.nomeProva} (${row.sexoProva})` 
+                : `${row.nomeProva} (${row.sexoNadador})`;
+
+            if (!classificacao[provaKey]) {
+                classificacao[provaKey] = [];
+            }
+
+            // Formatar tempo ou definir texto personalizado
+            if (row.status === 'DESC') {
+                row.tempo = 'DESCLASSIFICADO';
+                row.classificacao = 'DESCLASSIFICADO';
+            } else if (row.status === 'NC' || (row.minutos === 0 && row.segundos === 0 && row.centesimos === 0)) {
+                row.tempo = 'NÃO COMPARECEU';
+                row.classificacao = 'NÃO COMPARECEU';
+            } else {
+                row.tempo = `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`;
+                row.classificacao = null; // Definir depois
+            }
+
+            classificacao[provaKey].push(row);
+        });
+
+        // Adicionar posição no ranking dentro de cada prova + sexo
+        for (const prova in classificacao) {
+            // Separar resultados válidos e inválidos
+            const validos = [];
+            const invalidos = [];
+            classificacao[prova].forEach(row => {
+                if (row.classificacao) {
+                    invalidos.push(row); // Já possui status (DESC ou NC)
+                } else {
+                    validos.push(row);
+                }
+            });
+
+            // Classificar válidos e adicionar posição
+            validos.forEach((atleta, index) => {
+                atleta.classificacao = index + 1; // 1º, 2º, 3º...
+            });
+
+            // Combinar válidos e inválidos
+            classificacao[prova] = [...validos, ...invalidos];
+        }
+
+        res.json(classificacao);
+    } catch (error) {
+        console.error('Erro ao buscar resultados absolutos:', error.message);
+        res.status(500).json({ error: 'Erro ao buscar resultados' });
+    }
+});
+
+router.post('/fecharClassificacao/:eventoId', async (req, res) => {
+  const { eventoId } = req.params;
 
   try {
-    // Buscar todas as provas associadas ao evento
-    const [provas] = await db.query(queryBuscarProvas, [eventosId]);
+      // Verifica se a classificação já foi gerada
+      const [evento] = await db.query(`SELECT classificacao_finalizada FROM eventos WHERE id = ?`, [eventoId]);
+      if (evento[0].classificacao_finalizada) {
+          return res.status(400).json({ error: 'Classificação já foi fechada para este evento.' });
+      }
 
-    for (const prova of provas) {
-      await db.query('SET @row_number = 0;');
-      await db.query(queryAtualizarPontuacao, [prova.id]);
-    }
+      // Buscar os resultados do evento
+      const [resultados] = await db.query(`
+          SELECT 
+              r.nadadores_id AS nadadorId,
+              r.equipes_id AS equipeId,
+              r.eventos_provas_id AS eventosProvasId,
+              p.eh_revezamento,
+              p.eh_prova_ouro,
+              r.minutos, r.segundos, r.centesimos,
+              r.status
+          FROM resultados r
+          JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
+          JOIN provas p ON ep.provas_id = p.id
+          WHERE ep.eventos_id = ?
+          ORDER BY p.eh_revezamento ASC, p.id ASC, r.minutos ASC, r.segundos ASC, r.centesimos ASC;
+      `, [eventoId]);
 
-    res.status(200).json({ message: 'Pontuação gerada com sucesso' });
+      const classificacoes = [];
+      const provas = {};
+
+      // Organizar classificação por eventos_provas_id
+      resultados.forEach(row => {
+          const chave = row.eventosProvasId;
+          if (!provas[chave]) provas[chave] = [];
+          provas[chave].push(row);
+      });
+
+      // Aplicar classificação
+      for (const eventosProvasId in provas) {
+          let posicao = 1;
+          provas[eventosProvasId].forEach(row => {
+              const tempo = row.status === 'OK' 
+                  ? `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`
+                  : row.status === 'DESC' ? 'DESCLASSIFICADO' : 'NÃO COMPARECEU';
+
+              const classificacao = row.status === 'OK' ? posicao++ : null; // Define null for 'DESC' and 'NC'
+
+              classificacoes.push([
+                  row.eventosProvasId,
+                  row.nadadorId || null,
+                  row.equipeId || null,
+                  tempo,
+                  classificacao,
+                  row.status,
+                  row.eh_revezamento || row.eh_prova_ouro ? 'ABSOLUTO' : 'CATEGORIA' // Se for revezamento ou prova ouro → ABSOLUTO
+              ]);
+          });
+      }
+
+      // Inserir classificação no banco
+      if (classificacoes.length > 0) {
+          await db.query(`
+              INSERT INTO classificacoes (eventos_provas_id, nadadores_id, equipes_id, tempo, classificacao, status, tipo)
+              VALUES ?
+          `, [classificacoes]);
+
+          // Atualiza a flag para evitar recalcular
+          await db.query(`UPDATE eventos SET classificacao_finalizada = 1 WHERE id = ?`, [eventoId]);
+      }
+
+      res.json({ success: true, message: 'Classificação fechada com sucesso!' });
+
   } catch (error) {
-    console.error('Erro ao gerar pontuação:', error.message);
-    res.status(500).json({ error: 'Erro ao gerar pontuação' });
+      console.error('Erro ao fechar classificação:', error.message);
+      res.status(500).json({ error: 'Erro ao fechar classificação' });
   }
 });
 
-// Rota para verificar os registros que seriam afetados
-router.get('/verificarPontuacao/:eventosId', async (req, res) => {
-  const { eventosId } = req.params;
-
-  const queryVerificarPontuacao = `
-    SELECT 
-        r.id,
-        r.prova_id,
-        CASE 
-            WHEN r.eh_revezamento = 1 THEN 
-                CASE 
-                    WHEN r.status = 'OK' THEN 
-                        CASE 
-                            WHEN (@row_number := IF(@current_prova = r.prova_id, @row_number + 1, 1)) = 1 THEN 18
-                            WHEN @row_number = 2 THEN 14
-                            WHEN @row_number = 3 THEN 12
-                            WHEN @row_number = 4 THEN 10
-                            WHEN @row_number = 5 THEN 8
-                            WHEN @row_number = 6 THEN 6
-                            WHEN @row_number = 7 THEN 4
-                            WHEN @row_number = 8 THEN 2
-                            ELSE 0
-                        END
-                    ELSE 0
-                END
-            ELSE 
-                CASE 
-                    WHEN r.status = 'OK' THEN 
-                        CASE 
-                            WHEN (@row_number := IF(@current_prova = r.prova_id, @row_number + 1, 1)) = 1 THEN 9
-                            WHEN @row_number = 2 THEN 7
-                            WHEN @row_number = 3 THEN 6
-                            WHEN @row_number = 4 THEN 5
-                            WHEN @row_number = 5 THEN 4
-                            WHEN @row_number = 6 THEN 3
-                            WHEN @row_number = 7 THEN 2
-                            WHEN @row_number = 8 THEN 1
-                            ELSE 0
-                        END
-                    ELSE 0
-                END
-        END AS pontos,
-        @current_prova := r.prova_id AS dummy
-    FROM (
-        SELECT r.*, p.eh_revezamento, p.id AS prova_id
-        FROM resultados r
-        JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
-        JOIN provas p ON ep.provas_id = p.id
-        WHERE ep.eventos_id = ?
-        ORDER BY p.eh_revezamento DESC, p.id, r.minutos ASC, r.segundos ASC, r.centesimos ASC
-    ) AS r
-    JOIN (SELECT @row_number := 0, @current_prova := 0) AS rn;
-  `;
+router.get('/listarDoBanco/:eventoId', async (req, res) => {
+  const { eventoId } = req.params;
 
   try {
-    const [result] = await db.query(queryVerificarPontuacao, [eventosId]);
-    res.json(result);
+    // Buscar resultados do banco
+    const [resultados] = await db.query(`
+      SELECT 
+        c.id, 
+        c.eventos_provas_id, 
+        p.id AS prova_id, 
+        CONCAT(p.distancia, 'm', ' ', p.estilo) AS prova_nome, 
+        c.nadadores_id, 
+        n.nome AS nome_nadador, 
+        c.equipes_id, 
+        e.nome AS nome_equipe, 
+        c.tempo, 
+        c.classificacao, 
+        c.status, 
+        c.tipo,
+        p.eh_revezamento,
+        p.sexo AS sexo_prova,
+        n.sexo AS sexo_nadador,
+        cat.nome AS categoria_nadador,  
+        c.pontuacao_individual,  -- Adiciona a pontuação individual
+        c.pontuacao_equipe,      -- Adiciona a pontuação da equipe
+        ep.ordem  -- Add ordem column
+      FROM classificacoes c
+      JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
+      JOIN provas p ON ep.provas_id = p.id
+      LEFT JOIN nadadores n ON c.nadadores_id = n.id
+      LEFT JOIN equipes e ON c.equipes_id = e.id
+      LEFT JOIN categorias cat ON n.categorias_id = cat.id  
+      WHERE ep.eventos_id = ?
+      ORDER BY ep.ordem ASC, c.tipo ASC, c.eventos_provas_id ASC, c.classificacao ASC;  
+    `, [eventoId]);
+
+    const classificacao = {}; // Objeto para agrupar os resultados
+    resultados.forEach(row => { // Para cada resultado
+      const provaKey = row.eh_revezamento // Chave para agrupar os resultados, porque revezamento é diferente
+        ? `Revezamento - ${row.prova_nome} (${row.sexo_prova})` // Aparece REVEZAMENTO - Nome da prova + sexo
+        : `${row.prova_nome} (${row.sexo_nadador})`; // Nome da prova + sexo
+
+      if (!classificacao[provaKey]) { // Se a chave não existe, criar um array vazio
+        classificacao[provaKey] = []; // Inicializa o array vazio para a prova 
+      }
+
+      classificacao[provaKey].push({ // Adiciona o resultado ao array da prova
+        id: row.id,
+        eventos_provas_id: row.eventos_provas_id,
+        prova_id: row.prova_id,
+        prova_nome: row.prova_nome,
+        nadadores_id: row.nadadores_id,
+        nome_nadador: row.nome_nadador,
+        equipes_id: row.equipes_id,
+        nome_equipe: row.nome_equipe,
+        tempo: row.tempo,
+        classificacao: row.classificacao,
+        status: row.status,
+        tipo: row.tipo,
+        eh_revezamento: row.eh_revezamento,
+        sexo_prova: row.sexo_prova,
+        sexo_nadador: row.sexo_nadador,
+        categoria_nadador: row.categoria_nadador,
+        pontuacao_individual: row.pontuacao_individual,  
+        pontuacao_equipe: row.pontuacao_equipe       
+      });
+    });
+
+    for (const prova in classificacao) { // Para cada prova 
+      classificacao[prova].sort((a, b) => { // Classificar os resultados por classificação e status
+        if (a.status === 'DESC' || a.status === 'NC') return 1; // Se a é DESCLASSIFICADO ou NÃO COMPARECEU, a vem depois
+        if (b.status === 'DESC' || b.status === 'NC') return -1; // Se b é DESCLASSIFICADO ou NÃO COMPARECEU, a vem antes
+        return a.classificacao - b.classificacao; // Classificar por classificação
+      });
+    }
+
+    // Retornar os resultados agrupados
+    res.json(classificacao);
   } catch (error) {
-    console.error('Erro ao verificar pontuação:', error.message);
-    res.status(500).json({ error: 'Erro ao verificar pontuação' });
+    console.error('Erro ao buscar resultados do banco:', error.message);
+    res.status(500).json({ error: 'Erro ao buscar resultados do banco' });
   }
 });
 

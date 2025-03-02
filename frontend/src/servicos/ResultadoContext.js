@@ -14,7 +14,6 @@ export const ResultadosProvider = ({ children }) => {
   }, [resultados]);
 
   const salvarTempo = (provaId, nadadorId, tempo) => {
-    console.log(`Salvando tempo no contexto: ProvaId: ${provaId}, NadadorId: ${nadadorId}, Tempo: ${tempo}`);
     setResultados((prev) => ({
       ...prev,
       [provaId]: {

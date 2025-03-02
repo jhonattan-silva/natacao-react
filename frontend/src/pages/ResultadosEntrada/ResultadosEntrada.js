@@ -84,6 +84,7 @@ const ResultadosEntrada = () => {
             try {
                 const response = await api.get(`${apiBateriasProva}/${provaId}`);
                 if (Array.isArray(response.data)) {
+
                     const bateriasComTempos = response.data.map((bateria) => ({
                         ...bateria,
                         id: bateria.bateriaId, // Mapeia bateriaId para id
@@ -130,25 +131,21 @@ const ResultadosEntrada = () => {
 
     useEffect(() => {
         if (baterias.length > 0) {
-            console.log("Baterias recebidas:", baterias);
             const newStates = {};
             baterias.forEach(bateria => {
                 bateria.nadadores.forEach(nadador => {
-                    console.log(`Nadador ${nadador.id} - Status do banco: ${nadador.status}`);
                     newStates[nadador.id] = {
                         nc: nadador.status === 'NC', // Define o estado do checkbox NC
                         desc: nadador.status === 'DESC', // Define o estado do checkbox DESC
                     };
                 });
                 bateria.equipes.forEach(equipe => {
-                    console.log(`Equipe ${equipe.id} - Status do banco: ${equipe.status}`);
                     newStates[equipe.id] = {
                         nc: equipe.status === 'NC', // Define o estado do checkbox NC
                         desc: equipe.status === 'DESC', // Define o estado do checkbox DESC
                     };
                 });
             });
-            console.log("Novos estados dos checkboxes:", newStates);
             setCheckboxes(newStates);
         }
     }, [baterias]);
@@ -217,10 +214,11 @@ const ResultadosEntrada = () => {
     const handleTempoChange = (bateriaId, id, valor, isEquipe = false) => {
         const tempoFormatado = formatarTempo(valor);
         atualizarTempo(bateriaId, id, tempoFormatado, isEquipe);
-        salvarTempo(provaId, id, tempoFormatado); // Save the formatted time to context
+        salvarTempo(provaId, id, tempoFormatado); // salva temporariamente o tempo
+        setInputSalvo({ bateriaId, id, isEquipe }); // mantem o estado do input salvo
     };
 
-    // Atualiza estados no handleCheckboxChange com logs para ver as mudanças
+    // Atualiza estados no handleCheckboxChange
     const handleCheckboxChange = (id, tipo, value) => {
         setCheckboxes(prev => {
              const atual = prev[id] || { nc: false, desc: false };
@@ -234,6 +232,7 @@ const ResultadosEntrada = () => {
              }
              return { ...prev, [id]: novoEstado };
         });
+        setInputSalvo(null); // garante que o estado do input salvo seja resetado ao alterar o checkbox
     };
 
     const aoSalvar = async () => {
@@ -268,12 +267,14 @@ const ResultadosEntrada = () => {
                 nadadores: bateria.nadadores.map((nadador) => {
                     const cb = checkboxes[nadador.id] || { nc: false, desc: false };
                     const status = cb.nc ? "NC" : (cb.desc ? "DESC" : "OK");
+
                     // Fornece tempo padrão se inexistente (para status "NC" ou "DESC")
-                    return { id: nadador.id, tempo: nadador.tempo || null, status };
+                    return { id: nadador.id, tempo: nadador.tempo || null, status, equipeId: nadador.equipeId || null };
                 }),
                 equipes: bateria.equipes.map((equipe) => {
                     const cb = checkboxes[equipe.id] || { nc: false, desc: false };
                     const status = cb.nc ? "NC" : (cb.desc ? "DESC" : "OK");
+
                     // Fornece tempo padrão se inexistente (para status "NC" ou "DESC")
                     return { id: equipe.id, tempo: equipe.tempo || null, status };
                 }),
@@ -284,7 +285,6 @@ const ResultadosEntrada = () => {
                 throw new Error('Prova selecionada não encontrada.');
             }
             const eventosProvasId = selectedProva.eventos_provas_id;
-            console.log('Dados a serem salvos:', { provaId: eventosProvasId, dados });
             await api.post('/resultadosEntrada/salvarResultados', { provaId: eventosProvasId, dados });
             alert('Resultados salvos com sucesso!');
             window.location.reload();

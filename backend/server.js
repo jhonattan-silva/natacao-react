@@ -116,6 +116,7 @@ const uploadRoutes = require('./uploads'); // Rotas de upload
 const migracao = require('./routes/migracaoRoute');
 const resultadosEntrada = require('./routes/resultadosEntradaRoutes');
 const resultadosRoutes = require('./routes/resultadosRoutes');
+const pontuacoesRoutes = require('./routes/pontuacoesRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/balizamento', balizamentoRoutes);
@@ -129,6 +130,7 @@ app.use(uploadRoutes);
 app.use('/api/migracao', migracao);
 app.use('/api/resultadosEntrada', resultadosEntrada);
 app.use('/api/resultados', resultadosRoutes);
+app.use('/api/pontuacoes', pontuacoesRoutes);
 
 // Servir o frontend em produção
 if (process.env.NODE_ENV === 'production') {

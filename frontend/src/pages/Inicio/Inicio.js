@@ -5,19 +5,7 @@ import Carrossel from '../../componentes/Carrossel/Carrossel';
 import style from './Inicio.module.css';
 import Card from '../../componentes/Card/Card';
 import api from '../../servicos/api';
-
-const formataData = (dateString) => {
-    const adjustedDate = new Date(dateString);
-    adjustedDate.setHours(adjustedDate.getHours() + 3); // Adiciona 3 horas
-
-    const optionsDate = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Sao_Paulo' };
-
-    const dataEvento = adjustedDate.toLocaleDateString('pt-BR', optionsDate);
-    const horario = adjustedDate.toLocaleTimeString('pt-BR', optionsTime);
-
-    return { dataEvento, horario };
-};
+import { formataData } from '../../servicos/functions';
 
 const formatarParaMaps = (endereco, cidade) => {
     return `https://www.google.com/maps/search/${encodeURIComponent(endereco + ', ' + cidade)}`;
