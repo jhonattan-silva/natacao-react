@@ -1,6 +1,7 @@
 import api from '../../servicos/api';
 import { useEffect, useState } from 'react';
 import Botao from '../../componentes/Botao/Botao';
+import BotaoTabela from '../../componentes/BotaoTabela/BotaoTabela';
 import Formulario from '../../componentes/Formulario/Formulario';
 import TabelaEdicao from '../../componentes/TabelaEdicao/TabelaEdicao';
 import style from './Etapas.module.css';
@@ -30,6 +31,14 @@ const Etapas = () => {
     const apiExcluiEtapa = `/etapas/excluiEtapa`;
     const apiAbreInscricao = `/etapas/abreInscricao`;
     const apiListaEtapasAno = `/etapas/listarEtapasAno`;
+
+    const buttonLabels = {
+        editar: 'Editar',
+        excluir: 'Excluir',
+        abrirInscricao: 'Abrir Inscrição',
+        fecharInscricao: 'Fechar Inscrição',
+        gerarPontuacao: 'Gerar Pontuação'
+    };
 
     useEffect(() => {
         fetchData(anoSelecionado); // Chama a função `fetchData` ao montar o componente
@@ -199,9 +208,9 @@ const Etapas = () => {
                 }
 
                 valorFormatado = dia;
-                if (valorFormatado.length >= 2) valorFormatado += "/"; 
+                if (valorFormatado.length >= 2) valorFormatado += "/";
                 valorFormatado += mes;
-                if (valorFormatado.length >= 5) valorFormatado += "/"; 
+                if (valorFormatado.length >= 5) valorFormatado += "/";
                 valorFormatado += ano;
 
                 // Permite apagar corretamente (se terminar com '/', remove)
@@ -410,54 +419,71 @@ const Etapas = () => {
 
     const handleAvancar = () => {
         if (etapaAtual === 1) {
-            // Mantém a ordem original do backend ao invés de criar um novo array misturado
-            const provasMap = new Map(provasSelecionadas.map(prova => [prova.id, prova]));
-    
-            const provasSelecionadasOrdenadas = [...selecionadasMasculino, ...selecionadasFeminino]
-                .map(id => provasMap.get(id))
-                .filter(prova => prova) // Remove undefined caso alguma prova não esteja no Map
-                .sort((a, b) => {
-                    if (a.ordem !== undefined && b.ordem !== undefined) {
-                        return a.ordem - b.ordem;
-                    }
-                    return a.id - b.id; // Se não tiver ordem, ordena por ID
-                });    
-            setProvasSelecionadas(provasSelecionadasOrdenadas);
+            // Gera uma lista única de provas selecionadas (Masculino + Feminino)
+            const provasUnificadas = [...selecionadasMasculino, ...selecionadasFeminino].map((id, index) => ({
+                id,
+                label: `${provasMasculino.find(p => p.id === id)?.label || provasFeminino.find(p => p.id === id)?.label}`,
+                ordem: index + 1 // Inicialmente preenche a ordem sequencialmente
+            }));
+
+            setProvasSelecionadas(provasUnificadas);
             setEtapaAtual(2);
         }
-    };    
-    
+    };
+
     const handleVoltar = () => {
         setEtapaAtual(1);
     };
 
-    const handleReordenar = (novasProvas) => {
-        setProvasSelecionadas(novasProvas);
+    const handleAlterarOrdem = (id, novaOrdem) => {
+        let ordemCorrigida = parseInt(novaOrdem, 10);
+        console.log(`🔹 Prova ID: ${id}, Nova Ordem Digitada: ${novaOrdem}`);
+
+        if (isNaN(ordemCorrigida) || ordemCorrigida < 1) {
+            console.warn(`⚠️ Ordem inválida (${ordemCorrigida}) - Resetando campo!`);
+            return;
+        }
+
+        setProvasSelecionadas((prevProvas) => {
+            const newProvas = [...prevProvas];
+            const index = newProvas.findIndex(prova => prova.id === id);
+            if(index === -1) return newProvas;
+
+            const currentOrder = newProvas[index].ordem;
+            if(currentOrder === ordemCorrigida) return newProvas;
+
+            // Find if any other prova has the target order
+            const swapIndex = newProvas.findIndex(prova => prova.ordem === ordemCorrigida);
+            if(swapIndex !== -1) {
+                // Swap the order values
+                newProvas[swapIndex].ordem = currentOrder;
+                newProvas[index].ordem = ordemCorrigida;
+            } else {
+                newProvas[index].ordem = ordemCorrigida;
+            }
+            console.log("✅ Provas Após Swapping:", newProvas);
+            return [...newProvas];
+        });
     };
 
     const handleSalvar = async () => {
-        // Implementação do salvamento da ordem das provas
+        // Verifica se todas as provas possuem uma ordem válida
+        const ordensValidas = provasSelecionadas.every(prova => prova.ordem > 0);
+
+        if (!ordensValidas) {
+            alert('Por favor, preencha a ordem de todas as provas.');
+            return;
+        }
+
         try {
-            const provasOrdenadas = provasSelecionadas.map((prova, index) => ({
-                ...prova,
-                ordem: index + 1,
+            // Enviar as provas ordenadas para o backend
+            const provasOrdenadas = provasSelecionadas.map((prova) => ({
+                provas_id: prova.id,
+                ordem: parseInt(prova.ordem, 10)
             }));
 
-            // Converte a data para o formato esperado pelo MySQL
-            const [ano, mes, dia] = etapaEditando.data.split('T')[0].split('-');
-            const [hora, minuto, segundo] = etapaEditando.data.split('T')[1].split(':');
-            const dataFormatada = `${ano}-${mes}-${dia} ${hora}:${minuto}:${segundo.split('.')[0]}`;
-
-            // Garantir que quantidade_raias e torneios_id não sejam nulos
-            const quantidadeRaias = raias || etapaEditando.quantidade_raias;
-            const torneiosId = torneioEtapa || etapaEditando.torneios_id;
-
-            // Enviar as provas ordenadas para o backend
             await api.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, {
                 ...etapaEditando,
-                data: dataFormatada,
-                quantidade_raias: quantidadeRaias,
-                torneios_id: torneiosId,
                 provas: provasOrdenadas,
             });
 
@@ -479,6 +505,8 @@ const Etapas = () => {
         }
     };
 
+    const formatBoolean = (value) => (value === 1 ? 'Sim' : 'Não');
+
     return (
         <>
             <CabecalhoAdmin />
@@ -495,18 +523,40 @@ const Etapas = () => {
                             selectExibicao="nome" // Campo que será usado como texto visível no `option`
                         />
                         <TabelaEdicao
-                            dados={etapas}
-                            colunasOcultas={['id', 'torneios_id']}
+                            dados={etapas.map(etapa => ({
+                                ...etapa,
+                                inscricao_aberta: formatBoolean(etapa.inscricao_aberta),
+                                teve_balizamento: formatBoolean(etapa.teve_balizamento),
+                                teve_resultados: formatBoolean(etapa.teve_resultados),
+                                classificacao_finalizada: formatBoolean(etapa.classificacao_finalizada),
+                            }))}
+                            colunasOcultas={['id', 'torneios_id', 'observacoes', 'cidade', 'sede', 'endereco', 'quantidade_raias']}
+                            colunasTitulos={{
+                                nome: 'Nome',
+                                data: 'Data',
+                                cidade: 'Cidade',
+                                sede: 'Sede',
+                                endereco: 'Endereço',
+                                quantidade_raias: 'Quantidade de Raias',
+                                inscricao_aberta: 'Inscrição Aberta',
+                                teve_balizamento: 'Teve Balizamento',
+                                teve_resultados: 'Teve Resultados',
+                                classificacao_finalizada: 'Classificação Finalizada'
+                            }}
                             onEdit={handleEdit}
                             onDelete={handleExcluir}
                             funcExtra={(etapa) => (
                                 <>
-                                    <Botao onClick={() => abreInscricao(etapa.id, etapa.inscricao_aberta)}>
-                                        {etapa.inscricao_aberta ? 'Fechar Inscrição' : 'Abrir Inscrição'}
-                                    </Botao>
-                                    <Botao onClick={() => gerarPontuacao(etapa.id)}>
-                                        Gerar Pontuação
-                                    </Botao>
+                                    <BotaoTabela
+                                        tipo={etapa.inscricao_aberta ? 'fecharInscricao' : 'abrirInscricao'}
+                                        onClick={() => abreInscricao(etapa.id, etapa.inscricao_aberta)}
+                                        labels={buttonLabels}
+                                    />
+                                    <BotaoTabela
+                                        tipo="gerarPontuacao"
+                                        onClick={() => gerarPontuacao(etapa.id)}
+                                        labels={buttonLabels}
+                                    />
                                 </>
                             )}
                         />
@@ -565,12 +615,26 @@ const Etapas = () => {
                         )}
                         {etapaAtual === 2 && (
                             <>
-                                <h2>Ordenar Provas</h2>
-                                <ArrastaSolta 
-                                    itens={provasSelecionadas} 
-                                    aoReordenar={handleReordenar} 
-                                    renderItem={(item) => `${item.label} (${item.sexo})`} 
-                                />
+                                <h2>Defina a Ordem das Provas</h2>
+                                <div className={style.listaProvas}>
+                                    {provasSelecionadas.map((prova) => (
+                                        <div key={`${prova.id}-${prova.ordem}`} className={style.itemProva}>
+                                            <span>{`${prova.label} (${prova.sexo === 'M' ? 'Masculino' : 'Feminino'})`}</span>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max={provasSelecionadas.length}
+                                                value={prova.ordem || ""}
+                                                onChange={(e) => handleAlterarOrdem(prova.id, e.target.value)}
+                                                className={
+                                                    prova.ordem === "" || prova.ordem > provasSelecionadas.length
+                                                        ? style.inputErro
+                                                        : style.inputOrdem
+                                                }
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                                 <Botao onClick={handleVoltar}>Voltar</Botao>
                                 <Botao onClick={handleSalvar}>Salvar Ordem</Botao>
                             </>

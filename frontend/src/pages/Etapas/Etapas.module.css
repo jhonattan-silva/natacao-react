@@ -54,7 +54,6 @@
     color: black;
 }
 
-
 /* Estilos dos botões */
 .button-group {
     display: flex;
@@ -101,6 +100,54 @@ button:disabled, .btn:disabled {
     cursor: not-allowed;
 }
 
+.tableButton {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.etapasContainer .tableButton {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.etapasContainer .btnComponente {
+    background: linear-gradient(135deg, #6c63ff, #5a54e5);
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    flex: 1;
+    margin-right: 10px;
+}
+
+.etapasContainer .btnComponente:hover {
+    background: linear-gradient(135deg, #5a54e5, #6c63ff);
+}
+
+.etapasContainer .btnVoltar {
+    background: linear-gradient(135deg, #ff7e5f, #ff6b4f);
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    flex: 1;
+}
+
+.etapasContainer .btnVoltar:hover {
+    background: linear-gradient(135deg, #ff6b4f, #ff7e5f);
+}
 
 .cadastroContainer { /* CAMPO DE FORMULARIO COMPLETO */
     width: 70%;
@@ -123,4 +170,16 @@ button:disabled, .btn:disabled {
     display: flex;
     flex-direction: row;
     gap: 10px;
+}
+
+.inputErro {
+    border: 2px solid red;
+    background-color: #ffe5e5;
+}
+
+.inputOrdem {
+    border: 1px solid #ccc;
+    padding: 5px;
+    width: 50px;
+    text-align: center;
 }

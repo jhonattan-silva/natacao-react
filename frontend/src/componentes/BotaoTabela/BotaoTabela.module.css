@@ -1,12 +1,13 @@
-button {
-  padding: 10px 20px;
+.botaoTabela {
   font-size: 14px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  width: 100px; /* Define a largura fixa */
+  height: 40px; /* Define a altura fixa */
 }
 
-.btnEditar{
+.btnEditar {
   background-color: #4CAF50; /* Green */
   color: white;
 }
@@ -23,5 +24,20 @@ button {
 
 .btnAtivar {
   background-color: rgb(50, 76, 248);
+  color: white;
+}
+
+.btnAbrirInscricao {
+  background-color: #ff9800; /* Orange */
+  color: white;
+}
+
+.btnFecharInscricao {
+  background-color: #ff5722; /* Deep Orange */
+  color: white;
+}
+
+.btnGerarPontuacao {
+  background-color: #9c27b0; /* Purple */
   color: white;
 }

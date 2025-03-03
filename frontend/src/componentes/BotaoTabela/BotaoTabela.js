@@ -2,25 +2,23 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import style from './BotaoTabela.module.css';
 
-const BotaoTabela = ({ tipo, onClick }) => {
+/*
+*
+* Botão padronizado para opções de tabelas
+*
+* @param {string} tipo - Função do botão (editar, excluir, abrirInscricao, fecharInscricao, gerarPontuacao)
+* @param {function} onClick - Função a ser executada ao clicar no botão
+* @param {object} labels - Labels dos botões
+*
+*/
+const BotaoTabela = ({ tipo, onClick, labels }) => {
   const getButtonLabel = (tipo) => {
-    switch (tipo) {
-      case 'editar':
-        return 'Editar';
-      case 'inativar':
-        return 'Inativar';
-      case 'ativar': // Adicionado caso 'ativar'
-        return 'Ativar';
-      case 'excluir':
-        return 'Excluir';
-      default:
-        return '';
-    }
+    return labels[tipo] || '';
   };
 
   return (
     <button 
-      className={style[`btn${tipo ? tipo.charAt(0).toUpperCase() + tipo.slice(1) : ''}`]} // Adiciona a classe CSS de acordo com o tipo
+      className={`${style.botaoTabela} ${style[`btn${tipo ? tipo.charAt(0).toUpperCase() + tipo.slice(1) : ''}`]}`} 
       onClick={onClick}
     >
       {getButtonLabel(tipo)}
@@ -29,8 +27,19 @@ const BotaoTabela = ({ tipo, onClick }) => {
 };
 
 BotaoTabela.propTypes = {
-  tipo: PropTypes.oneOf(['editar', 'inativar', 'ativar', 'excluir']).isRequired, // Adicionado 'ativar' ao PropTypes
+  tipo: PropTypes.string.isRequired,
   onClick: PropTypes.func.isRequired,
+  labels: PropTypes.objectOf(PropTypes.string).isRequired,
+};
+
+BotaoTabela.defaultProps = {
+  labels: {
+    editar: 'Editar',
+    excluir: 'Excluir',
+    abrirInscricao: 'Abrir Inscrição',
+    fecharInscricao: 'Fechar Inscrição',
+    gerarPontuacao: 'Gerar Pontuação'
+  }
 };
 
 export default BotaoTabela;

@@ -7,13 +7,14 @@ import BotaoTabela from '../BotaoTabela/BotaoTabela';
  * Componente de tabela com opções de edição
  * dados: Array de objetos com os dados a serem exibidos
  * colunasOcultas: Array de strings com os nomes das colunas a serem ocultadas
+ * colunasTitulos: Objeto com os títulos personalizados das colunas
  * onEdit: Função a ser executada ao clicar no botão de editar
  * onInativar: Função a ser executada ao clicar no botão de inativar
  * onDelete: Função a ser executada ao clicar no botão de excluir
  * funcExtra: Botão extra com função personalizada 
  * renderLinha: Função para aplicar estilos personalizados às linhas da tabela
  */
-const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete, funcExtra, renderLinha }) => {
+const TabelaEdicao = ({ dados, colunasOcultas = [], colunasTitulos = {}, onEdit, onInativar, onDelete, funcExtra, renderLinha }) => {
   // Detecta as colunas automaticamente e exclui as especificadas em `colunasOcultas`
   const colunas = dados.length > 0
     ? Object.keys(dados[0]).filter(coluna => !colunasOcultas.includes(coluna))
@@ -28,7 +29,7 @@ const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete
       <thead>
         <tr>
           {colunas.map((coluna) => (
-            <th key={coluna}>{coluna}</th>
+            <th key={coluna}>{colunasTitulos[coluna] || coluna}</th>
           ))}
           {(onEdit || onInativar || onDelete || funcExtra) && <th>Ações</th>} {/* Condicional para exibir Ações */}
         </tr>
@@ -57,6 +58,7 @@ const TabelaEdicao = ({ dados, colunasOcultas = [], onEdit, onInativar, onDelete
 TabelaEdicao.propTypes = {
   dados: PropTypes.arrayOf(PropTypes.object).isRequired,
   colunasOcultas: PropTypes.arrayOf(PropTypes.string), // Validação de `colunasOcultas`
+  colunasTitulos: PropTypes.object, // Validação de `colunasTitulos`
   onEdit: PropTypes.func,
   onInativar: PropTypes.func,
   onDelete: PropTypes.func,
@@ -66,6 +68,7 @@ TabelaEdicao.propTypes = {
 
 TabelaEdicao.defaultProps = {
   colunasOcultas: [],
+  colunasTitulos: {},
   funcExtra: null,
   renderLinha: null,
 };

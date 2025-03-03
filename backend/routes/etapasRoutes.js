@@ -140,15 +140,18 @@ router.post('/cadastrarEtapas', async (req, res) => {
 // Rota para SALVAR ATUALIZAÇÕES uma etapa e suas provas
 router.put('/atualizarEtapas/:id', async (req, res) => {
     const etapaId = req.params.id;
-    const { nome, data, cidade, sede, endereco, quantidade_raias, torneios_id, provas } = req.body;
+    let { nome, data, cidade, sede, endereco, quantidade_raias, torneios_id, provas } = req.body;
 
     try {
         console.log('Dados recebidos para atualização:', req.body); // Adiciona log para depuração
 
+        // Converte o valor ISO para um formato de datetime aceito pelo MySQL: YYYY-MM-DD HH:MM:SS
+        const formattedData = new Date(data).toISOString().slice(0, 19).replace('T', ' ');
+
         // Atualiza os dados básicos da etapa
         await db.query(
             'UPDATE eventos SET nome = ?, data = ?, cidade = ?, sede = ?, endereco = ?, quantidade_raias = ?, torneios_id = ? WHERE id = ?',
-            [nome, data, cidade, sede, endereco, quantidade_raias, torneios_id, etapaId] // Define quantidade_raias como '6' se estiver vazio
+            [nome, formattedData, cidade, sede, endereco, quantidade_raias, torneios_id, etapaId]
         );
 
         // Remove as associações antigas de provas para a etapa
@@ -162,9 +165,10 @@ router.put('/atualizarEtapas/:id', async (req, res) => {
 
         // Insere as novas associações de provas com a ordem correta
         for (const prova of provas) {
+            const provaId = prova.id || prova.provas_id; // fallback para usar 'provas_id' se 'id' não existir
             await db.query(
                 'INSERT INTO eventos_provas (eventos_id, provas_id, ordem) VALUES (?, ?, ?)',
-                [etapaId, prova.id, prova.ordem]
+                [etapaId, provaId, prova.ordem]
             );
         }
 
