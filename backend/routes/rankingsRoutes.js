@@ -10,8 +10,9 @@ router.get('/resultados', async (req, res) => {
     try {
         const query = equipe
             ? 'SELECT * FROM temp WHERE Equipe = ?'
-            : 'SELECT * FROM temp';
-        const [rows] = await db.query(query, [equipe].filter(Boolean));
+            : 'SELECT Equipe, SUM(Pontos) as total_pontos FROM temp GROUP BY Equipe';
+        // Se equipe estiver definido, o array conterá somente valores truthy
+        const [rows] = await db.query(query, equipe ? [equipe] : []);
 
         if (!Array.isArray(rows)) {
             console.error('Resposta inesperada de /resultados:', rows);
@@ -30,7 +31,7 @@ router.get('/resultados', async (req, res) => {
 router.get('/listaEquipes', async (req, res) => {
     console.log('Acessando rota /listaEquipes'); // Log para verificar a chamada
     try {
-        const [rows] = await pool.query('SELECT DISTINCT Equipe FROM temp WHERE Equipe IS NOT NULL');
+        const [rows] = await db.query('SELECT DISTINCT Equipe FROM temp WHERE Equipe IS NOT NULL');
 
         if (!Array.isArray(rows)) {
             console.error('Resposta inesperada de /listaEquipes:', rows);
