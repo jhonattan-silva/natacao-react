@@ -228,7 +228,7 @@ const Inscricao = () => {
                                 <ul>
                                     {provas.map(prova => (
                                         <li key={prova.id}>
-                                            {prova.ordem} - {prova.distancia}m {prova.estilo} {formatSexo(prova.sexo)} {prova.eh_revezamento ? "Revezamento" : "Individual"}
+                                            {prova.ordem} - {prova.distancia}m {prova.estilo} {formatSexo(prova.sexo)}
                                         </li>
                                     ))}
                                 </ul>
@@ -244,7 +244,7 @@ const Inscricao = () => {
                                     <div className={styles.containerTabelaRevezamentos}>
                                         <h3>Revezamentos</h3>
                                         {revezamentos.map(prova => (
-                                            <div key={prova.id} className={styles.inscricaoRevezamento}>
+                                            <div key={prova.id} className={styles.revezamentoEntry}>
                                                 <span>
                                                     {prova.ordem} - {prova.distancia}m {prova.estilo} {formatSexo(prova.sexo)}
                                                 </span>

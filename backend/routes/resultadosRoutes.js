@@ -115,7 +115,7 @@ router.get('/resultadosEvento/:eventoId', async (req, res) => {
           if (resultadoRows.length > 0) {
             const { minutos, segundos, centesimos, status } = resultadoRows[0];
             row.tempo = `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}:${String(centesimos).padStart(2, '0')}`;
-            row.status = status;
+            row.status = status === 'DQL' ? 'DQL' : status;
           } else {
             row.tempo = "A DISPUTAR";
             row.status = null;
@@ -215,12 +215,12 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
             }
 
             // Formatar tempo ou definir texto personalizado
-            if (row.status === 'DESC') {
-                row.tempo = 'DESCLASSIFICADO';
-                row.classificacao = 'DESCLASSIFICADO';
+            if (row.status === 'DQL') { // Alterado de 'DESC'
+                row.tempo = 'DQL';
+                row.classificacao = 'DQL';
             } else if (row.status === 'NC' || (row.minutos === 0 && row.segundos === 0 && row.centesimos === 0)) {
-                row.tempo = 'NÃO COMPARECEU';
-                row.classificacao = 'NÃO COMPARECEU';
+                row.tempo = 'NC';
+                row.classificacao = 'NC';
             } else {
                 row.tempo = `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`;
                 row.classificacao = null; // Definir depois
@@ -306,12 +306,12 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
             }
 
             // Formatar tempo ou definir texto personalizado
-            if (row.status === 'DESC') {
-                row.tempo = 'DESCLASSIFICADO';
-                row.classificacao = 'DESCLASSIFICADO';
+            if (row.status === 'DQL') { // Alterado de 'DESC'
+                row.tempo = 'DQL';
+                row.classificacao = 'DQL';
             } else if (row.status === 'NC' || (row.minutos === 0 && row.segundos === 0 && row.centesimos === 0)) {
-                row.tempo = 'NÃO COMPARECEU';
-                row.classificacao = 'NÃO COMPARECEU';
+                row.tempo = 'NC';
+                row.classificacao = 'NC';
             } else {
                 row.tempo = `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`;
                 row.classificacao = null; // Definir depois
@@ -351,79 +351,93 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
 
 router.post('/fecharClassificacao/:eventoId', async (req, res) => {
   const { eventoId } = req.params;
+  let connection;
 
   try {
-      // Verifica se a classificação já foi gerada
-      const [evento] = await db.query(`SELECT classificacao_finalizada FROM eventos WHERE id = ?`, [eventoId]);
-      if (evento[0].classificacao_finalizada) {
-          return res.status(400).json({ error: 'Classificação já foi fechada para este evento.' });
-      }
+    connection = await db.getConnection();
+    await connection.beginTransaction();
 
-      // Buscar os resultados do evento
-      const [resultados] = await db.query(`
-          SELECT 
-              r.nadadores_id AS nadadorId,
-              r.equipes_id AS equipeId,
-              r.eventos_provas_id AS eventosProvasId,
-              p.eh_revezamento,
-              p.eh_prova_ouro,
-              r.minutos, r.segundos, r.centesimos,
-              r.status
-          FROM resultados r
-          JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
-          JOIN provas p ON ep.provas_id = p.id
-          WHERE ep.eventos_id = ?
-          ORDER BY p.eh_revezamento ASC, p.id ASC, r.minutos ASC, r.segundos ASC, r.centesimos ASC;
-      `, [eventoId]);
+    const [evento] = await connection.query(
+      `SELECT classificacao_finalizada FROM eventos WHERE id = ?`, 
+      [eventoId]
+    );
+    if (evento[0].classificacao_finalizada) {
+      await connection.release();
+      return res.status(400).json({ error: 'Classificação já foi fechada para este evento.' });
+    }
 
-      const classificacoes = [];
-      const provas = {};
+    // Excluir classificações anteriores para este evento
+    await connection.query(`
+      DELETE c FROM classificacoes c
+      INNER JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
+      WHERE ep.eventos_id = ?
+    `, [eventoId]);
 
-      // Organizar classificação por eventos_provas_id
-      resultados.forEach(row => {
-          const chave = row.eventosProvasId;
-          if (!provas[chave]) provas[chave] = [];
-          provas[chave].push(row);
+    // Buscar os resultados do evento
+    const [resultados] = await connection.query(`
+      SELECT 
+          r.nadadores_id AS nadadorId,
+          r.equipes_id AS equipeId,
+          r.eventos_provas_id AS eventosProvasId,
+          p.eh_revezamento,
+          p.eh_prova_ouro,
+          r.minutos, r.segundos, r.centesimos,
+          r.status
+      FROM resultados r
+      JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
+      JOIN provas p ON ep.provas_id = p.id
+      WHERE ep.eventos_id = ?
+      ORDER BY p.eh_revezamento ASC, p.id ASC, r.minutos ASC, r.segundos ASC, r.centesimos ASC;
+    `, [eventoId]);
+
+    const classificacoes = [];
+    const provas = {};
+
+    resultados.forEach(row => {
+      const chave = row.eventosProvasId;
+      if (!provas[chave]) provas[chave] = [];
+      provas[chave].push(row);
+    });
+
+    for (const eventosProvasId in provas) {
+      let posicao = 1;
+      provas[eventosProvasId].forEach(row => {
+        const tempo = row.status === 'OK' 
+          ? `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`
+          : row.status === 'DQL' ? 'DQL' : 'NC';
+        const classificacao = row.status === 'OK' ? posicao++ : null;
+        classificacoes.push([
+          row.eventosProvasId,
+          row.nadadorId || null,
+          row.equipeId || null,
+          tempo,
+          classificacao,
+          row.status,
+          row.eh_revezamento || row.eh_prova_ouro ? 'ABSOLUTO' : 'CATEGORIA'
+        ]);
       });
+    }
 
-      // Aplicar classificação
-      for (const eventosProvasId in provas) {
-          let posicao = 1;
-          provas[eventosProvasId].forEach(row => {
-              const tempo = row.status === 'OK' 
-                  ? `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`
-                  : row.status === 'DESC' ? 'DESCLASSIFICADO' : 'NÃO COMPARECEU';
+    if (classificacoes.length > 0) {
+      await connection.query(`
+        INSERT INTO classificacoes (eventos_provas_id, nadadores_id, equipes_id, tempo, classificacao, status, tipo)
+        VALUES ?
+      `, [classificacoes]);
 
-              const classificacao = row.status === 'OK' ? posicao++ : null; // Define null for 'DESC' and 'NC'
+      await connection.query(`UPDATE eventos SET classificacao_finalizada = 1 WHERE id = ?`, [eventoId]);
+    }
 
-              classificacoes.push([
-                  row.eventosProvasId,
-                  row.nadadorId || null,
-                  row.equipeId || null,
-                  tempo,
-                  classificacao,
-                  row.status,
-                  row.eh_revezamento || row.eh_prova_ouro ? 'ABSOLUTO' : 'CATEGORIA' // Se for revezamento ou prova ouro → ABSOLUTO
-              ]);
-          });
-      }
+    await connection.commit();
+    connection.release();
 
-      // Inserir classificação no banco
-      if (classificacoes.length > 0) {
-          await db.query(`
-              INSERT INTO classificacoes (eventos_provas_id, nadadores_id, equipes_id, tempo, classificacao, status, tipo)
-              VALUES ?
-          `, [classificacoes]);
-
-          // Atualiza a flag para evitar recalcular
-          await db.query(`UPDATE eventos SET classificacao_finalizada = 1 WHERE id = ?`, [eventoId]);
-      }
-
-      res.json({ success: true, message: 'Classificação fechada com sucesso!' });
-
+    res.json({ success: true, message: 'Classificação fechada com sucesso!' });
   } catch (error) {
-      console.error('Erro ao fechar classificação:', error.message);
-      res.status(500).json({ error: 'Erro ao fechar classificação' });
+    if (connection) {
+      await connection.rollback();
+      connection.release();
+    }
+    console.error('Erro ao fechar classificação:', error.message);
+    res.status(500).json({ error: 'Erro ao fechar classificação' });
   }
 });
 
@@ -497,8 +511,8 @@ router.get('/listarDoBanco/:eventoId', async (req, res) => {
 
     for (const prova in classificacao) { // Para cada prova 
       classificacao[prova].sort((a, b) => { // Classificar os resultados por classificação e status
-        if (a.status === 'DESC' || a.status === 'NC') return 1; // Se a é DESCLASSIFICADO ou NÃO COMPARECEU, a vem depois
-        if (b.status === 'DESC' || b.status === 'NC') return -1; // Se b é DESCLASSIFICADO ou NÃO COMPARECEU, a vem antes
+        if (a.status === 'DQL' || a.status === 'NC') return 1; // Se a é DESCLASSIFICADO ou NÃO COMPARECEU, a vem depois
+        if (b.status === 'DQL' || b.status === 'NC') return -1; // Se b é DESCLASSIFICADO ou NÃO COMPARECEU, a vem antes
         return a.classificacao - b.classificacao; // Classificar por classificação
       });
     }

@@ -99,9 +99,9 @@ const Resultados = () => {
       const tableData = bateria.nadadores.map(nadador => {
         let tempo = nadador.tempo;
         if (nadador.status === 'NC') {
-          tempo = 'NÃO COMPETIU';
-        } else if (nadador.status === 'DESC') {
-          tempo = 'DESCLASSIFICADO';
+          tempo = 'NC';
+        } else if (nadador.status === 'DQL') { // Alterado de 'DESC' para 'DQL'
+          tempo = 'DQL';
         }
         const rowData = item.prova.revezamento ? {
           Raia: nadador.raia,
@@ -176,7 +176,7 @@ const Resultados = () => {
                                       <Tabela
                                         className={style.tabelaClassificacaoFinal}
                                         dados={resultados.map(item => ({
-                                          Classificação: item.status === 'NC' || item.status === 'DESC' ? item.status : item.classificacao,
+                                          Classificação: item.status === 'NC' || item.status === 'DQL' ? item.status : item.classificacao,
                                           Nome: item.nome_nadador || '-',
                                           Tempo: item.tempo,
                                           Equipe: item.nome_equipe || '-',

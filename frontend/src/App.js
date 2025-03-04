@@ -23,7 +23,8 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/resultados" element={<Resultados />} />
                 <Route path="/resultados/:eventoId" element={<Resultados />} /> {/* alterado de :provaId para :eventoId */}
-
+                <Route path="/rankings" element={<Rankings />}/>
+                
                 {/* Rotas protegidas */}
                 <Route
                     path="/admin"
@@ -78,14 +79,6 @@ const App = () => {
                     element={
                         <ProtecaoRota>
                             <Inscricao />
-                        </ProtecaoRota>
-                    }
-                />
-                <Route
-                    path="/rankings"
-                    element={
-                        <ProtecaoRota>
-                            <Rankings />
                         </ProtecaoRota>
                     }
                 />

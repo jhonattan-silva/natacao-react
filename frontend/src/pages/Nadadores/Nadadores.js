@@ -34,7 +34,7 @@ const Nadadores = () => {
     const apiCadastraNadador = `nadadores/cadastrarNadador`;
     const apiListaEquipes = `nadadores/listarEquipes`;
     const apiInativarNadador = `nadadores/inativarNadador`;
-    const apiAtualizaNadador = `nadadores/atualizarNadador`; // Adicione a URL correta para atualizar nadador
+    const apiAtualizaNadador = `nadadores/atualizarNadador`; 
 
     const equipeSelecionada = (id) => { //para capturar a equipe escolhida, caso o usuário não tenha uma equipe (admin)
         setEquipes(id);
@@ -42,7 +42,6 @@ const Nadadores = () => {
 
     useEffect(() => { // Busca os nadadores ao carregar a página
         if (!loading && user?.equipeId) { // Verifica se o usuário está carregado e tem equipeId
-            console.log("User equipeId atualizado:", user.equipeId);
             setEquipes(user.equipeId);
             fetchNadadores(user.equipeId);
         }
@@ -78,7 +77,6 @@ const Nadadores = () => {
     const handleEdit = (id) => {
         try {            
             const nadador = nadadores.find(nadador => nadador.id === id);
-            console.log("O NADADOR É ESSE:", nadador);
 
             if (!nadador) {
                 throw new Error('Nadador não encontrado.');
@@ -88,7 +86,7 @@ const Nadadores = () => {
             setNomeNadador(nadador.nome);
             setCidade(nadador.cidade);
             setDataNasc(nadador.data_nasc.split('-').reverse().join('/'));
-            setCelular(nadador.telefone);
+            setCelular(nadador.celular);
             setSexo(nadador.sexo);
 
             // Define a equipe do nadador diretamente
@@ -316,7 +314,16 @@ const Nadadores = () => {
                     <TabelaEdicao
                         dados={nadadores}
                         onEdit={handleEdit}
-                        colunasOcultas={['id']}
+                        colunasOcultas={['id', 'equipes_id', 'ativo', 'categorias_id']}
+                        colunasTitulos={{
+                            nome: "Nome",
+                            cpf: "CPF",
+                            data_nasc: "Data de Nascimento",
+                            celular: "Celular",
+                            sexo: "Sexo",
+                            cidade: "Cidade",
+                            categoria_nome: "Categoria"
+                        }}
                         funcExtra={(nadador) => (
                             <BotaoTabela
                                 tipo={nadador.ativo === 1 ? 'inativar' : 'ativar'} // Corrige o uso do tipo

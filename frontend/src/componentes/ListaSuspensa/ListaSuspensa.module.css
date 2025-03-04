@@ -1,0 +1,25 @@
+.listaSuspensa {
+    /* ...existing container styles... */
+}
+
+.selectModern {
+    appearance: none;
+    outline: none;
+    padding: 10px 15px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23999'><path d='M4 6l4 4 4-4z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+    margin-bottom: 2%;
+    min-width: 200px; /* novo: garante espaço suficiente para o texto */
+}
+
+.selectModern:focus {
+    border-color: #66afe9;
+    box-shadow: 0 0 8px rgba(102,175,233, 0.6);
+}

@@ -91,6 +91,30 @@ button:active {
     margin-bottom: 15px;
 }
 
+.revezamentoEntry {
+    width: 50%;
+    margin: 10px auto;
+    padding: 15px;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.revezamentoEntry select {
+    font-size: 16px;
+    padding: 10px;
+    height: 44px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23007bff' viewBox='0 0 16 16'><path d='M8 10L3 5h10L8 10z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    min-width: 200px; /* novo: aumenta a largura do select */
+}
+
 .inscricaoRevezamento span {
     display: block;
     font-size: 1.1em;

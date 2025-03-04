@@ -2,61 +2,103 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-// Tabela de pontuação individual
+// Tabela de pontuação individual e revezamento
 const PONTOS_INDIVIDUAL = [9, 7, 6, 5, 4, 3, 2, 1];
-// Tabela de pontuação de revezamento (dobro da individual)
 const PONTOS_REVEZAMENTO = [18, 14, 12, 10, 8, 6, 4, 2];
 
 // Função para calcular e armazenar a pontuação no evento
 const calcularPontuacaoEvento = async (eventosId) => {
     try {
-        // 1. Buscar todas as provas do evento
         const [provasEvento] = await db.execute(
-            "SELECT ep.id AS evento_prova_id, p.* FROM eventos_provas ep JOIN provas p ON ep.provas_id = p.id WHERE ep.eventos_id = ?",
+            `SELECT ep.id AS evento_prova_id, p.eh_revezamento, p.eh_prova_ouro, p.eh_prova_categoria 
+             FROM eventos_provas ep 
+             JOIN provas p ON ep.provas_id = p.id 
+             WHERE ep.eventos_id = ?`,
             [eventosId]
         );
 
         if (provasEvento.length === 0) return { error: "Nenhuma prova encontrada para este evento." };
 
-        // 2. Para cada prova, buscar a classificação já ordenada da tabela `classificacoes`
         for (const prova of provasEvento) {
-            const [classificacoes] = await db.execute(
-                `SELECT id, nadadores_id, equipes_id, classificacao 
-                 FROM classificacoes
-                 WHERE eventos_provas_id = ? 
-                 AND classificacao BETWEEN 1 AND 8`, // Apenas os 8 primeiros pontuam
-                [prova.evento_prova_id]
-            );
-
-            // 3. Aplicar pontuação e atualizar a tabela `classificacoes`
-            for (const classificacao of classificacoes) {
-                const colocacao = classificacao.classificacao;
-                let pontuacao_individual = 0;
-                let pontuacao_equipe = 0;
-
-                if (prova.eh_revezamento) {
-                    // 🚀 REVEZAMENTO: Apenas pontuação para equipe (dobrada)
-                    pontuacao_equipe = PONTOS_REVEZAMENTO[colocacao - 1];
-                } else {
-                    if (prova.eh_prova_categoria) {
-                        // ✅ Prova de categoria: Apenas pontuação individual
-                        pontuacao_individual = PONTOS_INDIVIDUAL[colocacao - 1];
-                    } else if (prova.eh_prova_ouro) {
-                        // ✅ Prova Ouro: Pontuação individual + pontuação para equipe
-                        pontuacao_individual = PONTOS_INDIVIDUAL[colocacao - 1];
-                        pontuacao_equipe = PONTOS_INDIVIDUAL[colocacao - 1];
+            let classificacoes;
+            if (prova.eh_revezamento) {
+                [classificacoes] = await db.execute(
+                    `SELECT c.id, c.nadadores_id, c.equipes_id, c.classificacao, n.categorias_id, c.tipo
+                     FROM classificacoes c
+                     LEFT JOIN nadadores n ON c.nadadores_id = n.id
+                     WHERE c.eventos_provas_id = ? 
+                     AND c.classificacao BETWEEN 1 AND 8
+                     ORDER BY c.classificacao ASC`,
+                    [prova.evento_prova_id]
+                );
+                // Atualiza pontuação de equipes para revezamento
+                for (const classificacao of classificacoes) {
+                    const pontuacao_equipe = PONTOS_REVEZAMENTO[classificacao.classificacao - 1] || 0;
+                    if (pontuacao_equipe > 0) {
+                        await db.execute(
+                            `UPDATE classificacoes 
+                             SET pontuacao_equipe = ? 
+                             WHERE id = ?`,
+                            [pontuacao_equipe, classificacao.id]
+                        );
                     }
                 }
-
-                // 4. Atualizar apenas se houver pontuação válida
-                if (pontuacao_individual > 0 || pontuacao_equipe > 0) {
-                    await db.execute(
-                        `UPDATE classificacoes 
-                         SET pontuacao_individual = ?, pontuacao_equipe = ? 
-                         WHERE id = ?`,
-                        [pontuacao_individual, pontuacao_equipe, classificacao.id]
-                    );
+            } else {
+                // NOVA LÓGICA: Obter classificações ordenadas por categoria semelhante à classificação por categoria dos resultados
+                [classificacoes] = await db.execute(
+                    `SELECT c.id, n.categorias_id, c.classificacao 
+                     FROM classificacoes c
+                     LEFT JOIN nadadores n ON c.nadadores_id = n.id
+                     WHERE c.eventos_provas_id = ?
+                     ORDER BY n.categorias_id ASC, 
+                              CASE WHEN c.status IN ('DQL', 'NC') THEN 1 ELSE 0 END, 
+                              c.classificacao ASC`,
+                    [prova.evento_prova_id]
+                );
+                // Agrupar por categoria para pontuação individual
+                const categorias = {};
+                classificacoes.forEach((row) => {
+                    if (!categorias[row.categorias_id]) {
+                        categorias[row.categorias_id] = [];
+                    }
+                    categorias[row.categorias_id].push(row);
+                });
+                // Atualiza pontuação individual conforme ranking por categoria
+                for (const cat in categorias) {
+                    categorias[cat].forEach(async (row, index) => {
+                        let pontuacao_individual = 0;
+                        if (prova.eh_prova_categoria || prova.eh_prova_ouro) {
+                            pontuacao_individual = PONTOS_INDIVIDUAL[index] || 0;
+                        }
+                        if (pontuacao_individual > 0) {
+                            await db.execute(
+                                `UPDATE classificacoes 
+                                 SET pontuacao_individual = ? 
+                                 WHERE id = ?`,
+                                [pontuacao_individual, row.id]
+                            );
+                        }
+                    });
                 }
+                // Atualiza pontuação da equipe utilizando o ranking absoluto geral para provas individuais
+                [classificacoes] = await db.execute(
+                    `SELECT c.id, c.classificacao 
+                     FROM classificacoes c
+                     WHERE c.eventos_provas_id = ?
+                     ORDER BY c.classificacao ASC`,
+                    [prova.evento_prova_id]
+                );
+                classificacoes.forEach(async (row, index) => {
+                    const pontuacao_equipe = PONTOS_INDIVIDUAL[index] || 0;
+                    if (pontuacao_equipe > 0) {
+                        await db.execute(
+                            `UPDATE classificacoes 
+                             SET pontuacao_equipe = ? 
+                             WHERE id = ?`,
+                            [pontuacao_equipe, row.id]
+                        );
+                    }
+                });
             }
         }
 

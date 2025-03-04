@@ -68,7 +68,7 @@ router.get('/listarInscricoes/:eventoId', async (req, res) => {
         `, [eventoId]);
 
         const [inscricoesRevezamento] = await db.query(`
-            SELECT equipes_id AS equipeId, provas_id AS provaId
+            SELECT equipes_id AS equipeId, eventos_provas_id AS provaId
             FROM revezamentos_inscricoes
             WHERE eventos_id = ?
         `, [eventoId]);
@@ -89,7 +89,7 @@ router.get('/verificarRevezamento/:eventoId', async (req, res) => {
     }
     try {
         const [rows] = await db.query(
-            'SELECT provas_id AS provaId FROM revezamentos_inscricoes WHERE eventos_id = ? AND equipes_id = ?',
+            'SELECT eventos_provas_id AS provaId FROM revezamentos_inscricoes WHERE eventos_id = ? AND equipes_id = ?',
             [eventoId, equipeId]
         );
         res.json(rows);
@@ -153,14 +153,14 @@ router.post('/salvarInscricao', async (req, res) => {
 
         // Inserir novas inscrições de revezamento, evitando duplicações
         const queryRevezamento = `
-            INSERT INTO revezamentos_inscricoes (eventos_id, provas_id, equipes_id)
+            INSERT INTO revezamentos_inscricoes (eventos_id, eventos_provas_id, equipes_id)
             SELECT * FROM (
-                SELECT ? AS eventos_id, ? AS provas_id, ? AS equipes_id
+                SELECT ? AS eventos_id, ? AS eventos_provas_id, ? AS equipes_id
             ) AS tmp
             WHERE NOT EXISTS (
                 SELECT 1 FROM revezamentos_inscricoes 
                 WHERE eventos_id = ? 
-                AND provas_id = ? 
+                AND eventos_provas_id = ? 
                 AND equipes_id = ?
             ) LIMIT 1;`;
 

@@ -38,7 +38,9 @@ BotaoTabela.defaultProps = {
     excluir: 'Excluir',
     abrirInscricao: 'Abrir Inscrição',
     fecharInscricao: 'Fechar Inscrição',
-    gerarPontuacao: 'Gerar Pontuação'
+    gerarPontuacao: 'Gerar Pontuação',
+    inativar: 'Inativar',
+    ativar: 'Ativar'
   }
 };
 

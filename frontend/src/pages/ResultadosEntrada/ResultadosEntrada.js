@@ -136,13 +136,13 @@ const ResultadosEntrada = () => {
                 bateria.nadadores.forEach(nadador => {
                     newStates[nadador.id] = {
                         nc: nadador.status === 'NC', // Define o estado do checkbox NC
-                        desc: nadador.status === 'DESC', // Define o estado do checkbox DESC
+                        desc: nadador.status === 'DQL', // Define o estado do checkbox DQL
                     };
                 });
                 bateria.equipes.forEach(equipe => {
                     newStates[equipe.id] = {
                         nc: equipe.status === 'NC', // Define o estado do checkbox NC
-                        desc: equipe.status === 'DESC', // Define o estado do checkbox DESC
+                        desc: equipe.status === 'DQL', // Define o estado do checkbox DQL
                     };
                 });
             });
@@ -266,16 +266,16 @@ const ResultadosEntrada = () => {
                 bateriaId: bateria.id,
                 nadadores: bateria.nadadores.map((nadador) => {
                     const cb = checkboxes[nadador.id] || { nc: false, desc: false };
-                    const status = cb.nc ? "NC" : (cb.desc ? "DESC" : "OK");
+                    const status = cb.nc ? "NC" : (cb.desc ? "DQL" : "OK");
 
-                    // Fornece tempo padrão se inexistente (para status "NC" ou "DESC")
+                    // Fornece tempo padrão se inexistente (para status "NC" ou "DQL")
                     return { id: nadador.id, tempo: nadador.tempo || null, status, equipeId: nadador.equipeId || null };
                 }),
                 equipes: bateria.equipes.map((equipe) => {
                     const cb = checkboxes[equipe.id] || { nc: false, desc: false };
-                    const status = cb.nc ? "NC" : (cb.desc ? "DESC" : "OK");
+                    const status = cb.nc ? "NC" : (cb.desc ? "DQL" : "OK");
 
-                    // Fornece tempo padrão se inexistente (para status "NC" ou "DESC")
+                    // Fornece tempo padrão se inexistente (para status "NC" ou "DQL")
                     return { id: equipe.id, tempo: equipe.tempo || null, status };
                 }),
             }));
@@ -352,7 +352,7 @@ const ResultadosEntrada = () => {
                                                 />
                                                 <CheckboxGroup
                                                     titulo=""
-                                                    opcoes={[{ id: 'nc', label: 'NC' }, { id: 'desc', label: 'DESC' }]}
+                                                    opcoes={[{ id: 'nc', label: 'NC' }, { id: 'desc', label: 'DQL' }]} // Alterado label para DQL
                                                     selecionadas={
                                                         (() => {
                                                             const selecionadas = [];
@@ -385,7 +385,7 @@ const ResultadosEntrada = () => {
                                                 />
                                                 <CheckboxGroup
                                                     titulo=""
-                                                    opcoes={[{ id: 'nc', label: 'NC' }, { id: 'desc', label: 'DESC' }]}
+                                                    opcoes={[{ id: 'nc', label: 'NC' }, { id: 'desc', label: 'DQL' }]} // Alterado label para DQL
                                                     selecionadas={
                                                         (() => {
                                                             const selecionadas = [];

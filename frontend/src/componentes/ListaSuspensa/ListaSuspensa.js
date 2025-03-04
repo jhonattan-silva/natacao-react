@@ -59,7 +59,7 @@ const ListaSuspensa = ({ fonteDados,
 
     return (
         <div className={style.listaSuspensa}>
-            <select onChange={aoEscolher} required={obrigatorio} value={valor}>
+            <select className={style.selectModern} onChange={aoEscolher} required={obrigatorio} value={valor}>
                 <option value=''>{textoPlaceholder}</option>
                 {opcoes.map((opcao) => (
                     <option key={opcao[selectId]} value={opcao[selectId]}>

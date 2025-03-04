@@ -318,8 +318,8 @@ const Etapas = () => {
     };
 
     const aoAlterarAmbos = (id, checked) => {
-        const idMasculino = id;
-        const idFeminino = idMap[idMasculino];
+        const idMasculino = id; // ID da prova masculina é o mesmo da prova unificada
+        const idFeminino = idMap[idMasculino]; // ID da prova feminina é obtido do mapa
 
         if (checked) {
             setSelecionadasMasculino(prev =>
@@ -420,12 +420,16 @@ const Etapas = () => {
     const handleAvancar = () => {
         if (etapaAtual === 1) {
             // Gera uma lista única de provas selecionadas (Masculino + Feminino)
-            const provasUnificadas = [...selecionadasMasculino, ...selecionadasFeminino].map((id, index) => ({
-                id,
-                label: `${provasMasculino.find(p => p.id === id)?.label || provasFeminino.find(p => p.id === id)?.label}`,
-                ordem: index + 1 // Inicialmente preenche a ordem sequencialmente
-            }));
-
+            const provasUnificadas = [...selecionadasMasculino, ...selecionadasFeminino].map((id, index) => {
+                const provaMasculina = provasMasculino.find(p => p.id === id);
+                const provaFeminina = provasFeminino.find(p => p.id === id);
+                return {
+                    id,
+                    label: provaMasculina ? provaMasculina.label : provaFeminina?.label,
+                    ordem: index + 1,
+                    sexo: provaMasculina ? 'M' : 'F'
+                }
+            });
             setProvasSelecionadas(provasUnificadas);
             setEtapaAtual(2);
         }
@@ -525,20 +529,16 @@ const Etapas = () => {
                         <TabelaEdicao
                             dados={etapas.map(etapa => ({
                                 ...etapa,
-                                inscricao_aberta: formatBoolean(etapa.inscricao_aberta),
+                                inscricao_aberta_txt: formatBoolean(etapa.inscricao_aberta),
                                 teve_balizamento: formatBoolean(etapa.teve_balizamento),
                                 teve_resultados: formatBoolean(etapa.teve_resultados),
                                 classificacao_finalizada: formatBoolean(etapa.classificacao_finalizada),
                             }))}
-                            colunasOcultas={['id', 'torneios_id', 'observacoes', 'cidade', 'sede', 'endereco', 'quantidade_raias']}
+                            colunasOcultas={['id', 'torneios_id', 'observacoes', 'cidade', 'sede', 'endereco', 'quantidade_raias', 'inscricao_aberta']}
                             colunasTitulos={{
                                 nome: 'Nome',
                                 data: 'Data',
-                                cidade: 'Cidade',
-                                sede: 'Sede',
-                                endereco: 'Endereço',
-                                quantidade_raias: 'Quantidade de Raias',
-                                inscricao_aberta: 'Inscrição Aberta',
+                                inscricao_aberta_txt: 'Inscrição Aberta',
                                 teve_balizamento: 'Teve Balizamento',
                                 teve_resultados: 'Teve Resultados',
                                 classificacao_finalizada: 'Classificação Finalizada'

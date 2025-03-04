@@ -9,11 +9,13 @@ router.get('/listarNadadores', authMiddleware, async (req, res) => {
 
         console.log("Equipe ID recebido na API:", equipeId);
 
-        let query = 'SELECT * FROM nadadores';
+        let query = `SELECT n.*, c.nome AS categoria_nome
+                     FROM nadadores n
+                     LEFT JOIN categorias c ON n.categorias_id = c.id`;
         let queryParams = [];
 
         if (equipeId && !isNaN(equipeId)) {
-            query += ' WHERE equipes_id = ?';
+            query += ' WHERE n.equipes_id = ?';
             queryParams.push(equipeId);
         }
 

@@ -29,7 +29,8 @@ const Cabecalho = () => {
             </div>
             <div className={style.center}>
                 <nav className={menuOpen ? style.open : ''}>
-                    <CabecalhoLink url='./Resultados' onClick={() => handleLinkClick('./Resultados')}> Resultados </CabecalhoLink>
+                    <CabecalhoLink url='/Resultados' onClick={() => handleLinkClick('/Resultados')}> Resultados </CabecalhoLink>
+                    <CabecalhoLink url='/Rankings' onClick={() => handleLinkClick('/Rankings')}> Rankings </CabecalhoLink>
                 </nav>
             </div>
             <div className={style.right}>
