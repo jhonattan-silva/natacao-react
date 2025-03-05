@@ -142,40 +142,49 @@ router.put('/atualizarEtapas/:id', async (req, res) => {
     const etapaId = req.params.id;
     let { nome, data, cidade, sede, endereco, quantidade_raias, torneios_id, provas } = req.body;
 
-    try {
-        console.log('Dados recebidos para atualização:', req.body); // Adiciona log para depuração
+    const connection = await db.getConnection(); // Obtém conexão para transação
 
-        // Converte o valor ISO para um formato de datetime aceito pelo MySQL: YYYY-MM-DD HH:MM:SS
+    try {
+        console.log('Dados recebidos para atualização:', req.body);
+
+        await connection.beginTransaction(); // Inicia a transação
+
         const formattedData = new Date(data).toISOString().slice(0, 19).replace('T', ' ');
 
         // Atualiza os dados básicos da etapa
-        await db.query(
+        await connection.query(
             'UPDATE eventos SET nome = ?, data = ?, cidade = ?, sede = ?, endereco = ?, quantidade_raias = ?, torneios_id = ? WHERE id = ?',
             [nome, formattedData, cidade, sede, endereco, quantidade_raias, torneios_id, etapaId]
         );
 
-        // Remove as associações antigas de provas para a etapa
-        const [eventosProvas] = await db.query('SELECT id FROM eventos_provas WHERE eventos_id = ?', [etapaId]);
+        // Pega os IDs das provas existentes na etapa
+        const [eventosProvas] = await connection.query('SELECT id FROM eventos_provas WHERE eventos_id = ?', [etapaId]);
         const eventosProvasIds = eventosProvas.map(ep => ep.id);
 
+        // Remove as provas apenas se não houver dependências
         if (eventosProvasIds.length > 0) {
-            await db.query('DELETE FROM inscricoes WHERE eventos_provas_id IN (?)', [eventosProvasIds]);
-            await db.query('DELETE FROM eventos_provas WHERE eventos_id = ?', [etapaId]);
+            await connection.query('DELETE FROM inscricoes WHERE eventos_provas_id IN (?)', [eventosProvasIds]);
+            await connection.query('DELETE FROM eventos_provas WHERE eventos_id = ?', [etapaId]);
         }
 
-        // Insere as novas associações de provas com a ordem correta
+        // Insere as novas provas
         for (const prova of provas) {
-            const provaId = prova.id || prova.provas_id; // fallback para usar 'provas_id' se 'id' não existir
-            await db.query(
+            const provaId = prova.id || prova.provas_id;
+            await connection.query(
                 'INSERT INTO eventos_provas (eventos_id, provas_id, ordem) VALUES (?, ?, ?)',
                 [etapaId, provaId, prova.ordem]
             );
         }
 
+        await connection.commit(); // Confirma a transação se tudo deu certo
         res.json({ message: 'Etapa atualizada com sucesso!' });
+
     } catch (error) {
+        await connection.rollback(); // Reverte todas as alterações em caso de erro
         console.error('Erro ao atualizar etapa:', error);
         res.status(500).json({ error: 'Erro ao atualizar etapa' });
+    } finally {
+        connection.release(); // Libera a conexão do pool
     }
 });
 

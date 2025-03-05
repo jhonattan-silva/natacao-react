@@ -9,7 +9,6 @@ import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
-import ArrastaSolta from '../../componentes/ArrastaSolta/ArrastaSolta';
 
 const Etapas = () => {
     const [etapas, setEtapas] = useState([]);
@@ -41,12 +40,15 @@ const Etapas = () => {
     };
 
     useEffect(() => {
+        console.log('useEffect: fetching data for year', anoSelecionado);
         fetchData(anoSelecionado); // Chama a função `fetchData` ao montar o componente
     }, [anoSelecionado]); // Chama `fetchData` sempre que `anoSelecionado` mudar
 
     const fetchData = async (ano) => {
+        console.log('fetchData called with ano:', ano);
         try {
             const response = await api.get(`${apiListaEtapasAno}/${ano}`); // Busca no backend a lista de etapas para o ano selecionado
+            console.log('fetchData response:', response);
             if (response.data) {
                 const etapasFormatadas = response.data.map(etapa => ({
                     ...etapa,
@@ -62,8 +64,10 @@ const Etapas = () => {
     };
 
     const handleEdit = async (id) => {
+        console.log('handleEdit called with id:', id); // New log
         try {
             const response = await api.get(`${apiAtualizaEtapas}/${id}`);
+            console.log('handleEdit response:', response);
             const etapa = response.data;
 
             setEtapaEditando(etapa);
@@ -72,8 +76,8 @@ const Etapas = () => {
             setDataEtapa(date.split('-').reverse().join('/'));
             setHoraEtapa(time.substring(0, 5));
             setCidadeEtapa(etapa.cidade);
-            setSedeEtapa(etapa.sede);
-            setEnderecoEtapa(etapa.endereco);
+            setSedeEtapa(etapa.sede || '');         // Updated to fallback to empty string
+            setEnderecoEtapa(etapa.endereco || '');   // Updated to fallback to empty string
             setTorneioEtapa(etapa.torneios_id);
             setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6');
 
@@ -355,52 +359,6 @@ const Etapas = () => {
         setRaias(valor);
     };
 
-    const aoSalvar = async (evento) => {
-        evento.preventDefault();
-
-        // Validações
-        if (!nomeEtapa || !dataEtapa || !horaEtapa || !cidadeEtapa || !torneioEtapa) {
-            let mensagemErro = 'Por favor, preencha os seguintes campos obrigatórios:\n';
-            if (!nomeEtapa) mensagemErro += '- Nome do Evento\n';
-            if (!dataEtapa) mensagemErro += '- Data do Evento\n';
-            if (!horaEtapa) mensagemErro += '- Horário do Evento\n';
-            if (!cidadeEtapa) mensagemErro += '- Cidade\n';
-            if (!torneioEtapa) mensagemErro += '- Torneio\n';
-            alert(mensagemErro);
-            return; // Interrompe o processo de salvamento se houver campos vazios
-        }
-
-        // Converte a data e o horário para o formato esperado
-        const [dia, mes, ano] = dataEtapa.split('/');
-        const dataHoraFormatada = `${ano}-${mes}-${dia} ${horaEtapa}:00`; // Junta data e hora no formato esperado pelo MySQL
-
-        const provas = [...selecionadasMasculino, ...selecionadasFeminino]; // Combina as provas M e F em um só array
-
-        const etapaDados = {
-            nome: nomeEtapa,
-            data: dataHoraFormatada,
-            cidade: cidadeEtapa,
-            sede: sedeEtapa,
-            endereco: enderecoEtapa,
-            torneios_id: torneioEtapa,
-            provas: provas.map(id => ({ provas_id: id })),
-            quantidade_raias: raias
-        };
-
-        if (etapaEditando) {
-            // Se `etapaEditando` existir, atualiza a etapa
-            await atualizarEtapa(etapaDados);
-            alert('Evento atualizado com sucesso!');
-        } else {
-            // Se não, adiciona uma nova etapa
-            await adicionarEtapa(etapaDados);
-            alert('Evento salvo com sucesso!');
-        }
-
-        limparFormulario(); // Limpa o formulário após salvar ou atualizar
-        window.scrollTo(0, 0); // Volta ao topo da página
-    };
-
     const abreInscricao = async (id, inscricaoAberta) => {
         try {
             await api.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota para abrir/fechar inscrição
@@ -471,34 +429,46 @@ const Etapas = () => {
     };
 
     const handleSalvar = async () => {
-        // Verifica se todas as provas possuem uma ordem válida
         const ordensValidas = provasSelecionadas.every(prova => prova.ordem > 0);
-
+    
         if (!ordensValidas) {
             alert('Por favor, preencha a ordem de todas as provas.');
             return;
         }
-
+    
         try {
-            // Enviar as provas ordenadas para o backend
-            const provasOrdenadas = provasSelecionadas.map((prova) => ({
-                provas_id: prova.id,
-                ordem: parseInt(prova.ordem, 10)
-            }));
-
-            await api.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, {
-                ...etapaEditando,
-                provas: provasOrdenadas,
-            });
-
-            alert('Ordem das provas salva com sucesso!');
-            setEtapaAtual(1);
+            // Criando o objeto de envio com TODOS os dados
+            const etapaCompleta = {
+                nome: nomeEtapa,
+                data: `${dataEtapa.split('/').reverse().join('-')} ${horaEtapa}:00`, // Convertendo formato DD/MM/AAAA para AAAA-MM-DD
+                cidade: cidadeEtapa,
+                sede: sedeEtapa,
+                endereco: enderecoEtapa,
+                torneios_id: torneioEtapa,
+                quantidade_raias: parseInt(raias, 10),
+                provas: provasSelecionadas.map(prova => ({
+                    provas_id: prova.id,
+                    ordem: parseInt(prova.ordem, 10)
+                }))
+            };
+    
+            if (etapaEditando) {
+                await api.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, etapaCompleta);
+                alert('Evento atualizado com sucesso!');
+            } else {
+                await api.post(apiCadastraEtapas, etapaCompleta);
+                alert('Evento salvo com sucesso!');
+            }
+    
+            setEtapaAtual(1);  // Volta para primeira etapa
             setFormVisivel(false);
+            fetchData(anoSelecionado); // Atualiza a lista
         } catch (error) {
-            console.error('Erro ao salvar a ordem das provas:', error);
-            alert('Erro ao salvar a ordem das provas.');
+            console.error('Erro ao salvar a etapa:', error);
+            alert('Erro ao salvar a etapa.');
         }
     };
+    
 
     const gerarPontuacao = async (id) => {
         try {
@@ -567,7 +537,7 @@ const Etapas = () => {
                     <div className={style.cadastroContainer}>
                         {etapaAtual === 1 && (
                             <>
-                                <Formulario inputs={inputs} aoSalvar={aoSalvar} />
+                                <Formulario inputs={inputs} aoSalvar={handleSalvar} />
                                 <RadioButtons
                                     titulo="Quantidade de Raias da Piscina"
                                     opcoes={[

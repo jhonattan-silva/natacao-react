@@ -24,7 +24,6 @@ const Login = () => {
             localStorage.setItem("token", token);
             atualizarUsuario(); // Atualiza o usuário no contexto imediatamente
 
-            alert("Login realizado com sucesso!");
             navigate("/admin"); // Redireciona para a página de admin
         } catch (err) {
             console.error("Erro ao fazer login:", err);
