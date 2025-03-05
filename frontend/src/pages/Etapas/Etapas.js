@@ -40,15 +40,12 @@ const Etapas = () => {
     };
 
     useEffect(() => {
-        console.log('useEffect: fetching data for year', anoSelecionado);
         fetchData(anoSelecionado); // Chama a função `fetchData` ao montar o componente
     }, [anoSelecionado]); // Chama `fetchData` sempre que `anoSelecionado` mudar
 
     const fetchData = async (ano) => {
-        console.log('fetchData called with ano:', ano);
         try {
             const response = await api.get(`${apiListaEtapasAno}/${ano}`); // Busca no backend a lista de etapas para o ano selecionado
-            console.log('fetchData response:', response);
             if (response.data) {
                 const etapasFormatadas = response.data.map(etapa => ({
                     ...etapa,
@@ -64,10 +61,8 @@ const Etapas = () => {
     };
 
     const handleEdit = async (id) => {
-        console.log('handleEdit called with id:', id); // New log
         try {
             const response = await api.get(`${apiAtualizaEtapas}/${id}`);
-            console.log('handleEdit response:', response);
             const etapa = response.data;
 
             setEtapaEditando(etapa);
@@ -399,7 +394,6 @@ const Etapas = () => {
 
     const handleAlterarOrdem = (id, novaOrdem) => {
         let ordemCorrigida = parseInt(novaOrdem, 10);
-        console.log(`🔹 Prova ID: ${id}, Nova Ordem Digitada: ${novaOrdem}`);
 
         if (isNaN(ordemCorrigida) || ordemCorrigida < 1) {
             console.warn(`⚠️ Ordem inválida (${ordemCorrigida}) - Resetando campo!`);
@@ -423,7 +417,6 @@ const Etapas = () => {
             } else {
                 newProvas[index].ordem = ordemCorrigida;
             }
-            console.log("✅ Provas Após Swapping:", newProvas);
             return [...newProvas];
         });
     };
