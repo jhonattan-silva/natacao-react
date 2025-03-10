@@ -408,10 +408,8 @@ const Etapas = () => {
             const currentOrder = newProvas[index].ordem;
             if(currentOrder === ordemCorrigida) return newProvas;
 
-            // Find if any other prova has the target order
             const swapIndex = newProvas.findIndex(prova => prova.ordem === ordemCorrigida);
             if(swapIndex !== -1) {
-                // Swap the order values
                 newProvas[swapIndex].ordem = currentOrder;
                 newProvas[index].ordem = ordemCorrigida;
             } else {
