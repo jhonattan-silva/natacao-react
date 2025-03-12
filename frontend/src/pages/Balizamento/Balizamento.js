@@ -117,6 +117,10 @@ const Balizamento = () => {
     };
 
     const gerarBalizamento = async () => {
+        if (etapa.inscricao_aberta !== 0) {
+            alert("As inscrições deste evento ainda estão abertas.");
+            return;
+        }
         if (!eventoId) {
             alert("Por favor, selecione um evento.");
             return;
@@ -226,6 +230,10 @@ const Balizamento = () => {
 
     // Salvar balizamento no banco
     const salvarBalizamento = async () => {
+        if (etapa.inscricao_aberta !== 0) {
+            alert("As inscrições deste evento ainda estão abertas, não é possível salvar.");
+            return;
+        }
         if (!balizamentoGerado) {
             alert('Nenhum balizamento foi gerado ainda.');
             return;
@@ -285,7 +293,7 @@ const Balizamento = () => {
                                 <h3>{`Série ${index + 1}`}</h3>
                                 <Tabela
                                     dados={bateria.flat()}
-                                    colunasOcultas={['prova_id', 'nadador_id', 'inscricao_id', 'data_nasc']}
+                                    colunasOcultas={['prova_id', 'nadador_id', 'inscricao_id', 'data_nasc', 'eventos_provas_id']}
                                     textoExibicao={{
                                         nome_prova: 'PROVA',
                                         nome: 'NADADOR',

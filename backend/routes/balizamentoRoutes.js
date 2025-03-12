@@ -160,6 +160,17 @@ router.post('/salvarBalizamento', async (req, res) => {
   try {
     await connection.beginTransaction();
     
+    const [checkEvent] = await connection.query(
+      "SELECT inscricao_aberta FROM eventos WHERE id = ?",
+      [eventoId]
+    );
+    if (!checkEvent[0] || checkEvent[0].inscricao_aberta !== 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'As inscrições deste evento ainda estão abertas.'
+      });
+    }
+
     // Array para armazenar mensagens de provas ignoradas
     const ignoredProvas = [];
 
