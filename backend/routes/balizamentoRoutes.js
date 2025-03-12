@@ -35,6 +35,7 @@ router.get('/listarInscritos/:eventoId', async (req, res) => {
             ), '00:00:00'
           ) AS melhor_tempo, 
           i.id AS inscricao_id,
+          i.eventos_provas_id AS eventos_provas_id,
           e.nome AS equipe,
           c.nome AS categoria
       FROM inscricoes i
@@ -158,56 +159,66 @@ router.post('/salvarBalizamento', async (req, res) => {
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
+    
+    // Array para armazenar mensagens de provas ignoradas
+    const ignoredProvas = [];
 
     for (const [prova, baterias] of Object.entries(balizamento)) {
       // Verifica se a prova possui pelo menos 3 inscritos
       const totalInscritos = baterias.reduce((acc, bateria) => acc + bateria.length, 0);
       if (totalInscritos < 3) {
-        throw new Error(`A prova ${prova} possui menos que 3 inscritos e não pode ser balizada.`);
+        console.warn(`A prova ${prova} possui menos que 3 inscritos e foi ignorada.`);
+        ignoredProvas.push(`A prova ${prova} possui menos que 3 inscritos e foi ignorada.`);
+        continue; // Pula esta prova e continua com as demais
       }
+      
+      try { // Processa a prova individualmente
+        for (const [bateriaIndex, bateria] of baterias.entries()) {
+          // Acessa o primeiro nadador para obter eventos_provas_id e inscricao_id
+          const eventos_provas_id = bateria[0]?.eventos_provas_id;
+          const inscricao_id = bateria[0]?.inscricao_id;
 
-      for (const [bateriaIndex, bateria] of baterias.entries()) {
-        // Acessa o primeiro nadador dentro do array aninhado para obter `prova_id` e `Nadadores_id`
-        const prova_id = bateria[0]?.[0]?.prova_id;
-        const inscricao_id = bateria[0]?.[0]?.inscricao_id;
-
-        if (!prova_id || !inscricao_id) {
-          console.error(`Erro: Dados incompletos para a prova: ${prova}`);
-          console.error(`Dados da bateria:`, JSON.stringify(bateria, null, 2));
-          throw new Error(`Dados incompletos para a prova: ${prova}`);
-        }
-
-        const [result] = await connection.query(
-          `INSERT INTO baterias (descricao, Eventos_id, Provas_id) VALUES (?, ?, ?)`,
-          [`Série ${bateriaIndex + 1}`, eventoId, prova_id]
-        );        
-
-        // Fechar inscrições para o evento
-        await connection.query(
-          `UPDATE eventos SET inscricao_aberta = 0 WHERE id = ?`,
-          [eventoId]
-        );
-
-        const bateriaId = result.insertId;
-
-        for (const nadadorData of bateria) {
-          const nadador = nadadorData[0]; // Acessa o objeto do nadador
-          const { nadador_id, piscina = 1, raia, inscricao_id } = nadador;
-
-          if (!nadador_id || !raia) {
-            throw new Error(`Dados incompletos para nadador na bateria ${bateriaId}.`);
+          if (!eventos_provas_id || !inscricao_id) {
+            throw new Error(`Dados incompletos para a prova: ${prova}`);
           }
 
-          await connection.query(
-            `INSERT INTO baterias_inscricoes (baterias_id, inscricoes_id, piscina, raia) VALUES (?, ?, ?, ?)`,
-            [bateriaId, inscricao_id, piscina, raia]
-          );
+          // Alterado: usar "eventos_provas_id" conforme a estrutura da tabela "baterias"
+          const [result] = await connection.query(
+            `INSERT INTO baterias (descricao, eventos_id, eventos_provas_id) VALUES (?, ?, ?)`,
+            [`Série ${bateriaIndex + 1}`, eventoId, eventos_provas_id]
+          );        
+
+          const bateriaId = result.insertId;
+
+          for (const nadador of bateria) {
+            const { nadador_id, piscina = 1, raia, inscricao_id } = nadador;
+
+            if (!nadador_id || !raia) {
+              throw new Error(`Dados incompletos para nadador na bateria ${bateriaId}.`);
+            }
+
+            await connection.query(
+              `INSERT INTO baterias_inscricoes (baterias_id, inscricoes_id, piscina, raia) VALUES (?, ?, ?, ?)`,
+              [bateriaId, inscricao_id, piscina, raia]
+            );
+          }
         }
+      } catch (error) {
+        console.error(`Erro ao processar a prova ${prova}:`, error);
+        ignoredProvas.push(error.message);
+        continue; // Ignora esta prova e continua com as demais
       }
     }
 
     await connection.commit();
-    res.status(200).json({ success: true, message: 'Balizamento salvo com sucesso!' });
+    // Alterado: mensagem de retorno diferenciando garantidamente provas ignoradas
+    res.status(200).json({ 
+      success: true, 
+      message: ignoredProvas.length 
+        ? "Balizamento salvo, porém as seguintes provas foram ignoradas:\n" + ignoredProvas.join("\n") 
+        : 'Balizamento salvo com sucesso!', 
+      ignoredProvas 
+    });
   } catch (error) {
     await connection.rollback();
     console.error('Erro ao salvar balizamento:', error);

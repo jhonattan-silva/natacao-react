@@ -147,7 +147,8 @@ const Balizamento = () => {
             // Processar cada prova conforme a ordem
             const resultado = {}; // Objeto para armazenar o balizamento
             provasOrdenadas.forEach(item => { // Para cada prova
-                const provaId = item.inscritos[0]?.prova_id; // Pega o ID da prova da primeira inscrição
+                // Atualizado: extrai o eventos_provas_id conforme retornado pelo backend
+                const eventosProvasId = item.inscritos[0]?.eventos_provas_id;
                 const todosNadadores = ordenarNadadoresPorTempo(item.inscritos); // Ordena os nadadores por tempo
 
                 // Passa a quantidade de raias definida no evento
@@ -159,7 +160,7 @@ const Balizamento = () => {
                 }
 
                 resultado[item.nome_prova] = baterias.map(qtdNadadores =>
-                    distribuirNadadoresNasRaias(todosNadadores.splice(0, qtdNadadores), provaId, etapa.quantidade_raias)
+                    distribuirNadadoresNasRaias(todosNadadores.splice(0, qtdNadadores), eventosProvasId, etapa.quantidade_raias)
                 );
             });
 
@@ -184,7 +185,8 @@ const Balizamento = () => {
     };
 
     // Função para distribuir os nadadores nas raias de acordo com a classificação
-    const distribuirNadadoresNasRaias = (nadadores, provaId, quantidadeRaias) => {
+    // Atualizado: renomear parâmetro para eventosProvasId e usá-lo ao atribuir o campo correto
+    const distribuirNadadoresNasRaias = (nadadores, eventosProvasId, quantidadeRaias) => {
         // Função auxiliar para tratar tempos zero
         const getTimeValue = (swimmer) => {
             const t = timeToMilliseconds(swimmer.melhor_tempo);
@@ -216,7 +218,7 @@ const Balizamento = () => {
         const distribuicao = nadadoresOrdenados.map((nadador, index) => ({
             ...nadador,
             raia: usedLanes[index],
-            prova_id: provaId,
+            eventos_provas_id: eventosProvasId
         }));
 
         return distribuicao.sort((a, b) => a.raia - b.raia);
@@ -229,13 +231,20 @@ const Balizamento = () => {
             return;
         }
         try {
-            await api.post(apiSalvarBalizamento, { eventoId, balizamento: inscritos });
-            alert('Balizamento salvo com sucesso!');
-            setBalizamentoGerado(false); // Reseta o estado de balizamento gerado
+            const response = await api.post(apiSalvarBalizamento, { eventoId, balizamento: inscritos });
+            if (response.data.ignoredProvas && response.data.ignoredProvas.length) {
+                alert("Balizamento salvo, porém as seguintes provas foram ignoradas:\n" + response.data.ignoredProvas.join("\n"));
+            } else {
+                alert('Balizamento salvo com sucesso!');
+            }
+            setBalizamentoGerado(false);
         } catch (error) {
             console.error('Erro ao salvar balizamento:', error);
-            // Mostra a mensagem de erro retornada pelo backend ao usuário, se existir.
-            alert(error.response?.data?.error || 'Erro ao salvar o balizamento. Tente novamente.');
+            alert(
+                error.response?.data?.message ||
+                error.response?.data?.error ||
+                'Erro ao salvar o balizamento. Tente novamente.'
+            );
         }
     };
 

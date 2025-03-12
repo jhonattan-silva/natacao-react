@@ -48,22 +48,23 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
 
 router.get('/listarBateriasProva/:provaId', async (req, res) => {
     const { provaId } = req.params;
+    const { eventoId } = req.query; // Recebe o eventoId via query
 
-    if (!provaId) {
+    if (!provaId || !eventoId) {
         return res.status(400).json({
             success: false,
-            message: 'Prova ID é obrigatório.',
+            message: 'Prova ID e Evento ID são obrigatórios.',
         });
     }
 
     try {
-        // Obter o eventos_provas_id correspondente ao provaId
+        // Obter o eventos_provas_id filtrando por provaId e eventoId
         const [evRows] = await db.query(
-            "SELECT id as eventosProvasId FROM eventos_provas WHERE provas_id = ?",
-            [provaId]
+            "SELECT id as eventosProvasId FROM eventos_provas WHERE provas_id = ? AND eventos_id = ?",
+            [provaId, eventoId]
         );
         if (evRows.length === 0) {
-            throw new Error("Eventos_Provas não encontrado para provaId " + provaId);
+            throw new Error("Eventos_Provas não encontrado para provaId " + provaId + " e eventoId " + eventoId);
         }
         const eventosProvasId = evRows[0].eventosProvasId;
 

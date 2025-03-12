@@ -56,6 +56,13 @@ const ResultadosEntrada = () => {
     // Listar as provas do evento escolhido
     useEffect(() => {
         if (!eventoId) return;
+        
+        setProvas([]);
+        setProvaId('');
+        setBaterias([]);
+        setCheckboxes({});
+        setValoresBanco({});
+        localStorage.removeItem('resultados'); // Limpa dados antigos
 
         const fetchProvas = async () => {
             try {
@@ -64,11 +71,9 @@ const ResultadosEntrada = () => {
                     setProvas(response.data);
                     setErro(null);
                 } else {
-                    console.error('ERRO: A resposta das provas não é array');
                     setErro('Erro nos dados vindos do banco');
                 }
             } catch (err) {
-                console.error('Erro ao buscar provas:', err.message);
                 setErro('Erro ao buscar provas');
             }
         };
@@ -79,74 +84,75 @@ const ResultadosEntrada = () => {
     // Listar Séries da prova escolhida
     useEffect(() => {
         if (!provaId) return;
-
+    
         const fetchBaterias = async () => {
             try {
-                const response = await api.get(`${apiBateriasProva}/${provaId}`);
+                // Inclui eventoId na URL para filtrar o evento atual
+                const response = await api.get(`${apiBateriasProva}/${provaId}?eventoId=${eventoId}`);
                 if (Array.isArray(response.data)) {
-
                     const bateriasComTempos = response.data.map((bateria) => ({
                         ...bateria,
-                        id: bateria.bateriaId, // Mapeia bateriaId para id
-                        nadadores: bateria.nadadores.map((nadador) => {
-                            const tempoSalvo = resultados[provaId]?.[nadador.id];
-                            return tempoSalvo ? { ...nadador, tempo: tempoSalvo } : nadador;
-                        }),
-                        equipes: bateria.equipes.map((equipe) => {
-                            const tempoSalvo = resultados[provaId]?.[equipe.id];
-                            return tempoSalvo ? { ...equipe, tempo: tempoSalvo } : equipe;
-                        }),
+                        id: bateria.bateriaId,
+                        nadadores: bateria.nadadores.map((nadador) => ({
+                            ...nadador,
+                            tempo: resultados[provaId]?.[nadador.id] || nadador.tempo || '',
+                        })),
+                        equipes: bateria.equipes.map((equipe) => ({
+                            ...equipe,
+                            tempo: resultados[provaId]?.[equipe.id] || equipe.tempo || '',
+                        })),
                     }));
                     setBaterias(bateriasComTempos);
-
-                    // Armazena os tempos carregados do banco
+    
                     const dbMapping = {};
                     response.data.forEach((bateria) => {
                         bateria.nadadores.forEach((nadador) => {
-                            if (nadador.tempo) {
-                                dbMapping[nadador.id] = nadador.tempo;
-                            }
+                            if (nadador.tempo) dbMapping[nadador.id] = nadador.tempo;
                         });
                         bateria.equipes.forEach((equipe) => {
-                            if (equipe.tempo) {
-                                dbMapping[equipe.id] = equipe.tempo;
-                            }
+                            if (equipe.tempo) dbMapping[equipe.id] = equipe.tempo;
                         });
                     });
                     setValoresBanco({ [provaId]: dbMapping });
-
                     setErro(null);
                 } else {
-                    console.error('ERRO: A resposta das Séries não é array');
                     setErro('Erro nos dados vindos do banco');
                 }
             } catch (err) {
-                console.error('Erro ao buscar Séries:', err.message);
+                console.error("Erro na busca das baterias para provaId", provaId, err);
                 setErro('Erro ao buscar Séries');
             }
         };
-
+    
         fetchBaterias();
-    }, [provaId, resultados]); // Add 'resultados' to dependencies
+    }, [provaId, eventoId]);
+    
 
     useEffect(() => {
         if (baterias.length > 0) {
-            const newStates = {};
-            baterias.forEach(bateria => {
-                bateria.nadadores.forEach(nadador => {
-                    newStates[nadador.id] = {
-                        nc: nadador.status === 'NC', // Define o estado do checkbox NC
-                        desc: nadador.status === 'DQL', // Define o estado do checkbox DQL
-                    };
+            setCheckboxes(prev => {
+                const newStates = { ...prev };
+                baterias.forEach(bateria => {
+                    bateria.nadadores.forEach(nadador => {
+                        // Só adiciona se ainda não existir (preserva modificações do usuário)
+                        if (!(nadador.id in newStates)) {
+                            newStates[nadador.id] = {
+                                nc: nadador.status === 'NC',
+                                desc: nadador.status === 'DQL',
+                            };
+                        }
+                    });
+                    bateria.equipes.forEach(equipe => {
+                        if (!(equipe.id in newStates)) {
+                            newStates[equipe.id] = {
+                                nc: equipe.status === 'NC',
+                                desc: equipe.status === 'DQL',
+                            };
+                        }
+                    });
                 });
-                bateria.equipes.forEach(equipe => {
-                    newStates[equipe.id] = {
-                        nc: equipe.status === 'NC', // Define o estado do checkbox NC
-                        desc: equipe.status === 'DQL', // Define o estado do checkbox DQL
-                    };
-                });
+                return newStates;
             });
-            setCheckboxes(newStates);
         }
     }, [baterias]);
 
@@ -185,16 +191,17 @@ const ResultadosEntrada = () => {
             ...bateria,
             nadadores: bateria.nadadores.map((nadador) => {
                 const tempoSalvo = resultados[provaId]?.[nadador.id];
-                return tempoSalvo ? { ...nadador, tempo: tempoSalvo } : nadador;
+                return tempoSalvo !== undefined ? { ...nadador, tempo: tempoSalvo } : nadador;
             }),
             equipes: bateria.equipes.map((equipe) => {
                 const tempoSalvo = resultados[provaId]?.[equipe.id];
-                return tempoSalvo ? { ...equipe, tempo: tempoSalvo } : equipe;
+                return tempoSalvo !== undefined ? { ...equipe, tempo: tempoSalvo } : equipe;
             }),
         }));
 
         setBaterias(novasBaterias);
-    }, [resultados, provaId, baterias.length]); // Add 'Séries.length' to dependencies
+    }, [resultados, provaId]);
+
 
     const handleBlur = (bateriaId, id, tempo, isEquipe = false) => {
         salvarTempo(provaId, id, tempo);
@@ -221,16 +228,16 @@ const ResultadosEntrada = () => {
     // Atualiza estados no handleCheckboxChange
     const handleCheckboxChange = (id, tipo, value) => {
         setCheckboxes(prev => {
-             const atual = prev[id] || { nc: false, desc: false };
-             let novoEstado;
-             if (tipo === 'nc' && value) {
-                 novoEstado = { nc: true, desc: false };
-             } else if (tipo === 'desc' && value) {
-                 novoEstado = { nc: false, desc: true };
-             } else {
-                 novoEstado = { ...atual, [tipo]: value };
-             }
-             return { ...prev, [id]: novoEstado };
+            const atual = prev[id] || { nc: false, desc: false };
+            let novoEstado;
+            if (tipo === 'nc' && value) {
+                novoEstado = { nc: true, desc: false };
+            } else if (tipo === 'desc' && value) {
+                novoEstado = { nc: false, desc: true };
+            } else {
+                novoEstado = { ...atual, [tipo]: value };
+            }
+            return { ...prev, [id]: novoEstado };
         });
         setInputSalvo(null); // garante que o estado do input salvo seja resetado ao alterar o checkbox
     };
@@ -320,13 +327,13 @@ const ResultadosEntrada = () => {
                         <h1>Prova: {nomeProvaSelecionada}</h1>
                         {baterias.map((bateria) => {
                             // Calcula se todos os nadadores e equipes já possuem resultado salvo
-                            const provaSalva = bateria.nadadores.every(nadador => 
-                                valoresBanco[provaId] && 
-                                valoresBanco[provaId][nadador.id] && 
+                            const provaSalva = bateria.nadadores.every(nadador =>
+                                valoresBanco[provaId] &&
+                                valoresBanco[provaId][nadador.id] &&
                                 nadador.tempo === valoresBanco[provaId][nadador.id]
-                            ) && bateria.equipes.every(equipe => 
-                                valoresBanco[provaId] && 
-                                valoresBanco[provaId][equipe.id] && 
+                            ) && bateria.equipes.every(equipe =>
+                                valoresBanco[provaId] &&
+                                valoresBanco[provaId][equipe.id] &&
                                 equipe.tempo === valoresBanco[provaId][equipe.id]
                             );
                             return (
