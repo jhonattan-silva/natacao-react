@@ -68,20 +68,26 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
       { text: 'Balizamento de Prova', style: 'header' },
       // Mapeia cada prova para exibir o nome
       ...formattedData.map((prova, provaIndex) => [
-        { text: `Prova: ${prova.nome}`, style: 'subheader', margin: provaIndex === 0 ? [0, 0, 0, 0] : [0, 50, 0, 0] },
+        { text: `Prova: ${prova.nome}`, style: 'subheader', margin: provaIndex === 0 ? [0, 0, 0, 0] : [0, 20, 0, 0] },
         // Para cada bateria, gera uma tabela com as colunas: Série, Raia, Nome, Categoria, Equipe, Tempo
         ...prova.baterias.map((bateria, index) => [
+          { 
+            // Exibe a série como um título antes da tabela
+            text: `Série: ${index + 1}`, 
+            style: 'subheader', 
+            alignment: 'center', 
+            margin: [0, 5, 0, 5]
+          },
           {
             table: {
               dontBreakRows: true, // Impede quebra da tabela entre páginas
               // Adicionada propriedade widths com valores fixos para padronizar o tamanho
-              widths: [30, 25, 150, 100, 100, 80],
+              widths: [25, 150, 100, 100, 80], // Ajustado: sem o espaço para a coluna 'Série'
               body: [
                 // Cabeçalho com a nova ordem de colunas
-                ['Série', 'Raia', 'Nome', 'Categoria', 'Equipe', 'Tempo'],
+                ['Raia', 'Nome', 'Categoria', 'Equipe', 'Tempo'],
                 // Preenche cada linha com os dados
                 ...bateria.map(nadador => [
-                  index + 1,
                   nadador.raia,
                   nadador.nome_nadador,
                   nadador.categoria,
@@ -98,29 +104,26 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
     ],
     styles: {
       header: {
-        fontSize: 22,
+        fontSize: 16, // reduzido de 18
         bold: true,
         margin: [0, 35, 0, 5]
       },
       subheader: {
-        fontSize: 18,
+        fontSize: 12, // reduzido de 14
         bold: true,
         margin: [0, 5, 0, 5]
       },
       tableHeader: {
-        fontSize: 16,
+        fontSize: 10, // reduzido de 12
         bold: true
-      },
-      tableExample: {
-        margin: [0, 5, 0, 15]
       },
       // Estilos adicionados para as informações do evento
       eventHeader: {
-        fontSize: 20,
+        fontSize: 18, // Diminuído de 20
         bold: true
       },
       eventInfo: {
-        fontSize: 12,
+        fontSize: 10, // Diminuído de 12
         margin: [0, 2, 0, 2]
       }
     }

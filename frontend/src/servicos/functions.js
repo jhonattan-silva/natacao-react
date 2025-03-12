@@ -11,104 +11,68 @@ function getAge(dataNasc) {
     return new Date(diff).getUTCFullYear() - 1970;
 }
 
-// Nova função: Ordena nadadores por idade (dos mais jovens para os mais velhos)
-export function ordenarNadadoresPorIdade(nadadores) {
-    const sorted = [...nadadores].sort((a, b) => getAge(a.data_nasc) - getAge(b.data_nasc));
-    console.log("Nadadores ordenados por idade (dos mais jovens para os mais velhos):");
-    sorted.forEach(n => console.log(`${n.nome} - Idade: ${getAge(n.data_nasc)}`));
-    return sorted;
-}
-
-// Função para ordenar nadadores com e sem tempo registrado
-export function ordenarNadadoresPorTempo(nadadores) {
-    // Separar nadadores com tempo "00:00" e com tempo definido
-    const nadadoresSemTempo = nadadores.filter(n => n.melhor_tempo === "00:00");
-    const nadadoresComTempo = nadadores.filter(n => n.melhor_tempo !== "00:00")
-        .sort((a, b) => timeToMilliseconds(b.melhor_tempo) - timeToMilliseconds(a.melhor_tempo)); // Ordenação decrescente dos tempos
-
-    // Combina a lista dos sem recorde com a dos tempos ordenados
-    return [...nadadoresSemTempo, ...nadadoresComTempo];
-}
-
-// Função para dividir nadadores em baterias com o mínimo de 3 nadadores na última bateria
-export function dividirEmBaterias(nadadores) {
-    // Ordenar os nadadores por idade
-    const nadadoresOrdenados = ordenarNadadoresPorIdade(nadadores);
-    const totalNadadores = nadadoresOrdenados.length;
+// Função para dividir nadadores em baterias, garantindo que cada bateria tenha no mínimo 3 nadadores
+export function dividirEmBaterias(nadadores, quantidadeRaias) {
+    const nadadoresOrdenados = [...nadadores]; // Clona o array para evitar modificações indesejadas
     const baterias = [];
+    let start = 0;
 
-    // Cálculo inicial das baterias
-    let numeroDeBaterias = Math.ceil(totalNadadores / 6);
-    let tamanhoBateriaPadrao = 6; // Tamanho padrão da bateria
+    while (start < nadadoresOrdenados.length) {
+        let tamanhoBateria = Math.min(quantidadeRaias, nadadoresOrdenados.length - start);
+        let restantes = nadadoresOrdenados.length - (start + tamanhoBateria);
 
-    // Ajustar o número de nadadores nas últimas baterias
-    const resto = totalNadadores % 6;
-    const tamanhosBaterias = Array(numeroDeBaterias).fill(tamanhoBateriaPadrao);
-
-    // Ajustes finais para garantir que a última bateria tenha no mínimo 3 nadadores
-    if (resto === 2) {
-        tamanhosBaterias[numeroDeBaterias - 2] = 5; // Penúltima bateria com 5
-        tamanhosBaterias[numeroDeBaterias - 1] = 3; // Última bateria com 3
-    } else if (resto === 1) {
-        tamanhosBaterias[numeroDeBaterias - 2] = 4; // Penúltima bateria com 4
-        tamanhosBaterias[numeroDeBaterias - 1] = 3; // Última bateria com 3
-    } else if (resto !== 0) {
-        tamanhosBaterias[numeroDeBaterias - 1] = resto; // Última bateria com o valor do resto
+        if (restantes > 0 && restantes < 3) {
+            tamanhoBateria -= (3 - restantes);
+        }
+        //console.log('nadadoresOrdenados:', nadadoresOrdenados); //AQUI AINDA ESTÁ OK
+        nadadoresOrdenados.reverse(); // Inverte a ordem dos nadadores
+        baterias.push(nadadoresOrdenados.slice(start, start + tamanhoBateria)); // Adiciona a bateria 
+        start += tamanhoBateria;
     }
-
-    // Distribuir os nadadores nas baterias conforme o tamanho calculado
-    let index = 0;
-    for (let i = 0; i < numeroDeBaterias; i++) {
-        const tamanhoBateria = tamanhosBaterias[i];
-        const grupo = nadadoresOrdenados.slice(index, index + tamanhoBateria);
-        baterias.push(grupo);
-        index += tamanhoBateria;
-    }
-    return baterias;
+    return baterias.reverse(); // Inverte para que os mais rápidos fiquem na última bateria
 }
 
 // Função para distribuir os nadadores nas raias de acordo com a classificação
-export function distribuirNadadoresNasRaias(nadadores, provaId) {
-    const nadadoresPorRaia = Array(6).fill(null).map(() => []); // Cria as raias vazias
-    const raias = []; // Armazena as raias de acordo com o número de nadadores
+export function distribuirNadadoresNasRaias(nadadores, provaId, quantidadeRaias) {
+    const raiasDistribuicao = {
+        3: [2, 1, 3],
+        4: [2, 1, 3, 4],
+        5: [3, 1, 4, 2, 5],
+        6: [3, 1, 4, 2, 5, 6],
+        7: [4, 2, 5, 1, 6, 3, 7],
+        8: [4, 2, 5, 1, 6, 3, 7, 8],
+        9: [5, 3, 6, 1, 7, 2, 8, 4, 9],
+        10: [5, 3, 6, 1, 7, 2, 8, 4, 9, 10],
+    };
 
-    // Define as raias manualmente com base no número de nadadores
-    switch (nadadores.length) {
-        case 6:
-            raias.push(6, 5, 4, 3, 2, 1); // Para 6 nadadores
-            break;
-        case 5:
-            raias.push(4, 5, 2, 3, 1); // Para 5 nadadores
-            break;
-        case 4:
-            raias.push(4, 3, 2, 1); // Para 4 nadadores
-            break;
-        case 3:
-            raias.push(2, 3, 1); // Para 3 nadadores
-            break;
-        default:
-            console.error(`Número de nadadores não suportado: ${nadadores.length}`);
-            return []; // Retorna vazio para números não suportados
+    // Instead of inverting the array, use the already sorted swimmers
+    const nadadoresOrdenados = [...nadadores]; // Mantém a ordem como está  
+
+    // Definir a ordem das raias conforme o número de nadadores disponíveis
+    let ordemRaias = raiasDistribuicao[quantidadeRaias] || [];
+
+    if (nadadoresOrdenados.length < quantidadeRaias) { // Se houver menos nadadores do que raias
+        const totalLanes = quantidadeRaias; // Total de raias
+        const center = Math.ceil(totalLanes / 2); // Raia central
+        ordemRaias = [center]; // Raia central
+        let left = center - 1, right = center + 1; // Raia à esquerda e à direita
+        while (ordemRaias.length < nadadoresOrdenados.length) { // Enquanto houver nadadores não distribuídos
+            if (right <= totalLanes) ordemRaias.push(right); // Adiciona à direita
+            if (ordemRaias.length >= nadadoresOrdenados.length) break; // Se já distribuiu todos, sai do loop
+            if (left >= 1) ordemRaias.push(left); // Adiciona à esquerda
+            right++; // Incrementa a raia à direita
+            left--; // Decrementa a raia à esquerda
+        }
     }
 
-    // Distribui os nadadores nas raias
-    nadadores.forEach((nadador, index) => {
-        const raiaIndex = index; // O índice corresponde diretamente ao índice de "raias"
-        if (raias[raiaIndex] === undefined) {
-            console.error(`Raia não encontrada para índice ${index}`);
-            return;
-        }
-        nadadoresPorRaia[raias[raiaIndex] - 1].push({
-            ...nadador,
-            raia: raias[raiaIndex],
-            prova_id: provaId,
-        });
-        console.log(`Nadador ${nadador.nome} (Idade: ${getAge(nadador.data_nasc)}) atribuído à raia ${raias[raiaIndex]}`);
-    });
+    // Distribuir os nadadores nas raias
+    const distribuicao = nadadoresOrdenados.map((nadador, index) => ({
+        ...nadador,
+        raia: ordemRaias[index] || (index + 1),
+        prova_id: provaId,
+    }));
 
-    const resultado = nadadoresPorRaia.filter(raia => raia.length > 0);
-    console.log("Distribuição final nas raias:", resultado.map((r, idx) => `Raia ${idx + 1}: ${r.map(n => n.nome).join(", ")}`).join(" | "));
-    return resultado;
+    return distribuicao.sort((a, b) => a.raia - b.raia);
 }
 
 // Função para validar CPF

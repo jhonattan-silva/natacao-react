@@ -4,10 +4,12 @@ import Botao from '../../componentes/Botao/Botao';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import Tabela from '../../componentes/Tabela/Tabela';
 import api from '../../servicos/api';
-import { ordenarNadadoresPorIdade, dividirEmBaterias, distribuirNadadoresNasRaias } from '../../servicos/functions'; // Modificado
+import { timeToMilliseconds } from '../../servicos/functions'; // Updated import
 import { balizamentoPDF, gerarFilipetas } from '../../servicos/pdf';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import { relatorioInscritosPDF } from '../../servicos/relatoriosPDF';
+
+
 
 const Balizamento = () => {
     const [eventoId, setEventoId] = useState(''); //captura o id do evento
@@ -19,6 +21,7 @@ const Balizamento = () => {
     const [inscritosEquipe, setInscritosEquipe] = useState([]);
     const [inscritosEquipeSexo, setInscritosEquipeSexo] = useState([]);
     const [etapa, setEtapa] = useState({}); // Estado para as infos do evento
+    const [eventos, setEventos] = useState([]); // Estado para armazenar a lista de eventos
 
     const apiEventos = `/balizamento/listarEventos`;
     const apiInscritos = `/balizamento/listarInscritos`;
@@ -32,40 +35,85 @@ const Balizamento = () => {
         const fetchEventos = async () => {
             try {
                 const response = await api.get(apiEventos);
-                setEventoId(response.data); // Preenche os eventos para a lista suspensa
+                setEventos(response.data);
             } catch (error) {
                 console.error('Erro ao buscar dados:', error);
             }
         };
-        fetchEventos(); // Executa a função
-    }, [apiEventos]); // Executa quando o componente é montado
+        fetchEventos();
+    }, [apiEventos]);
 
     /* Capturar id do evento*/
     const eventoSelecionado = async (selected) => {
-        if (typeof selected === 'object' && selected.id) {
-            setEventoId(selected.id);
-            // Armazena os dados completos do evento em "etapa"
-            setEtapa({ nome: selected.nome, data: selected.data /*, outros dados se necessário */ });
-        } else {
-            setEventoId(selected);
-            try {
-                const response = await api.get(apiEventos);
-                // Procura o evento que possui o id igual a `selected`
-                const eventoEncontrado = response.data.find(e => e.id === selected) || response.data[0];
-                setEtapa(eventoEncontrado);
-            } catch (error) {
-                console.error("Erro ao buscar dados completos do evento:", error);
-            }
-        }
-    };
-    
+        const id = typeof selected === 'object' ? selected.id : selected;
+        const idNumber = Number(id); // Converta o id para número, se necessário
+        setEventoId(idNumber);
 
-    const fetchInscritosPorEquipe = async () => {
-        try {
-            const response = await api.get(apiInscritosEquipe);
-        } catch (error) {
-            console.error("Erro ao buscar inscritos por equipe:", error);
+        const eventoEncontrado = eventos.find(e => e.id === idNumber);
+        if (eventoEncontrado) {
+            setEtapa(eventoEncontrado);
+        } else {
+            console.warn("Evento não encontrado para o id:", idNumber);
         }
+
+        // Resetar estados relacionados ao balizamento anterior
+        setInscritos([]);
+        setInscritosOriginais([]);
+        setInscritosEquipe([]);
+        setInscritosEquipeSexo([]);
+        setBalizamentoGerado(false);
+    };
+
+    // Função para ordenar nadadores com e sem tempo registrado
+    const ordenarNadadoresPorTempo = (nadadores) => {
+        const ordenados = [...nadadores].sort((a, b) => {
+            const aInvalid = !a.melhor_tempo || a.melhor_tempo === "00:00" || a.melhor_tempo === "00:00:00";
+            const bInvalid = !b.melhor_tempo || b.melhor_tempo === "00:00" || b.melhor_tempo === "00:00:00";
+
+            // Agora invalidos no início
+            if (aInvalid && bInvalid) return 0;
+            if (aInvalid) return -1; // Move invalid para o início
+            if (bInvalid) return 1;  // Move invalid para o início
+
+            return timeToMilliseconds(b.melhor_tempo) - timeToMilliseconds(a.melhor_tempo);
+        });
+        return ordenados;
+    };
+
+    // Função para criar as baterias
+    const dividirEmBaterias = (nadadores, quantidadeRaias) => {
+        if (nadadores < 3) {
+            return "Número insuficiente de nadadores para formar um grupo.";
+        }
+
+        let baterias = [];
+        let qtdGruposMax = Math.floor(nadadores / quantidadeRaias);
+        let resto = nadadores % quantidadeRaias;
+
+        if (resto === 0) {
+            // Se o resto for 0, todos os grupos têm "quantidadeRaias" nadadores
+            for (let i = 0; i < qtdGruposMax; i++) {
+                baterias.push(quantidadeRaias);
+            }
+        } else if (resto >= 3) {
+            // Se o resto for 3 ou 4, basta formar um último grupo com esse resto
+            for (let i = 0; i < qtdGruposMax; i++) {
+                baterias.push(quantidadeRaias);
+            }
+            baterias.push(resto);
+        } else {
+            // Se o resto for 1 ou 2, ajustamos um grupo de "quantidadeRaias"
+            for (let i = 0; i < qtdGruposMax - 1; i++) {
+                baterias.push(quantidadeRaias);
+            }
+            baterias.push(3);
+            baterias.push(quantidadeRaias - 2 + resto);
+        }
+
+        // Ordenar os grupos em ordem crescente
+        baterias.sort((a, b) => a - b);
+
+        return baterias;
     };
 
     const gerarBalizamento = async () => {
@@ -75,8 +123,8 @@ const Balizamento = () => {
         }
         try { //tendo selecionado um evento...
             const response = await api.get(`${apiInscritos}/${eventoId}`); //api+idEvento
-            const originais = response.data; // Captura os inscritos originais
-            setInscritosOriginais(originais); // Store data in state
+            const originais = response.data; // Captura os inscritos
+            setInscritosOriginais(originais); // Salva os inscritos originais para o relatório 
 
             // Agrupar inscrições pela prova, armazenando também a ordem
             const nadadoresPorProva = {};
@@ -97,13 +145,22 @@ const Balizamento = () => {
                 .sort((a, b) => a.ordem - b.ordem);
 
             // Processar cada prova conforme a ordem
-            const resultado = {};
-            provasOrdenadas.forEach(item => {
-                const provaId = item.inscritos[0]?.prova_id;
-                // Alterado: ordena nadadores por idade em vez de por tempo
-                const todosNadadores = ordenarNadadoresPorIdade(item.inscritos);
-                const baterias = dividirEmBaterias(todosNadadores);
-                resultado[item.nome_prova] = baterias.map(bateria => distribuirNadadoresNasRaias(bateria, provaId));
+            const resultado = {}; // Objeto para armazenar o balizamento
+            provasOrdenadas.forEach(item => { // Para cada prova
+                const provaId = item.inscritos[0]?.prova_id; // Pega o ID da prova da primeira inscrição
+                const todosNadadores = ordenarNadadoresPorTempo(item.inscritos); // Ordena os nadadores por tempo
+
+                // Passa a quantidade de raias definida no evento
+                const baterias = dividirEmBaterias(todosNadadores.length, etapa.quantidade_raias);
+
+                if (!Array.isArray(baterias)) {
+                    console.error('Erro: baterias não é um array válido!', baterias);
+                    return;
+                }
+
+                resultado[item.nome_prova] = baterias.map(qtdNadadores =>
+                    distribuirNadadoresNasRaias(todosNadadores.splice(0, qtdNadadores), provaId, etapa.quantidade_raias)
+                );
             });
 
             setInscritos(resultado);
@@ -124,6 +181,45 @@ const Balizamento = () => {
         } catch (error) {
             console.error('Erro ao buscar inscritos:', error);
         }
+    };
+
+    // Função para distribuir os nadadores nas raias de acordo com a classificação
+    const distribuirNadadoresNasRaias = (nadadores, provaId, quantidadeRaias) => {
+        // Função auxiliar para tratar tempos zero
+        const getTimeValue = (swimmer) => {
+            const t = timeToMilliseconds(swimmer.melhor_tempo);
+            return t === 0 ? Number.MAX_SAFE_INTEGER : t;
+        };
+
+        // Ordenar nadadores usando a função auxiliar: nadadores com tempo 0 ficarão por último
+        const nadadoresOrdenados = [...nadadores].sort((a, b) => getTimeValue(a) - getTimeValue(b));
+
+        // Criar a ordem das raias: o nadador mais rápido vai para a raia central, os próximos para os lados
+        const totalLanes = quantidadeRaias;
+        let laneOrder = [];
+        const center = Math.ceil(totalLanes / 2);
+        laneOrder.push(center);
+        let offset = 1;
+        while(laneOrder.length < totalLanes) {
+            if (center + offset <= totalLanes) {
+                laneOrder.push(center + offset);
+            }
+            if (laneOrder.length < totalLanes && center - offset >= 1) {
+                laneOrder.push(center - offset);
+            }
+            offset++;
+        }
+        // Se houver menos nadadores que raias, use apenas as primeiras posições
+        const usedLanes = laneOrder.slice(0, nadadoresOrdenados.length);
+
+        // Mapear os nadadores para as raias definidas
+        const distribuicao = nadadoresOrdenados.map((nadador, index) => ({
+            ...nadador,
+            raia: usedLanes[index],
+            prova_id: provaId,
+        }));
+
+        return distribuicao.sort((a, b) => a.raia - b.raia);
     };
 
     // Salvar balizamento no banco

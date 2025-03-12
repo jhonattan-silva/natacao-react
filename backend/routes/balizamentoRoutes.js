@@ -5,7 +5,7 @@ const db = require('../config/db');
 //Listar todos EVENTOS
 router.get('/listarEventos', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM eventos WHERE inscricao_aberta = 1');
+    const [rows] = await db.query('SELECT * FROM eventos WHERE torneios_id = 3');
     res.json(rows);
   } catch (error) {
     console.error('Erro ao buscar eventos:', error);
@@ -22,12 +22,18 @@ router.get('/listarInscritos/:eventoId', async (req, res) => {
     const [rows] = await db.query(`
       SELECT 
           p.id AS prova_id, 
-          CONCAT(p.estilo, ' ', p.distancia, 'm ', p.tipo, ' ', p.sexo) AS nome_prova,
+          CONCAT(p.estilo, ' ', p.distancia, 'm ', ' ', p.sexo) AS nome_prova,
           ep.ordem,
-          n.nome AS nome,       -- Alterado: alias para "nome"
-          n.data_nasc,         -- Adicionado: data de nascimento
+          n.nome AS nome,
+          n.data_nasc,
           n.id AS nadador_id,
-          COALESCE(r.tempo, '00:00') AS melhor_tempo, 
+          COALESCE(
+            CONCAT(
+              LPAD(r.minutos, 2, '0'), ':',
+              LPAD(r.segundos, 2, '0'), ':',
+              LPAD(r.centesimos, 2, '0')
+            ), '00:00:00'
+          ) AS melhor_tempo, 
           i.id AS inscricao_id,
           e.nome AS equipe,
           c.nome AS categoria
@@ -35,7 +41,7 @@ router.get('/listarInscritos/:eventoId', async (req, res) => {
       INNER JOIN nadadores n ON i.nadadores_id = n.id
       INNER JOIN eventos_provas ep ON i.eventos_provas_id = ep.id
       INNER JOIN provas p ON ep.provas_id = p.id
-      LEFT JOIN records r ON n.id = r.nadadores_id AND ep.provas_id = r.provas_id
+      LEFT JOIN records r ON n.id = r.Nadadores_id AND ep.provas_id = r.provas_id
       LEFT JOIN equipes e ON n.equipes_id = e.id
       LEFT JOIN categorias c ON n.categorias_id = c.id
       WHERE i.eventos_id = ?
@@ -112,7 +118,7 @@ router.get('/listarInscritosEquipeSexo', async (req, res) => {
         COUNT(DISTINCT i.nadadores_id) AS total_atletas,
         (
           COUNT(DISTINCT CASE 
-            WHEN LOWER(CONCAT(p.estilo, ' ', p.distancia, 'm ', p.tipo, ' ', p.sexo)) LIKE '%revezamento%' 
+            WHEN LOWER(CONCAT(p.estilo, ' ', p.distancia, 'm ', ' ', p.sexo)) LIKE '%revezamento%' 
             THEN i.nadadores_id 
           END)
           + IFNULL((

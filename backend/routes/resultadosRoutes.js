@@ -525,4 +525,66 @@ router.get('/listarDoBanco/:eventoId', async (req, res) => {
   }
 });
 
+// Função para converter tempo para centésimos
+const calcularTempoEmCentesimos = (minutos, segundos, centesimos) => {
+  return minutos * 6000 + segundos * 100 + centesimos;
+};
+
+router.post('/atualizar-recordes/:torneioId', async (req, res) => {
+  try {
+      const { torneioId } = req.params;
+
+      // 1️⃣ Buscar tempos individuais (excluindo revezamentos)
+      const [resultados] = await db.execute(
+          `SELECT r.nadadores_id, ep.provas_id, e.torneios_id, r.minutos, r.segundos, r.centesimos, e.id AS eventos_id
+           FROM resultados r
+           JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
+           JOIN eventos e ON ep.eventos_id = e.id
+           JOIN provas p ON ep.provas_id = p.id
+           WHERE r.status = 'OK' 
+           AND e.torneios_id = ?
+           AND p.eh_revezamento = 0`, // ⛔ Exclui revezamentos
+          [torneioId]
+      );
+
+      for (const resultado of resultados) {
+          const tempoNovo = calcularTempoEmCentesimos(resultado.minutos, resultado.segundos, resultado.centesimos);
+
+          // 2️⃣ Verificar recorde atual do nadador na prova
+          const [recordAtual] = await db.execute(
+              `SELECT minutos, segundos, centesimos 
+               FROM records 
+               WHERE nadadores_id = ? AND provas_id = ? AND torneios_id = ?`,
+              [resultado.nadadores_id, resultado.provas_id, torneioId]
+          );
+
+          if (recordAtual.length === 0) {
+              // 3️⃣ Se não existir recorde, inserir novo tempo
+              await db.execute(
+                  `INSERT INTO records (nadadores_id, provas_id, torneios_id, eventos_id, minutos, segundos, centesimos)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                  [resultado.nadadores_id, resultado.provas_id, torneioId, resultado.eventos_id, resultado.minutos, resultado.segundos, resultado.centesimos]
+              );
+          } else {
+              // 4️⃣ Comparar com recorde atual
+              const tempoAtual = calcularTempoEmCentesimos(recordAtual[0].minutos, recordAtual[0].segundos, recordAtual[0].centesimos);
+
+              if (tempoNovo < tempoAtual) {
+                  await db.execute(
+                      `UPDATE records 
+                       SET minutos = ?, segundos = ?, centesimos = ?, eventos_id = ? 
+                       WHERE nadadores_id = ? AND provas_id = ? AND torneios_id = ?`,
+                      [resultado.minutos, resultado.segundos, resultado.centesimos, resultado.eventos_id, resultado.nadadores_id, resultado.provas_id, torneioId]
+                  );
+              }
+          }
+      }
+
+      res.status(200).json({ success: "Recordes atualizados com sucesso!" });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Erro ao atualizar recordes." });
+  }
+});
+
 module.exports = router;

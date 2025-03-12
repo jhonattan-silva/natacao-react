@@ -67,7 +67,6 @@ const CabecalhoAdmin = () => {
             <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>
             <span className={style.closeButton} onClick={toggleMenu}>&times;</span>
             <nav className={menuOpen ? style.open : ''}>
-                <CabecalhoLink url='../../' onClick={() => handleLinkClick('../../')}> Home </CabecalhoLink>
                 <CabecalhoLink url='../Nadadores' onClick={() => handleLinkClick('../Nadadores')}> Nadadores </CabecalhoLink>
                 <CabecalhoLink url='../Inscricao' onClick={() => handleLinkClick('../Inscricao')}> Inscrição </CabecalhoLink>
                 {userProfile.includes('admin') && (
