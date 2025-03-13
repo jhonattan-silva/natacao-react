@@ -26,7 +26,6 @@ const Balizamento = () => {
     const apiEventos = `/balizamento/listarEventos`;
     const apiInscritos = `/balizamento/listarInscritos`;
     const apiInscritosEquipe = `/balizamento/listarInscritosEquipe`;
-    const apiInscritosUnicosEquipe = `/balizamento/listarInscritosUnicosEquipe`;
     const apiInscritosEquipeSexo = `/balizamento/listarInscritosEquipeSexo`;
     const apiSalvarBalizamento = '/balizamento/salvarBalizamento';
 
@@ -126,11 +125,19 @@ const Balizamento = () => {
             return;
         }
         try {
-            // 🔹 Buscar nadadores individuais
+            // Buscar nadadores individuais
             const response = await api.get(`${apiInscritos}/${eventoId}`);
             const originais = response.data;
             setInscritosOriginais(originais);
-    
+
+            // NOVO: Buscar inscritos por equipe (Dados Brutos)
+            const responseEquipe = await api.get(`${apiInscritosEquipe}?eventoId=${eventoId}`);
+            setInscritosEquipe(responseEquipe.data);
+
+            // NOVO: Buscar inscritos por equipe detalhados (por Sexo e Revezamentos)
+            const responseEquipeSexo = await api.get(`${apiInscritosEquipeSexo}?eventoId=${eventoId}`);
+            setInscritosEquipeSexo(responseEquipeSexo.data);
+
             // 🔹 Buscar equipes inscritas em revezamentos
             const responseRevezamentos = await api.get(`/balizamento/listarRevezamentos/${eventoId}`);
             const inscritosRevezamento = responseRevezamentos.data;
@@ -187,8 +194,10 @@ const Balizamento = () => {
             });
     
             setInscritos(resultado);
+            //gera os pdfs
             balizamentoPDF(resultado, etapa);
-            gerarFilipetas(resultado);
+            gerarFilipetas(resultado, etapa);
+            relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo, etapa);
     
             setBalizamentoGerado(true);
         } catch (error) {
@@ -278,7 +287,7 @@ const Balizamento = () => {
                         <Botao onClick={() => balizamentoPDF(inscritos, etapa)} className={style.baixarBotao}>
                             Baixar Balizamento
                         </Botao>
-                        <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo)} className={style.baixarBotao}>
+                        <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo, etapa)} className={style.baixarBotao}>
                             Baixar Relatório de Inscritos
                         </Botao>
                     </div>
@@ -316,7 +325,7 @@ const Balizamento = () => {
                         <Botao onClick={() => balizamentoPDF(inscritos, etapa)} className={style.baixarBotao}>
                             Baixar Balizamento
                         </Botao>
-                        <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo)} className={style.baixarBotao}>
+                        <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo, etapa)} className={style.baixarBotao}>
                             Baixar Relatório de Inscritos
                         </Botao>
                     </div>

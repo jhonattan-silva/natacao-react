@@ -144,13 +144,16 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
     }
   };
 
-  pdfMake.createPdf(docDefinition).download('Balizamento.pdf');
+  // Atualiza o nome do arquivo conforme o padrão para Balizamento
+  const anoAtual = new Date().getFullYear();
+  const fileName = `LPN-Balizamento ${etapa?.nome?.replace(/\s+/g, ' ') || 'Relatorio'}_${anoAtual}.pdf`;
+  pdfMake.createPdf(docDefinition).download(fileName);
 };
 
 
 /********************************************************************************** */
 /************GERAÇÃO DA FILEPETA************************ */
-export const gerarFilipetas = (dadosBalizamento) => {
+export const gerarFilipetas = (dadosBalizamento, evento) => {
   const nadadoresData = [];
 
   // Extrai as informações de cada nadador para cada Série e raia
@@ -249,6 +252,8 @@ export const gerarFilipetas = (dadosBalizamento) => {
     }
   };
 
-  // Gera e baixa o PDF
-  pdfMake.createPdf(docDefinition).download('Filipetas_Nadadores.pdf');
+  // Atualiza o nome do arquivo conforme o padrão para Filipetas usando o nome do evento
+  const anoAtual = new Date().getFullYear();
+  const fileName = `LPN-Filipetas ${evento?.nome?.replace(/\s+/g, ' ') || 'Relatorio'}_${anoAtual}.pdf`;
+  pdfMake.createPdf(docDefinition).download(fileName);
 };
