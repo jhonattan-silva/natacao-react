@@ -149,6 +149,40 @@ router.get('/listarInscritosEquipeSexo', async (req, res) => {
   }
 });
 
+router.get('/listarRevezamentos/:eventoId', async (req, res) => {
+    const { eventoId } = req.params;
+    if (!eventoId) {
+        return res.status(400).send('Evento ID é necessário');
+    }
+    try {
+        const [rows] = await db.query(`
+            SELECT
+                p.id AS prova_id,
+                CONCAT(p.estilo, ' ', p.distancia, 'm ', ' ', p.sexo) AS nome_prova,
+                ep.ordem,
+                e.nome AS nome, -- Reusing the "nome" field for the team
+                '' AS data_nasc,
+                0 AS nadador_id,
+                '00:00:00' AS melhor_tempo,
+                0 AS inscricao_id,
+                r.eventos_provas_id AS eventos_provas_id,
+                e.nome AS equipe,
+                '' AS categoria,
+                r.id AS revezamentos_inscricoes_id
+            FROM revezamentos_inscricoes r
+            INNER JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
+            INNER JOIN provas p ON ep.provas_id = p.id
+            INNER JOIN equipes e ON r.equipes_id = e.id
+            WHERE r.eventos_id = ?
+            ORDER BY ep.ordem ASC
+        `, [eventoId]);
+        res.json(rows);
+    } catch (error) {
+        console.error('Erro ao buscar revezamentos:', error);
+        res.status(500).send('Erro ao buscar revezamentos');
+    }
+});
+
 router.post('/salvarBalizamento', async (req, res) => {
   const { eventoId, balizamento } = req.body;
 
@@ -187,9 +221,8 @@ router.post('/salvarBalizamento', async (req, res) => {
         for (const [bateriaIndex, bateria] of baterias.entries()) {
           // Acessa o primeiro nadador para obter eventos_provas_id e inscricao_id
           const eventos_provas_id = bateria[0]?.eventos_provas_id;
-          const inscricao_id = bateria[0]?.inscricao_id;
 
-          if (!eventos_provas_id || !inscricao_id) {
+          if (!eventos_provas_id) {
             throw new Error(`Dados incompletos para a prova: ${prova}`);
           }
 
@@ -202,16 +235,24 @@ router.post('/salvarBalizamento', async (req, res) => {
           const bateriaId = result.insertId;
 
           for (const nadador of bateria) {
-            const { nadador_id, piscina = 1, raia, inscricao_id } = nadador;
+            const { piscina = 1, raia, inscricao_id, revezamentos_inscricoes_id } = nadador;
 
-            if (!nadador_id || !raia) {
+            if (!raia) {
               throw new Error(`Dados incompletos para nadador na bateria ${bateriaId}.`);
             }
 
-            await connection.query(
-              `INSERT INTO baterias_inscricoes (baterias_id, inscricoes_id, piscina, raia) VALUES (?, ?, ?, ?)`,
-              [bateriaId, inscricao_id, piscina, raia]
-            );
+            // Skip if inscricao_id is 0 (revezamento)
+            if (inscricao_id && inscricao_id > 0) {
+              await connection.query(
+                `INSERT INTO baterias_inscricoes (baterias_id, inscricoes_id, piscina, raia) VALUES (?, ?, ?, ?)`,
+                [bateriaId, inscricao_id, piscina, raia]
+              );
+            } else if (revezamentos_inscricoes_id && revezamentos_inscricoes_id > 0) {
+              await connection.query(
+                `INSERT INTO baterias_inscricoes (baterias_id, revezamentos_inscricoes_id, piscina, raia) VALUES (?, ?, ?, ?)`,
+                [bateriaId, revezamentos_inscricoes_id, piscina, raia]
+              );
+            }
           }
         }
       } catch (error) {

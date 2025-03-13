@@ -32,18 +32,22 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
   const formattedTime = adjustedDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   // Formata os dados para exibir no PDF, agora incluindo categoria e equipe
-  const formattedData = Object.keys(dados).map(prova => ({
-    nome: prova,
-    baterias: dados[prova].map(bateria => (
-      bateria.flat().map(nadador => ({
-        nome_nadador: nadador.nome || nadador.nome_nadador || 'N/D',
-        melhor_tempo: nadador.melhor_tempo || 'N/D',
-        raia: nadador.raia || 'N/D',
-        categoria: nadador.categoria || 'N/D',
-        equipe: nadador.equipe || 'N/D'
-      }))
-    ))
-  }));
+  const formattedData = Object.keys(dados).map(prova => {
+    const isRevezamento = prova.toLowerCase().includes('x');
+    return {
+      nome: prova,
+      isRevezamento,
+      baterias: dados[prova].map(bateria => (
+        bateria.flat().map(nadador => ({
+          nome_nadador: nadador.nome || nadador.nome_nadador || 'N/D',
+          melhor_tempo: nadador.melhor_tempo || 'N/D',
+          raia: nadador.raia || 'N/D',
+          categoria: nadador.categoria || 'N/D',
+          equipe: nadador.equipe || 'N/D'
+        }))
+      ))
+    };
+  });
 
   // Definição do conteúdo do PDF com informações do evento em maiúsculas
   const docDefinition = {
@@ -82,18 +86,29 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
             table: {
               dontBreakRows: true, // Impede quebra da tabela entre páginas
               // Adicionada propriedade widths com valores fixos para padronizar o tamanho
-              widths: [25, 150, 100, 100, 80], // Ajustado: sem o espaço para a coluna 'Série'
+              widths: prova.isRevezamento
+                ? [25, 150, 80]
+                : [25, 150, 100, 100, 80],
               body: [
-                // Cabeçalho com a nova ordem de colunas
-                ['Raia', 'Nome', 'Categoria', 'Equipe', 'Tempo'],
+                prova.isRevezamento
+                  ? ['Raia', 'Equipe', 'Tempo']
+                  : ['Raia', 'Nome', 'Categoria', 'Equipe', 'Tempo'],
                 // Preenche cada linha com os dados
-                ...bateria.map(nadador => [
-                  nadador.raia,
-                  nadador.nome_nadador,
-                  nadador.categoria,
-                  nadador.equipe,
-                  nadador.melhor_tempo
-                ])
+                ...(
+                  prova.isRevezamento
+                    ? bateria.map(nadador => [
+                        nadador.raia,
+                        nadador.equipe,
+                        nadador.melhor_tempo
+                      ])
+                    : bateria.map(nadador => [
+                        nadador.raia,
+                        nadador.nome_nadador,
+                        nadador.categoria,
+                        nadador.equipe,
+                        nadador.melhor_tempo
+                      ])
+                )
               ]
             },
             layout: 'lightHorizontalLines',

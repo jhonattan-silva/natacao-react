@@ -125,108 +125,106 @@ const Balizamento = () => {
             alert("Por favor, selecione um evento.");
             return;
         }
-        try { //tendo selecionado um evento...
-            const response = await api.get(`${apiInscritos}/${eventoId}`); //api+idEvento
-            const originais = response.data; // Captura os inscritos
-            setInscritosOriginais(originais); // Salva os inscritos originais para o relatório 
-
-            // Agrupar inscrições pela prova, armazenando também a ordem
-            const nadadoresPorProva = {};
-            originais.forEach(inscrito => {
-                if (!nadadoresPorProva[inscrito.nome_prova]) {
-                    nadadoresPorProva[inscrito.nome_prova] = { ordem: inscrito.ordem, inscritos: [] };
-                }
-                nadadoresPorProva[inscrito.nome_prova].inscritos.push(inscrito);
-            });
-
-            // Transformar em array ordenado pela ordem da prova
-            const provasOrdenadas = Object.keys(nadadoresPorProva)
+        try {
+            // 🔹 Buscar nadadores individuais
+            const response = await api.get(`${apiInscritos}/${eventoId}`);
+            const originais = response.data;
+            setInscritosOriginais(originais);
+    
+            // 🔹 Buscar equipes inscritas em revezamentos
+            const responseRevezamentos = await api.get(`/balizamento/listarRevezamentos/${eventoId}`);
+            const inscritosRevezamento = responseRevezamentos.data;
+    
+            // 🔹 Agrupar nadadores e equipes por prova
+            const provasMap = {};
+    
+            const agruparPorProva = (lista, tipo) => {
+                lista.forEach(inscrito => {
+                    const key = inscrito.nome_prova;
+                    if (!provasMap[key]) {
+                        provasMap[key] = { ordem: inscrito.ordem, nadadores: [], equipes: [] };
+                    }
+                    provasMap[key][tipo].push(inscrito);
+                });
+            };
+    
+            agruparPorProva(originais, "nadadores");
+            agruparPorProva(inscritosRevezamento, "equipes");
+    
+            // 🔹 Transformar e ordenar provas
+            const provasOrdenadas = Object.keys(provasMap)
                 .map(prova => ({
                     nome_prova: prova,
-                    ordem: nadadoresPorProva[prova].ordem,
-                    inscritos: nadadoresPorProva[prova].inscritos
+                    ordem: provasMap[prova].ordem,
+                    nadadores: provasMap[prova].nadadores,
+                    equipes: provasMap[prova].equipes
                 }))
                 .sort((a, b) => a.ordem - b.ordem);
-
-            // Processar cada prova conforme a ordem
-            const resultado = {}; // Objeto para armazenar o balizamento
-            provasOrdenadas.forEach(item => { // Para cada prova
-                // Atualizado: extrai o eventos_provas_id conforme retornado pelo backend
-                const eventosProvasId = item.inscritos[0]?.eventos_provas_id;
-                const todosNadadores = ordenarNadadoresPorTempo(item.inscritos); // Ordena os nadadores por tempo
-
-                // Passa a quantidade de raias definida no evento
-                const baterias = dividirEmBaterias(todosNadadores.length, etapa.quantidade_raias);
-
+    
+            // 🔹 Processar cada prova
+            const resultado = {};
+            provasOrdenadas.forEach(prova => {
+                const eventosProvasId = prova.nadadores[0]?.eventos_provas_id || prova.equipes[0]?.eventos_provas_id;
+    
+                // 🔹 Ordenar nadadores e equipes por tempo
+                const nadadoresOrdenados = ordenarNadadoresPorTempo(prova.nadadores);
+                const equipesOrdenadas = ordenarNadadoresPorTempo(prova.equipes); // Mesma função usada
+    
+                // 🔹 Criar baterias
+                const totalParticipantes = nadadoresOrdenados.length + equipesOrdenadas.length;
+                const baterias = dividirEmBaterias(totalParticipantes, etapa.quantidade_raias);
+    
                 if (!Array.isArray(baterias)) {
                     console.error('Erro: baterias não é um array válido!', baterias);
                     return;
                 }
-
-                resultado[item.nome_prova] = baterias.map(qtdNadadores =>
-                    distribuirNadadoresNasRaias(todosNadadores.splice(0, qtdNadadores), eventosProvasId, etapa.quantidade_raias)
-                );
+    
+                resultado[prova.nome_prova] = baterias.map(qtdParticipantes => {
+                    const nadadoresGrupo = nadadoresOrdenados.splice(0, qtdParticipantes);
+                    const equipesGrupo = equipesOrdenadas.splice(0, qtdParticipantes - nadadoresGrupo.length);
+                    return distribuirNasRaias([...nadadoresGrupo, ...equipesGrupo], eventosProvasId, etapa.quantidade_raias);
+                });
             });
-
+    
             setInscritos(resultado);
             balizamentoPDF(resultado, etapa);
             gerarFilipetas(resultado);
-
-            // Agora busca os inscritos por equipe e gera o relatório com ambos os conjuntos
-            const respEquipe = await api.get(`${apiInscritosUnicosEquipe}`, { params: { eventoId } });
-            setInscritosEquipe(respEquipe.data);
-
-            const respEquipeSexo = await api.get(apiInscritosEquipeSexo, { params: { eventoId } });
-            setInscritosEquipeSexo(respEquipeSexo.data);
-
-            // Passe os três conjuntos para a função (orginais, dados brutos e equipe/sexo)
-            relatorioInscritosPDF(originais, respEquipe.data, respEquipeSexo.data);
-
-            setBalizamentoGerado(true); // Indica que o balizamento foi gerado
+    
+            setBalizamentoGerado(true);
         } catch (error) {
             console.error('Erro ao buscar inscritos:', error);
         }
     };
-
-    // Função para distribuir os nadadores nas raias de acordo com a classificação
-    // Atualizado: renomear parâmetro para eventosProvasId e usá-lo ao atribuir o campo correto
-    const distribuirNadadoresNasRaias = (nadadores, eventosProvasId, quantidadeRaias) => {
-        // Função auxiliar para tratar tempos zero
-        const getTimeValue = (swimmer) => {
-            const t = timeToMilliseconds(swimmer.melhor_tempo);
+    
+    // 🔹 Função para distribuir nadadores e equipes nas raias
+    const distribuirNasRaias = (participantes, eventosProvasId, quantidadeRaias) => {
+        const getTimeValue = (p) => {
+            const t = timeToMilliseconds(p.melhor_tempo);
             return t === 0 ? Number.MAX_SAFE_INTEGER : t;
         };
-
-        // Ordenar nadadores usando a função auxiliar: nadadores com tempo 0 ficarão por último
-        const nadadoresOrdenados = [...nadadores].sort((a, b) => getTimeValue(a) - getTimeValue(b));
-
-        // Criar a ordem das raias: o nadador mais rápido vai para a raia central, os próximos para os lados
+    
+        const ordenados = [...participantes].sort((a, b) => getTimeValue(a) - getTimeValue(b));
+    
         const totalLanes = quantidadeRaias;
         let laneOrder = [];
         const center = Math.ceil(totalLanes / 2);
         laneOrder.push(center);
         let offset = 1;
-        while(laneOrder.length < totalLanes) {
-            if (center + offset <= totalLanes) {
-                laneOrder.push(center + offset);
-            }
-            if (laneOrder.length < totalLanes && center - offset >= 1) {
-                laneOrder.push(center - offset);
-            }
+        while (laneOrder.length < totalLanes) {
+            if (center + offset <= totalLanes) laneOrder.push(center + offset);
+            if (laneOrder.length < totalLanes && center - offset >= 1) laneOrder.push(center - offset);
             offset++;
         }
-        // Se houver menos nadadores que raias, use apenas as primeiras posições
-        const usedLanes = laneOrder.slice(0, nadadoresOrdenados.length);
-
-        // Mapear os nadadores para as raias definidas
-        const distribuicao = nadadoresOrdenados.map((nadador, index) => ({
-            ...nadador,
+    
+        const usedLanes = laneOrder.slice(0, ordenados.length);
+    
+        return ordenados.map((p, index) => ({
+            ...p,
             raia: usedLanes[index],
             eventos_provas_id: eventosProvasId
-        }));
-
-        return distribuicao.sort((a, b) => a.raia - b.raia);
+        })).sort((a, b) => a.raia - b.raia);
     };
+    
 
     // Salvar balizamento no banco
     const salvarBalizamento = async () => {
