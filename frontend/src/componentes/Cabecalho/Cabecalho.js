@@ -31,6 +31,7 @@ const Cabecalho = () => {
                 <nav className={menuOpen ? style.open : ''}>
                     <CabecalhoLink url='/Resultados' onClick={() => handleLinkClick('/Resultados')}> Resultados </CabecalhoLink>
                     <CabecalhoLink url='/Rankings' onClick={() => handleLinkClick('/Rankings')}> Rankings </CabecalhoLink>
+                    <CabecalhoLink url='/Balizamentos' onClick={() => handleLinkClick('/Balizamentos')}> Balizamentos </CabecalhoLink>
                 </nav>
             </div>
             <div className={style.right}>

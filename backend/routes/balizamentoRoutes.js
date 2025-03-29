@@ -226,7 +226,6 @@ router.post('/salvarBalizamento', async (req, res) => {
             throw new Error(`Dados incompletos para a prova: ${prova}`);
           }
 
-          // Alterado: usar "eventos_provas_id" conforme a estrutura da tabela "baterias"
           const [result] = await connection.query(
             `INSERT INTO baterias (descricao, eventos_id, eventos_provas_id) VALUES (?, ?, ?)`,
             [`Série ${bateriaIndex + 1}`, eventoId, eventos_provas_id]
@@ -241,7 +240,7 @@ router.post('/salvarBalizamento', async (req, res) => {
               throw new Error(`Dados incompletos para nadador na bateria ${bateriaId}.`);
             }
 
-            // Skip if inscricao_id is 0 (revezamento)
+            // ignora inscricao_id é 0 (é revezamento)
             if (inscricao_id && inscricao_id > 0) {
               await connection.query(
                 `INSERT INTO baterias_inscricoes (baterias_id, inscricoes_id, piscina, raia) VALUES (?, ?, ?, ?)`,
@@ -261,9 +260,14 @@ router.post('/salvarBalizamento', async (req, res) => {
         continue; // Ignora esta prova e continua com as demais
       }
     }
-
+    
+    // atualiza a flag teve_balizamento para 1
+    await connection.query(
+      "UPDATE eventos SET teve_balizamento = 1 WHERE id = ?",
+      [eventoId]
+    );
     await connection.commit();
-    // Alterado: mensagem de retorno diferenciando garantidamente provas ignoradas
+
     res.status(200).json({ 
       success: true, 
       message: ignoredProvas.length 

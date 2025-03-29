@@ -4,6 +4,10 @@
     align-items: center;
     flex-wrap: wrap;
     justify-content: center;
+
+    /* Garante que o conteúdo se ajuste corretamente */
+    width: 100%;
+    min-height: auto;
 }
 
 .container h1 {
@@ -24,7 +28,9 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 16px;/* distancia entre os cards */
-    justify-content: center; 
+    
+    /* Garante que os cards não fiquem escondidos */
+    align-items: stretch;
+    gap: 16px;
+    width: 100%;
 }
-

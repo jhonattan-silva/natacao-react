@@ -118,6 +118,7 @@ const resultadosEntrada = require('./routes/resultadosEntradaRoutes');
 const resultadosRoutes = require('./routes/resultadosRoutes');
 const pontuacoesRoutes = require('./routes/pontuacoesRoutes');
 const estatisticasRoutes = require('./routes/estatisticasRoutes');
+const balizamentoExibicaoRoutes = require('./routes/balizamentoExibicaoRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/balizamento', balizamentoRoutes);
@@ -133,6 +134,7 @@ app.use('/api/resultadosEntrada', resultadosEntrada);
 app.use('/api/resultados', resultadosRoutes);
 app.use('/api/pontuacoes', pontuacoesRoutes);
 app.use('/api/estatisticas', estatisticasRoutes);
+app.use('/api/balizamentoExibicao', balizamentoExibicaoRoutes);
 
 // Servir o frontend em produção
 if (process.env.NODE_ENV === 'production') {

@@ -255,6 +255,12 @@ const Usuarios = () => {
             return;
         }
 
+        // Verifica se o perfil de treinador está selecionado sem equipe associada
+        if (perfisSelecionados.includes(perfilEspecificoId) && !equipeSelecionada) {
+            alert('É necessário Vincular uma equipe ao treinador');
+            return;
+        }
+
         const usuarioDados = {
             nome: nomeUsuario,
             cpf: cpf,

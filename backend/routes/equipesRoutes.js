@@ -21,10 +21,6 @@ router.get('/listarEquipes', async (req, res) => {
 router.post('/cadastrarEquipe', async (req, res) => {
   const { nome, cidade, treinadorId } = req.body;
 
-  if (!treinadorId) {
-    return res.status(400).send('Treinador não foi selecionado');
-  }
-
   try {
     // Iniciar uma transação para garantir que ambas as operações sejam feitas
     await db.query('START TRANSACTION');
@@ -33,11 +29,13 @@ router.post('/cadastrarEquipe', async (req, res) => {
     const [resultEquipe] = await db.query('INSERT INTO equipes (nome, cidade) VALUES (?, ?)', [nome, cidade]);
     const equipeId = resultEquipe.insertId;
 
-    // Insere o treinador (usuario_id) na tabela usuarios_equipes com a equipe recém-criada
-    const [resultUsuarioEquipe] = await db.query(
-      'INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)',
-      [treinadorId, equipeId]
-    );
+    // Se um treinador foi informado, cria o vínculo na tabela usuarios_equipes
+    if (treinadorId) {
+      await db.query(
+        'INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)',
+        [treinadorId, equipeId]
+      );
+    }
 
     // Confirma a transação se tudo ocorrer bem
     await db.query('COMMIT');
@@ -77,9 +75,13 @@ router.put('/atualizarEquipe/:id', async (req, res) => {
     // Atualiza a equipe
     await db.query('UPDATE equipes SET nome = ?, cidade = ? WHERE id = ?', [nome, cidade, equipeId]);
 
-    // Atualiza o treinador (usuario_id) na tabela usuarios_equipes
+    // Remove vínculo atual
     await db.query('DELETE FROM usuarios_equipes WHERE equipes_id = ?', [equipeId]);
-    await db.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [treinadorId, equipeId]);
+
+    // Se for informado um treinador válido, insere novo vínculo
+    if (treinadorId) {
+      await db.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [treinadorId, equipeId]);
+    }
 
     // Confirma a transação se tudo ocorrer bem
     await db.query('COMMIT');

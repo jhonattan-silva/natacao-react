@@ -130,11 +130,11 @@ const Balizamento = () => {
             const originais = response.data;
             setInscritosOriginais(originais);
 
-            // NOVO: Buscar inscritos por equipe (Dados Brutos)
+            // Buscar inscritos por equipe (Dados Brutos)
             const responseEquipe = await api.get(`${apiInscritosEquipe}?eventoId=${eventoId}`);
             setInscritosEquipe(responseEquipe.data);
 
-            // NOVO: Buscar inscritos por equipe detalhados (por Sexo e Revezamentos)
+            // Buscar inscritos por equipe detalhados (por Sexo e Revezamentos)
             const responseEquipeSexo = await api.get(`${apiInscritosEquipeSexo}?eventoId=${eventoId}`);
             setInscritosEquipeSexo(responseEquipeSexo.data);
 

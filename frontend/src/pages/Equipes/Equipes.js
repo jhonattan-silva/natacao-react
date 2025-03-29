@@ -136,7 +136,7 @@ const Equipes = () => {
     evento.preventDefault();
 
     // Validações
-    if (!nomeEquipe || !cidadeEquipe || !treinadorEquipe) {
+    if (!nomeEquipe || !cidadeEquipe) {
       alert('Por favor, preencha todos os campos obrigatórios.');
       return; // Interrompe o processo de salvamento se houver campos vazios
     }
@@ -144,7 +144,7 @@ const Equipes = () => {
     const equipeDados = {
       nome: nomeEquipe,
       cidade: cidadeEquipe,
-      treinadorId: treinadorEquipe
+      treinadorId: treinadorEquipe ? treinadorEquipe : null
     };
 
     try {

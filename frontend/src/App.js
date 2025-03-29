@@ -12,6 +12,7 @@ import ResultadosEntrada from "./pages/ResultadosEntrada/ResultadosEntrada";
 import Resultados from "./pages/Resultados/Resultados";
 import ProtecaoRota from "./componentes/ProtecaoRota";
 import Login from "./pages/Login/Login"; // Página de login para autenticação
+import Balizamentos from "./pages/Balizamentos/Balizamentos";
 
 
 const App = () => {
@@ -24,6 +25,8 @@ const App = () => {
                 <Route path="/resultados" element={<Resultados />} />
                 <Route path="/resultados/:eventoId" element={<Resultados />} /> {/* alterado de :provaId para :eventoId */}
                 <Route path="/rankings" element={<Rankings />}/>
+                <Route path="/balizamentos" element={<Balizamentos />}/>
+                <Route path="/balizamentos/:eventoId" element={<Balizamentos />} /> {/* alterado de :provaId para :eventoId */}
                 
                 {/* Rotas protegidas */}
                 <Route
