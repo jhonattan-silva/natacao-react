@@ -294,7 +294,7 @@ const Balizamento = () => {
                 )}
                 {Object.keys(inscritos).map(prova => (
                     <div key={prova}>
-                        <h2>{`Balizamento - ${prova.replace(/\bF\b/, 'FEMININO').replace(/\bM\b/, 'MASCULINO')}`}</h2>
+                        <h2>{`Balizamento - ${prova.replace(/\bF\b/, 'FEMININO').replace(/\bM\b/, 'MASCULINO').split(' ').slice(1).join(' ')} ${prova.split(' ')[0]}`}</h2>
                         {inscritos[prova].map((bateria, index) => (
                             <div key={index}>
                                 <h3>{`Série ${index + 1}`}</h3>
