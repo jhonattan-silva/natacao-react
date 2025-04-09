@@ -36,7 +36,7 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
     }
 
     try {
-// Buscar provas associadas ao evento específico
+        // Buscar provas associadas ao evento específico
         const [provas] = await db.query(`
             SELECT p.*, ep.*
             FROM eventos_provas ep
@@ -45,10 +45,10 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
             ORDER BY ep.ordem
         `, [eventoId]);
 
-// Buscar nadadores pelo equipes_id
+        // Buscar nadadores pelo equipes_id
         const [nadadores] = await db.query('SELECT * FROM nadadores WHERE equipes_id = ?', [equipeId]);
 
-// Retorna os dados no formato esperado pelo frontend
+        // Retorna os dados no formato esperado pelo frontend
         res.json({ provas, nadadores });
     } catch (error) {
         console.error('Erro ao buscar provas e nadadores:', error);
@@ -107,14 +107,25 @@ router.post('/salvarInscricao', async (req, res) => {
         return res.status(400).json({ message: 'Nenhuma inscrição enviada.' });
     }
 
-    const eventoId = inscricoes[0]?.eventoId;
-    const equipeId = inscricoes[0]?.equipeId;
+    const eventoId = inscricoes[0]?.eventoId; // EVENTO
+    const equipeId = inscricoes[0]?.equipeId; // EQUIPE
 
     if (!eventoId) {
         return res.status(400).json({ message: 'Evento ID é necessário para salvar inscrições.' });
     }
     if (!equipeId) {
         return res.status(400).json({ message: 'Equipe ID é necessário para salvar inscrições.' });
+    }
+
+    // Validação para impedir que o mesmo nadador seja inscrito em mais de duas provas
+    const inscricoesIndividuais = inscricoes.filter(inscricao => inscricao.nadadorId);
+    const quantidadePorNadador = {};
+
+    for (const inscricao of inscricoesIndividuais) {
+        quantidadePorNadador[inscricao.nadadorId] = (quantidadePorNadador[inscricao.nadadorId] || 0) + 1;
+        if (quantidadePorNadador[inscricao.nadadorId] > 2) {
+            return res.status(400).json({ message: 'Um nadador não pode ser inscrito em mais de duas provas.' });
+        }
     }
 
     const connection = await db.getConnection();
@@ -140,9 +151,9 @@ router.post('/salvarInscricao', async (req, res) => {
 
         // Inserir novas inscrições individuais, evitando duplicações
         const queryIndividual = `
-            INSERT INTO inscricoes (nadadores_id, eventos_id, eventos_provas_id)
+            INSERT INTO inscricoes (nadadores_id, eventos_id, eventos_provas_id, minutos, segundos, centesimos)
             SELECT * FROM (
-                SELECT ? AS nadadores_id, ? AS eventos_id, ? AS eventos_provas_id
+                SELECT ? AS nadadores_id, ? AS eventos_id, ? AS eventos_provas_id, ? AS minutos, ? AS segundos, ? AS centesimos
             ) AS tmp
             WHERE NOT EXISTS (
                 SELECT 1 FROM inscricoes 
@@ -164,16 +175,29 @@ router.post('/salvarInscricao', async (req, res) => {
                 AND equipes_id = ?
             ) LIMIT 1;`;
 
+            // Percorrer as inscrições e inserir no banco de dados
         for (const inscricao of inscricoes) {
             if (inscricao.nadadorId) { // Inscrição individual
+                // Verificar se o nadador tem record na prova específica
+                const [record] = await connection.query(
+                    `SELECT minutos, segundos, centesimos 
+                     FROM records 
+                     WHERE Nadadores_id = ? AND provas_id = ?`,
+                    [inscricao.nadadorId, inscricao.provaId]
+                );
+
+                const minutos = record[0]?.minutos || null;
+                const segundos = record[0]?.segundos || null;
+                const centesimos = record[0]?.centesimos || null;
+
                 await connection.query(queryIndividual, [
-                    inscricao.nadadorId, eventoId, inscricao.provaId, 
+                    inscricao.nadadorId, eventoId, inscricao.provaId, minutos, segundos, centesimos,
                     inscricao.nadadorId, eventoId, inscricao.provaId
                 ]);
             }
             if (inscricao.equipeId && !inscricao.nadadorId) { // Inscrição em revezamento
                 await connection.query(queryRevezamento, [
-                    eventoId, inscricao.provaId, inscricao.equipeId, 
+                    eventoId, inscricao.provaId, inscricao.equipeId,
                     eventoId, inscricao.provaId, inscricao.equipeId
                 ]);
             }

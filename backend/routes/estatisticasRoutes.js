@@ -19,9 +19,11 @@ router.get('/inscricoesEquipe/:equipesId', async (req, res) => {
 
         // Consulta para obter o total de inscrições de revezamentos
         const [totalRevezamentos] = await db.execute(`
-            SELECT COUNT(id) AS total_revezamentos
-            FROM revezamentos_inscricoes
-            WHERE equipes_id = ?
+            SELECT COUNT(ri.id) AS total_revezamentos
+            FROM revezamentos_inscricoes ri
+            JOIN eventos_provas ep ON ri.eventos_provas_id = ep.id
+            JOIN eventos ev ON ep.eventos_id = ev.id
+            WHERE ri.equipes_id = ? AND ev.inscricao_aberta = 1
         `, [equipesId]);
 
         // Consulta para obter a lista de nadadores e suas provas
@@ -43,7 +45,7 @@ router.get('/inscricoesEquipe/:equipesId', async (req, res) => {
             JOIN eventos_provas ep ON ri.eventos_provas_id = ep.id
             JOIN provas p ON ep.provas_id = p.id
             JOIN eventos ev ON ep.eventos_id = ev.id
-            WHERE ri.equipes_id = ? AND ev.inscricao_aberta = 1;
+            WHERE ri.equipes_id = 19 AND ev.inscricao_aberta = 1;
         `, [equipesId]);
 
         // Agrupar nadadores e suas provas com o sexo disponível

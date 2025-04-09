@@ -9,6 +9,28 @@ import Abas from '../../componentes/Abas/Abas';
 import Card from '../../componentes/Card/Card';
 import { formataData } from '../../servicos/functions';
 
+/*
+*
+* Componente Balizamentos
+* Responsável por exibir os balizamentos de um evento específico ou uma lista de eventos com balizamentos (PÁGINA PUBLICA).
+* Utiliza hooks para gerenciar estado e efeitos colaterais, além de componentes reutilizáveis para exibir dados.
+*
+* Dependências: React, React Router, Axios (api), CSS Modules (estilização).
+*
+* Estrutura de dados esperada:
+* - dados: Array de objetos contendo informações sobre balizamentos, provas e nadadores.
+* - balizamentosBanco: Array de objetos contendo informações sobre balizamentos do banco.
+* - eventosComBalizamentos: Array de objetos contendo informações sobre eventos com balizamentos.
+*
+* - erro: String para armazenar mensagens de erro durante as requisições.
+* - loading: Boolean para indicar se os dados estão sendo carregados.
+*
+* - eventoId: ID do evento obtido a partir da URL.
+* - navigate: Função para navegar entre rotas.
+*
+* - fetchBalizamentos: Função assíncrona para buscar balizamentos de um evento específico.
+*/
+
 const Balizamentos = () => {
   const { eventoId } = useParams();
   const navigate = useNavigate();

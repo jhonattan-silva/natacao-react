@@ -2,21 +2,15 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-// Atualiza a função auxiliar para converter o tempo para segundos com frações
-function formatTime(timeStr) {
-    const parts = timeStr.split(':');
-    const secondsParts = parts[2].split('.');
-    
-    let hours = parseInt(parts[0], 10);
-    let minutes = parseInt(parts[1], 10);
-    let seconds = parseInt(secondsParts[0], 10);
-    let centiseconds = parseInt(secondsParts[1] || '00', 10); // Pega os centésimos de segundo
-
-    // Converte tudo para segundos
-    const totalSeconds = (hours * 3600) + (minutes * 60) + seconds + (centiseconds / 100);
-    
-    return totalSeconds.toFixed(2); // Retorna o tempo em segundos com duas casas decimais
-}
+/****
+ * listarEventosComResultados - Rota para listar eventos com resultados - Eventos que já tiveram resultados digitados
+ * resultadosEvento - Rota para listar resultados de um evento específico - Tempos de cada prova, bateria e nadador por evento
+ * resultadosPorCategoria - Rota para listar resultados por categoria e prova - Ranking da prova por categoria e sexo
+ * resultadosAbsoluto - Rota para listar resultados absolutos (sem categoria) - Ranking geral da prova por sexo
+ * fecharClassificacao - Rota para fechar a classificação de um evento - Depois de todos os resultados digitados, gera a classificação final
+ * listarDoBanco - Rota para listar resultados do banco de dados - Mostra a classificação final do evento
+ * atualizar-recordes - Rota para atualizar recordes individuais e de revezamento - Inclui/Atualiza os recordes de cada nadador/equipe
+ */
 
 //Página inicial, sem evento selecionado
 router.get('/listarEventosComResultados', async (req, res) => {
@@ -33,6 +27,7 @@ router.get('/listarEventosComResultados', async (req, res) => {
   }
 });
 
+// Rota para listar resultados de um evento específico
 router.get('/resultadosEvento/:eventoId', async (req, res) => {
   const { eventoId } = req.params;
   try {
@@ -168,6 +163,7 @@ router.get('/resultadosEvento/:eventoId', async (req, res) => {
   }
 });
 
+// Rota para listar resultados por categoria e prova
 router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
     const { eventoId } = req.params;
 
@@ -258,6 +254,8 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
     }
 });
 
+
+// Rota para listar resultados absolutos (sem categoria)
 router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
     const { eventoId } = req.params;
 
@@ -281,8 +279,8 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
               p.sexo AS sexo_prova,
               n.sexo AS sexo_nadador,
               cat.nome AS categoria_nadador,  
-              c.pontuacao_individual,  -- 👈 Adicionamos a pontuação individual
-              c.pontuacao_equipe,      -- 👈 Adicionamos a pontuação da equipe
+              c.pontuacao_individual, 
+              c.pontuacao_equipe,
               ep.ordem  
           FROM classificacoes c
           JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
@@ -349,6 +347,8 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
     }
 });
 
+
+// Rota para fechar a classificação de um evento
 router.post('/fecharClassificacao/:eventoId', async (req, res) => {
   const { eventoId } = req.params;
   let connection;
@@ -441,6 +441,7 @@ router.post('/fecharClassificacao/:eventoId', async (req, res) => {
   }
 });
 
+// Rota para listar resultados do banco de dados
 router.get('/listarDoBanco/:eventoId', async (req, res) => {
   const { eventoId } = req.params;
 
@@ -530,11 +531,13 @@ const calcularTempoEmCentesimos = (minutos, segundos, centesimos) => {
   return minutos * 6000 + segundos * 100 + centesimos;
 };
 
+
+// Rota para atualizar recordes individuais e de revezamento
 router.post('/atualizar-recordes/:torneioId', async (req, res) => {
   try {
       const { torneioId } = req.params;
 
-      // 1️⃣ Buscar tempos individuais (excluindo revezamentos)
+      // Buscar tempos individuais (excluindo revezamentos)
       const [resultadosIndividuais] = await db.execute(
           `SELECT r.nadadores_id, ep.provas_id, e.torneios_id, r.minutos, r.segundos, r.centesimos, e.id AS eventos_id
            FROM resultados r

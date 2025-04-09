@@ -22,7 +22,7 @@ router.get('/listarInscritos/:eventoId', async (req, res) => {
     const [rows] = await db.query(`
       SELECT 
           p.id AS prova_id, 
-          CONCAT(p.estilo, ' ', p.distancia, 'm ', ' ', p.sexo) AS nome_prova,
+          CONCAT(p.distancia, ' METROS ', p.estilo, ' ', p.sexo) AS nome_prova,
           ep.ordem,
           n.nome AS nome,
           n.data_nasc,
@@ -119,7 +119,7 @@ router.get('/listarInscritosEquipeSexo', async (req, res) => {
         COUNT(DISTINCT i.nadadores_id) AS total_atletas,
         (
           COUNT(DISTINCT CASE 
-            WHEN LOWER(CONCAT(p.estilo, ' ', p.distancia, 'm ', ' ', p.sexo)) LIKE '%revezamento%' 
+            WHEN LOWER(CONCAT(p.distancia, ' METROS ', p.estilo, ' ', p.sexo)) LIKE '%revezamento%' 
             THEN i.nadadores_id 
           END)
           + IFNULL((
@@ -158,12 +158,18 @@ router.get('/listarRevezamentos/:eventoId', async (req, res) => {
         const [rows] = await db.query(`
             SELECT
                 p.id AS prova_id,
-                CONCAT(p.estilo, ' ', p.distancia, 'm ', ' ', p.sexo) AS nome_prova,
+                CONCAT(p.distancia, ' METROS ', p.estilo, ' ', p.sexo) AS nome_prova,
                 ep.ordem,
-                e.nome AS nome, -- Reusing the "nome" field for the team
+                e.nome AS nome,
                 '' AS data_nasc,
                 0 AS nadador_id,
-                '00:00:00' AS melhor_tempo,
+                COALESCE(
+                    CONCAT(
+                        LPAD(re.minutos, 2, '0'), ':',
+                        LPAD(re.segundos, 2, '0'), ':',
+                        LPAD(re.centesimos, 2, '0')
+                    ), '00:00:00'
+                ) AS melhor_tempo,
                 0 AS inscricao_id,
                 r.eventos_provas_id AS eventos_provas_id,
                 e.nome AS equipe,
@@ -173,6 +179,7 @@ router.get('/listarRevezamentos/:eventoId', async (req, res) => {
             INNER JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
             INNER JOIN provas p ON ep.provas_id = p.id
             INNER JOIN equipes e ON r.equipes_id = e.id
+            LEFT JOIN recordsEquipes re ON re.equipes_id = e.id AND re.provas_id = p.id
             WHERE r.eventos_id = ?
             ORDER BY ep.ordem ASC
         `, [eventoId]);

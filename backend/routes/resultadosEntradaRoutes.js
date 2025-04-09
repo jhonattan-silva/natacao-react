@@ -2,6 +2,19 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
+// Função auxiliar para converter "mm:ss:cc" em objeto { minutos, segundos, centesimos }
+function parseTime(timeStr) {
+    if (!timeStr || typeof timeStr !== 'string') return { minutos: 0, segundos: 0, centesimos: 0 };
+    const parts = timeStr.split(':');
+    if (parts.length < 3) return { minutos: 0, segundos: 0, centesimos: 0 };
+    return {
+        minutos: parseInt(parts[0], 10),
+        segundos: parseInt(parts[1], 10),
+        centesimos: parseInt(parts[2], 10)
+    };
+}
+
+// Listar todos os eventos
 router.get('/listarEventos', async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM eventos where torneios_id = 3');
@@ -16,6 +29,7 @@ router.get('/listarEventos', async (req, res) => {
     }
 })
 
+// Listar as provas de um evento específico
 router.get('/listarProvasEvento/:eventoId', async (req, res) => {
     const { eventoId } = req.params;
 
@@ -46,6 +60,7 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
     }
 });
 
+//listar as baterias de uma prova específica
 router.get('/listarBateriasProva/:provaId', async (req, res) => {
     const { provaId } = req.params;
     const { eventoId } = req.query; // Recebe o eventoId via query
@@ -203,22 +218,14 @@ router.get('/listarBateriasProva/:provaId', async (req, res) => {
     }
 });
 
-// Nova função auxiliar para converter "mm:ss:cc" em objeto { minutos, segundos, centesimos }
-function parseTime(timeStr) {
-    if (!timeStr || typeof timeStr !== 'string') return { minutos: 0, segundos: 0, centesimos: 0 };
-    const parts = timeStr.split(':');
-    if (parts.length < 3) return { minutos: 0, segundos: 0, centesimos: 0 };
-    return {
-        minutos: parseInt(parts[0], 10),
-        segundos: parseInt(parts[1], 10),
-        centesimos: parseInt(parts[2], 10)
-    };
-}
 
+// Salvar resultados de nadadores e equipes
 router.post('/salvarResultados', async (req, res) => {
     const { provaId, etapaId, dados } = req.body;
+    console.log("Entrou no endpoint /salvarResultados");
 
     if (!provaId || !dados || !Array.isArray(dados)) {
+        console.error("Erro: Prova ID ou dados inválidos.");
         return res.status(400).json({
             success: false,
             message: 'Prova ID e dados das Séries são obrigatórios.',
@@ -230,24 +237,38 @@ router.post('/salvarResultados', async (req, res) => {
     try {
         await connection.beginTransaction();
 
+        console.log(`Buscando se a prova ${provaId} é revezamento...`);
         const [provaRows] = await connection.query(
-            'SELECT eh_revezamento FROM provas WHERE id = ?',
+            `SELECT p.eh_revezamento 
+             FROM eventos_provas ep
+             JOIN provas p ON ep.provas_id = p.id
+             WHERE ep.id = ?`,
             [provaId]
         );
-        const ehRevezamento = provaRows.length > 0 ? Boolean(provaRows[0].eh_revezamento) : false;
+
+        if (provaRows.length === 0) {
+            console.error(`Erro: Evento_Prova com ID ${provaId} não encontrado.`);
+            throw new Error('Evento_Prova não encontrado.');
+        }
+
+        const ehRevezamento = Boolean(provaRows[0].eh_revezamento);
+        console.log(`Prova ${provaId} é revezamento: ${ehRevezamento}`);
 
         for (const bateria of dados) {
             const { nadadores, equipes } = bateria;
-            
+
             if ((!nadadores || nadadores.length === 0) && (!equipes || equipes.length === 0)) {
+                console.error("Erro: Dados de nadadores ou equipes ausentes ou vazios.");
                 throw new Error('Dados de nadadores ou equipes estão ausentes ou vazios.');
             }
-            
+
             if (nadadores) {
+                console.log(`Processando nadadores da bateria...`);
                 for (const nadador of nadadores) {
                     const { id: nadadorId, tempo, status, equipeId } = nadador;
                     
                     if (!nadadorId || tempo === undefined || !equipeId) {
+                        console.error('Erro: ID do nadador, equipe e tempo são obrigatórios.');
                         throw new Error('ID do nadador, equipe e tempo são obrigatórios.');
                     }
                     
@@ -271,44 +292,51 @@ router.post('/salvarResultados', async (req, res) => {
                     }
                 }
             }
-            
-            if (ehRevezamento) { 
-                console.log("ENTROU NO REVEZAMENTO");
-                
+
+            if (ehRevezamento) {
+                console.log("Processando resultados de revezamento...");
                 for (const equipe of equipes) {
                     const { id: equipeId, tempo, status } = equipe;
-                    
+
                     if (!equipeId || tempo === undefined) {
+                        console.error('Erro: ID da equipe e tempo são obrigatórios.');
                         throw new Error('ID da equipe e tempo são obrigatórios.');
                     }
-                    
-                    if (!ehRevezamento) {
-                        throw new Error('Só é permitido inserir resultados sem nadadores_id se for revezamento.');
-                    }
-                    
-                    const parsedTime = parseTime(tempo);
-                    const [existingRows] = await connection.query(
-                        'SELECT id FROM resultados WHERE equipes_id = ? AND eventos_provas_id = ? LIMIT 1',
-                        [equipeId, provaId]
-                    );
 
-                    if (existingRows.length > 0) {
-                        await connection.query(
-                            'UPDATE resultados SET minutos = ?, segundos = ?, centesimos = ?, status = ? WHERE id = ?',
-                            [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, status, existingRows[0].id]
+                    const parsedTime = parseTime(tempo);
+                    console.log(`Equipe ID: ${equipeId}, Tempo: ${tempo}, Status: ${status}`);
+
+                    try {
+                        const [existingRows] = await connection.query(
+                            'SELECT id FROM resultados WHERE equipes_id = ? AND eventos_provas_id = ? LIMIT 1',
+                            [equipeId, provaId]
                         );
-                    } else {
-                        await connection.query(
-                            `INSERT INTO resultados (minutos, segundos, centesimos, equipes_id, eventos_provas_id, status)
-                             VALUES (?, ?, ?, ?, ?, ?)`,
-                            [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, equipeId, provaId, status]
-                        );
+
+                        if (existingRows.length > 0) {
+                            console.log(`Atualizando resultado existente para equipe ID: ${equipeId}`);
+                            const [updateResult] = await connection.query(
+                                'UPDATE resultados SET minutos = ?, segundos = ?, centesimos = ?, status = ? WHERE id = ?',
+                                [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, status, existingRows[0].id]
+                            );
+                            console.log(`Linhas afetadas na atualização: ${updateResult.affectedRows}`);
+                        } else {
+                            console.log(`Inserindo novo resultado para equipe ID: ${equipeId}`);
+                            const [insertResult] = await connection.query(
+                                `INSERT INTO resultados (minutos, segundos, centesimos, equipes_id, eventos_provas_id, status)
+                                 VALUES (?, ?, ?, ?, ?, ?)`,
+                                [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, equipeId, provaId, status]
+                            );
+                            console.log(`Linhas afetadas na inserção: ${insertResult.affectedRows}`);
+                        }
+                    } catch (dbError) {
+                        console.error(`Erro ao processar equipe ID: ${equipeId}`, dbError.message);
+                        throw dbError;
                     }
                 }
             }
         }
 
-        const [rows] = await connection.query(
+        const [rows] = await connection.query( // Verifica se o evento já teve resultados
             'SELECT COALESCE(?, eventos_id) as eventoId FROM eventos_provas WHERE id = ?',
             [etapaId, provaId]
         );
