@@ -132,19 +132,20 @@ const Balizamento = () => {
 
             // Buscar inscritos por equipe (Dados Brutos)
             const responseEquipe = await api.get(`${apiInscritosEquipe}?eventoId=${eventoId}`);
-            setInscritosEquipe(responseEquipe.data);
+            const equipeData = responseEquipe.data;
+            setInscritosEquipe(equipeData);
 
             // Buscar inscritos por equipe detalhados (por Sexo e Revezamentos)
             const responseEquipeSexo = await api.get(`${apiInscritosEquipeSexo}?eventoId=${eventoId}`);
-            setInscritosEquipeSexo(responseEquipeSexo.data);
+            const equipeSexoData = responseEquipeSexo.data;
+            setInscritosEquipeSexo(equipeSexoData);
 
             // 🔹 Buscar equipes inscritas em revezamentos
             const responseRevezamentos = await api.get(`/balizamento/listarRevezamentos/${eventoId}`);
             const inscritosRevezamento = responseRevezamentos.data;
-    
+
             // 🔹 Agrupar nadadores e equipes por prova
             const provasMap = {};
-    
             const agruparPorProva = (lista, tipo) => {
                 lista.forEach(inscrito => {
                     const key = inscrito.nome_prova;
@@ -154,10 +155,10 @@ const Balizamento = () => {
                     provasMap[key][tipo].push(inscrito);
                 });
             };
-    
+
             agruparPorProva(originais, "nadadores");
             agruparPorProva(inscritosRevezamento, "equipes");
-    
+
             // 🔹 Transformar e ordenar provas
             const provasOrdenadas = Object.keys(provasMap)
                 .map(prova => ({
@@ -167,38 +168,41 @@ const Balizamento = () => {
                     equipes: provasMap[prova].equipes
                 }))
                 .sort((a, b) => a.ordem - b.ordem);
-    
+
             // 🔹 Processar cada prova
             const resultado = {};
             provasOrdenadas.forEach(prova => {
                 const eventosProvasId = prova.nadadores[0]?.eventos_provas_id || prova.equipes[0]?.eventos_provas_id;
-    
+
                 // 🔹 Ordenar nadadores e equipes por tempo
                 const nadadoresOrdenados = ordenarNadadoresPorTempo(prova.nadadores);
-                const equipesOrdenadas = ordenarNadadoresPorTempo(prova.equipes); // Mesma função usada
-    
+                const equipesOrdenadas = ordenarNadadoresPorTempo(prova.equipes);
+
                 // 🔹 Criar baterias
                 const totalParticipantes = nadadoresOrdenados.length + equipesOrdenadas.length;
                 const baterias = dividirEmBaterias(totalParticipantes, etapa.quantidade_raias);
-    
+
                 if (!Array.isArray(baterias)) {
                     console.error('Erro: baterias não é um array válido!', baterias);
                     return;
                 }
-    
+
                 resultado[prova.nome_prova] = baterias.map(qtdParticipantes => {
                     const nadadoresGrupo = nadadoresOrdenados.splice(0, qtdParticipantes);
                     const equipesGrupo = equipesOrdenadas.splice(0, qtdParticipantes - nadadoresGrupo.length);
                     return distribuirNasRaias([...nadadoresGrupo, ...equipesGrupo], eventosProvasId, etapa.quantidade_raias);
                 });
             });
-    
+
             setInscritos(resultado);
-            //gera os pdfs
-            balizamentoPDF(resultado, etapa);
-            gerarFilipetas(resultado, etapa);
-            relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo, etapa);
-    
+
+            // 🔹 Gera os PDFs após garantir que os estados foram atualizados
+            setTimeout(() => {
+                balizamentoPDF(resultado, etapa);
+                gerarFilipetas(resultado, etapa);
+                relatorioInscritosPDF(originais, equipeData, equipeSexoData, etapa);
+            }, 0);
+
             setBalizamentoGerado(true);
         } catch (error) {
             console.error('Erro ao buscar inscritos:', error);
@@ -294,7 +298,7 @@ const Balizamento = () => {
                 )}
                 {Object.keys(inscritos).map(prova => (
                     <div key={prova}>
-                        <h2>{`Balizamento - ${prova.replace(/\bF\b/, 'FEMININO').replace(/\bM\b/, 'MASCULINO').split(' ').slice(1).join(' ')} ${prova.split(' ')[0]}`}</h2>
+                        <h2>{`Balizamento - ${prova}`}</h2>
                         {inscritos[prova].map((bateria, index) => (
                             <div key={index}>
                                 <h3>{`Série ${index + 1}`}</h3>
@@ -325,7 +329,7 @@ const Balizamento = () => {
                         <Botao onClick={() => balizamentoPDF(inscritos, etapa)} className={style.baixarBotao}>
                             Baixar Balizamento
                         </Botao>
-                        <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo, etapa)} className={style.baixarBotao}>
+                        <Botao onClick={() => relatorioInscritosPDF(originais, inscritosEquipe, inscritosEquipeSexo, etapa)} className={style.baixarBotao}>
                             Baixar Relatório de Inscritos
                         </Botao>
                     </div>
