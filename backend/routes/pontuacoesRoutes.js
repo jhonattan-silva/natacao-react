@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
+/*
+**
+** calcularPontuacaoEvento: Função para calcular e armazenar a pontuação de um evento
+** pontuarEvento: Rota para processar a pontuação de um evento
+**
+*/
+
 // Tabela de pontuação individual e revezamento
 const PONTOS_INDIVIDUAL = [9, 7, 6, 5, 4, 3, 2, 1];
 const PONTOS_REVEZAMENTO = [18, 14, 12, 10, 8, 6, 4, 2];
@@ -9,7 +16,7 @@ const PONTOS_REVEZAMENTO = [18, 14, 12, 10, 8, 6, 4, 2];
 // Função para calcular e armazenar a pontuação no evento
 const calcularPontuacaoEvento = async (eventosId) => {
     try {
-        const [provasEvento] = await db.execute(
+        const [provasEvento] = await db.execute( // Obter provas do evento
             `SELECT ep.id AS evento_prova_id, p.eh_revezamento, p.eh_prova_ouro, p.eh_prova_categoria 
              FROM eventos_provas ep 
              JOIN provas p ON ep.provas_id = p.id 
@@ -19,15 +26,19 @@ const calcularPontuacaoEvento = async (eventosId) => {
 
         if (provasEvento.length === 0) return { error: "Nenhuma prova encontrada para este evento." };
 
-        for (const prova of provasEvento) {
+        for (const prova of provasEvento) { // Obter cada prova do evento
+            if (!prova.eh_prova_ouro) {
+                continue; // Pula para a próxima prova
+            }
             let classificacoes;
             if (prova.eh_revezamento) {
-                [classificacoes] = await db.execute(
+                [classificacoes] = await db.execute( // Obter classificações de revezamento
                     `SELECT c.id, c.nadadores_id, c.equipes_id, c.classificacao, n.categorias_id, c.tipo
                      FROM classificacoes c
                      LEFT JOIN nadadores n ON c.nadadores_id = n.id
                      WHERE c.eventos_provas_id = ? 
                      AND c.classificacao BETWEEN 1 AND 8
+                     AND c.status = 'OK'
                      ORDER BY c.classificacao ASC`,
                     [prova.evento_prova_id]
                 );
@@ -44,12 +55,13 @@ const calcularPontuacaoEvento = async (eventosId) => {
                     }
                 }
             } else {
-                // NOVA LÓGICA: Obter classificações ordenadas por categoria semelhante à classificação por categoria dos resultados
+                // Obter classificações ordenadas por categoria semelhante à classificação por categoria dos resultados
                 [classificacoes] = await db.execute(
                     `SELECT c.id, n.categorias_id, c.classificacao 
                      FROM classificacoes c
                      LEFT JOIN nadadores n ON c.nadadores_id = n.id
                      WHERE c.eventos_provas_id = ?
+                     AND c.status = 'OK'
                      ORDER BY n.categorias_id ASC, 
                               CASE WHEN c.status IN ('DQL', 'NC') THEN 1 ELSE 0 END, 
                               c.classificacao ASC`,
@@ -85,6 +97,7 @@ const calcularPontuacaoEvento = async (eventosId) => {
                     `SELECT c.id, c.classificacao 
                      FROM classificacoes c
                      WHERE c.eventos_provas_id = ?
+                     AND c.status = 'OK'
                      ORDER BY c.classificacao ASC`,
                     [prova.evento_prova_id]
                 );
@@ -101,7 +114,6 @@ const calcularPontuacaoEvento = async (eventosId) => {
                 });
             }
         }
-
         return { success: "Pontuação do evento calculada e armazenada com sucesso!" };
     } catch (error) {
         console.error(error);

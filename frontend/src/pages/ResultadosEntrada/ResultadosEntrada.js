@@ -7,6 +7,9 @@ import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import { ResultadosContext } from '../../servicos/ResultadoContext'; // Contexto para salvar temporariamente o resultado de cada nadador
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
 
+// Configurar timeout para 60 segundos (60000 ms)
+api.defaults.timeout = 60000; 
+
 const ResultadosEntrada = () => {
     const [eventos, setEventos] = useState([]); // Recebe todos eventos pela API
     const [eventoId, setEventoId] = useState(''); // Recebe o evento escolhido
@@ -293,11 +296,23 @@ const ResultadosEntrada = () => {
             }
             const eventosProvasId = selectedProva.eventos_provas_id;
             await api.post('/resultadosEntrada/salvarResultados', { provaId: eventosProvasId, dados });
-            alert('Resultados salvos com sucesso!');
+            await api.post(`/pontuacoes/pontuar-evento/${eventoId}`); // Adiciona chamada para calcular pontuação
+            alert('Resultados e pontuações salvos com sucesso!');
             window.location.reload();
         } catch (err) {
             console.error('Erro ao salvar resultados:', err.message);
             alert('Erro ao salvar resultados. Tente novamente.');
+        }
+    };
+
+    // Função para focar no próximo input
+    const focarProximoInput = (bateriaId, id, isEquipe = false) => {
+        const inputs = document.querySelectorAll('input[type="text"]');
+        const indexAtual = Array.from(inputs).findIndex(
+            (input) => input.dataset.bateriaId === String(bateriaId) && input.dataset.id === String(id) && input.dataset.isEquipe === String(isEquipe)
+        );
+        if (indexAtual !== -1 && indexAtual + 1 < inputs.length) {
+            inputs[indexAtual + 1].focus();
         }
     };
 
@@ -353,6 +368,14 @@ const ResultadosEntrada = () => {
                                                     value={nadador.tempo || ''}
                                                     onChange={(e) => handleTempoChange(bateria.id, nadador.id, e.target.value)}
                                                     onBlur={() => handleBlur(bateria.id, nadador.id, nadador.tempo)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            focarProximoInput(bateria.id, nadador.id);
+                                                        }
+                                                    }}
+                                                    data-bateria-id={bateria.id}
+                                                    data-id={nadador.id}
+                                                    data-is-equipe={false}
                                                     disabled={checkboxes[nadador.id]?.nc || checkboxes[nadador.id]?.desc}
                                                     className={`${style.nadadorInput} ${isSalvoBanco ? style.inputBanco : isTemporario ? style.inputSalvo : ''
                                                         }`}
@@ -386,6 +409,14 @@ const ResultadosEntrada = () => {
                                                     value={equipe.tempo || ''}
                                                     onChange={(e) => handleTempoChange(bateria.id, equipe.id, e.target.value, true)}
                                                     onBlur={() => handleBlur(bateria.id, equipe.id, equipe.tempo, true)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            focarProximoInput(bateria.id, equipe.id, true);
+                                                        }
+                                                    }}
+                                                    data-bateria-id={bateria.id}
+                                                    data-id={equipe.id}
+                                                    data-is-equipe={true}
                                                     disabled={checkboxes[equipe.id]?.nc || checkboxes[equipe.id]?.desc}
                                                     className={`${style.nadadorInput} ${isSalvoBanco ? style.inputBanco : isTemporario ? style.inputSalvo : ''
                                                         }`}

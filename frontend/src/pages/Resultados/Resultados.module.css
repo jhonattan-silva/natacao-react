@@ -1,52 +1,88 @@
-.resultadosContainer {
-  padding: 2rem;
+/* ======================= */
+/* Layout Geral e Fontes   */
+/* ======================= */
+
+body {
+  margin: 0;
   font-family: 'Roboto', sans-serif;
   color: #333;
+  background-color: #f5f7fa;
+  line-height: 1.6;
+}
+
+.resultadosContainer {
+  padding: 2rem;
   min-height: 100vh;
 }
 
-.resultadosContainer h1 {
-  text-align: center;
-  margin-bottom: 2rem;
-  font-size: 2.5rem;
-  color: #fff !important; /* Changed to white */
+.resultadosContainer table tr:nth-child(even) {
+  background-color: transparent; /* Define a cor desejada ou remova o fundo */
 }
 
-.resultadosContainer h1, .resultadosContainer h2{
+.resultadosContainer table th:first-child,
+.resultadosContainer table td:first-child {
+  width: 50px; 
+}
+
+/* ======================= */
+/* Títulos e Cabeçalhos    */
+/* ======================= */
+
+.resultadosContainer h1{
   text-align: center;
-  color: #fff;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  color: #e1f3ff;
+}
+.resultadosContainer h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 600;
+  color: #222;
 }
 
 .titulo h1 {
-  size: 4rm;
+  font-size: 2.5rem;
 }
 
 .titulo h2 {
-  size: 3rm;
-} 
+  font-size: 2rem;
+}
 
-.provaContainer {
-  background-color: #ffffff;
+/* ======================= */
+/* Containers Principais   */
+/* ======================= */
+
+.provaContainer,
+.absolutoContainer {
+  background-color: #fff;
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  transition: transform 0.3s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease;
 }
 
-.provaContainer:hover {
-  transform: translateY(-5px);
+.provaContainer:hover,
+.absolutoContainer:hover {
+  transform: translateY(-3px);
 }
 
-.provaContainer h2 {
+.provaContainer h2,
+.absolutoContainer h2 {
   margin-bottom: 1rem;
   border-bottom: 2px solid #3498db;
   padding-bottom: 0.5rem;
-  color: #ffffff; 
+  color: #3498db;
+  font-size: 1.5rem;
 }
 
+/* ======================= */
+/* Componentes Específicos */
+/* ======================= */
+
 .bateriaContainer {
-  background-color: #f7fbfc;
+  background-color: #f9fbfc;
   border-left: 4px solid #3498db;
   border-radius: 4px;
   padding: 1rem;
@@ -76,107 +112,115 @@
   margin-right: 1rem;
 }
 
-@media (max-width: 768px) {
-  .nadador {
-    flex-direction: column;
-  }
-}
+/* ======================= */
+/* Tabelas Personalizadas  */
+/* ======================= */
 
-.tabelaPersonalizada table {
-  text-align: center !important;
-}
-
-.tabelaPersonalizada tbody tr:nth-child(odd) {
-  background-color: #fababa !important;
-}
-
-.tabelaPersonalizada tbody tr:nth-child(even) {
-  background-color: #9ecdf1 !important;
-}
-
-.tabelaPersonalizada thead {
-  background-color: #FF5733 !important; /* New background color */
-  font-size: 1.2rem !important;          /* Increased font size */
-  text-align: center !important;
-  border-bottom: 3px solid #1558b0 !important;
-}
-
-.tabelaPersonalizada thead th {
-  text-align: center !important;
-}
-
-.tabelaPersonalizada tbody tr {
-  transition: background-color 0.3s ease !important;
-}
-
-.tabelaPersonalizada tbody td {
-  text-align: center !important;
-}
-
-/* Optional: add a subtle hover effect on rows */
-.tabelaPersonalizada tbody tr:hover {
-  background-color: #cce4f7 !important;
-}
-
-.tabelaPersonalizada table th {
-  background-color: #f86f50 !important; /* New background color */
-  color: #fff !important;              /* New text color */
-  font-size: 18px;
-}
-
+.tabelaPersonalizada table,
 .tabelaClassificacaoFinal table,
 .tabelaResultadosBalizamento table,
 .tabelaClassificacaoCategoria table {
-  text-align: center !important;
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  text-align: center;
 }
+
+.tabelaPersonalizada thead {
+  background-color: #e9eef4;
+  color: #222;
+  font-weight: 600;
+  font-size: 1.1rem;
+  border-bottom: 2px solid #3498db;
+}
+
+.tabelaPersonalizada thead th,
+.tabelaPersonalizada tbody td {
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+.tabelaPersonalizada tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.tabelaPersonalizada tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.tabelaResultadosBalizamento table th:first-child,
+.tabelaResultadosBalizamento table td:first-child {
+  width: 40px; /* Ajuste para a coluna "Raia" na primeira aba */
+}
+
+.tabelaClassificacaoCategoria table th:first-child,
+.tabelaClassificacaoCategoria table td:first-child {
+  width: 80px; /* Ajuste para a coluna "Classificação" na segunda aba */
+}
+
+/* ======================= */
+/* Tabela Absoluto         */
+/* ======================= */
+
+.absolutoTabela {
+  width: 100%;
+  text-align: center;
+}
+
+.absolutoTabela th,
+.absolutoTabela td {
+  padding: 0.75rem;
+  text-align: center;
+}
+
+/* ======================= */
+/* Outros Componentes      */
+/* ======================= */
 
 .classificacaoTabela {
   text-align: center;
 }
 
-.classificacaoTabela th, .classificacaoTabela td {
+.classificacaoTabela th,
+.classificacaoTabela td {
+  padding: 0.75rem;
   text-align: center;
-}
-
-.loadingMessage {
-  font-size: 2rem;
-  color: #fff;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-/* Styles for the new "Absoluto" tab */
-.absolutoContainer {
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  transition: transform 0.3s;
-}
-
-.absolutoContainer:hover {
-  transform: translateY(-5px);
-}
-
-.absolutoContainer h2 {
-  margin-bottom: 1rem;
-  border-bottom: 2px solid #964cd6;
-  padding-bottom: 0.5rem;
-  color: #ffffff; 
-}
-
-.absolutoTabela {
-  text-align: center;
-}
-
-.absolutoTabela th, .absolutoTabela td {
-  text-align: center;
-}
-
-.cardContainer h3 {
-  color: #000 !important;
 }
 
 .cardContainer {
   cursor: pointer;
+}
+
+.cardContainer h3 {
+  color: #000;
+}
+
+/* ======================= */
+/* Mensagens               */
+/* ======================= */
+
+.loadingMessage {
+  font-size: 2rem;
+  color: #333;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+/* ======================= */
+/* Responsividade          */
+/* ======================= */
+
+@media (max-width: 768px) {
+  .nadador {
+    flex-direction: column;
+  }
+
+  .tabelaPersonalizada table,
+  .tabelaClassificacaoFinal table {
+    font-size: 0.9rem;
+  }
+
+  .resultadosContainer {
+    padding: 1rem;
+  }
 }

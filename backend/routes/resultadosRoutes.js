@@ -33,22 +33,22 @@ router.get('/resultadosEvento/:eventoId', async (req, res) => {
   try {
     // Query para listar todas as provas do evento
     const queryProvas = `
-            SELECT DISTINCT
-                ep.id AS eventos_provas_id,
-                p.id AS prova_id,
-                CONCAT(p.estilo, ' ', p.distancia, 'm ', IF(p.eh_revezamento, 'Revezamento', 'Individual'), ' (', p.sexo, ')') AS nome,
-                p.estilo AS prova_estilo,
-                p.distancia,
-                p.sexo,
-                p.eh_revezamento,
-                ep.ordem
-            FROM 
-                eventos_provas ep
-            JOIN 
-                provas p ON ep.provas_id = p.id
-            WHERE 
-                ep.eventos_id = ?
-            ORDER BY ep.ordem ASC;
+        SELECT DISTINCT
+            ep.id AS eventos_provas_id,
+            p.id AS prova_id,
+            CONCAT(ep.ordem, 'ª PROVA - ', p.distancia, ' METROS ', p.estilo, ' ', IF(p.eh_revezamento, 'REVEZAMENTO ', ''), '(', p.sexo, ')') AS nome,
+            p.estilo AS prova_estilo,
+            p.distancia,
+            p.sexo,
+            p.eh_revezamento,
+            ep.ordem
+        FROM 
+            eventos_provas ep
+        JOIN 
+            provas p ON ep.provas_id = p.id
+        WHERE 
+            ep.eventos_id = ?
+        ORDER BY ep.ordem ASC;
     `;
     const [provas] = await db.query(queryProvas, [eventoId]);
     if (provas.length === 0) {
@@ -182,7 +182,7 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
                 ep.id AS eventosProvasId,
                 p.id AS provaId,
                 p.sexo AS sexoProva,
-                CONCAT(p.estilo, ' ', p.distancia, 'm') AS nomeProva,
+                CONCAT(p.estilo, ' ', p.distancia, ' METROS') AS nomeProva,
                 r.minutos,
                 r.segundos,
                 r.centesimos,
@@ -266,7 +266,7 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
               c.id, 
               c.eventos_provas_id, 
               p.id AS prova_id, 
-              CONCAT(p.distancia, 'm', ' ', p.estilo) AS prova_nome, 
+              CONCAT(p.distancia, ' METROS', ' ', p.estilo) AS prova_nome, 
               c.nadadores_id, 
               n.nome AS nome_nadador, 
               c.equipes_id, 
@@ -452,7 +452,7 @@ router.get('/listarDoBanco/:eventoId', async (req, res) => {
         c.id, 
         c.eventos_provas_id, 
         p.id AS prova_id, 
-        CONCAT(p.distancia, 'm', ' ', p.estilo) AS prova_nome, 
+        CONCAT(p.distancia, ' METROS', ' ', p.estilo) AS prova_nome, 
         c.nadadores_id, 
         n.nome AS nome_nadador, 
         c.equipes_id, 
@@ -465,9 +465,9 @@ router.get('/listarDoBanco/:eventoId', async (req, res) => {
         p.sexo AS sexo_prova,
         n.sexo AS sexo_nadador,
         cat.nome AS categoria_nadador,  
-        c.pontuacao_individual,  -- Adiciona a pontuação individual
-        c.pontuacao_equipe,      -- Adiciona a pontuação da equipe
-        ep.ordem  -- Add ordem column
+        c.pontuacao_individual,
+        c.pontuacao_equipe,
+        ep.ordem
       FROM classificacoes c
       JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
       JOIN provas p ON ep.provas_id = p.id

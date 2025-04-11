@@ -97,7 +97,7 @@ const Balizamentos = () => {
   const renderTabelaBalizamento = (item) => {
     return item.baterias.map(bateria => {
       const tableData = bateria.nadadores.map(nadador => {
-        let tempo = nadador.tempo;
+        let tempo = nadador.tempo || '-'; // Ensure tempo is displayed
         if (nadador.status === 'NC') {
           tempo = 'NC';
         } else if (nadador.status === 'DQL') {
@@ -106,11 +106,11 @@ const Balizamentos = () => {
         const rowData = item.prova.revezamento ? {
           Raia: nadador.raia,
           Equipe: nadador.equipe,
-          Tempo: tempo
+          Tempo: tempo // Include tempo
         } : {
           Raia: nadador.raia,
           Nome: nadador.nome,
-          Tempo: tempo,
+          Tempo: tempo, // Include tempo
           Equipe: nadador.equipe,
           Categoria: nadador.categoria
         };
@@ -162,9 +162,11 @@ const Balizamentos = () => {
                         label: 'Balizamentos do Evento',
                         content: (
                           <div className={style.balizamentosContainer}>
-                            {dados.map(item => (
+                            {dados.map((item) => (
                               <div key={item.prova.eventos_provas_id}>
-                                <h2 className={style.titulo}>{item.prova.nome}</h2>
+                                <h2 className={style.titulo}>
+                                  {item.prova.nome}
+                                </h2>
                                 {renderTabelaBalizamento(item)}
                               </div>
                             ))}
@@ -187,7 +189,7 @@ const Balizamentos = () => {
                                           Nome: item.nome_nadador || '-',
                                           Tempo: item.tempo,
                                           Equipe: item.nome_equipe || '-',
-                                          Categoria: item.categoria || '-',
+                                          Categoria: item.categoria_nadador || '-',
                                         }))}
                                         textoExibicao={{
                                           Nome: 'Nadador',

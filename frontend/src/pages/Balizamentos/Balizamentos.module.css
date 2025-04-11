@@ -1,0 +1,22 @@
+/* Centralize and style h2 elements */
+.titulo {
+  color: white;
+  text-align: center;
+}
+
+/* Clean table styles */
+.tabelaPersonalizada {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabelaPersonalizada th,
+.tabelaPersonalizada td {
+  text-align: center;
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+
+.tabelaPersonalizada tr:hover {
+  background-color: #f2f2f2;
+}

@@ -41,22 +41,31 @@ h1 {
 
 /* Estilos para a tabela */
 .rankings table {
-    width: 70%;
+    width: 90%; /* Aumenta o espaço horizontal */
     margin: 20px auto;
     border-collapse: collapse;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 12px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Reduz a intensidade da sombra */
+    border-radius: 8px; /* Ajusta o arredondamento */
     overflow: hidden;
+    background-color: #f9f9f9; /* Fundo neutro */
+}
+
+.rankings th:first-child, 
+.rankings td:first-child {
+    width: 8%; /* Reduz a largura da coluna posição */
+    text-align: center; /* Centraliza o texto */
 }
 
 /* Cabeçalho da tabela */
 .rankings th {
-    background-color: #1a73e8;
-    color: #ffffff;
+    background-color: #f1f1f1; /* Fundo neutro */
+    color: #333; /* Texto mais escuro */
     font-weight: bold;
     padding: 12px;
     text-align: left;
     font-size: 1rem;
+    border-bottom: 2px solid #ddd; /* Linha de separação */
+    text-transform: uppercase; /* Exibe o texto em uppercase */
 }
 
 /* Linhas da tabela */
@@ -64,25 +73,28 @@ h1 {
     padding: 10px;
     text-align: left;
     font-size: 1rem;
-    color: black;
+    color: #333; /* Texto mais escuro */
     border-bottom: 1px solid #ddd;
 }
 
-/* Alternância de cor nas linhas da tabela */
-.rankings tr:nth-child(even) {
-    background-color: #9bd5e8;
-}
-
+/* Remove alternância de cor nas linhas */
+.rankings tr:nth-child(even),
 .rankings tr:nth-child(odd) {
-    background-color: #ffffff;
+    background-color: #fff;
 }
 
 /* Estilo de foco ao passar o mouse sobre uma linha */
 .rankings tr:hover {
-    background-color: #6de95f;
+    background-color: #e0e0e0; /* Efeito mais escuro */
 }
 
-
+.rankings h2 {
+    color: #fff; /* Define a cor branca */
+    text-align: center; /* Centraliza o texto */
+    font-size: 2rem; /* Ajusta o tamanho da fonte */
+    margin-top: 20px; /* Espaçamento superior */
+    margin-bottom: 20px; /* Espaçamento inferior */
+}
 
 .filtroContainer {
     /* CAMPO DE FORMULARIO COMPLETO */

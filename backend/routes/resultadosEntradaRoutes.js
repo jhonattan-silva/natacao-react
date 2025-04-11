@@ -1,6 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const pontuacoesRoutes = require('./pontuacoesRoutes'); // Importa as rotas de pontuação
+
+/*
+**
+** listarEventos: Listar todos os eventos
+** listarProvasEvento: Listar as provas de um evento específico
+** listarBateriasProva: Listar as baterias de uma prova específica
+** salvarResultados: Salvar resultados de nadadores e equipes
+**  
+*/
+
 
 // Função auxiliar para converter "mm:ss:cc" em objeto { minutos, segundos, centesimos }
 function parseTime(timeStr) {
@@ -348,7 +359,14 @@ router.post('/salvarResultados', async (req, res) => {
         }
 
         await connection.commit();
-        res.status(200).json({ success: true, message: 'Resultados salvos com sucesso!' });
+
+        // Chamar a função de cálculo de pontuação após salvar os resultados
+        const resultadoPontuacao = await pontuacoesRoutes.calcularPontuacaoEvento(rows[0].eventoId);
+        if (resultadoPontuacao.error) {
+            throw new Error(resultadoPontuacao.error);
+        }
+
+        res.status(200).json({ success: true, message: 'Resultados e pontuações salvos com sucesso!' });
     } catch (error) {
         await connection.rollback();
         console.error('Erro ao salvar resultados:', error);

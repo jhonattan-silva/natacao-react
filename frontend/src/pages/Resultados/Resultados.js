@@ -19,11 +19,13 @@ const Resultados = () => {
   const [erro, setErro] = useState(null);
   const [loading, setLoading] = useState(true);
   const [eventosComResultados, setEventosComResultados] = useState([]);
+  const [pontuacaoEtapa, setPontuacaoEtapa] = useState([]);
   const apiResultados = '/resultados/resultadosEvento';
   const apiClassificacao = '/resultados/resultadosPorCategoria';
   const apiAbsoluto = '/resultados/resultadosAbsoluto';
   const apiResultadosBanco = '/resultados/listarDoBanco';
   const apiEventosComResultados = '/resultados/listarEventosComResultados';
+  const apiRankingEquipesPorEvento = '/rankings/ranking-equipes-por-evento';
 
   const fetchResultadosEClassificacao = async () => {
     try {
@@ -67,11 +69,22 @@ const Resultados = () => {
     }
   };
 
+  const fetchPontuacaoEtapa = async (eventoId) => {
+    try {
+      const response = await api.get(`${apiRankingEquipesPorEvento}/${eventoId}`);
+      setPontuacaoEtapa(response.data || []);
+    } catch (err) {
+      console.error("Erro ao buscar pontuação da etapa:", err.message);
+      setErro("Erro ao buscar pontuação da etapa");
+    }
+  };
+
   useEffect(() => {
     if (eventoId) {
       setLoading(true);
       fetchResultadosEClassificacao();
       fetchResultadosBanco();
+      fetchPontuacaoEtapa(eventoId);
     } else {
       setLoading(true);
       fetchEventosComResultados();
@@ -100,7 +113,7 @@ const Resultados = () => {
         let tempo = nadador.tempo;
         if (nadador.status === 'NC') {
           tempo = 'NC';
-        } else if (nadador.status === 'DQL') { // Alterado de 'DESC' para 'DQL'
+        } else if (nadador.status === 'DQL') {
           tempo = 'DQL';
         }
         const rowData = item.prova.revezamento ? {
@@ -159,61 +172,12 @@ const Resultados = () => {
                   <Abas
                     tabs={[
                       {
-                        label: 'Classificação Final',
-                        content: (
-                          <div className={style.resultadosContainer}>
-                            {Object.keys(resultadosBanco).length > 0 ? (
-                              Object.entries(resultadosBanco).map(([prova, resultados]) => {
-                                const colunasOcultas = [];
-                                const ehRevezamento = resultados.some(item => item.eh_revezamento);
-                                if (ehRevezamento) {
-                                  colunasOcultas.push('Categoria', 'Nome', 'Tipo');
-                                }
-                                return (
-                                  <div key={prova} className={style.resultadoBancoItem}>
-                                    <h2 className={style.titulo}>{prova.replace('(M)', '(Masculino)').replace('(F)', '(Feminino)')}</h2>
-                                    <div className={style.tabelaPersonalizada}>
-                                      <Tabela
-                                        className={style.tabelaClassificacaoFinal}
-                                        dados={resultados.map(item => ({
-                                          Classificação: item.status === 'NC' || item.status === 'DQL' ? item.status : item.classificacao,
-                                          Nome: item.nome_nadador || '-',
-                                          Tempo: item.tempo,
-                                          Equipe: item.nome_equipe || '-',
-                                          Categoria: item.categoria_nadador || '-',
-                                          Tipo: item.tipo,
-                                          Pontuação_Individual: item.pontuacao_individual,
-                                          Pontuação_Equipe: item.pontuacao_equipe
-                                        }))}
-                                        textoExibicao={{
-                                          Classificação: 'Classificação',
-                                          Nome: 'Nome',
-                                          Tempo: 'Tempo',
-                                          Equipe: 'Equipe',
-                                          Categoria: 'Categoria',
-                                          Tipo: 'Tipo',
-                                          Pontuação_Individual: 'Pontos Individuais',
-                                          Pontuação_Equipe: 'Pontos Equipe'
-                                        }}
-                                        colunasOcultas={colunasOcultas}
-                                      />
-                                    </div>
-                                  </div>
-                                );
-                              })
-                            ) : (
-                              <p>Nenhum resultado encontrado no banco.</p>
-                            )}
-                          </div>
-                        ),
-                      },
-                      {
                         label: 'Resultados pelo Balizamento',
                         content: (
                           <div className={style.resultadosContainer}>
                             {dados.map(item => (
                               <div key={item.prova.eventos_provas_id}>
-                                <h2 className={style.titulo}>{item.prova.nome.replace('(M)', '(Masculino)').replace('(F)', '(Feminino)')}</h2>
+                                <h2 className={style.titulo}>{item.prova.nome.replace('(M)', 'MASCULINO').replace('(F)', 'FEMININO')}</h2>
                                 {renderTabelaBalizamento(item)}
                               </div>
                             ))}
@@ -260,6 +224,91 @@ const Resultados = () => {
                               })
                             ) : (
                               <p>Nenhuma classificação encontrada.</p>
+                            )}
+                          </div>
+                        ),
+                      },
+                      {
+                        label: 'Classificação Absoluto',
+                        content: (
+                          <div className={style.resultadosContainer}>
+                            {Object.keys(resultadosBanco).length > 0 ? (
+                              Object.entries(resultadosBanco)
+                                .filter(([_, resultados]) => resultados.some(item => item.tipo === 'ABSOLUTO')) // Filtra apenas os resultados do tipo 'ABSOLUTO'
+                                .map(([prova, resultados]) => {
+                                  const colunasOcultas = [];
+                                  const ehRevezamento = resultados.some(item => item.eh_revezamento);
+                                  if (ehRevezamento) {
+                                    colunasOcultas.push('Categoria', 'Nome', 'Tipo');
+                                  }
+                                  return (
+                                    <div key={prova} className={style.resultadoBancoItem}>
+                                      <h2 className={style.titulo}>{prova.replace('(M)', 'MASCULINO').replace('(F)', 'FEMININO')}</h2>
+                                      <div className={style.tabelaPersonalizada}>
+                                        <Tabela
+                                          className={style.tabelaClassificacaoFinal}
+                                          dados={resultados
+                                            .filter(item => item.tipo === 'ABSOLUTO') // Filtra apenas os itens do tipo 'ABSOLUTO'
+                                            .map(item => ({
+                                              Classificação: item.status === 'NC' || item.status === 'DQL' ? item.status : item.classificacao,
+                                              Nome: item.nome_nadador || '-',
+                                              Tempo: item.tempo,
+                                              Equipe: item.nome_equipe || '-',
+                                              Categoria: item.categoria_nadador || '-',
+                                              Tipo: item.tipo,
+                                              Pontuação_Individual: item.pontuacao_individual,
+                                              Pontuação_Equipe: item.pontuacao_equipe
+                                            }))}
+                                          textoExibicao={{
+                                            Classificação: 'Classificação',
+                                            Nome: 'Nome',
+                                            Tempo: 'Tempo',
+                                            Equipe: 'Equipe',
+                                            Categoria: 'Categoria',
+                                            Tipo: 'Tipo',
+                                            Pontuação_Individual: 'Pontos Individuais',
+                                            Pontuação_Equipe: 'Pontos Equipe'
+                                          }}
+                                          colunasOcultas={colunasOcultas}
+                                        />
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                            ) : (
+                              <p>Nenhum resultado encontrado no banco.</p>
+                            )}
+                          </div>
+                        ),
+                      },
+                      {
+                        label: 'Pontuação da Etapa',
+                        content: (
+                          <div className={style.resultadosContainer}>
+                            {pontuacaoEtapa.length > 0 ? (
+                              <Tabela
+                                className={style.tabelaPontuacaoEtapa}
+                                dados={pontuacaoEtapa
+                                  .sort((a, b) => b.pontos - a.pontos) // Ordena por pontos em ordem decrescente
+                                  .map((item, index, array) => {
+                                    const posicao = index === 0 || item.pontos !== array[index - 1].pontos
+                                      ? index + 1 // Define a posição apenas se não houver empate
+                                      : null; // Mantém a posição anterior em caso de empate
+                                    return {
+                                      Posição: posicao || '', // Exibe a posição ou vazio para empates
+                                      Equipe: item.equipe,
+                                      Pontos: item.pontos
+                                    };
+                                  })}
+                                textoExibicao={{
+                                  Posição: 'Posição',
+                                  Equipe: 'Equipe',
+                                  Pontos: 'Pontos na etapa'
+                                }}
+                                colunasOcultas={[]}
+                              />
+                            ) : (
+                              <p>Nenhuma pontuação encontrada para a etapa.</p>
                             )}
                           </div>
                         ),

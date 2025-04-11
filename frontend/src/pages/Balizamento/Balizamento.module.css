@@ -48,7 +48,7 @@ table th {
 }
 
 table tr:nth-child(even) {
-    background-color: #eacece;
+    /*background-color: #eacece;*/
 }
 
 /* Estilo para a linha do título da bateria */

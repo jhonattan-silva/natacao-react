@@ -7,20 +7,15 @@ import Cabecalho from '../../componentes/Cabecalho/Cabecalho';
 import Rodape from '../../componentes/Rodape/Rodape';
 
 const Rankings = () => {
-    // Use the correct torneiosId matching the API data
-    const torneiosId = 3;
+    const torneiosId = 3; //torneio de 2025
 
-    // New states for rankings
     const [rankingsEquipes, setRankingsEquipes] = useState([]);
     const [errorEquipes, setErrorEquipes] = useState(null);
     const [rankingsNadadores, setRankingsNadadores] = useState({ masculino: [], feminino: [] });
     const [errorNadadores, setErrorNadadores] = useState(null);
-    const [isUpdating, setIsUpdating] = useState(false);
 
-    // Fetch rankings for equipes
     const fetchRankingsEquipes = async () => {
         try {
-            console.log('Buscando ranking das equipes');
             const response = await api.get(`/rankings/ranking-equipes/${torneiosId}`);
             if (!Array.isArray(response.data)) {
                 throw new Error(`Resposta inesperada: ${JSON.stringify(response.data)}`);
@@ -36,7 +31,6 @@ const Rankings = () => {
     // Fetch rankings para nadadores (individual) separados por gênero
     const fetchRankingsNadadores = async () => {
         try {
-            console.log('Buscando ranking dos nadadores');
             const response = await api.get(`/rankings/ranking-nadadores/${torneiosId}`);
             setRankingsNadadores(response.data);
             setErrorNadadores(null);
@@ -51,19 +45,43 @@ const Rankings = () => {
         fetchRankingsNadadores();
     }, []);
 
+    // Adiciona a posição como a primeira coluna nos rankings, considerando empates e ajustando corretamente as posições seguintes
+    const addPositionToRanking = (ranking) => {
+        let currentPosition = 1;
+        return ranking.map((item, index, array) => {
+            if (index > 0 && item.pontos === array[index - 1].pontos) {
+                return { posicao: "", ...item }; // Deixa a posição em branco para empates
+            }
+            const position = currentPosition;
+            currentPosition += array.slice(index).filter((el) => el.pontos === item.pontos).length; // Incrementa com base no número de itens empatados
+            return { posicao: position, ...item };
+        });
+    };
+
     // Agrupa os nadadores por categoria para cada gênero
     const groupedMasculino = rankingsNadadores.masculino.reduce((acc, curr) => {
-        const cat = curr.categoria;
+        const cat = curr.categoria || curr.Categoria; // Ajusta para usar o nome correto da propriedade
         if (!acc[cat]) acc[cat] = [];
-        acc[cat].push(curr);
+        acc[cat].push({ ...curr, equipe: curr.equipe }); // Inclui a equipe
         return acc;
     }, {});
     const groupedFeminino = rankingsNadadores.feminino.reduce((acc, curr) => {
-        const cat = curr.categoria;
+        const cat = curr.categoria || curr.Categoria; // Ajusta para usar o nome correto da propriedade
         if (!acc[cat]) acc[cat] = [];
-        acc[cat].push(curr);
+        acc[cat].push({ ...curr, equipe: curr.equipe }); // Inclui a equipe
         return acc;
     }, {});
+
+    // Adiciona posição aos rankings agrupados
+    Object.keys(groupedMasculino).forEach(cat => {
+        groupedMasculino[cat] = addPositionToRanking(groupedMasculino[cat]);
+    });
+    Object.keys(groupedFeminino).forEach(cat => {
+        groupedFeminino[cat] = addPositionToRanking(groupedFeminino[cat]);
+    });
+
+    // Adiciona posição ao ranking de equipes
+    const rankingsEquipesWithPosition = addPositionToRanking(rankingsEquipes);
 
     // Conteúdo da aba para equipes
     const equipeTabContent = errorEquipes ? (
@@ -71,7 +89,7 @@ const Rankings = () => {
             <strong>Erro:</strong> {errorEquipes}
         </div>
     ) : (
-        rankingsEquipes.length > 0 ? <Tabela dados={rankingsEquipes} /> : <p>Nenhum dado disponível para o ranking das equipes.</p>
+        rankingsEquipesWithPosition.length > 0 ? <Tabela dados={rankingsEquipesWithPosition} /> : <p>Nenhum dado disponível para o ranking das equipes.</p>
     );
 
     // Conteúdo da aba para atletas (nadadores), exibindo por gênero e categoria
@@ -118,7 +136,7 @@ const Rankings = () => {
     return (
         <>
             <Cabecalho />
-            <div className={style.rankings}>
+            <div className={`${style.rankings}`}>
                 <h1>Rankings</h1>
                 <Abas tabs={tabs} />
             </div>

@@ -10,7 +10,12 @@ router.get('/balizamentosEvento/:eventoId', async (req, res) => {
       SELECT DISTINCT
         ep.id AS eventos_provas_id,
         p.id AS prova_id,
-        CONCAT(p.estilo, ' ', p.distancia, 'm ', IF(p.eh_revezamento, 'Revezamento', 'Individual'), ' (', p.sexo, ')') AS nome,
+        CONCAT(
+          ep.ordem, 'ª Prova - ',
+          p.distancia, ' METROS ',
+          UPPER(p.estilo), ' ',
+          IF(p.sexo = 'M', 'MASCULINO', 'FEMININO')
+        ) AS nome,
         p.estilo AS prova_estilo,
         p.distancia,
         p.sexo,
@@ -40,7 +45,12 @@ router.get('/balizamentosEvento/:eventoId', async (req, res) => {
           n.nome AS nomeNadador,
           COALESCE(e.id, eq.id) AS equipeId,  
           COALESCE(e.nome, eq.nome) AS nomeEquipe,  
-          c.nome AS categoriaNadador
+          c.nome AS categoriaNadador,
+          CONCAT(
+            IFNULL(i.minutos, '00'), ':',
+            LPAD(IFNULL(i.segundos, '00'), 2, '0'), '.',
+            LPAD(IFNULL(i.centesimos, '00'), 2, '0')
+          ) AS tempo
         FROM baterias b
         INNER JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
         LEFT JOIN inscricoes i ON bi.inscricoes_id = i.id
@@ -64,29 +74,36 @@ router.get('/balizamentosEvento/:eventoId', async (req, res) => {
           };
           acc.push(bateria);
         }
-        const nadadorData = {
-          id: row.nadadorId,
-          raia: row.raia,
-          equipe: row.nomeEquipe
-        };
-        if (!prova.eh_revezamento) {
-          nadadorData.nome = row.nomeNadador;
-          nadadorData.categoria = row.categoriaNadador;
+        const nadadorExists = bateria.nadadores.find(n => n.id === row.nadadorId && n.raia === row.raia);
+        if (!nadadorExists) { // Avoid duplicate nadadores in the same bateria
+          const nadadorData = {
+            id: row.nadadorId,
+            raia: row.raia,
+            equipe: row.nomeEquipe,
+            tempo: row.tempo
+          };
+          if (!prova.eh_revezamento) {
+            nadadorData.nome = row.nomeNadador;
+            nadadorData.categoria = row.categoriaNadador;
+          }
+          bateria.nadadores.push(nadadorData);
         }
-        bateria.nadadores.push(nadadorData);
         return acc;
       }, []);
 
-      balizamentosEvento.push({
-        prova: {
-          eventos_provas_id: prova.eventos_provas_id,
-          prova_id: prova.prova_id,
-          nome: prova.nome,
-          ordem: prova.ordem,
-          revezamento: prova.eh_revezamento === 1
-        },
-        baterias: bateriasOrganizadas,
-      });
+      // Ensure no duplicate baterias are added to the same prova
+      if (!balizamentosEvento.find(be => be.prova.eventos_provas_id === prova.eventos_provas_id)) {
+        balizamentosEvento.push({
+          prova: {
+            eventos_provas_id: prova.eventos_provas_id,
+            prova_id: prova.prova_id,
+            nome: `${prova.nome}`, // Nome já formatado na query
+            ordem: prova.ordem,
+            revezamento: prova.eh_revezamento === 1
+          },
+          baterias: bateriasOrganizadas,
+        });
+      }
     }
 
     res.json(balizamentosEvento);
@@ -102,75 +119,70 @@ router.get('/listarDoBanco/:eventoId', async (req, res) => {
   try {
     const [resultados] = await db.query(`
       SELECT 
-        c.id, 
-        c.eventos_provas_id, 
-        p.id AS prova_id, 
-        CONCAT(p.distancia, 'm', ' ', p.estilo) AS prova_nome, 
-        c.nadadores_id, 
-        n.nome AS nome_nadador, 
-        c.equipes_id, 
-        e.nome AS nome_equipe, 
-        c.tempo, 
-        c.classificacao, 
-        c.status, 
-        c.tipo,
+        i.id AS inscricao_id,
+        ep.id AS eventos_provas_id,
+        p.id AS prova_id,
+        CONCAT(
+          ep.ordem, 'ª Prova - ',
+          p.distancia, ' METROS ',
+          UPPER(p.estilo), ' ',
+          IF(p.sexo = 'M', 'MASCULINO', 'FEMININO')
+        ) AS prova_nome,
+        n.id AS nadador_id,
+        n.nome AS nome_nadador,
+        e.id AS equipe_id,
+        e.nome AS nome_equipe,
+        COALESCE(cat.nome, '-') AS categoria_nadador,
+        CONCAT(
+          IFNULL(i.minutos, '00'), ':',
+          LPAD(IFNULL(i.segundos, '00'), 2, '0'), '.',
+          LPAD(IFNULL(i.centesimos, '00'), 2, '0')
+        ) AS tempo,
         p.eh_revezamento,
         p.sexo AS sexo_prova,
         n.sexo AS sexo_nadador,
-        cat.nome AS categoria_nadador,
         ep.ordem
-      FROM classificacoes c
-      JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
+      FROM inscricoes i
+      JOIN eventos_provas ep ON i.eventos_provas_id = ep.id
       JOIN provas p ON ep.provas_id = p.id
-      LEFT JOIN nadadores n ON c.nadadores_id = n.id
-      LEFT JOIN equipes e ON c.equipes_id = e.id
+      LEFT JOIN nadadores n ON i.nadadores_id = n.id
+      LEFT JOIN equipes e ON n.equipes_id = e.id
       LEFT JOIN categorias cat ON n.categorias_id = cat.id
-      WHERE ep.eventos_id = ?
-      ORDER BY ep.ordem ASC, c.tipo ASC, c.eventos_provas_id ASC, c.classificacao ASC;
+      WHERE i.eventos_id = ?
+      ORDER BY ep.ordem ASC, p.eh_revezamento DESC, n.nome ASC;
     `, [eventoId]);
 
-    const classificacao = {};
+    const inscritosPorProva = {};
     resultados.forEach(row => {
       const provaKey = row.eh_revezamento
-        ? `Revezamento - ${row.prova_nome} (${row.sexo_prova})`
-        : `${row.prova_nome} (${row.sexo_nadador})`;
+        ? `Revezamento - ${row.prova_nome}`
+        : `${row.prova_nome}`;
 
-      if (!classificacao[provaKey]) {
-        classificacao[provaKey] = [];
+      if (!inscritosPorProva[provaKey]) {
+        inscritosPorProva[provaKey] = [];
       }
 
-      classificacao[provaKey].push({
-        id: row.id,
+      inscritosPorProva[provaKey].push({
+        inscricao_id: row.inscricao_id,
         eventos_provas_id: row.eventos_provas_id,
         prova_id: row.prova_id,
         prova_nome: row.prova_nome,
-        nadadores_id: row.nadadores_id,
+        nadador_id: row.nadador_id,
         nome_nadador: row.nome_nadador,
-        equipes_id: row.equipes_id,
+        equipe_id: row.equipe_id,
         nome_equipe: row.nome_equipe,
+        categoria_nadador: row.categoria_nadador,
         tempo: row.tempo,
-        classificacao: row.classificacao,
-        status: row.status,
-        tipo: row.tipo,
         eh_revezamento: row.eh_revezamento,
         sexo_prova: row.sexo_prova,
         sexo_nadador: row.sexo_nadador,
-        categoria_nadador: row.categoria_nadador
       });
     });
 
-    for (const prova in classificacao) {
-      classificacao[prova].sort((a, b) => {
-        if (a.status === 'DQL' || a.status === 'NC') return 1;
-        if (b.status === 'DQL' || b.status === 'NC') return -1;
-        return a.classificacao - b.classificacao;
-      });
-    }
-
-    res.json(classificacao);
+    res.json(inscritosPorProva);
   } catch (error) {
-    console.error('Erro ao buscar balizamentos do banco:', error.message);
-    res.status(500).json({ error: 'Erro ao buscar balizamentos do banco' });
+    console.error('Erro ao buscar inscritos do banco:', error.message);
+    res.status(500).json({ error: 'Erro ao buscar inscritos do banco' });
   }
 });
 
