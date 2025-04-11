@@ -45,6 +45,10 @@
   background-color: #964cd6 !important;
 }
 
+.abasContainer .tabs .tab4 {
+  background-color: #045fba !important; /* Dark blue background */
+}
+
 .abasContainer .tabContent .content1 {
   background-color: #488ac3 !important;
 }

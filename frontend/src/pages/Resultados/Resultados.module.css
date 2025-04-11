@@ -224,3 +224,11 @@ body {
     padding: 1rem;
   }
 }
+
+/* ======================= */
+/* Abas                   */
+/* ======================= */
+
+.abasContainer .aba {
+  color: #3498db; /* Azul padrão para abas antes de clicar */
+}
