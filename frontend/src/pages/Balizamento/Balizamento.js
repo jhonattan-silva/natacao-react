@@ -329,7 +329,7 @@ const Balizamento = () => {
                         <Botao onClick={() => balizamentoPDF(inscritos, etapa)} className={style.baixarBotao}>
                             Baixar Balizamento
                         </Botao>
-                        <Botao onClick={() => relatorioInscritosPDF(originais, inscritosEquipe, inscritosEquipeSexo, etapa)} className={style.baixarBotao}>
+                        <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo, etapa)} className={style.baixarBotao}>
                             Baixar Relatório de Inscritos
                         </Botao>
                     </div>
