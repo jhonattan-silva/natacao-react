@@ -139,4 +139,7 @@ router.post('/pontuar-evento/:eventoId', async (req, res) => {
     }
 });
 
-module.exports = router;
+module.exports = {
+    router,
+    calcularPontuacaoEvento, // Export the function
+};

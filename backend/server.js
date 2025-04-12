@@ -134,7 +134,7 @@ app.use(uploadRoutes);
 app.use('/api/migracao', migracao);
 app.use('/api/resultadosEntrada', resultadosEntrada);
 app.use('/api/resultados', resultadosRoutes);
-app.use('/api/pontuacoes', pontuacoesRoutes);
+app.use('/api/pontuacoes', pontuacoesRoutes.router); // Use the router property
 app.use('/api/estatisticas', estatisticasRoutes);
 app.use('/api/balizamentoExibicao', balizamentoExibicaoRoutes);
 app.use('/api/balizamentosAjuste', balizamentosAjusteRoutes);
