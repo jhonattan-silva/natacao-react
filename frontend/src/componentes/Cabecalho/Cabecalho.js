@@ -28,16 +28,17 @@ const Cabecalho = () => {
                 </Link>
             </div>
             <div className={style.center}>
-                <nav className={menuOpen ? style.open : ''}>
-                    <CabecalhoLink url='/Resultados' onClick={() => handleLinkClick('/Resultados')}> Resultados </CabecalhoLink>
-                    <CabecalhoLink url='/Rankings' onClick={() => handleLinkClick('/Rankings')}> Rankings </CabecalhoLink>
-                    <CabecalhoLink url='/Balizamentos' onClick={() => handleLinkClick('/Balizamentos')}> Balizamentos </CabecalhoLink>
+                <nav className={`${menuOpen ? style.open : ''}`}>
+                    <span className={style.closeButton} onClick={toggleMenu}>&times;</span>
+                    <CabecalhoLink url='/Resultados' onClick={() => { handleLinkClick('/Resultados'); setMenuOpen(false); }}>Resultados</CabecalhoLink>
+                    <CabecalhoLink url='/Rankings' onClick={() => { handleLinkClick('/Rankings'); setMenuOpen(false); }}>Rankings</CabecalhoLink>
+                    <CabecalhoLink url='/Balizamentos' onClick={() => { handleLinkClick('/Balizamentos'); setMenuOpen(false); }}>Balizamentos</CabecalhoLink>
+                    <CabecalhoLink url='/admin' onClick={() => { handleLinkClick('/admin'); setMenuOpen(false); }}>Acesso Restrito</CabecalhoLink>
                 </nav>
             </div>
+
             <div className={style.right}>
-                <CabecalhoLink url='/admin' onClick={() => handleLinkClick('/admin')}> Acesso Restrito </CabecalhoLink>
                 {!menuOpen && <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>}
-                {menuOpen && <span className={style.closeButton} onClick={toggleMenu}>&times;</span>}
             </div>
         </header>
     )

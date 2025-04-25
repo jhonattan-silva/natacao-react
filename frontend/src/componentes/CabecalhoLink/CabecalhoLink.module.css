@@ -8,3 +8,11 @@
     background-color: #0099CC;
     border-radius: 15px;
 }
+
+@media (max-width: 900px) {
+    .link {
+        width: 100%;
+        text-align: left;
+        margin-left: 0;
+    }
+}

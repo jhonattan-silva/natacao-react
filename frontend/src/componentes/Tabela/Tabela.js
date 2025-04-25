@@ -43,33 +43,35 @@ const Tabela = ({ dados, colunasOcultas = [], textoExibicao = {} }) => {
     }
 
     return (
-        <table className={style.tabela}>
-            <thead>
-                <tr>
-                    {colunas.map((coluna) => (
-                        <th
-                            key={coluna}
-                            onClick={() => ordenar(coluna)}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            {textoExibicao[coluna] || coluna}
-                            {ordenaConfig.key === coluna && (
-                                <span>{ordenaConfig.direction === 'asc' ? ' 🔼' : ' 🔽'}</span>
-                            )}
-                        </th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody>
-                {sortedData.map((linha, index) => (
-                    <tr key={index}>
-                        {colunas.map((coluna, idx) => (
-                            <td key={idx}>{linha[coluna]}</td>
+        <div className={style['tabela-container']}>
+            <table className={style.tabela}>
+                <thead>
+                    <tr>
+                        {colunas.map((coluna) => (
+                            <th
+                                key={coluna}
+                                onClick={() => ordenar(coluna)}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                {textoExibicao[coluna] || coluna}
+                                {ordenaConfig.key === coluna && (
+                                    <span>{ordenaConfig.direction === 'asc' ? ' 🔼' : ' 🔽'}</span>
+                                )}
+                            </th>
                         ))}
                     </tr>
-                ))}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {sortedData.map((linha, index) => (
+                        <tr key={index}>
+                            {colunas.map((coluna, idx) => (
+                                <td key={idx}>{linha[coluna]}</td>
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 };
 

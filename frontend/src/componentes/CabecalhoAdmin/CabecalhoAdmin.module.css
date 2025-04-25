@@ -2,9 +2,28 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
     background-color: #003366;
+    padding: 10px 20px;
     border-bottom: 1px solid #dee2e6;
+}
+
+.left, .center, .right {
+    display: flex;
+    align-items: center;
+}
+
+.left {
+    flex: 1;
+}
+
+.center {
+    flex: 2;
+    justify-content: center;
+}
+
+.right {
+    flex: 1;
+    justify-content: flex-end;
 }
 
 .logo {
@@ -12,83 +31,8 @@
     width: 100px;
 }
 
-nav {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* Centralizar links */
-    flex-grow: 1;
-}
-
-nav a {
-    margin-right: 15px;
-    text-decoration: none;
-    color: #007bff;
-}
-
-nav a:last-child {
-    /*margin-left: auto;
-    /* Alinhar o último link à direita */
-    margin-right: 0;
-}
-
-nav a:hover {
-    text-decoration: underline;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-}
-
-.dadosUsuario {
-    display: flex;
-    flex-direction: column;
-    /* Organizar em colunas */
-    align-items: flex-end;
-    /* Alinhar à direita */
-    margin-right: 10px;
-    /* Adicionar margem direita */
-}
-
-.dadosUsuario p {
-    margin: 0;
-    font-size: 2em;
-    color: white;
-    font-weight: bold;
-}
-
-.logoutButton {
-    padding: 10px 20px;
-    /* Aumentar o padding */
-    background-color: #dc3545 !important;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    /* Aumentar o border-radius */
-    cursor: pointer;
-    font-size: 1em;
-    /* Aumentar o tamanho da fonte */
-    transition: background-color 0.3s ease;
-    /* Adicionar transição suave */
-}
-
-.logoutButton:hover {
-    background-color: #c82333;
-}
-
-.userInfo {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    /* Alinhar conteúdo à direita */
-    gap: 10px;
-    /* Espaçamento entre elementos */
-    margin-left: auto; /* Adicionar margem automática à esquerda */
-}
-
 .menuIcon {
-    display: none; /* Esconder o ícone do menu por padrão */
+    display: none;
     font-size: 30px;
     cursor: pointer;
     color: white;
@@ -104,28 +48,18 @@ nav a:hover {
     right: 10px;
 }
 
-nav.open+.closeButton {
-    display: block;
+nav {
+    /* Não defina display aqui */
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease-in-out;
 }
 
-nav.open+.menuIcon {
-    display: none;
-}
-
-@media (max-width: 600px) {
-    .cabecalho {
-        flex-direction: row;
-        justify-content: space-between;
-    }
-
-    .logo {
-        height: 80px;
-        width: 80px;
-    }
-
+@media (max-width: 900px) {
     nav {
-        display: none;
-        position: absolute;
+        display: none; /* escondido por padrão */
+        position: fixed;
         top: 0;
         right: 0;
         height: 100%;
@@ -133,32 +67,44 @@ nav.open+.menuIcon {
         background-color: #003366;
         flex-direction: column;
         align-items: flex-start;
-        padding-top: 60px;
-        transition: transform 0.3s ease-in-out;
+        padding: 60px 20px;
         transform: translateX(100%);
-    }
-
-    nav a {
-        width: 100%;
-        padding: 10px 20px;
+        transition: transform 0.3s ease-in-out;
+        z-index: 1000;
     }
 
     nav.open {
-        display: flex;
+        display: flex; /* só exibe se tiver .open */
         transform: translateX(0);
     }
 
-    .menuIcon {
-        display: block; /* Mostrar o ícone do menu em telas pequenas */
+    nav a {
+        display: block;
+        margin-bottom: 20px;
+        font-size: 18px;
+        color: white;
+        text-decoration: none;
     }
 
-    .userInfo {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 10px 20px;
+    nav a:hover {
+        text-decoration: underline;
+    }
+
+    .menuIcon {
+        display: block;
     }
 
     .closeButton {
         display: block;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 30px;
+        cursor: pointer;
+        color: white;
+    }
+
+    .right {
+        justify-content: flex-end;
     }
 }

@@ -48,20 +48,18 @@
     right: 10px;
 }
 
-@media (max-width: 600px) {
-    .cabecalho {
-        flex-direction: row;
-        justify-content: space-between;
-    }
+nav {
+    /* Não defina display aqui */
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease-in-out;
+}
 
-    .logo {
-        height: 80px;
-        width: 80px;
-    }
-
+@media (max-width: 900px) {
     nav {
-        display: none;
-        position: absolute;
+        display: none; /* escondido por padrão */
+        position: fixed;
         top: 0;
         right: 0;
         height: 100%;
@@ -69,19 +67,27 @@
         background-color: #003366;
         flex-direction: column;
         align-items: flex-start;
-        padding-top: 60px;
-        transition: transform 0.3s ease-in-out;
+        padding: 60px 20px;
         transform: translateX(100%);
-    }
-
-    nav a {
-        width: 100%;
-        padding: 10px 20px;
+        transition: transform 0.3s ease-in-out;
+        z-index: 1000;
     }
 
     nav.open {
-        display: flex;
+        display: flex; /* só exibe se tiver .open */
         transform: translateX(0);
+    }
+
+    nav a {
+        display: block;
+        margin-bottom: 20px;
+        font-size: 18px;
+        color: white;
+        text-decoration: none;
+    }
+
+    nav a:hover {
+        text-decoration: underline;
     }
 
     .menuIcon {
@@ -90,5 +96,15 @@
 
     .closeButton {
         display: block;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 30px;
+        cursor: pointer;
+        color: white;
+    }
+
+    .right {
+        justify-content: flex-end;
     }
 }

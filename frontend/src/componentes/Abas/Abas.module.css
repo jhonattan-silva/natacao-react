@@ -60,3 +60,26 @@
 .abasContainer .tabContent .content3 {
   background-color: #964cd6 !important;
 }
+
+@media (max-width: 768px) {
+  .abasContainer {
+    width: 100%; /* Use full width on smaller screens */
+    padding: 0 10px; /* Add padding for better spacing */
+  }
+
+  .tabs {
+    flex-direction: column; /* Stack tabs vertically */
+    align-items: stretch; /* Ensure tabs take full width */
+  }
+
+  .tabs .tabButton {
+    font-size: 1.8rem; /* Reduce font size for smaller screens */
+    padding: 8px; /* Adjust padding */
+    text-align: center; /* Center-align text */
+  }
+
+  .tabContent {
+    font-size: 1.6rem; /* Adjust content font size */
+    padding: 10px; /* Add padding for better readability */
+  }
+}
