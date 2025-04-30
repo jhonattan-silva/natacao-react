@@ -131,3 +131,27 @@ export const relatorioInscritosPDF = (inscritos, inscritosEquipe, inscritosEquip
     const fileName = `LPN-Relatorio ${evento?.nome?.replace(/\s+/g, ' ') || 'Relatorio'}_${anoAtual}.pdf`;
     pdfMake.createPdf(docDefinition).download(fileName);
 };
+
+export const gerarPDFInscricoes = (inscricoes, evento) => {
+    const bodyInscricoes = [['Nadador ID', 'Prova ID']];
+    inscricoes.forEach(inscricao => {
+        bodyInscricoes.push([String(inscricao.nadadorId), String(inscricao.provaId)]);
+    });
+
+    const docDefinition = {
+        pageMargins: [40, 60, 40, 60],
+        content: [
+            { text: `Relatório de Inscrições - ${evento?.nome || 'Evento'}`, style: 'header', alignment: 'center' },
+            { text: '\n' },
+            { text: 'Detalhes das Inscrições', style: 'subheader' },
+            { table: { headerRows: 1, widths: ['*', '*'], body: bodyInscricoes }, layout: 'lightHorizontalLines' }
+        ],
+        styles: {
+            header: { fontSize: 18, bold: true },
+            subheader: { fontSize: 14, bold: true }
+        }
+    };
+
+    const fileName = `Relatorio_Inscricoes_${evento?.nome?.replace(/\s+/g, '_') || 'Evento'}.pdf`;
+    pdfMake.createPdf(docDefinition).download(fileName);
+};

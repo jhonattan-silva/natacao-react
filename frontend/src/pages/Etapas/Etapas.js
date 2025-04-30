@@ -1,5 +1,5 @@
 import api from '../../servicos/api';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Botao from '../../componentes/Botao/Botao';
 import BotaoTabela from '../../componentes/BotaoTabela/BotaoTabela';
 import Formulario from '../../componentes/Formulario/Formulario';
@@ -20,6 +20,7 @@ const Etapas = () => {
     const [horaEtapa, setHoraEtapa] = useState(''); // Novo estado para o horário do evento
     const [etapaAtual, setEtapaAtual] = useState(1); // Novo estado para controlar a etapa atual
     const [provasSelecionadas, setProvasSelecionadas] = useState([]); // Novo estado para armazenar as provas selecionadas
+    const ordemInputRefs = useRef({}); //ref para não perder o foco do input de ordem depois de alterar qualquer caracter
 
     const apiListaEtapas = `/etapas/listarEtapas`;
     const apiCadastraEtapas = `/etapas/cadastrarEtapas`;
@@ -41,7 +42,7 @@ const Etapas = () => {
 
     useEffect(() => {
         fetchData(anoSelecionado); // Chama a função `fetchData` ao montar o componente
-    }, [anoSelecionado]); // Chama `fetchData` sempre que `anoSelecionado` mudar
+    }, [anoSelecionado, apiListaEtapasAno]); // Incluído `apiListaEtapasAno` como dependência
 
     const fetchData = async (ano) => {
         try {
@@ -175,7 +176,7 @@ const Etapas = () => {
             }
         };
         fetchTorneios();
-    }, []);
+    }, [apiListaTorneios]); // Incluído `apiListaTorneios` como dependência
 
     const inputs = [
         {
@@ -392,41 +393,45 @@ const Etapas = () => {
         setEtapaAtual(1);
     };
 
-    const handleAlterarOrdem = (id, novaOrdem) => {
-        let ordemCorrigida = parseInt(novaOrdem, 10);
-
-        if (isNaN(ordemCorrigida) || ordemCorrigida < 1) {
-            console.warn(`⚠️ Ordem inválida (${ordemCorrigida}) - Resetando campo!`);
-            return;
-        }
-
+    const handleAlterarOrdemBlur = (id, novaOrdem) => {
         setProvasSelecionadas((prevProvas) => {
             const newProvas = [...prevProvas];
             const index = newProvas.findIndex(prova => prova.id === id);
-            if(index === -1) return newProvas;
+            if (index === -1) return newProvas;
 
-            const currentOrder = newProvas[index].ordem;
-            if(currentOrder === ordemCorrigida) return newProvas;
-
-            const swapIndex = newProvas.findIndex(prova => prova.ordem === ordemCorrigida);
-            if(swapIndex !== -1) {
-                newProvas[swapIndex].ordem = currentOrder;
-                newProvas[index].ordem = ordemCorrigida;
+            if (novaOrdem === "") {
+                newProvas[index].ordem = "";
+                newProvas[index].duplicado = true;
             } else {
-                newProvas[index].ordem = ordemCorrigida;
+                const ordemCorrigida = parseInt(novaOrdem, 10);
+                if (!isNaN(ordemCorrigida) && ordemCorrigida >= 1 && ordemCorrigida <= newProvas.length) {
+                    newProvas[index].ordem = ordemCorrigida;
+                } else {
+                    alert(`A ordem deve ser um número entre 1 e ${newProvas.length}.`);
+                    return newProvas; // Ignora valores inválidos
+                }
             }
-            return [...newProvas];
+
+            const ordensDuplicadas = newProvas
+                .map(p => p.ordem)
+                .filter((ordem, _, arr) => ordem !== "" && arr.indexOf(ordem) !== arr.lastIndexOf(ordem));
+
+            newProvas.forEach(prova => {
+                prova.duplicado = prova.ordem === "" || ordensDuplicadas.includes(prova.ordem);
+            });
+
+            return newProvas;
         });
     };
 
     const handleSalvar = async () => {
-        const ordensValidas = provasSelecionadas.every(prova => prova.ordem > 0);
-    
+        const ordensValidas = provasSelecionadas.every(prova => prova.ordem > 0 && !prova.duplicado);
+
         if (!ordensValidas) {
-            alert('Por favor, preencha a ordem de todas as provas.');
+            alert('Por favor, corrija as ordens duplicadas ou inválidas.');
             return;
         }
-    
+
         try {
             // Criando o objeto de envio com TODOS os dados
             const etapaCompleta = {
@@ -442,7 +447,7 @@ const Etapas = () => {
                     ordem: parseInt(prova.ordem, 10)
                 }))
             };
-    
+
             if (etapaEditando) {
                 await api.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, etapaCompleta);
                 alert('Evento atualizado com sucesso!');
@@ -450,7 +455,7 @@ const Etapas = () => {
                 await api.post(apiCadastraEtapas, etapaCompleta);
                 alert('Evento salvo com sucesso!');
             }
-    
+
             setEtapaAtual(1);  // Volta para primeira etapa
             setFormVisivel(false);
             fetchData(anoSelecionado); // Atualiza a lista
@@ -459,7 +464,6 @@ const Etapas = () => {
             alert('Erro ao salvar a etapa.');
         }
     };
-    
 
     const gerarPontuacao = async (id) => {
         try {
@@ -542,13 +546,6 @@ const Etapas = () => {
                                     classNameRadioOpcoes={style.radioRaias}
                                     valorSelecionado={raias}
                                 />
-                                <ListaSuspensa
-                                    textoPlaceholder={"Escolha o torneio"}
-                                    fonteDados={apiListaTorneios}
-                                    onChange={torneioSelecionado}
-                                    obrigatorio={true}
-                                    valorSelecionado={torneioEtapa}
-                                />
                                 <h2>Selecione as provas de acordo com sexo</h2>
                                 <div className={style.provasContainer}>
                                     <CheckboxGroup
@@ -585,12 +582,10 @@ const Etapas = () => {
                                                 type="number"
                                                 min="1"
                                                 max={provasSelecionadas.length}
-                                                value={prova.ordem || ""}
-                                                onChange={(e) => handleAlterarOrdem(prova.id, e.target.value)}
+                                                defaultValue={prova.ordem || ""}
+                                                onBlur={(e) => handleAlterarOrdemBlur(prova.id, e.target.value)}
                                                 className={
-                                                    prova.ordem === "" || prova.ordem > provasSelecionadas.length
-                                                        ? style.inputErro
-                                                        : style.inputOrdem
+                                                    prova.duplicado ? style.inputErro : style.inputOrdem
                                                 }
                                             />
                                         </div>

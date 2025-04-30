@@ -15,6 +15,7 @@ const Inscricao = () => {
     const [selecoes, setSelecoes] = useState({});
     const [revezamentos, setRevezamentos] = useState([]); // Lista de revezamentos
     const [selecoesRevezamento, setSelecoesRevezamento] = useState({}); // Estado para participação em revezamento
+    const [inscricoesRealizadas, setInscricoesRealizadas] = useState([]); // Novo estado para inscrições realizadas
     const user = useUser(); // Obter o usuário do contexto do usuário
 
     const apiEventos = `/inscricao/listarEventos`;
@@ -49,8 +50,7 @@ const Inscricao = () => {
 
             const nadadoresResponse = await api.get(`${apiListaNadadores}/${equipeId}`);
             const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${equipeId}`);
-            // Buscando inscrições individuais
-            const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`);
+            const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`); // Buscar inscrições realizadas
             // Buscando inscrições de revezamento via a nova rota
             const revezamentoResponse = await api.get(`${apiVerificarRevezamento}/${eventoSelecionado}?equipeId=${equipeId}`);
             setNadadores(nadadoresResponse.data);
@@ -83,6 +83,7 @@ const Inscricao = () => {
 
             setSelecoes(novasSelecoes);
             setSelecoesRevezamento(novasSelecoesRevezamento);
+            setInscricoesRealizadas(inscricoesResponse.data.inscricoesIndividuais); // Atualiza o estado com as inscrições realizadas
         } catch (error) {
             console.error("Erro ao buscar dados do evento:", error);
         }
@@ -199,7 +200,7 @@ const Inscricao = () => {
         
         try {
             await api.post(apiSalvarInscricao, payload);
-            alert('Inscrição realizada com sucesso!');
+            alert(`Inscrição realizada com sucesso! Total de inscritos: ${payload.length}`);
             await fetchDadosEvento();
             window.location.reload(); // Atualiza a tela
         } catch (error) {
@@ -233,6 +234,19 @@ const Inscricao = () => {
                                     ))}
                                 </ul>
                             </div>
+                            {/* Novo container para listar inscrições realizadas */}
+                            {inscricoesRealizadas.length > 0 && (
+                                <div className={styles.inscricoesRealizadas}>
+                                    <h3>Inscrições Realizadas</h3>
+                                    <ul>
+                                        {inscricoesRealizadas.map(inscricao => (
+                                            <li key={inscricao.nadadorId}>
+                                                Nadador ID: {inscricao.nadadorId}, Prova ID: {inscricao.provaId}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                             {nadadores.length > 0 && provas.length > 0 ? (
                                 <>
                                     <TabelaInscricao
