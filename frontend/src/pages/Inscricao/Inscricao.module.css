@@ -9,20 +9,36 @@
     justify-content: center;
 }
 
+/* Remover ou comentar este bloco para evitar conflito com o CSS do componente */
+/*
+.listaSuspensa {
+    display: flex !important;
+}
+
 .listaSuspensa:focus {
     border-color: #007bff;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
     outline: none;
 }
+*/
 
 .provasLegenda {
     background-color: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 8px;
     margin: 20px auto;
-    max-width: 300px;
-    padding: 10px;
+    max-width: 500px; /* aumentado */
+    width: 100%;
+    padding: 20px; /* aumentado */
     text-align: center;
+}
+
+/* Novo: caso exista classe inscricoesRealizadas, aumente também */
+.inscricoesRealizadas {
+    max-width: 500px;
+    width: 100%;
+    margin: 20px auto;
+    padding: 20px;
 }
 
 .provasLegenda h3 {
@@ -78,7 +94,8 @@ button:active {
 }
 
 .revezamentoContainer {
-    background-color: #f0f8ff; /* Light blue background */
+    background-color: #f0f8ff;
+    /* Light blue background */
     padding: 20px;
     border-radius: 10px;
     margin: 20px 0;
@@ -112,7 +129,8 @@ button:active {
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 16px;
-    min-width: 200px; /* novo: aumenta a largura do select */
+    min-width: 200px;
+    /* novo: aumenta a largura do select */
 }
 
 .inscricaoRevezamento span {
@@ -120,7 +138,7 @@ button:active {
     font-size: 1.1em;
     color: #007bff;
     margin-bottom: 10px;
-    font-weight: bold; 
+    font-weight: bold;
 }
 
 .containerTabelaIndividuais {
@@ -137,21 +155,23 @@ button:active {
     margin-top: 20px;
 }
 
-.inscricoesRealizadas {
-    background-color: #f0f0f0; /* Cor de fundo mais escura */
-    width: 80%; /* Aumenta a largura para ocupar mais da tela */
-    margin: 20px auto; /* Centraliza horizontalmente */
-    max-width: none; /* Sobrescreve qualquer max-width herdado */
-}
-
 @media (max-width: 768px) {
     .inscricaoContainer {
         padding: 10px;
     }
 
+    /* Centraliza a listaSuspensa no mobile */
+    /*
+    .listaSuspensa {
+        display: flex !important;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    */
+
     .centralizado {
         width: 100%;
-        display: block; /* Remove flex display for mobile */
+        display: block;
     }
 
     table {
@@ -159,7 +179,8 @@ button:active {
         border-collapse: collapse;
     }
 
-    th, td {
+    th,
+    td {
         padding: 8px;
         text-align: left;
         border: 1px solid #ddd;
@@ -171,12 +192,18 @@ button:active {
 
     .provasLegenda {
         max-width: 100%;
+        padding: 10px;
+    }
+
+    .inscricoesRealizadas {
+        max-width: 100%;
+        padding: 10px;
     }
 
     .revezamentoContainer {
         width: 100%;
-        padding: 10px; 
-        margin: 10px 0; 
+        padding: 10px;
+        margin: 10px 0;
     }
 
     .inscricaoRevezamento {

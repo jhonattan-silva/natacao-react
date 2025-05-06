@@ -228,9 +228,9 @@ const Inscricao = () => {
                     eventoId: eventoSelecionado,
                     provaId,
                     equipeId,
-                    distancia: prova?.distancia || 'N/D', // Corrigido para evitar valores vazios
-                    estilo: prova?.estilo || 'N/D', // Corrigido para evitar valores vazios
-                    sexo: prova?.sexo || 'N/D' // Adicionado para consistência
+                    distancia: prova?.distancia || 'N/D',
+                    estilo: prova?.estilo || 'N/D', 
+                    sexo: prova?.sexo || 'N/D'
                 };
             });
 
@@ -296,16 +296,16 @@ const Inscricao = () => {
             <CabecalhoAdmin />
             {alertaComponente}
             <h1>INSCRIÇÃO</h1>
-            <div className={styles.centralizado}>
-                <ListaSuspensa
+            <ListaSuspensa
                     fonteDados={apiEventos}
                     onChange={(id) => setEventoSelecionado(id)}
                     textoPlaceholder="Selecione um evento"
                     obrigatorio={true}
                     className={styles.listaSuspensa}
                 />
+            <div>
                 {eventoSelecionado && (
-                    <div>
+                    <div  className={styles.centralizado}>
                         <div className={styles.provasLegenda}>
                             <h3>Provas do Evento</h3>
                             <ul>

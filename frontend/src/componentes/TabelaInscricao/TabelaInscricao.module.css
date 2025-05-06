@@ -5,6 +5,7 @@
     overflow-y: auto; /* Habilita a rolagem vertical */
     overflow-x: auto; /* Permite rolagem horizontal caso necessário */
     margin-bottom: 20px; /* Adiciona espaço entre as divs */
+    position: relative; /* Add relative positioning for sticky columns */
 }
 
 .tabelaIndividuais {
@@ -24,7 +25,7 @@ thead {
     position: sticky;
     top: 0;
     background-color: #fff; /* Mantém a cor ao fixar */
-    z-index: 10; /* Garante que o cabeçalho fique acima do conteúdo */
+    z-index: 3; /* Ensure header stays above sticky columns */
 }
 
 th, td {
@@ -32,6 +33,15 @@ th, td {
     text-align: left;
     border: 1px solid #ddd;
     min-width: 120px; /* Aumenta largura mínima das colunas */
+}
+
+th:first-child, td:first-child {
+    position: sticky; /* Make the first column sticky */
+    left: 0; /* Stick to the left */
+    background-color: #fff; /* Add background to avoid overlap */
+    z-index: 2; /* Ensure it stays above other content */
+    min-width: 180px; /* Aumenta a largura mínima da primeira coluna */
+    white-space: nowrap; /* Garante que o texto não quebre */
 }
 
 th {
@@ -44,11 +54,39 @@ th {
 @media (max-width: 768px) {
     .containerTabela {
         max-height: 300px; /* Reduz altura em telas menores */
-        overflow-x: auto;
+        overflow-x: auto; /* Permite rolagem horizontal */
         -webkit-overflow-scrolling: touch;
+        position: relative; /* Necessário para sticky funcionar */
     }
 
     table {
-        min-width: 600px; /* Garante que a tabela não se contraia demais */
+        min-width: 1000px; /* Garante que a tabela tenha largura suficiente */
+        border-collapse: collapse;
+        overflow-x: auto; /* Adiciona rolagem horizontal */
+        display: block; /* Garante que a tabela se comporte como um bloco */
+        position: relative; /* Necessário para sticky funcionar */
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border: 1px solid #ddd;
+        white-space: nowrap; /* Evita quebra de texto */
+    }
+
+    th:first-child, td:first-child {
+        position: sticky; /* Torna a primeira coluna fixa */
+        left: 0; /* Fixa a coluna à esquerda */
+        background-color: #fff; /* Evita sobreposição visual */
+        z-index: 4; /* Aumenta o z-index para garantir visibilidade */
+        min-width: 180px; /* Garante largura mínima maior no mobile */
+        white-space: nowrap;
+    }
+
+    thead {
+        position: sticky;
+        top: 0;
+        background-color: #fff; /* Mantém a cor ao fixar */
+        z-index: 3; /* Garante que o cabeçalho fique acima da primeira coluna */
     }
 }

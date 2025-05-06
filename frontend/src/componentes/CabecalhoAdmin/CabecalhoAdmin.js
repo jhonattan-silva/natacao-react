@@ -82,15 +82,15 @@ const CabecalhoAdmin = () => {
                     )}
 
                     <CabecalhoLink url='../Admin' onClick={() => { handleLinkClick('../Admin'); setMenuOpen(false); }}>ADMIN</CabecalhoLink>
-
-                    <div className={style.userInfo}>
-                        <div className={style.dadosUsuario}>
-                            {nome && <p>{nome}</p>}
-                            {equipe && <p>{equipe}</p>}
-                        </div>
-                        <button onClick={handleLogout} className={style.logoutButton}>Sair</button>
-                    </div>
                 </nav>
+            </div>
+
+            <div className={style.userInfo}>
+                <div className={style.dadosUsuario}>
+                    {nome && <p>{nome}</p>}
+                    {equipe && <p>{equipe}</p>}
+                </div>
+                <button onClick={handleLogout} className={style.logoutButton}>Sair</button>
             </div>
 
             <div className={style.right}>

@@ -56,6 +56,30 @@ nav {
     transition: transform 0.3s ease-in-out;
 }
 
+.dadosUsuario {
+    font-family: 'Arial', sans-serif; /* Change font */
+    font-size: 16px; /* Increase font size */
+    font-weight: bold; /* Make text bold */
+    color: white;
+    text-align: right;
+    margin-right: 10px;
+}
+
+.logoutButton {
+    font-family: 'Arial', sans-serif; /* Match font */
+    font-size: 14px;
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.logoutButton:hover {
+    background-color: #e60000;
+}
+
 @media (max-width: 900px) {
     nav {
         display: none; /* escondido por padrão */
@@ -106,5 +130,22 @@ nav {
 
     .right {
         justify-content: flex-end;
+    }
+}
+
+@media (min-width: 901px) {
+    .center {
+        justify-content: center;
+    }
+
+    .userInfo {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        margin-left: auto;
+    }
+
+    .right {
+        display: none; /* Hide menu icon on desktop */
     }
 }
