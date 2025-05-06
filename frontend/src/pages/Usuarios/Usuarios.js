@@ -297,7 +297,7 @@ const Usuarios = () => {
             <CabecalhoAdmin />
             {AlertaComponente}
             <div className={style.usuarios}>
-                <h2>USUÁRIOS</h2>
+                <h1>USUÁRIOS</h1>
                 {!formVisivel && (
                     <>
                         <TabelaEdicao 

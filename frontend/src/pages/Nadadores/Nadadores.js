@@ -334,7 +334,12 @@ const Nadadores = () => {
                             </BotaoTabela>
                         )}
                         renderLinha={(nadador) => ({
-                            style: { backgroundColor: nadador.ativo === 0 ? '#f44336' : 'transparent' }
+                            // Modificando para usar uma classe em vez de estilo inline
+                            // para permitir que o hover funcione adequadamente
+                            className: nadador.ativo === 0 ? 'inativo' : '',
+                            style: { 
+                                backgroundColor: nadador.ativo === 0 ? '#ffcccc' : null 
+                            }
                         })}
                     />
                 )}

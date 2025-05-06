@@ -7,8 +7,6 @@ router.get('/listarNadadores', authMiddleware, async (req, res) => {
     try {
         const equipeId = req.query.equipeId; // Pega equipeId da query, não do usuário
 
-        console.log("Equipe ID recebido na API:", equipeId);
-
         let query = `SELECT n.*, c.nome AS categoria_nome
                      FROM nadadores n
                      LEFT JOIN categorias c ON n.categorias_id = c.id`;

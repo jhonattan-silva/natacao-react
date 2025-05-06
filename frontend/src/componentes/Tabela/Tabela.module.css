@@ -10,19 +10,22 @@
     font-size: 14px; /* Define um tamanho de fonte padrão consistente */
 }
 
-.tabela th, .tabela td {
+/* Adiciono seletores mais específicos usando a classe pai */
+.tabela-container .tabela th, 
+.tabela-container .tabela td {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left; /* Melhor alinhamento para dispositivos móveis */
 }
 
-.tabela th {
+.tabela-container .tabela th {
     background-color: #f2f2f2;
     text-align: center;
 }
 
 @media (max-width: 600px) {
-    .tabela th, .tabela td {
+    .tabela-container .tabela th, 
+    .tabela-container .tabela td {
         font-size: 12px; /* Reduz o tamanho da fonte em telas pequenas */
         padding: 6px; /* Ajusta o espaçamento */
     }

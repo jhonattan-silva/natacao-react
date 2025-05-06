@@ -1,33 +1,60 @@
+.tabelaContainer {
+  width: 100%;
+  overflow-x: auto;
+  margin: 20px auto;
+}
+
 .tabela {
   width: 80%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
-.tabela th, .tabela td {
+.tabelaContainer .tabela th, 
+.tabelaContainer .tabela td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: center; /* Centraliza horizontalmente */
   vertical-align: middle; /* Centraliza verticalmente */
+  position: relative; /* Garante que estilos próprios sejam aplicados */
 }
 
-.tabela th {
-  background-color: #67bbff;
+.tabelaContainer .tabela th {
+  background-color: #67bbff !important;
   text-align: center;
+  position: relative; /* Para garantir que o z-index funcione */
+  z-index: 1;
 }
 
-.tabela tbody tr:nth-child(even) {
+/* Corrigindo o problema da primeira coluna - removendo o !important para background-color */
+.tabelaContainer .tabela th:first-child, 
+.tabelaContainer .tabela td:first-child {
+  position: relative;
+  left: auto;
+  z-index: auto;
+  /* Removido o background-color: inherit !important; para permitir que o th receba a cor correta */
+}
+
+/* Garantir que todos os cabeçalhos tenham a mesma cor de fundo */
+.tabelaContainer .tabela th:first-child {
+  background-color: #67bbff !important; /* Mesma cor dos outros cabeçalhos */
+}
+
+/* Estilos alternados por linha, aplicados diretamente na linha (tr) 
+.tabelaContainer .tabela tbody tr:nth-child(even) {
   background-color: #abe2f8;
 }
-
-.tabela tbody tr:nth-child(odd) {
+*/
+.tabelaContainer .tabela tbody tr:nth-child(odd) {
   background-color: #ffffff;
 }
 
-.tabela tbody tr:hover {
-  background-color: #75f78b;
+/* Garantir que o hover funcione em todas as linhas */
+.tabelaContainer .tabela tbody tr:hover {
+  background-color: #75f78b !important; /* Adicionando !important para sobrescrever outros estilos */
 }
 
-.tabela tbody td {
+.tabelaContainer .tabela tbody td {
   justify-content: center; /* Centraliza horizontalmente */
   align-items: center; /* Centraliza verticalmente */
 }

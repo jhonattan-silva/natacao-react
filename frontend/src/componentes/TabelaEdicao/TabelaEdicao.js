@@ -24,34 +24,42 @@ const TabelaEdicao = ({ dados, colunasOcultas = [], colunasTitulos = {}, onEdit,
     return <p>Nenhum dado disponível.</p>;
   }
 
+  // Envolvendo a tabela em uma div para melhor isolamento de estilos
   return (
-    <table className={style.tabela}>
-      <thead>
-        <tr>
-          {colunas.map((coluna) => (
-            <th key={coluna}>{colunasTitulos[coluna] || coluna}</th>
-          ))}
-          {(onEdit || onInativar || onDelete || funcExtra) && <th>Ações</th>} {/* Condicional para exibir Ações */}
-        </tr>
-      </thead>
-      <tbody>
-        {dados.map((linha, index) => (
-          <tr key={index} {...(renderLinha ? renderLinha(linha) : {})}>
-            {colunas.map((coluna, idx) => (
-              <td key={idx}>{linha[coluna]}</td>
+    <div className={style.tabelaContainer}>
+      <table className={style.tabela}>
+        <thead>
+          <tr>
+            {colunas.map((coluna) => (
+              <th key={coluna}>{colunasTitulos[coluna] || coluna}</th>
             ))}
-            {(onEdit || onInativar || onDelete || funcExtra) && (
-              <td>
-                {onEdit && <BotaoTabela tipo="editar" onClick={() => onEdit(linha.id)} />}
-                {onInativar && <BotaoTabela tipo="inativar" onClick={() => onInativar(linha.id)} />}
-                {onDelete && <BotaoTabela tipo="excluir" onClick={() => onDelete(linha.id)} />}
-                {funcExtra && funcExtra(linha)}
-              </td>
-            )}
+            {(onEdit || onInativar || onDelete || funcExtra) && <th>Ações</th>} {/* Condicional para exibir Ações */}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {dados.map((linha, index) => {
+            // Obtém os atributos da linha, como className e style
+            const linhaProps = renderLinha ? renderLinha(linha) : {};
+            
+            return (
+              <tr key={index} {...linhaProps}>
+                {colunas.map((coluna, idx) => (
+                  <td key={idx}>{linha[coluna]}</td>
+                ))}
+                {(onEdit || onInativar || onDelete || funcExtra) && (
+                  <td>
+                    {onEdit && <BotaoTabela tipo="editar" onClick={() => onEdit(linha.id)} />}
+                    {onInativar && <BotaoTabela tipo="inativar" onClick={() => onInativar(linha.id)} />}
+                    {onDelete && <BotaoTabela tipo="excluir" onClick={() => onDelete(linha.id)} />}
+                    {funcExtra && funcExtra(linha)}
+                  </td>
+                )}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 };
 

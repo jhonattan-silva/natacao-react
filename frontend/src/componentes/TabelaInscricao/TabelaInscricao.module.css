@@ -15,27 +15,29 @@
     position: relative; /* Garante alinhamento correto */
 }
 
-table {
+.containerTabela table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed; /* Mantém o layout estável */
 }
 
-thead {
+.containerTabela thead {
     position: sticky;
     top: 0;
     background-color: #fff; /* Mantém a cor ao fixar */
     z-index: 3; /* Ensure header stays above sticky columns */
 }
 
-th, td {
+.containerTabela th, 
+.containerTabela td {
     padding: 8px;
     text-align: left;
     border: 1px solid #ddd;
     min-width: 120px; /* Aumenta largura mínima das colunas */
 }
 
-th:first-child, td:first-child {
+.containerTabela th:first-child, 
+.containerTabela td:first-child {
     position: sticky; /* Make the first column sticky */
     left: 0; /* Stick to the left */
     background-color: #fff; /* Add background to avoid overlap */
@@ -44,7 +46,7 @@ th:first-child, td:first-child {
     white-space: nowrap; /* Garante que o texto não quebre */
 }
 
-th {
+.containerTabela th {
     background-color: #f2f2f2;
     text-align: center;
     font-size: 14px;
@@ -59,7 +61,7 @@ th {
         position: relative; /* Necessário para sticky funcionar */
     }
 
-    table {
+    .containerTabela table {
         min-width: 1000px; /* Garante que a tabela tenha largura suficiente */
         border-collapse: collapse;
         overflow-x: auto; /* Adiciona rolagem horizontal */
@@ -67,14 +69,16 @@ th {
         position: relative; /* Necessário para sticky funcionar */
     }
 
-    th, td {
+    .containerTabela th, 
+    .containerTabela td {
         padding: 8px;
         text-align: left;
         border: 1px solid #ddd;
         white-space: nowrap; /* Evita quebra de texto */
     }
 
-    th:first-child, td:first-child {
+    .containerTabela th:first-child, 
+    .containerTabela td:first-child {
         position: sticky; /* Torna a primeira coluna fixa */
         left: 0; /* Fixa a coluna à esquerda */
         background-color: #fff; /* Evita sobreposição visual */
@@ -83,7 +87,7 @@ th {
         white-space: nowrap;
     }
 
-    thead {
+    .containerTabela thead {
         position: sticky;
         top: 0;
         background-color: #fff; /* Mantém a cor ao fixar */
