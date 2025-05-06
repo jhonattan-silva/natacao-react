@@ -282,7 +282,7 @@ const Inscricao = () => {
 
             setTimeout(() => {
                 window.location.reload(); // Recarrega a página após 3 segundos
-            }, 30000);
+            }, 3000);
             await fetchDadosEvento(); // Atualiza a lista de inscrições
         } catch (error) {
             console.error("Erro ao realizar a inscrição:", error);
@@ -331,6 +331,30 @@ const Inscricao = () => {
                                         </li>
                                     ))}
                                 </ul>
+                                {/* Botão para baixar a lista de inscritos */}
+                                <div className={styles.centralizado}>
+                                    <Botao
+                                        onClick={() =>
+                                            gerarPDFInscricoes(
+                                                inscricoesIndividuais.map(insc => ({
+                                                    ...insc,
+                                                    nadadorNome: nadadores.find(n => String(n.id) === String(insc.nadadorId))?.nome || 'N/D',
+                                                    equipeNome: nomeEquipe || user?.user?.equipeNome || 'N/D',
+                                                    distancia: provas.find(p => String(p.id) === String(insc.provaId))?.distancia || '',
+                                                    estilo: provas.find(p => String(p.id) === String(insc.provaId))?.estilo || '',
+                                                    sexo: provas.find(p => String(p.id) === String(insc.provaId))?.sexo || ''
+                                                })),
+                                                eventos.find(e => String(e.id) === String(eventoSelecionado)) || {},
+                                                nomeEquipe || user?.user?.equipeNome || 'N/D',
+                                                user?.user?.nome || user?.user?.email || 'N/D',
+                                                inscricoesRevezamento,
+                                                provas
+                                            )
+                                        }
+                                    >
+                                        BAIXAR LISTA DE INSCRITOS (Já salvos)
+                                    </Botao>
+                                </div>
                             </div>
                         )}
 
