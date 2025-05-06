@@ -8,8 +8,10 @@ import Formulario from '../../componentes/Formulario/Formulario';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
 import { validarCPF, validarCelular, aplicarMascaraCPF, aplicarMascaraCelular } from '../../servicos/functions';
+import useAlerta from '../../hooks/useAlerta';
 
 const Usuarios = () => {
+    const { mostrar: mostrarAlerta, componente: AlertaComponente } = useAlerta();
     const [usuarios, setUsuarios] = useState([]);
     const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
     const [equipes, setEquipes] = useState(''); // controla as equipes
@@ -148,10 +150,10 @@ const Usuarios = () => {
                     usuario.id === id ? { ...usuario, ativo: novoStatus } : usuario
                 )
             );
-            alert(`Usuário ${ativo ? 'inativado' : 'ativado'} com sucesso!`);
+            mostrarAlerta(`Usuário ${ativo ? 'inativado' : 'ativado'} com sucesso!`);
         } catch (error) {
             console.error('Erro ao inativar/ativar usuário:', error);
-            alert('Erro ao inativar/ativar usuário. Verifique os logs.');
+            mostrarAlerta('Erro ao inativar/ativar usuário. Verifique os logs.');
         }
     };
 
@@ -241,23 +243,23 @@ const Usuarios = () => {
 
         // Validações
         if (!nomeUsuario || !cpf || (!isEditing && !senha) || !celular || !email) {
-            alert('Por favor, preencha todos os campos obrigatórios.');
+            mostrarAlerta('Por favor, preencha todos os campos obrigatórios.');
             return; // Interrompe o processo de salvamento se houver campos vazios
         }
 
         if (!validarCPF(cpf)) {
-            alert('CPF inválido.');
+            mostrarAlerta('CPF inválido.');
             return;
         }
 
         if (!validarCelular(celular)) {
-            alert('Celular inválido.');
+            mostrarAlerta('Celular inválido.');
             return;
         }
 
         // Verifica se o perfil de treinador está selecionado sem equipe associada
         if (perfisSelecionados.includes(perfilEspecificoId) && !equipeSelecionada) {
-            alert('É necessário Vincular uma equipe ao treinador');
+            mostrarAlerta('É necessário Vincular uma equipe ao treinador');
             return;
         }
 
@@ -275,24 +277,25 @@ const Usuarios = () => {
             if (isEditing) {
                 // Edita o usuário
                 await api.put(`usuarios/atualizarUsuario/${editUserId}`, usuarioDados);
-                alert('Usuário atualizado com sucesso!');
+                mostrarAlerta('Usuário atualizado com sucesso!');
             } else {
                 // Cria um novo usuário
                 await api.post(apiCadastraUsuario, usuarioDados);
-                alert('Usuário cadastrado com sucesso!');
+                mostrarAlerta('Usuário cadastrado com sucesso!');
             }
 
             await fetchUsuarios(); // Atualiza a lista de usuários
             limparFormulario(); // Reseta o formulário
         } catch (error) {
             console.error('Erro ao salvar o usuário:', error);
-            alert('Erro ao salvar o usuário. Verifique os logs.');
+            mostrarAlerta('Erro ao salvar o usuário. Verifique os logs.');
         }
     };
 
     return (
         <>
             <CabecalhoAdmin />
+            {AlertaComponente}
             <div className={style.usuarios}>
                 <h2>USUÁRIOS</h2>
                 {!formVisivel && (

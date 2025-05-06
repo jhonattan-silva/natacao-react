@@ -17,8 +17,13 @@ router.get('/listarEventos', async (req, res) => {
 router.get('/listarNadadores/:equipeId', async (req, res) => {
     try {
         const { equipeId } = req.params; // Extrai o equipeId da rota
-        // Alteração: incluir filtro para nadadores ativos e ordenar alfabeticamente pelo nome
-        const [rows] = await db.query('SELECT * FROM nadadores WHERE equipes_id = ? AND ativo = 1 ORDER BY nome ASC', [equipeId]); // Busca todos os nadadores
+        const [rows] = await db.query(`
+            SELECT n.*, e.nome AS equipe_nome
+            FROM nadadores n
+            JOIN equipes e ON n.equipes_id = e.id
+            WHERE n.equipes_id = ? AND n.ativo = 1
+            ORDER BY n.nome ASC
+        `, [equipeId]); // Busca todos os nadadores
         res.json(rows); // Retorna a lista de nadadores em JSON
     } catch (error) {
         console.error('Erro ao buscar nadadores:', error); // Loga o erro no servidor
@@ -62,15 +67,29 @@ router.get('/listarInscricoes/:eventoId', async (req, res) => {
 
     try {
         const [inscricoesIndividuais] = await db.query(`
-            SELECT nadadores_id AS nadadorId, eventos_provas_id AS provaId 
-            FROM inscricoes
-            WHERE eventos_id = ?
+            SELECT 
+                i.nadadores_id AS nadadorId,
+                n.nome AS nadadorNome,
+                i.eventos_provas_id AS provaId,
+                p.estilo,
+                p.distancia
+            FROM inscricoes i
+            JOIN nadadores n ON n.id = i.nadadores_id
+            JOIN eventos_provas ep ON ep.id = i.eventos_provas_id
+            JOIN provas p ON p.id = ep.provas_id
+            WHERE i.eventos_id = ?
         `, [eventoId]);
 
         const [inscricoesRevezamento] = await db.query(`
-            SELECT equipes_id AS equipeId, eventos_provas_id AS provaId
-            FROM revezamentos_inscricoes
-            WHERE eventos_id = ?
+            SELECT 
+                r.equipes_id AS equipeId,
+                r.eventos_provas_id AS provaId,
+                p.estilo,
+                p.distancia
+            FROM revezamentos_inscricoes r
+            JOIN eventos_provas ep ON ep.id = r.eventos_provas_id
+            JOIN provas p ON p.id = ep.provas_id
+            WHERE r.eventos_id = ?
         `, [eventoId]);
 
         res.json({ inscricoesIndividuais, inscricoesRevezamento });
@@ -79,6 +98,7 @@ router.get('/listarInscricoes/:eventoId', async (req, res) => {
         res.status(500).json({ message: 'Erro ao buscar inscrições.' });
     }
 });
+
 
 // Nova rota para verificar inscrições de revezamento diretamente
 router.get('/verificarRevezamento/:eventoId', async (req, res) => {

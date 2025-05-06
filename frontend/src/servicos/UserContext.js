@@ -1,21 +1,30 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
+import api from "./api";
+import {jwtDecode} from "jwt-decode";
 
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true); // Estado de carregamento
+    const [loading, setLoading] = useState(true);
 
-    const atualizarUsuario = () => {
+    const atualizarUsuario = async () => {
         const token = localStorage.getItem("token");
         if (token) {
-            const decodedToken = jwtDecode(token);
-            setUser(decodedToken);
+            const decoded = jwtDecode(token);
+            let perfil = { ...decoded };
+            try {
+                const resp = await api.get(`/usuarios/buscarUsuario/${decoded.id}`);
+                const { nome, email } = resp.data;
+                perfil = { ...decoded, nome, email };
+            } catch {
+                // falha ao buscar perfil, continua apenas com decoded
+            }
+            setUser(perfil);
         } else {
             setUser(null);
         }
-        setLoading(false); // Indica que o carregamento terminou
+        setLoading(false);
     };
 
     useEffect(() => {

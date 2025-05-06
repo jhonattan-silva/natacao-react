@@ -145,7 +145,17 @@ router.put('/atualizarEtapas/:id', async (req, res) => {
     const connection = await db.getConnection(); // Obtém conexão para transação
 
     try {
-        console.log('Dados recebidos para atualização:', req.body);
+        // Verifica se existem inscrições associadas à etapa
+        const [inscricoes] = await connection.query(
+            'SELECT COUNT(*) AS total FROM inscricoes WHERE eventos_id = ?',
+            [etapaId]
+        );
+
+        if (inscricoes[0].total > 0) {
+            return res.status(400).json({
+                error: 'Esse evento já possui nadadores inscritos, por favor contate o desenvolvedor',
+            });
+        }
 
         await connection.beginTransaction(); // Inicia a transação
 

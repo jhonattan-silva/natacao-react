@@ -5,6 +5,8 @@ import Botao from "../../componentes/Botao/Botao";
 import TabelaInscricao from "../../componentes/TabelaInscricao/TabelaInscricao";
 import api from "../../servicos/api";
 import { useUser } from "../../servicos/UserContext"; // Importar o contexto do usuário logado no sistema
+import useAlerta from "../../hooks/useAlerta"; // Importar o hook useAlerta
+import { gerarPDFInscricoes } from "../../servicos/relatoriosPDF"; // Adicione esta linha
 import styles from "./Inscricao.module.css"; // Importar o arquivo CSS como módulo
 
 const Inscricao = () => {
@@ -15,8 +17,11 @@ const Inscricao = () => {
     const [selecoes, setSelecoes] = useState({});
     const [revezamentos, setRevezamentos] = useState([]); // Lista de revezamentos
     const [selecoesRevezamento, setSelecoesRevezamento] = useState({}); // Estado para participação em revezamento
-    const [inscricoesRealizadas, setInscricoesRealizadas] = useState([]); // Novo estado para inscrições realizadas
+    const [inscricoesIndividuais, setInscricoesIndividuais] = useState([]); // Inscrições individuais
+    const [inscricoesRevezamento, setInscricoesRevezamento] = useState([]); // Inscrições de revezamento
+    const [nomeEquipe, setNomeEquipe] = useState(''); // Novo estado para nome da equipe
     const user = useUser(); // Obter o usuário do contexto do usuário
+    const { mostrar: mostrarAlerta, componente: alertaComponente } = useAlerta(); // Usar o hook useAlerta
 
     const apiEventos = `/inscricao/listarEventos`;
     const apiListaNadadores = `/inscricao/listarNadadores`;
@@ -83,7 +88,8 @@ const Inscricao = () => {
 
             setSelecoes(novasSelecoes);
             setSelecoesRevezamento(novasSelecoesRevezamento);
-            setInscricoesRealizadas(inscricoesResponse.data.inscricoesIndividuais); // Atualiza o estado com as inscrições realizadas
+            setInscricoesIndividuais(inscricoesResponse.data.inscricoesIndividuais); // Atualiza com inscrições individuais
+            setInscricoesRevezamento(inscricoesResponse.data.inscricoesRevezamento); // Atualiza com inscrições de revezamento
         } catch (error) {
             console.error("Erro ao buscar dados do evento:", error);
         }
@@ -95,45 +101,73 @@ const Inscricao = () => {
         }
     }, [eventoSelecionado]);
 
+    // Buscar nome da equipe via nadadores ao carregar usuário
+    useEffect(() => {
+        const fetchNomeEquipe = async () => {
+            const equipeId = user?.user?.equipeId?.[0];
+            if (!equipeId) return;
+            try {
+                // Busca nadadores da equipe
+                const response = await api.get(`${apiListaNadadores}/${equipeId}`);
+                // Tenta pegar o nome da equipe do primeiro nadador retornado
+                const nomeEquipeExtraido = response.data?.[0]?.equipe_nome || response.data?.[0]?.equipe || '';
+                setNomeEquipe(nomeEquipeExtraido || '');
+            } catch (error) {
+                console.error('Erro ao carregar nome da equipe:', error);
+            }
+        };
+        fetchNomeEquipe();
+    }, [user]);
+
     // Função para atualizar a seleção de checkboxes
     const handleCheckboxChange = (nadadorId, provaId, isChecked) => {
         setSelecoes(prevSelecoes => {
             const selecoesNadador = prevSelecoes[nadadorId] || {};
+            const provasSelecionadas = Object.entries(selecoesNadador).filter(([, val]) => val).map(([id]) => parseInt(id));
+            const totalSelecionadas = provasSelecionadas.length;
 
-            // Verificando se o nadador já tem 2 inscrições
-            const numeroDeInscricoes = Object.values(selecoesNadador).filter(Boolean).length;
-            if (numeroDeInscricoes >= 2 && isChecked) {
-                alert("O nadador já tem o máximo de 2 provas.");
+            if (totalSelecionadas >= 2 && isChecked) {
+                mostrarAlerta("O nadador já tem o máximo de 2 provas.");
                 return prevSelecoes;
             }
 
-            // Verificando se a prova selecionada é de 25 metros
-            const provaSelecionada = provas.find(prova => prova.id === provaId);
-            if (provaSelecionada.distancia === "25" && isChecked) {
-                // Verificando se já existe uma prova de estilo "LIVRE" selecionada
-                const temProvaLivre = Object.keys(selecoesNadador).some(id => {
-                    const prova = provas.find(prova => prova.id === parseInt(id));
-                    return prova && prova.estilo === "LIVRE";
-                });
+            const provaSelecionada = provas.find(p => p.id === provaId);
+            const distancia = provaSelecionada?.distancia;
+            const estilo = provaSelecionada?.estilo;
 
-                if (temProvaLivre) {
-                    alert("Não é possível selecionar uma prova de 25 metros e uma prova de estilo LIVRE.");
-                    return prevSelecoes;
-                }
+            const jaSelecionou25 = provasSelecionadas.some(id => {
+                const prova = provas.find(p => p.id === id);
+                return prova?.distancia === "25";
+            });
+
+            const jaSelecionouLivre = provasSelecionadas.some(id => {
+                const prova = provas.find(p => p.id === id);
+                return prova?.estilo === "LIVRE";
+            });
+
+            const jaSelecionouNao50 = provasSelecionadas.some(id => {
+                const prova = provas.find(p => p.id === id);
+                return prova?.distancia !== "50";
+            });
+
+            // REGRA: 25 + LIVRE não pode, em nenhuma ordem
+            if (isChecked && (
+                (distancia === "25" && jaSelecionouLivre) ||
+                (estilo === "LIVRE" && jaSelecionou25)
+            )) {
+                mostrarAlerta("Não é permitido combinar uma prova de 25m com uma prova de estilo LIVRE.");
+                return prevSelecoes;
             }
 
-            // Verificando se a prova selecionada é de estilo "LIVRE"
-            if (provaSelecionada.estilo === "LIVRE" && isChecked) {
-                // Verificando se já existe uma prova de 25 metros selecionada
-                const temProva25 = Object.keys(selecoesNadador).some(id => {
-                    const prova = provas.find(prova => prova.id === parseInt(id));
-                    return prova && prova.distancia === "25";
-                });
+            // REGRA: Nenhuma prova diferente de distância "50" pode ser combinada com uma prova de "25"
+            if (isChecked && distancia === "25" && jaSelecionouNao50) {
+                mostrarAlerta("Não é permitido combinar uma prova de 25m com uma prova de distância diferente de 50m.");
+                return prevSelecoes;
+            }
 
-                if (temProva25) {
-                    alert("Não é possível selecionar uma prova de estilo LIVRE e uma prova de 25 metros.");
-                    return prevSelecoes;
-                }
+            if (isChecked && distancia !== "50" && jaSelecionou25) {
+                mostrarAlerta("Não é permitido combinar uma prova de distância diferente de 50m com uma prova de 25m.");
+                return prevSelecoes;
             }
 
             const novasSelecoes = {
@@ -147,6 +181,7 @@ const Inscricao = () => {
         });
     };
 
+
     const handleRevezamentoChange = (provaId, value) => {
         setSelecoesRevezamento(prevSelecoes => {
             const novoEstado = {
@@ -156,21 +191,20 @@ const Inscricao = () => {
             return novoEstado;
         });
     };
-    
+
 
     const aoSalvar = async () => {
         if (!eventoSelecionado) {
-            alert("Selecione um evento para continuar.");
+            mostrarAlerta("Selecione um evento para continuar.");
             return;
         }
-        
+
         const equipeId = user?.user?.equipeId?.[0];
         if (!equipeId) {
-            alert("Você precisa fazer parte de uma equipe para realizar a inscrição.");
+            mostrarAlerta("Você precisa fazer parte de uma equipe para realizar a inscrição.");
             return;
         }
-    
-        // Verificando se o nadador já tem inscrições
+
         const inscricoesIndividuais = Object.entries(selecoes).flatMap(([nadadorId, provas]) =>
             Object.entries(provas)
                 .filter(([, isChecked]) => isChecked)
@@ -181,107 +215,160 @@ const Inscricao = () => {
                     equipeId
                 }))
         );
-    
+
         const inscricoesRevezamento = Object.entries(selecoesRevezamento)
             .filter(([, valor]) => valor === "Sim")
-            .map(([provaId]) => ({
-                eventoId: eventoSelecionado,
-                provaId,
-                equipeId
-            }));
-    
-            // Criando o payload com as inscrições individuais e de revezamento
+            .map(([provaId]) => {
+                // Buscar a prova correspondente, incluindo revezamentos
+                const prova = [...provas, ...revezamentos].find(p => String(p.id) === String(provaId));
+                if (!prova) {
+                    console.error(`Prova não encontrada para o ID: ${provaId}`);
+                }
+                return {
+                    eventoId: eventoSelecionado,
+                    provaId,
+                    equipeId,
+                    distancia: prova?.distancia || 'N/D', // Corrigido para evitar valores vazios
+                    estilo: prova?.estilo || 'N/D', // Corrigido para evitar valores vazios
+                    sexo: prova?.sexo || 'N/D' // Adicionado para consistência
+                };
+            });
+
         const payload = [...inscricoesIndividuais, ...inscricoesRevezamento];
-    
+
         if (payload.length === 0) {
-            alert("Nenhuma inscrição foi selecionada.");
+            mostrarAlerta("Nenhuma inscrição foi selecionada.");
             return;
         }
-        
+
         try {
             await api.post(apiSalvarInscricao, payload);
-            alert(`Inscrição realizada com sucesso! Total de inscritos: ${payload.length}`);
-            await fetchDadosEvento();
-            window.location.reload(); // Atualiza a tela
+            mostrarAlerta(`Inscrição realizada com sucesso! Total de inscritos: ${payload.length}`);
+
+            // Montar dados detalhados para cada inscrição individual
+            const inscricoesDetalhadas = inscricoesIndividuais.map(insc => {
+                const nadador = nadadores.find(n => String(n.id) === String(insc.nadadorId));
+                const prova = [...provas, ...revezamentos].find(p => String(p.id) === String(insc.provaId));
+                return {
+                    nadadorNome: nadador?.nome || 'N/D',
+                    equipeNome: nomeEquipe || nadador?.equipe || user?.user?.equipeNome || 'N/D',
+                    distancia: prova?.distancia || '',
+                    estilo: prova?.estilo || '',
+                    sexo: prova?.sexo || ''
+                };
+            });
+
+            // Montar dados detalhados para inscrições de revezamento
+            const inscricoesRevezamentoDetalhadas = inscricoesRevezamento.map(insc => ({
+                equipeNome: nomeEquipe || user?.user?.equipeNome || 'N/D',
+                distancia: insc.distancia,
+                estilo: insc.estilo,
+                sexo: insc.sexo
+            }));
+
+            // Buscar o evento selecionado para passar ao PDF
+            const eventoObj = eventos.find(e => String(e.id) === String(eventoSelecionado)) || {};
+            const equipeNomeParaPDF = nomeEquipe || user?.user?.equipeNome || 'N/D';
+            const gerador = user?.user?.nome || user?.user?.email || 'N/D';
+
+            gerarPDFInscricoes(
+                inscricoesDetalhadas,
+                eventoObj,
+                equipeNomeParaPDF,
+                gerador,
+                inscricoesRevezamentoDetalhadas,
+                provas
+            );
+
+            setTimeout(() => {
+                window.location.reload(); // Recarrega a página após 3 segundos
+            }, 30000);
+            await fetchDadosEvento(); // Atualiza a lista de inscrições
         } catch (error) {
             console.error("Erro ao realizar a inscrição:", error);
-            alert('Erro ao salvar a inscrição.');
+            mostrarAlerta('Erro ao salvar a inscrição.');
         }
     };
-    
+
 
     return (
         <>
             <CabecalhoAdmin />
-                <h1>INSCRIÇÃO</h1>
-                <div className={styles.centralizado}>
-                    <ListaSuspensa
-                        fonteDados={apiEventos}
-                        onChange={(id) => setEventoSelecionado(id)}
-                        textoPlaceholder="Selecione um evento"
-                        obrigatorio={true}
-                        className={styles.listaSuspensa}
-                    />
-                    {eventoSelecionado && (
-                        <div>
-                            <div className={styles.provasLegenda}>
-                                <h3>Provas do Evento</h3>
+            {alertaComponente}
+            <h1>INSCRIÇÃO</h1>
+            <div className={styles.centralizado}>
+                <ListaSuspensa
+                    fonteDados={apiEventos}
+                    onChange={(id) => setEventoSelecionado(id)}
+                    textoPlaceholder="Selecione um evento"
+                    obrigatorio={true}
+                    className={styles.listaSuspensa}
+                />
+                {eventoSelecionado && (
+                    <div>
+                        <div className={styles.provasLegenda}>
+                            <h3>Provas do Evento</h3>
+                            <ul>
+                                {provas.map(prova => (
+                                    <li key={prova.id}>
+                                        {prova.ordem} - {prova.distancia}m {prova.estilo} {formatSexo(prova.sexo)}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                        {(inscricoesIndividuais.length > 0 || inscricoesRevezamento.length > 0) && (
+                            <div className={`${styles.provasLegenda} ${styles.inscricoesRealizadas}`}>
+                                <h3>Inscrições Realizadas até o momento</h3>
                                 <ul>
-                                    {provas.map(prova => (
-                                        <li key={prova.id}>
-                                            {prova.ordem} - {prova.distancia}m {prova.estilo} {formatSexo(prova.sexo)}
+                                    {inscricoesIndividuais.map((inscricao, index) => (
+                                        <li key={`individual-${inscricao.nadadorId}-${inscricao.provaId}-${index}`}>
+                                            #{index + 1} - {inscricao.nadadorNome}, Prova: {inscricao.distancia}m {inscricao.estilo}
+                                        </li>
+                                    ))}
+                                    {inscricoesRevezamento.map((inscricao, index) => (
+                                        <li key={`revezamento-${inscricao.equipeId}-${inscricao.provaId}-${index}`}>
+                                            #R{index + 1} - Revezamento, Prova: {inscricao.distancia}m {inscricao.estilo}
                                         </li>
                                     ))}
                                 </ul>
                             </div>
-                            {/* Novo container para listar inscrições realizadas */}
-                            {inscricoesRealizadas.length > 0 && (
-                                <div className={styles.inscricoesRealizadas}>
-                                    <h3>Inscrições Realizadas</h3>
-                                    <ul>
-                                        {inscricoesRealizadas.map(inscricao => (
-                                            <li key={inscricao.nadadorId}>
-                                                Nadador ID: {inscricao.nadadorId}, Prova ID: {inscricao.provaId}
-                                            </li>
-                                        ))}
-                                    </ul>
+                        )}
+
+                        {nadadores.length > 0 && provas.length > 0 ? (
+                            <>
+                                <TabelaInscricao
+                                    nadadores={nadadores}
+                                    provas={provas}
+                                    selecoes={selecoes}
+                                    onCheckboxChange={handleCheckboxChange}
+                                />
+                                <div className={styles.containerTabelaRevezamentos}>
+                                    <h3>Revezamentos</h3>
+                                    {revezamentos.map(prova => (
+                                        <div key={prova.id} className={styles.revezamentoEntry}>
+                                            <span>
+                                                {prova.ordem} - {prova.distancia}m {prova.estilo} {formatSexo(prova.sexo)}
+                                            </span>
+                                            <ListaSuspensa
+                                                opcoes={[{ id: "Sim", nome: "Sim" }, { id: "Não", nome: "Não" }]}
+                                                onChange={(value) => handleRevezamentoChange(prova.id, value)}
+                                                valorSelecionado={selecoesRevezamento[prova.id] || "Não"}
+                                                selectId="id"
+                                                selectExibicao="nome"
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
-                            )}
-                            {nadadores.length > 0 && provas.length > 0 ? (
-                                <>
-                                    <TabelaInscricao
-                                        nadadores={nadadores}
-                                        provas={provas}
-                                        selecoes={selecoes}
-                                        onCheckboxChange={handleCheckboxChange}
-                                    />
-                                    <div className={styles.containerTabelaRevezamentos}>
-                                        <h3>Revezamentos</h3>
-                                        {revezamentos.map(prova => (
-                                            <div key={prova.id} className={styles.revezamentoEntry}>
-                                                <span>
-                                                    {prova.ordem} - {prova.distancia}m {prova.estilo} {formatSexo(prova.sexo)}
-                                                </span>
-                                                <ListaSuspensa
-                                                    opcoes={[{ id: "Sim", nome: "Sim" }, { id: "Não", nome: "Não" }]}
-                                                    onChange={(value) => handleRevezamentoChange(prova.id, value)}
-                                                    valorSelecionado={selecoesRevezamento[prova.id] || "Não"}
-                                                    selectId="id"
-                                                    selectExibicao="nome"
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </>
-                            ) : (
-                                <p>VOCÊ PRECISA FAZER PARTE DE UMA EQUIPE...</p>
-                            )}
-                            <div className={styles.centralizado}>
-                                <Botao onClick={aoSalvar}>REALIZAR INSCRIÇÃO</Botao>
-                            </div>
+                            </>
+                        ) : (
+                            <p>VOCÊ PRECISA FAZER PARTE DE UMA EQUIPE...</p>
+                        )}
+                        <div className={styles.centralizado}>
+                            <Botao onClick={aoSalvar}>REALIZAR INSCRIÇÃO</Botao>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
+            </div>
         </>
     );
 };

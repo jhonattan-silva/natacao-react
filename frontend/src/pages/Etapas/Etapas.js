@@ -9,6 +9,7 @@ import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
+import useAlerta from '../../hooks/useAlerta'; // Importa o hook useAlerta
 
 const Etapas = () => {
     const [etapas, setEtapas] = useState([]);
@@ -21,6 +22,7 @@ const Etapas = () => {
     const [etapaAtual, setEtapaAtual] = useState(1); // Novo estado para controlar a etapa atual
     const [provasSelecionadas, setProvasSelecionadas] = useState([]); // Novo estado para armazenar as provas selecionadas
     const ordemInputRefs = useRef({}); //ref para não perder o foco do input de ordem depois de alterar qualquer caracter
+    const { mostrar: mostrarAlerta, componente: alertaComponente } = useAlerta(); // Usa o hook useAlerta
 
     const apiListaEtapas = `/etapas/listarEtapas`;
     const apiCadastraEtapas = `/etapas/cadastrarEtapas`;
@@ -72,8 +74,8 @@ const Etapas = () => {
             setDataEtapa(date.split('-').reverse().join('/'));
             setHoraEtapa(time.substring(0, 5));
             setCidadeEtapa(etapa.cidade);
-            setSedeEtapa(etapa.sede || '');         // Updated to fallback to empty string
-            setEnderecoEtapa(etapa.endereco || '');   // Updated to fallback to empty string
+            setSedeEtapa(etapa.sede || '');     
+            setEnderecoEtapa(etapa.endereco || '');
             setTorneioEtapa(etapa.torneios_id);
             setRaias(etapa.quantidade_raias ? String(etapa.quantidade_raias) : '6');
 
@@ -116,11 +118,11 @@ const Etapas = () => {
         if (window.confirm("Tem certeza que deseja excluir esta etapa?")) {
             try {
                 await api.delete(`${apiExcluiEtapa}/${id}`);
-                alert("Etapa excluída com sucesso!");
+                mostrarAlerta("Etapa excluída com sucesso!"); // Usa o hook para exibir o alerta
                 fetchData(); // Atualiza a lista após exclusão
             } catch (error) {
                 console.error("Erro ao excluir etapa:", error);
-                alert("Não foi possível excluir a etapa.");
+                mostrarAlerta("Não foi possível excluir a etapa."); // Usa o hook para exibir o alerta
             }
         }
     };
@@ -151,6 +153,11 @@ const Etapas = () => {
             setEtapaEditando(null); // Limpa o estado de edição
         } catch (error) {
             console.error('Erro ao editar etapa:', error);
+            if (error.response && error.response.data && error.response.data.error) {
+                mostrarAlerta(error.response.data.error); // Exibe a mensagem de erro retornada pelo backend
+            } else {
+                mostrarAlerta('Esse evento já possui nadadores inscritos, por favor contate o desenvolvedor');
+            }
         }
     };
 
@@ -358,11 +365,11 @@ const Etapas = () => {
     const abreInscricao = async (id, inscricaoAberta) => {
         try {
             await api.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota para abrir/fechar inscrição
-            alert(`Inscrição ${inscricaoAberta ? 'fechada' : 'aberta'} com sucesso!`);
+            mostrarAlerta(`Inscrição ${inscricaoAberta ? 'fechada' : 'aberta'} com sucesso!`); // Usa o hook
             fetchData(anoSelecionado); // Recarrega a lista de etapas do backend
         } catch (error) {
             console.error('Erro ao alterar inscrição:', error);
-            alert('Erro ao alterar inscrição.');
+            mostrarAlerta('Erro ao alterar inscrição.'); // Usa o hook
         }
     };
 
@@ -407,7 +414,7 @@ const Etapas = () => {
                 if (!isNaN(ordemCorrigida) && ordemCorrigida >= 1 && ordemCorrigida <= newProvas.length) {
                     newProvas[index].ordem = ordemCorrigida;
                 } else {
-                    alert(`A ordem deve ser um número entre 1 e ${newProvas.length}.`);
+                    mostrarAlerta(`A ordem deve ser um número entre 1 e ${newProvas.length}.`);
                     return newProvas; // Ignora valores inválidos
                 }
             }
@@ -428,7 +435,7 @@ const Etapas = () => {
         const ordensValidas = provasSelecionadas.every(prova => prova.ordem > 0 && !prova.duplicado);
 
         if (!ordensValidas) {
-            alert('Por favor, corrija as ordens duplicadas ou inválidas.');
+            mostrarAlerta('Por favor, corrija as ordens duplicadas ou inválidas.');
             return;
         }
 
@@ -450,10 +457,10 @@ const Etapas = () => {
 
             if (etapaEditando) {
                 await api.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, etapaCompleta);
-                alert('Evento atualizado com sucesso!');
+                mostrarAlerta('Evento atualizado com sucesso!');
             } else {
                 await api.post(apiCadastraEtapas, etapaCompleta);
-                alert('Evento salvo com sucesso!');
+                mostrarAlerta('Evento salvo com sucesso!');
             }
 
             setEtapaAtual(1);  // Volta para primeira etapa
@@ -461,16 +468,19 @@ const Etapas = () => {
             fetchData(anoSelecionado); // Atualiza a lista
         } catch (error) {
             console.error('Erro ao salvar a etapa:', error);
-            alert('Erro ao salvar a etapa.');
+            if (error.response && error.response.data && error.response.data.error) {
+                mostrarAlerta(error.response.data.error); // Exibe a mensagem de erro retornada pelo backend
+            } else {
+                mostrarAlerta('Erro ao salvar a etapa. Por favor, tente novamente.');
+            }
         }
     };
 
     const gerarPontuacao = async (id) => {
         try {
-            alert(`Pontuação gerada para a etapa ${id}!`);
+            mostrarAlerta(`Pontuação gerada para a etapa ${id}!`); // Usa o hook
         } catch (error) {
-            console.error('Erro ao gerar pontuação:', error);
-            alert('Erro ao gerar pontuação.');
+            mostrarAlerta('Erro ao gerar pontuação.'); // Usa o hook
         }
     };
 
@@ -598,6 +608,7 @@ const Etapas = () => {
                     </div>
                 )}
             </div>
+            {alertaComponente /* Renderiza o componente do hook */}
         </>
     );
 };

@@ -10,9 +10,11 @@ import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
 import { useUser } from '../../servicos/UserContext';
 import { validarCPF, aplicarMascaraCPF, aplicarMascaraCelular, validarCelular } from '../../servicos/functions';
 import BotaoTabela from '../../componentes/BotaoTabela/BotaoTabela';
+import useAlerta from '../../hooks/useAlerta'; // Importa o hook useAlerta
 
 const Nadadores = () => {
     const { user, loading } = useUser(); // Pega o estado de carregamento também
+    const { mostrar: mostrarAlerta, componente: alertaComponente } = useAlerta(); // Usa o hook useAlerta
     const [nadadores, setNadadores] = useState([]); //controle de nadadores
     const [equipes, setEquipes] = useState(''); // Controle de equipes listadas
     const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
@@ -98,7 +100,7 @@ const Nadadores = () => {
             setFormVisivel(true);
 
         } catch (error) {
-            alert('Erro ao editar nadador: ' + error.message);
+            mostrarAlerta('Erro ao editar nadador: ' + error.message); // Substitui alert pelo hook
         }
     };
 
@@ -115,10 +117,10 @@ const Nadadores = () => {
     
             if (!confirmacao) return;
             await api.put(`${apiInativarNadador}/${id}`, { ativo: novoStatus });    
-            alert(`Nadador ${ativoNumero === 1 ? "inativado" : "ativado"} com sucesso!`);
+            mostrarAlerta(`Nadador ${ativoNumero === 1 ? "inativado" : "ativado"} com sucesso!`); // Substitui alert pelo hook
             setTimeout(() => fetchNadadores(user?.equipeId), 500);
         } catch (error) {
-            alert("Erro ao alterar status do nadador.");
+            mostrarAlerta("Erro ao alterar status do nadador."); // Substitui alert pelo hook
         }
     };
     
@@ -140,11 +142,10 @@ const Nadadores = () => {
             setFormVisivel(false); // Esconde o formulário após salvar
         } catch (error) {
             if (error.response && error.response.status === 401) {
-                alert('Sessão expirada. Por favor, faça login novamente.');
+                mostrarAlerta('Sessão expirada. Por favor, faça login novamente.'); // Substitui alert pelo hook
                 window.location.href = '/login'; // Redireciona para a página de login
             } else {
-                console.error('Erro ao cadastrar Nadador:', error.message);
-                alert('Erro ao cadastrar Nadador: ' + error.message);
+                mostrarAlerta('Erro ao cadastrar Nadador: ' + error.message); // Substitui alert pelo hook
             }
         }
     };
@@ -164,11 +165,10 @@ const Nadadores = () => {
             setFormVisivel(false); // Esconde o formulário após salvar
         } catch (error) {
             if (error.response && error.response.status === 401) {
-                alert('Sessão expirada. Por favor, faça login novamente.');
+                mostrarAlerta('Sessão expirada. Por favor, faça login novamente.'); // Substitui alert pelo hook
                 window.location.href = '/login'; // Redireciona para a página de login
             } else {
-                console.error('Erro ao atualizar Nadador:', error.message);
-                alert('Erro ao atualizar Nadador: ' + error.message);
+                mostrarAlerta('Erro ao atualizar Nadador: ' + error.message); // Substitui alert pelo hook
             }
         }
     };
@@ -261,24 +261,24 @@ const Nadadores = () => {
 
         // Validações
         if (!nomeNadador || !cpf || !dataNasc || !celular || !sexo) {
-            alert('Por favor, preencha todos os campos obrigatórios.');
+            mostrarAlerta('Por favor, preencha todos os campos obrigatórios.'); // Substitui alert pelo hook
             return; // Interrompe o processo de salvamento se houver campos vazios
         }
 
         // Validação do CPF
         if (!validarCPF(cpf)) {
-            alert('CPF inválido. Por favor, insira um CPF válido.');
+            mostrarAlerta('CPF inválido. Por favor, insira um CPF válido.'); // Substitui alert pelo hook
             return;
         }
 
         if (!validarCelular(celular)) {
-            alert('Celular/Telefone Inválido');
+            mostrarAlerta('Celular/Telefone Inválido'); // Substitui alert pelo hook
             return;
         }
 
         // Verifica se `equipes` está definido
         if (!equipes) {
-            alert('Por favor, selecione uma equipe.');
+            mostrarAlerta('Por favor, selecione uma equipe.'); // Substitui alert pelo hook
             return;
         }
 
@@ -295,11 +295,11 @@ const Nadadores = () => {
         if (editando) {
             // Se `editando` for verdadeiro, atualiza o nadador existente
             await atualizarNadador(editNadadorId, nadadorDados);
-            alert('Nadador atualizado com sucesso!');
+            mostrarAlerta('Nadador atualizado com sucesso!'); // Substitui alert pelo hook
         } else {
             // Se não, adiciona um novo nadador
             await adicionarNadador(nadadorDados);
-            alert('Nadador salvo com sucesso!');
+            mostrarAlerta('Nadador salvo com sucesso!'); // Substitui alert pelo hook
         }
 
         limparFormulario(); // Limpa o formulário após salvar ou atualizar
@@ -368,6 +368,7 @@ const Nadadores = () => {
                     </div>
                 )}
             </div>
+            {alertaComponente /* Renderiza o componente do hook */}
         </>
     )
 };
