@@ -31,6 +31,9 @@ const Nadadores = () => {
     /* RADIO GROUP */
     const [sexo, setSexo] = useState('');
 
+    /* NOVO: estado para controlar a visualização de nadadores inativos */
+    const [mostrarInativos, setMostrarInativos] = useState(false);
+
     /* URLS de API */
     const apiListaNadadores = `nadadores/listarNadadores`;
     const apiCadastraNadador = `nadadores/cadastrarNadador`;
@@ -310,9 +313,21 @@ const Nadadores = () => {
             <CabecalhoAdmin />
             <div className={style.nadadores}>
                 <h2 className={style.titulo}>NADADORES</h2>
+                {/* NOVO: Container com classe específica para o checkbox de filtro de inativos */}
+                <div className={style.filtroInativosContainer}>
+                    <input 
+                        type="checkbox" 
+                        id="filtrarInativos" 
+                        checked={mostrarInativos} 
+                        onChange={(e) => setMostrarInativos(e.target.checked)} 
+                    />
+                    <label htmlFor="filtrarInativos">Mostrar inativos</label>
+                </div>
                 {!formVisivel && (
                     <TabelaEdicao
-                        dados={nadadores}
+                        dados={[...nadadores]
+                            .filter(n => mostrarInativos ? true : n.ativo === 1)
+                            .sort((a, b) => b.ativo - a.ativo)} // Alteração: filtrar ativos com base no checkbox
                         onEdit={handleEdit}
                         colunasOcultas={['id', 'equipes_id', 'ativo', 'categorias_id']}
                         colunasTitulos={{

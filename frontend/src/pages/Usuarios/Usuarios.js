@@ -2,7 +2,7 @@ import api from '../../servicos/api';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import TabelaEdicao from '../../componentes/TabelaEdicao/TabelaEdicao';
 import style from './Usuarios.module.css';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react'; //usecallback evita que o useEffect seja chamado em loop infinito
 import Botao from '../../componentes/Botao/Botao';
 import Formulario from '../../componentes/Formulario/Formulario';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
@@ -32,7 +32,7 @@ const Usuarios = () => {
     const apiInativarUsuario = `usuarios/inativarUsuario`;
 
     // Função para buscar todos os usuários e atualizar a lista
-    const fetchUsuarios = async () => {
+    const fetchUsuarios = useCallback(async () => {
         try {
             const response = await api.get(apiListaUsuarios);
             const usuariosComMascara = response.data.map(usuario => ({
@@ -43,12 +43,12 @@ const Usuarios = () => {
             }));
             setUsuarios(usuariosComMascara);
         } catch (error) {
-            console.error('Erro ao buscar dados:', error);
+            mostrarAlerta('Erro ao buscar dados.');
         }
-    };
+    }, [apiListaUsuarios, mostrarAlerta]);
 
     // Função para buscar todos os perfis e atualizar a lista
-    const fetchPerfis = async () => {
+    const fetchPerfis = useCallback(async () => {
         try {
             const responsePerfis = await api.get(apiListaPerfis);
             const perfilFormatado = responsePerfis.data.map(perfil => ({
@@ -57,19 +57,19 @@ const Usuarios = () => {
             }));
             setPerfis(perfilFormatado);
         } catch (error) {
-            console.error('Erro ao buscar perfis:', error);
+            mostrarAlerta('Erro ao buscar perfis.');
         }
-    };
+    }, [apiListaPerfis, mostrarAlerta]);
 
     // Função para buscar todas as equipes e atualizar a lista
-    const fetchEquipes = async () => {
+    const fetchEquipes = useCallback(async () => {
         try {
             const responseEquipes = await api.get(apiListaEquipes);
             setEquipes(responseEquipes.data);
         } catch (error) {
-            console.error('Erro ao buscar equipes:', error);
+            mostrarAlerta('Erro ao buscar equipes.');
         }
-    };
+    }, [apiListaEquipes, mostrarAlerta]);
 
     const aoSelecionarEquipe = (id) => {
         setEquipeSelecionada(parseInt(id, 10)); // Converter para número inteiro
@@ -80,7 +80,7 @@ const Usuarios = () => {
         fetchUsuarios();
         fetchEquipes();
         fetchPerfis();
-    }, []); // Array vazio para executar apenas uma vez
+    }, [fetchUsuarios, fetchEquipes, fetchPerfis]);
 
     useEffect(() => { // Atualiza a visibilidade da lista suspensa de equipes quando os perfis selecionados mudam
         setMostrarListaSuspensa(perfisSelecionados.includes(perfilEspecificoId)); // Atualiza a visibilidade da lista suspensa de equipes
@@ -97,7 +97,7 @@ const Usuarios = () => {
             const usuario = usuarios.find((user) => user.id === id);
 
             if (!usuario) {
-                console.error('Usuário não encontrado');
+                mostrarAlerta('Usuário não encontrado');
                 return;
             }
 
@@ -134,7 +134,7 @@ const Usuarios = () => {
                 setMostrarListaSuspensa(false);
             }
         } catch (error) {
-            console.error('Erro ao editar usuário:', error);
+            mostrarAlerta('Erro ao editar usuário.');
         }
     };
 
@@ -152,8 +152,7 @@ const Usuarios = () => {
             );
             mostrarAlerta(`Usuário ${ativo ? 'inativado' : 'ativado'} com sucesso!`);
         } catch (error) {
-            console.error('Erro ao inativar/ativar usuário:', error);
-            mostrarAlerta('Erro ao inativar/ativar usuário. Verifique os logs.');
+            mostrarAlerta('Erro ao inativar/ativar usuário.');
         }
     };
 
@@ -287,7 +286,6 @@ const Usuarios = () => {
             await fetchUsuarios(); // Atualiza a lista de usuários
             limparFormulario(); // Reseta o formulário
         } catch (error) {
-            console.error('Erro ao salvar o usuário:', error);
             mostrarAlerta('Erro ao salvar o usuário. Verifique os logs.');
         }
     };

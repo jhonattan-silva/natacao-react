@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import style from './TabelaEdicao.module.css';
 import BotaoTabela from '../BotaoTabela/BotaoTabela';
@@ -20,6 +20,17 @@ const TabelaEdicao = ({ dados, colunasOcultas = [], colunasTitulos = {}, onEdit,
     ? Object.keys(dados[0]).filter(coluna => !colunasOcultas.includes(coluna))
     : [];
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 600); // Estado para verificar se a tela é mobile
+  const [acoesDropdownId, setAcoesDropdownId] = useState(null); // Estado para controlar o dropdown de ações
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 600);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   if (!dados || dados.length === 0) {
     return <p>Nenhum dado disponível.</p>;
   }
@@ -30,8 +41,10 @@ const TabelaEdicao = ({ dados, colunasOcultas = [], colunasTitulos = {}, onEdit,
       <table className={style.tabela}>
         <thead>
           <tr>
-            {colunas.map((coluna) => (
-              <th key={coluna}>{colunasTitulos[coluna] || coluna}</th>
+            {colunas.map(coluna => (
+              <th key={coluna}>
+                {colunasTitulos[coluna] || (coluna.charAt(0).toUpperCase() + coluna.slice(1))}
+              </th>
             ))}
             {(onEdit || onInativar || onDelete || funcExtra) && <th>Ações</th>} {/* Condicional para exibir Ações */}
           </tr>
@@ -48,10 +61,40 @@ const TabelaEdicao = ({ dados, colunasOcultas = [], colunasTitulos = {}, onEdit,
                 ))}
                 {(onEdit || onInativar || onDelete || funcExtra) && (
                   <td>
-                    {onEdit && <BotaoTabela tipo="editar" onClick={() => onEdit(linha.id)} />}
-                    {onInativar && <BotaoTabela tipo="inativar" onClick={() => onInativar(linha.id)} />}
-                    {onDelete && <BotaoTabela tipo="excluir" onClick={() => onDelete(linha.id)} />}
-                    {funcExtra && funcExtra(linha)}
+                    {isMobile ? (
+                      <div className={style.escondeAcoes}>
+                        <button className={style.btnAcaoMobile} onClick={() => setAcoesDropdownId(acoesDropdownId === linha.id ? null : linha.id)}>
+                          Ações
+                        </button>
+                        {acoesDropdownId === linha.id && (
+                          <div className={style.acoesDropdown}>
+                            {onEdit && (
+                              <div onClick={() => { onEdit(linha.id); setAcoesDropdownId(null); }}>
+                                <BotaoTabela tipo="editar" onClick={() => {}} />
+                              </div>
+                            )}
+                            {onInativar && (
+                              <div onClick={() => { onInativar(linha.id); setAcoesDropdownId(null); }}>
+                                <BotaoTabela tipo="inativar" onClick={() => {}} />
+                              </div>
+                            )}
+                            {onDelete && (
+                              <div onClick={() => { onDelete(linha.id); setAcoesDropdownId(null); }}>
+                                <BotaoTabela tipo="excluir" onClick={() => {}} />
+                              </div>
+                            )}
+                            {funcExtra && funcExtra(linha)}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        {onEdit && <BotaoTabela tipo="editar" onClick={() => onEdit(linha.id)} />}
+                        {onInativar && <BotaoTabela tipo="inativar" onClick={() => onInativar(linha.id)} />}
+                        {onDelete && <BotaoTabela tipo="excluir" onClick={() => onDelete(linha.id)} />}
+                        {funcExtra && funcExtra(linha)}
+                      </>
+                    )}
                   </td>
                 )}
               </tr>

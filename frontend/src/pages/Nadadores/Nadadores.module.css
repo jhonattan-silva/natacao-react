@@ -200,3 +200,22 @@
     border-color: pink;
     color: white;
 }
+
+/* NOVO: Estilos específicos para o checkbox de filtro de nadadores inativos */
+.filtroInativosContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+    font-size: 1.5rem;
+    color: #ffffff;
+}
+.filtroInativosContainer input[type="checkbox"] {
+    transform: scale(1.5);
+    margin-right: 10px;
+}
+
+/* NOVO: Sobrescreve a cor do label dentro do filtro de inativos para branco */
+.filtroInativosContainer label {
+    color: #ffffff !important;
+}
