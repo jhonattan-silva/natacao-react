@@ -21,6 +21,7 @@ const Nadadores = () => {
     const [editando, setEditando] = useState(false); // Controla se está editando ou não
     const [editNadadorId, setEditNadadorId] = useState(null); // Guarda o ID do Nadador sendo editado
     const [equipeNadador, setEquipeNadador] = useState(null); // Guarda a equipe do Nadador sendo editado
+    const [cpfExistente, setCpfExistente] = useState(false); // Controla se o CPF já existe
     /* INPUTS */
     const [nomeNadador, setNomeNadador] = useState(''); // Para input de nome
     const [cpf, setCpf] = useState('');
@@ -31,7 +32,7 @@ const Nadadores = () => {
     /* RADIO GROUP */
     const [sexo, setSexo] = useState('');
 
-    /* NOVO: estado para controlar a visualização de nadadores inativos */
+    /* Estado para controlar a visualização de nadadores inativos */
     const [mostrarInativos, setMostrarInativos] = useState(false);
 
     /* URLS de API */
@@ -39,7 +40,8 @@ const Nadadores = () => {
     const apiCadastraNadador = `nadadores/cadastrarNadador`;
     const apiListaEquipes = `nadadores/listarEquipes`;
     const apiInativarNadador = `nadadores/inativarNadador`;
-    const apiAtualizaNadador = `nadadores/atualizarNadador`; 
+    const apiAtualizaNadador = `nadadores/atualizarNadador`;
+    const apiVerificaCpf = `nadadores/verificarCpf`; 
 
     const equipeSelecionada = (id) => { //para capturar a equipe escolhida, caso o usuário não tenha uma equipe (admin)
         setEquipes(id);
@@ -136,20 +138,38 @@ const Nadadores = () => {
             if (!token) {
                 throw new Error('Token não encontrado. Por favor, faça login novamente.');
             }
+            
+            // Envia o novo Nadador para o backend
             await api.post(apiCadastraNadador, dados, {
                 headers: {
                     Authorization: `Bearer ${token}` // Adiciona o token ao cabeçalho
                 }
-            }); // Envia o novo Nadador para o backend
-            await fetchNadadores(); // Recarrega a lista completa de Nadadoress do backend
-            setFormVisivel(false); // Esconde o formulário após salvar
+            });
+            
+            // Recarrega a lista completa de Nadadores do backend
+            await fetchNadadores(user?.equipeId);
+            
+            // Esconde o formulário após salvar
+            setFormVisivel(false);
+            
+            // Exibe mensagem de sucesso
+            mostrarAlerta('Nadador salvo com sucesso!');
+            
+            return true; // Indica que a operação foi bem-sucedida
         } catch (error) {
-            if (error.response && error.response.status === 401) {
-                mostrarAlerta('Sessão expirada. Por favor, faça login novamente.'); // Substitui alert pelo hook
-                window.location.href = '/login'; // Redireciona para a página de login
+            if (error.response) {
+                if (error.response.status === 409) {
+                    mostrarAlerta('Erro: CPF já cadastrado.'); // Trata erro de CPF duplicado
+                } else if (error.response.status === 401) {
+                    mostrarAlerta('Sessão expirada. Por favor, faça login novamente.');
+                    window.location.href = '/login'; // Redireciona para a página de login
+                } else {
+                    mostrarAlerta('Erro ao cadastrar Nadador: ' + error.response.data.message);
+                }
             } else {
-                mostrarAlerta('Erro ao cadastrar Nadador: ' + error.message); // Substitui alert pelo hook
+                mostrarAlerta('Erro ao cadastrar Nadador: ' + error.message);
             }
+            return false; // Indica que houve um erro na operação
         }
     };
 
@@ -183,7 +203,46 @@ const Nadadores = () => {
             label: "CPF",
             placeholder: "Somente números",
             valor: cpf,
-            aoAlterar: (valor) => setCpf(aplicarMascaraCPF(valor)) // Aplicando a máscara ao alterar
+            aoAlterar: (valor) => {
+                setCpf(aplicarMascaraCPF(valor));
+                setCpfExistente(false); // Limpa o estado ao alterar
+            },
+            onBlur: async () => {
+                const cpfNumeros = cpf.replace(/\D/g, '');
+                
+                if (!validarCPF(cpf)) {
+                    mostrarAlerta('CPF inválido.');
+                    setCpfExistente(false);
+                    return;
+                }
+            
+                try {
+                    // Evita verificação se estamos editando e não mudou o CPF
+                    if (editando) {
+                        const nadadorOriginal = nadadores.find(n => n.id === editNadadorId);
+                        if (nadadorOriginal && nadadorOriginal.cpf === cpfNumeros) {
+                            setCpfExistente(false);
+                            return;
+                        }
+                    }
+            
+                    const response = await api.get(apiVerificaCpf, {
+                        params: { cpf: cpfNumeros }
+                    });
+            
+                    if (response?.data?.exists) {
+                        mostrarAlerta('CPF já cadastrado.');
+                        setCpfExistente(true);
+                    } else {
+                        setCpfExistente(false);
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar CPF:', error);
+                    mostrarAlerta('Erro ao verificar CPF. Tente novamente.');
+                    setCpfExistente(false);
+                }
+            }
+            
         },
         {
             obrigatorio: true,
@@ -268,6 +327,11 @@ const Nadadores = () => {
             return; // Interrompe o processo de salvamento se houver campos vazios
         }
 
+        if (cpfExistente) {
+            mostrarAlerta('CPF já cadastrado. Não é possível salvar.');
+            return;
+        }
+
         // Validação do CPF
         if (!validarCPF(cpf)) {
             mostrarAlerta('CPF inválido. Por favor, insira um CPF válido.'); // Substitui alert pelo hook
@@ -295,17 +359,27 @@ const Nadadores = () => {
             cidade: cidade
         };
 
+        let operacaoSucesso = false;
+        
         if (editando) {
             // Se `editando` for verdadeiro, atualiza o nadador existente
-            await atualizarNadador(editNadadorId, nadadorDados);
-            mostrarAlerta('Nadador atualizado com sucesso!'); // Substitui alert pelo hook
+            try {
+                await atualizarNadador(editNadadorId, nadadorDados);
+                operacaoSucesso = true;
+                mostrarAlerta('Nadador atualizado com sucesso!');
+            } catch (error) {
+                // Erro já tratado dentro da função atualizarNadador
+            }
         } else {
             // Se não, adiciona um novo nadador
-            await adicionarNadador(nadadorDados);
-            mostrarAlerta('Nadador salvo com sucesso!'); // Substitui alert pelo hook
+            operacaoSucesso = await adicionarNadador(nadadorDados);
+            // Não mostramos mensagem de sucesso aqui pois já é mostrada dentro da função adicionarNadador
         }
 
-        limparFormulario(); // Limpa o formulário após salvar ou atualizar
+        // Só limpa o formulário se a operação foi bem-sucedida
+        if (operacaoSucesso) {
+            limparFormulario();
+        }
     };
 
     return (
@@ -313,7 +387,7 @@ const Nadadores = () => {
             <CabecalhoAdmin />
             <div className={style.nadadores}>
                 <h2 className={style.titulo}>NADADORES</h2>
-                {/* NOVO: Container com classe específica para o checkbox de filtro de inativos */}
+                {/* Container com classe específica para o checkbox de filtro de inativos */}
                 <div className={style.filtroInativosContainer}>
                     <input 
                         type="checkbox" 
@@ -324,41 +398,44 @@ const Nadadores = () => {
                     <label htmlFor="filtrarInativos">Mostrar inativos</label>
                 </div>
                 {!formVisivel && (
-                    <TabelaEdicao
-                        dados={[...nadadores]
-                            .filter(n => mostrarInativos ? true : n.ativo === 1)
-                            .sort((a, b) => b.ativo - a.ativo)} // Alteração: filtrar ativos com base no checkbox
-                        onEdit={handleEdit}
-                        colunasOcultas={['id', 'equipes_id', 'ativo', 'categorias_id']}
-                        colunasTitulos={{
-                            nome: "Nome",
-                            cpf: "CPF",
-                            data_nasc: "Data de Nascimento",
-                            celular: "Celular",
-                            sexo: "Sexo",
-                            cidade: "Cidade",
-                            categoria_nome: "Categoria"
-                        }}
-                        funcExtra={(nadador) => (
-                            <BotaoTabela
-                                tipo={nadador.ativo === 1 ? 'inativar' : 'ativar'} // Corrige o uso do tipo
-                                onClick={() => handleInativar(nadador.id, nadador.ativo)}
-                                style={{ backgroundColor: nadador.ativo === 1 ? '#4CAF50' : '#f44336' }}
-                            >
-                                {nadador.ativo === 1 ? 'Inativar' : 'Ativar'}
-                            </BotaoTabela>
-                        )}
-                        renderLinha={(nadador) => ({
-                            // Modificando para usar uma classe em vez de estilo inline
-                            // para permitir que o hover funcione adequadamente
-                            className: nadador.ativo === 0 ? 'inativo' : '',
-                            style: { 
-                                backgroundColor: nadador.ativo === 0 ? '#ffcccc' : null 
-                            }
-                        })}
-                    />
+                    <>
+                        <Botao classBtn={style.btnAdd} onClick={handleAdicionar}>Adicionar Novo Nadador</Botao>
+                        <TabelaEdicao
+                            dados={[...nadadores]
+                                .filter(n => mostrarInativos ? true : n.ativo === 1)
+                                .sort((a, b) => b.ativo - a.ativo)} // Alteração: filtrar ativos com base no checkbox
+                            onEdit={handleEdit}
+                            colunasOcultas={['id', 'equipes_id', 'ativo', 'categorias_id']}
+                            colunasTitulos={{
+                                nome: "Nome",
+                                cpf: "CPF",
+                                data_nasc: "Data de Nascimento",
+                                celular: "Celular",
+                                sexo: "Sexo",
+                                cidade: "Cidade",
+                                categoria_nome: "Categoria"
+                            }}
+                            funcExtra={(nadador) => (
+                                <BotaoTabela
+                                    tipo={nadador.ativo === 1 ? 'inativar' : 'ativar'} // Corrige o uso do tipo
+                                    onClick={() => handleInativar(nadador.id, nadador.ativo)}
+                                    style={{ backgroundColor: nadador.ativo === 1 ? '#4CAF50' : '#f44336' }}
+                                >
+                                    {nadador.ativo === 1 ? 'Inativar' : 'Ativar'}
+                                </BotaoTabela>
+                            )}
+                            renderLinha={(nadador) => ({
+                                // Modificando para usar uma classe em vez de estilo inline
+                                // para permitir que o hover funcione adequadamente
+                                className: nadador.ativo === 0 ? 'inativo' : '',
+                                style: { 
+                                    backgroundColor: nadador.ativo === 0 ? '#ffcccc' : null 
+                                }
+                            })}
+                        />
+                        <Botao classBtn={style.btnAdd} onClick={handleAdicionar}>Adicionar Novo Nadador</Botao>
+                    </>
                 )}
-                <Botao classBtn={style.btnAdd} onClick={handleAdicionar}>Adicionar Novo Nadador</Botao>
                 {formVisivel && (
                     <div className={style.cadastroContainer}>
                         <Formulario inputs={inputs} aoSalvar={aoSalvar} />

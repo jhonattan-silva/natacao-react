@@ -45,6 +45,16 @@ router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
     const telefoneNumeros = telefone.replace(/\D/g, '');
 
     try {
+        // Verifica se o CPF já está cadastrado
+        const [cpfExistente] = await db.query(
+            'SELECT id FROM nadadores WHERE cpf = ?',
+            [cpfNumeros]
+        );
+        if (cpfExistente.length > 0) {
+            console.error(`Tentativa de cadastro com CPF duplicado: ${cpfNumeros}`);
+            return res.status(409).json({ message: 'CPF já cadastrado.' });
+        }
+
         // Calcula a idade com base apenas no ano de nascimento
         const anoAtual = new Date().getFullYear();
         const anoNascimento = new Date(data_nasc).getFullYear();
@@ -83,6 +93,15 @@ router.put('/atualizarNadador/:id', authMiddleware, async (req, res) => {
     const telefoneNumeros = telefone.replace(/\D/g, '');
 
     try {
+        // Verifica se o CPF já está cadastrado em outro nadador
+        const [cpfExistente] = await db.query(
+            'SELECT id FROM nadadores WHERE cpf = ? AND id <> ?',
+            [cpfNumeros, id]
+        );
+        if (cpfExistente.length > 0) {
+            return res.status(409).json({ message: 'CPF já cadastrado.' });
+        }
+
         // Calcula a idade com base apenas no ano de nascimento
         const anoAtual = new Date().getFullYear();
         const anoNascimento = new Date(data_nasc).getFullYear();
@@ -132,5 +151,18 @@ router.put('/inativarNadador/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// Nova rota para verificar se o CPF já está cadastrado
+router.get('/verificarCpf', authMiddleware, async (req, res) => {
+    try {
+        const { cpf } = req.query;
+        if (!cpf) return res.status(400).json({ message: 'CPF não fornecido.' });
+        const cpfNumeros = cpf.replace(/\D/g, '');
+        const [rows] = await db.query('SELECT id FROM nadadores WHERE cpf = ?', [cpfNumeros]);
+        res.json({ exists: rows.length > 0 });
+    } catch (error) {
+        console.error('Erro ao verificar CPF:', error);
+        res.status(500).json({ message: 'Erro ao verificar CPF', error: error.message });
+    }
+});
 
 module.exports = router;

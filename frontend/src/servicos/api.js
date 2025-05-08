@@ -11,7 +11,7 @@ const api = axios.create({
   timeout: 20000, // Tempo limite de 20 segundos
 });
 
-// Adiciona um interceptor para incluir o token JWT em todas as requisições
+// Interceptor para incluir o token JWT em todas as requisições
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token'); // Busca o token do localStorage
@@ -21,6 +21,22 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Interceptor para verificar quando o login expirou
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Se o erro for 401 (não autorizado), limpa o token e redireciona para o login
+      console.log('Token expirado ou inválido. Redirecionando para login...');
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );
