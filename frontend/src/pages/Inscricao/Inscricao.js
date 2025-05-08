@@ -55,8 +55,7 @@ const Inscricao = () => {
 
             const nadadoresResponse = await api.get(`${apiListaNadadores}/${equipeId}`);
             const provasResponse = await api.get(`${apiProvasEvento}/${eventoSelecionado}?equipeId=${equipeId}`);
-            const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}`); // Buscar inscrições realizadas
-            // Buscando inscrições de revezamento via a nova rota
+            const inscricoesResponse = await api.get(`${apiListaInscricoes}/${eventoSelecionado}?equipeId=${equipeId}`); // Adicionado equipeId
             const revezamentoResponse = await api.get(`${apiVerificarRevezamento}/${eventoSelecionado}?equipeId=${equipeId}`);
             setNadadores(nadadoresResponse.data);
 
@@ -243,7 +242,7 @@ const Inscricao = () => {
 
         try {
             await api.post(apiSalvarInscricao, payload);
-            mostrarAlerta(`Inscrição realizada com sucesso! Total de inscritos: ${payload.length}`);
+            mostrarAlerta(`Inscrição realizada com sucesso! Total de inscritos da equipe: ${payload.length}`); // Ajustada mensagem
 
             // Montar dados detalhados para cada inscrição individual
             const inscricoesDetalhadas = inscricoesIndividuais.map(insc => {

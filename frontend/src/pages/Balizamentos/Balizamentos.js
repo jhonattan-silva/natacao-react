@@ -97,7 +97,7 @@ const Balizamentos = () => {
   const renderTabelaBalizamento = (item) => {
     return item.baterias.map(bateria => {
       const tableData = bateria.nadadores.map(nadador => {
-        let tempo = nadador.tempo || '-'; // Ensure tempo is displayed
+        let tempo = nadador.tempo || '-'; 
         if (nadador.status === 'NC') {
           tempo = 'NC';
         } else if (nadador.status === 'DQL') {
@@ -106,11 +106,11 @@ const Balizamentos = () => {
         const rowData = item.prova.revezamento ? {
           Raia: nadador.raia,
           Equipe: nadador.equipe,
-          Tempo: tempo // Include tempo
+          Tempo: tempo 
         } : {
           Raia: nadador.raia,
           Nome: nadador.nome,
-          Tempo: tempo, // Include tempo
+          Tempo: tempo, 
           Equipe: nadador.equipe,
           Categoria: nadador.categoria
         };

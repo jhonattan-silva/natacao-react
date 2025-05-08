@@ -61,9 +61,14 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
     }
 });
 
-// Nova rota para buscar inscrições (nadadores e revezamento) existentes de um evento específico
+// Rota para listar inscrições de uma equipe específica em um evento
 router.get('/listarInscricoes/:eventoId', async (req, res) => {
     const { eventoId } = req.params;
+    const { equipeId } = req.query; // Adicionado para filtrar por equipe
+
+    if (!equipeId) {
+        return res.status(400).json({ message: 'Equipe ID é necessário' });
+    }
 
     try {
         const [inscricoesIndividuais] = await db.query(`
@@ -77,8 +82,8 @@ router.get('/listarInscricoes/:eventoId', async (req, res) => {
             JOIN nadadores n ON n.id = i.nadadores_id
             JOIN eventos_provas ep ON ep.id = i.eventos_provas_id
             JOIN provas p ON p.id = ep.provas_id
-            WHERE i.eventos_id = ?
-        `, [eventoId]);
+            WHERE i.eventos_id = ? AND n.equipes_id = ?
+        `, [eventoId, equipeId]);
 
         const [inscricoesRevezamento] = await db.query(`
             SELECT 
@@ -89,8 +94,8 @@ router.get('/listarInscricoes/:eventoId', async (req, res) => {
             FROM revezamentos_inscricoes r
             JOIN eventos_provas ep ON ep.id = r.eventos_provas_id
             JOIN provas p ON p.id = ep.provas_id
-            WHERE r.eventos_id = ?
-        `, [eventoId]);
+            WHERE r.eventos_id = ? AND r.equipes_id = ?
+        `, [eventoId, equipeId]);
 
         res.json({ inscricoesIndividuais, inscricoesRevezamento });
     } catch (error) {
@@ -99,8 +104,7 @@ router.get('/listarInscricoes/:eventoId', async (req, res) => {
     }
 });
 
-
-// Nova rota para verificar inscrições de revezamento diretamente
+// Rota para verificar inscrições de revezamento diretamente
 router.get('/verificarRevezamento/:eventoId', async (req, res) => {
     const { eventoId } = req.params;
     const { equipeId } = req.query;

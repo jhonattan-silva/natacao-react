@@ -16,7 +16,6 @@ const Balizamento = () => {
     const [inscritos, setInscritos] = useState([]); //listagem dos inscritos
     const [balizamentoGerado, setBalizamentoGerado] = useState(false); //controla se já foi gerado balizamento (separa listar e salvar)
 
-    // NEW STATE VARIABLES:
     const [inscritosOriginais, setInscritosOriginais] = useState([]);
     const [inscritosEquipe, setInscritosEquipe] = useState([]);
     const [inscritosEquipeSexo, setInscritosEquipeSexo] = useState([]);
@@ -84,34 +83,34 @@ const Balizamento = () => {
         if (nadadores < 3) {
             return "Número insuficiente de nadadores para formar um grupo.";
         }
-
+    
         let baterias = [];
         let qtdGruposMax = Math.floor(nadadores / quantidadeRaias);
         let resto = nadadores % quantidadeRaias;
-
+    
         if (resto === 0) {
             // Se o resto for 0, todos os grupos têm "quantidadeRaias" nadadores
             for (let i = 0; i < qtdGruposMax; i++) {
                 baterias.push(quantidadeRaias);
             }
         } else if (resto >= 3) {
-            // Se o resto for 3 ou 4, basta formar um último grupo com esse resto
+            // Se o resto for 3 ou maior, basta formar um último grupo com esse resto
             for (let i = 0; i < qtdGruposMax; i++) {
                 baterias.push(quantidadeRaias);
             }
             baterias.push(resto);
         } else {
-            // Se o resto for 1 ou 2, ajustamos um grupo de "quantidadeRaias"
+            // Se o resto for 1 ou 2, ajustamos para garantir que a última série tenha pelo menos 3 nadadores
             for (let i = 0; i < qtdGruposMax - 1; i++) {
                 baterias.push(quantidadeRaias);
             }
-            baterias.push(3);
-            baterias.push(quantidadeRaias - 2 + resto);
+            baterias.push(3); // Última série com o mínimo de nadadores
+            baterias.push(quantidadeRaias - 3 + resto); // Ajusta a penúltima série
         }
-
+    
         // Ordenar os grupos em ordem crescente
         baterias.sort((a, b) => a - b);
-
+    
         return baterias;
     };
 
