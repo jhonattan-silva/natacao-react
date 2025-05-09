@@ -35,6 +35,7 @@ const Admin = () => {
                         <Tile nomeTile="EQUIPES" onClick={() => handleTileClick('/equipes')} />
                         <Tile nomeTile="ETAPAS" onClick={() => handleTileClick('/etapas')} />
                         <Tile nomeTile="BALIZAMENTO" onClick={() => handleTileClick('/balizamento')} />
+                        <Tile nomeTile="ADICIONAR RESULTADOS" onClick={() => handleTileClick('/resultadosEntrada')} />
                     </>
                 )}
             </section>
