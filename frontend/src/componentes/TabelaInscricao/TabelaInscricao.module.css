@@ -65,7 +65,7 @@
         min-width: 1000px; /* Garante que a tabela tenha largura suficiente */
         border-collapse: collapse;
         overflow-x: auto; /* Adiciona rolagem horizontal */
-        display: block; /* Garante que a tabela se comporte como um bloco */
+        /*display: block; /* Garante que a tabela se comporte como um bloco */
         position: relative; /* Necessário para sticky funcionar */
     }
 
@@ -81,8 +81,8 @@
     .containerTabela td:first-child {
         position: sticky; /* Torna a primeira coluna fixa */
         left: 0; /* Fixa a coluna à esquerda */
-        background-color: #fff; /* Evita sobreposição visual */
-        z-index: 4; /* Aumenta o z-index para garantir visibilidade */
+        /*background-color: #fff; /* Evita sobreposição visual */
+        /*z-index: 4; /* Aumenta o z-index para garantir visibilidade */
         min-width: 180px; /* Garante largura mínima maior no mobile */
         white-space: nowrap;
     }
