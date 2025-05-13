@@ -1,7 +1,3 @@
-.inscricaoContainer {
-    text-align: center;
-}
-
 .centralizado {
     display: flex;
     flex-direction: column;
@@ -9,31 +5,18 @@
     justify-content: center;
 }
 
-/* Remover ou comentar este bloco para evitar conflito com o CSS do componente */
-/*
-.listaSuspensa {
-    display: flex !important;
-}
-
-.listaSuspensa:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-    outline: none;
-}
-*/
-
 .provasLegenda {
     background-color: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 8px;
     margin: 20px auto;
-    max-width: 500px; /* aumentado */
+    max-width: 500px;
     width: 100%;
-    padding: 20px; /* aumentado */
+    padding: 20px;
     text-align: center;
 }
 
-/* Novo: caso exista classe inscricoesRealizadas, aumente também */
+/* Caso exista classe inscricoesRealizadas, aumente também */
 .inscricoesRealizadas {
     max-width: 500px;
     width: 100%;
@@ -63,27 +46,6 @@
     border-bottom: none;
 }
 
-/* button {
-    padding: 12px 24px;
-    font-size: 18px;
-    border: none;
-    border-radius: 8px;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
-}
-
-button:hover {
-    background-color: #0056b3;
-    transform: scale(1.05);
-}
-
-button:active {
-    background-color: #004494;
-}
- */
-
 .inscricaoRevezamento {
     display: flex;
     flex-direction: column;
@@ -91,21 +53,6 @@ button:active {
     justify-content: center;
     width: 40%;
     margin: 0 auto;
-}
-
-.revezamentoContainer {
-    background-color: #f0f8ff;
-    /* Light blue background */
-    padding: 20px;
-    border-radius: 10px;
-    margin: 20px 0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.revezamentoContainer h3 {
-    color: #333;
-    font-size: 1.5em;
-    margin-bottom: 15px;
 }
 
 .revezamentoEntry {
@@ -130,7 +77,6 @@ button:active {
     background-position: right 10px center;
     background-size: 16px;
     min-width: 200px;
-    /* novo: aumenta a largura do select */
 }
 
 .inscricaoRevezamento span {
@@ -141,13 +87,6 @@ button:active {
     font-weight: bold;
 }
 
-.containerTabelaIndividuais {
-    width: 100%;
-    max-height: 400px;
-    overflow-y: auto;
-    margin-bottom: 20px;
-}
-
 .containerTabelaRevezamentos {
     width: 100%;
     max-height: 400px;
@@ -156,19 +95,6 @@ button:active {
 }
 
 @media (max-width: 768px) {
-    .inscricaoContainer {
-        padding: 10px;
-    }
-
-    /* Centraliza a listaSuspensa no mobile */
-    /*
-    .listaSuspensa {
-        display: flex !important;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    */
-
     .centralizado {
         width: 100%;
         display: block;
@@ -200,13 +126,17 @@ button:active {
         padding: 10px;
     }
 
-    .revezamentoContainer {
-        width: 100%;
-        padding: 10px;
-        margin: 10px 0;
-    }
-
     .inscricaoRevezamento {
         width: 100%;
     }
+}
+
+.centralizado .containerTabela {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.centralizado .containerTabela table {
+    display: block;
+    margin: 0 auto;
 }

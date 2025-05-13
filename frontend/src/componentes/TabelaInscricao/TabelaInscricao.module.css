@@ -1,31 +1,31 @@
 .containerTabela {
     padding: 0 20px;  /* Adiciona espaço em ambos os lados */
-    width: 100%;
+    min-width: 1000px;
+    border-collapse: collapse;
+    table-layout: fixed;
     max-height: 400px; /* Define uma altura máxima para permitir rolagem */
-    overflow-y: auto; /* Habilita a rolagem vertical */
-    overflow-x: auto; /* Permite rolagem horizontal caso necessário */
-    margin-bottom: 20px; /* Adiciona espaço entre as divs */
-    position: relative; /* Add relative positioning for sticky columns */
+    overflow:auto;
+    margin-bottom: 20px;
 }
 
 .tabelaIndividuais {
-    max-height: 400px; /* Define altura máxima */
-    overflow-y: auto; /* Permite rolagem vertical independente */
-    display: block; /* Necessário para sticky funcionar */
-    position: relative; /* Garante alinhamento correto */
+    max-height: 400px;
+    overflow-y: auto;
+    display: block;
+    position: relative;
 }
 
 .containerTabela table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed; /* Mantém o layout estável */
+    table-layout: fixed;
 }
 
 .containerTabela thead {
     position: sticky;
     top: 0;
-    background-color: #fff; /* Mantém a cor ao fixar */
-    z-index: 3; /* Ensure header stays above sticky columns */
+    background-color: #fff;
+    z-index: 3;
 }
 
 .containerTabela th, 
@@ -33,17 +33,24 @@
     padding: 8px;
     text-align: left;
     border: 1px solid #ddd;
-    min-width: 120px; /* Aumenta largura mínima das colunas */
+    min-width: 120px;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
 }
 
 .containerTabela th:first-child, 
 .containerTabela td:first-child {
-    position: sticky; /* Make the first column sticky */
-    left: 0; /* Stick to the left */
-    background-color: #fff; /* Add background to avoid overlap */
-    z-index: 2; /* Ensure it stays above other content */
-    min-width: 180px; /* Aumenta a largura mínima da primeira coluna */
-    white-space: nowrap; /* Garante que o texto não quebre */
+    position: sticky;
+    left: 0;
+    background-color: #fff;
+    z-index: 2;
+    min-width: 160px;
+    width: 100px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow: hidden;
 }
 
 .containerTabela th {
@@ -51,44 +58,44 @@
     text-align: center;
     font-size: 14px;
     font-weight: bold;
+    white-space: normal;
 }
 
 @media (max-width: 768px) {
     .containerTabela {
-        max-height: 300px; /* Reduz altura em telas menores */
-        overflow-x: auto; /* Permite rolagem horizontal */
+        max-height: 300px;
+        overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        position: relative; /* Necessário para sticky funcionar */
+        position: relative;
     }
 
     .containerTabela table {
-        min-width: 1000px; /* Garante que a tabela tenha largura suficiente */
+        min-width: 1000px;
         border-collapse: collapse;
-        overflow-x: auto; /* Adiciona rolagem horizontal */
-        /*display: block; /* Garante que a tabela se comporte como um bloco */
-        position: relative; /* Necessário para sticky funcionar */
+        overflow-x: auto;
+        position: relative;
     }
 
     .containerTabela th, 
     .containerTabela td {
-        padding: 6px; /* Reduzido para economizar espaço */
-        font-size: 13px; /* Fonte ligeiramente menor para mobile */
+        padding: 6px;
+        font-size: 13px;
     }
 
     .containerTabela th:first-child, 
     .containerTabela td:first-child {
-        position: sticky; /* Torna a primeira coluna fixa */
-        left: 0; /* Fixa a coluna à esquerda */
-        white-space: normal; /* Permite quebra de linha na primeira coluna */
-        word-wrap: break-word; /* Quebra palavras longas */
-        max-width: 180px; /* Limita a largura máxima */
-        min-width: 150px; /* Mantém largura mínima razoável */
+        position: sticky;
+        left: 0;
+        white-space: normal;
+        word-wrap: break-word;
+        min-width: 180px;
+        width: 220px;
     }
 
     .containerTabela thead {
         position: sticky;
         top: 0;
-        background-color: #fff; /* Mantém a cor ao fixar */
-        z-index: 3; /* Garante que o cabeçalho fique acima da primeira coluna */
+        background-color: #fff;
+        z-index: 3;
     }
 }
