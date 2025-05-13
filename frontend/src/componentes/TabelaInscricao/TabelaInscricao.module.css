@@ -71,20 +71,18 @@
 
     .containerTabela th, 
     .containerTabela td {
-        padding: 8px;
-        text-align: left;
-        border: 1px solid #ddd;
-        white-space: nowrap; /* Evita quebra de texto */
+        padding: 6px; /* Reduzido para economizar espaço */
+        font-size: 13px; /* Fonte ligeiramente menor para mobile */
     }
 
     .containerTabela th:first-child, 
     .containerTabela td:first-child {
         position: sticky; /* Torna a primeira coluna fixa */
         left: 0; /* Fixa a coluna à esquerda */
-        /*background-color: #fff; /* Evita sobreposição visual */
-        /*z-index: 4; /* Aumenta o z-index para garantir visibilidade */
-        min-width: 180px; /* Garante largura mínima maior no mobile */
-        white-space: nowrap;
+        white-space: normal; /* Permite quebra de linha na primeira coluna */
+        word-wrap: break-word; /* Quebra palavras longas */
+        max-width: 180px; /* Limita a largura máxima */
+        min-width: 150px; /* Mantém largura mínima razoável */
     }
 
     .containerTabela thead {
