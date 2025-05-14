@@ -68,11 +68,19 @@ const Balizamento = () => {
             const aInvalid = !a.melhor_tempo || a.melhor_tempo === "00:00" || a.melhor_tempo === "00:00:00";
             const bInvalid = !b.melhor_tempo || b.melhor_tempo === "00:00" || b.melhor_tempo === "00:00:00";
 
-            // Agora invalidos no início
-            if (aInvalid && bInvalid) return 0;
-            if (aInvalid) return -1; // Move invalid para o início
-            if (bInvalid) return 1;  // Move invalid para o início
+            // Ambos sem tempo: ordenar por categorias_id (menor primeiro)
+            if (aInvalid && bInvalid) {
+                // Se não houver categorias_id, trate como Infinity
+                const aCat = a.categorias_id ?? Infinity;
+                const bCat = b.categorias_id ?? Infinity;
+                return aCat - bCat;
+            }
+            // Apenas a sem tempo: vai para o início
+            if (aInvalid) return -1;
+            // Apenas b sem tempo: vai para o início
+            if (bInvalid) return 1;
 
+            // Ambos têm tempo: ordenar por tempo decrescente
             return timeToMilliseconds(b.melhor_tempo) - timeToMilliseconds(a.melhor_tempo);
         });
         return ordenados;

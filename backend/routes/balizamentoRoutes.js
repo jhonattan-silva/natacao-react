@@ -37,7 +37,8 @@ router.get('/listarInscritos/:eventoId', async (req, res) => {
           i.id AS inscricao_id,
           i.eventos_provas_id AS eventos_provas_id,
           e.nome AS equipe,
-          c.nome AS categoria
+          c.nome AS categoria,
+          n.categorias_id AS categorias_id
       FROM inscricoes i
       INNER JOIN nadadores n ON i.nadadores_id = n.id
       INNER JOIN eventos_provas ep ON i.eventos_provas_id = ep.id

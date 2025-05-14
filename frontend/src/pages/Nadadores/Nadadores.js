@@ -63,11 +63,16 @@ const Nadadores = () => {
        
             const response = await api.get(apiListaNadadores, { params: { equipeId } });
     
-            setNadadores(response.data.map(nadador => ({ // Mapeia os dados para o formato desejado
+            setNadadores(response.data.map(nadador => ({
                 ...nadador,
-                data_nasc: new Date(nadador.data_nasc).toLocaleDateString('pt-BR', { // Formata a data
-                    day: '2-digit', month: '2-digit', year: 'numeric',
-                }),
+                // Corrige a exibição da data para evitar erro de fuso horário e hora
+                data_nasc: (() => {
+                    if (!nadador.data_nasc) return '';
+                    // Garante que só a parte da data (YYYY-MM-DD) será usada
+                    const dataStr = nadador.data_nasc.split('T')[0];
+                    const [ano, mes, dia] = dataStr.split('-');
+                    return `${dia.padStart(2, '0')}/${mes.padStart(2, '0')}/${ano}`;
+                })(),
             })));
         } catch (error) {
             console.error('Erro ao buscar nadadores:', error);
@@ -109,7 +114,7 @@ const Nadadores = () => {
         }
     };
 
-    //Botão inativar cadastro
+    //Botão inativa cadastro
     const handleInativar = async (id, ativo) => {
         try {    
             // Converter `ativo` para número, caso esteja vindo como string
