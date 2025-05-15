@@ -188,9 +188,9 @@ router.post('/salvarInscricao', async (req, res) => {
 
         // Inserir novas inscrições de revezamento, evitando duplicações
         const queryRevezamento = `
-            INSERT INTO revezamentos_inscricoes (eventos_id, eventos_provas_id, equipes_id)
+            INSERT INTO revezamentos_inscricoes (eventos_id, eventos_provas_id, equipes_id, minutos, segundos, centesimos)
             SELECT * FROM (
-                SELECT ? AS eventos_id, ? AS eventos_provas_id, ? AS equipes_id
+                SELECT ? AS eventos_id, ? AS eventos_provas_id, ? AS equipes_id, ? AS minutos, ? AS segundos, ? AS centesimos
             ) AS tmp
             WHERE NOT EXISTS (
                 SELECT 1 FROM revezamentos_inscricoes 
@@ -199,20 +199,29 @@ router.post('/salvarInscricao', async (req, res) => {
                 AND equipes_id = ?
             ) LIMIT 1;`;
 
-            // Percorrer as inscrições e inserir no banco de dados
+        // Percorrer as inscrições e inserir no banco de dados
         for (const inscricao of inscricoes) {
             if (inscricao.nadadorId) { // Inscrição individual
-                // Verificar se o nadador tem record na prova específica
-                const [record] = await connection.query(
-                    `SELECT minutos, segundos, centesimos 
-                     FROM records 
-                     WHERE Nadadores_id = ? AND provas_id = ?`,
-                    [inscricao.nadadorId, inscricao.provaId]
+                // Buscar o provas_id a partir do eventos_provas_id
+                const [provaRow] = await connection.query(
+                    `SELECT provas_id FROM eventos_provas WHERE id = ?`,
+                    [inscricao.provaId]
                 );
+                const provasId = provaRow[0]?.provas_id;
 
-                const minutos = record[0]?.minutos || null;
-                const segundos = record[0]?.segundos || null;
-                const centesimos = record[0]?.centesimos || null;
+                // Verificar se o nadador tem record na prova específica
+                let minutos = null, segundos = null, centesimos = null;
+                if (provasId) {
+                    const [record] = await connection.query(
+                        `SELECT minutos, segundos, centesimos 
+                         FROM records 
+                         WHERE Nadadores_id = ? AND provas_id = ?`,
+                        [inscricao.nadadorId, provasId]
+                    );
+                    minutos = record[0]?.minutos || null;
+                    segundos = record[0]?.segundos || null;
+                    centesimos = record[0]?.centesimos || null;
+                }
 
                 await connection.query(queryIndividual, [
                     inscricao.nadadorId, eventoId, inscricao.provaId, minutos, segundos, centesimos,
@@ -220,8 +229,32 @@ router.post('/salvarInscricao', async (req, res) => {
                 ]);
             }
             if (inscricao.equipeId && !inscricao.nadadorId) { // Inscrição em revezamento
+                // Buscar o provas_id a partir do eventos_provas_id
+                const [provaRow] = await connection.query(
+                    `SELECT provas_id FROM eventos_provas WHERE id = ?`,
+                    [inscricao.provaId]
+                );
+                const provasId = provaRow[0]?.provas_id;
+
+                // Buscar tempo da equipe na prova de revezamento
+                let minutos = null, segundos = null, centesimos = null;
+                if (provasId) {
+                    const [recordEquipe] = await connection.query(
+                        `SELECT minutos, segundos, centesimos 
+                         FROM recordsEquipes 
+                         WHERE equipes_id = ? AND provas_id = ?`,
+                        [inscricao.equipeId, provasId]
+                    );
+                    minutos = recordEquipe[0]?.minutos || null;
+                    segundos = recordEquipe[0]?.segundos || null;
+                    centesimos = recordEquipe[0]?.centesimos || null;
+                }
+
+                // LOG para depuração
+                console.log(`Revezamento - Equipe: ${inscricao.equipeId}, Prova: ${inscricao.provaId}, Provas_id: ${provasId}, Minutos: ${minutos}, Segundos: ${segundos}, Centesimos: ${centesimos}`);
+
                 await connection.query(queryRevezamento, [
-                    eventoId, inscricao.provaId, inscricao.equipeId,
+                    eventoId, inscricao.provaId, inscricao.equipeId, minutos, segundos, centesimos,
                     eventoId, inscricao.provaId, inscricao.equipeId
                 ]);
             }
