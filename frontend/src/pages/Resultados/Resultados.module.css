@@ -206,6 +206,15 @@ body {
   margin-top: 2rem;
 }
 
+.eventoAndamento {
+  text-align: center;
+  margin: 2rem 0;
+  color: #f2dfd2;
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
 /* ======================= */
 /* Responsividade          */
 /* ======================= */

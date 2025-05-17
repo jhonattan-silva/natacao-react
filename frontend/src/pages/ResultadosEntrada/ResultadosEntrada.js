@@ -6,6 +6,7 @@ import Botao from '../../componentes/Botao/Botao';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import { ResultadosContext } from '../../servicos/ResultadoContext'; // Contexto para salvar temporariamente o resultado de cada nadador
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
+import useAlerta from '../../hooks/useAlerta'; // <-- Adicione este import
 
 // Configurar timeout para 60 segundos (60000 ms)
 api.defaults.timeout = 60000; 
@@ -21,6 +22,7 @@ const ResultadosEntrada = () => {
     const [inputSalvo, setInputSalvo] = useState(null); // Estado para controlar a estilização do input
     const [checkboxes, setCheckboxes] = useState({}); // Estado para os checkboxes
     const [valoresBanco, setValoresBanco] = useState({}); // Novo estado para os tempos do banco
+    const { mostrar: mostrarAlerta, componente: componenteAlerta } = useAlerta(); // <-- useAlerta hook
 
     const apiEventos = '/resultadosEntrada/listarEventos';
     const apiProvasEvento = '/resultadosEntrada/listarProvasEvento';
@@ -33,7 +35,7 @@ const ResultadosEntrada = () => {
 
     // Nome da prova selecionada
     const nomeProvaSelecionada = useMemo(() => {
-        return provas.find((prova) => String(prova.prova_id) === String(provaId))?.nome || '';
+        return provas.find((prova) => String(prova.prova_id) === String(provaId))?.nome_prova || '';
     }, [provas, provaId]);
 
     // Listar os eventos
@@ -251,22 +253,22 @@ const ResultadosEntrada = () => {
             for (const nadador of bateria.nadadores) {
                 const cb = checkboxes[nadador.id] || { nc: false, desc: false };
                 if (!nadador.tempo && !(cb.nc || cb.desc)) {
-                    alert("SALVAR APÓS PREENCHER TODOS OS NADADORES");
+                    mostrarAlerta("SALVAR APÓS PREENCHER OS RESULTADOS DE TODOS OS NADADORES");
                     return;
                 }
                 if (cb.nc && cb.desc) {
-                    alert("SALVAR APÓS PREENCHER TODOS OS NADADORES");
+                    mostrarAlerta("SALVAR APÓS PREENCHER OS RESULTADOS DE TODOS OS NADADORES");
                     return;
                 }
             }
             for (const equipe of bateria.equipes) {
                 const cb = checkboxes[equipe.id] || { nc: false, desc: false };
                 if (!equipe.tempo && !(cb.nc || cb.desc)) {
-                    alert("SALVAR APÓS PREENCHER TODAS AS EQUIPES");
+                    mostrarAlerta("SALVAR APÓS PREENCHER TODAS AS EQUIPES");
                     return;
                 }
                 if (cb.nc && cb.desc) {
-                    alert("SALVAR APÓS PREENCHER TODAS AS EQUIPES");
+                    mostrarAlerta("SALVAR APÓS PREENCHER TODAS AS EQUIPES");
                     return;
                 }
             }
@@ -277,31 +279,41 @@ const ResultadosEntrada = () => {
                 nadadores: bateria.nadadores.map((nadador) => {
                     const cb = checkboxes[nadador.id] || { nc: false, desc: false };
                     const status = cb.nc ? "NC" : (cb.desc ? "DQL" : "OK");
-
-                    // Fornece tempo padrão se inexistente (para status "NC" ou "DQL")
                     return { id: nadador.id, tempo: nadador.tempo || null, status, equipeId: nadador.equipeId || null };
                 }),
                 equipes: bateria.equipes.map((equipe) => {
                     const cb = checkboxes[equipe.id] || { nc: false, desc: false };
                     const status = cb.nc ? "NC" : (cb.desc ? "DQL" : "OK");
-
-                    // Fornece tempo padrão se inexistente (para status "NC" ou "DQL")
                     return { id: equipe.id, tempo: equipe.tempo || null, status };
                 }),
             }));
-            // Lookup the selected prova object to get the correct eventos_provas_id
             const selectedProva = provas.find(prova => String(prova.prova_id) === String(provaId));
             if (!selectedProva) {
                 throw new Error('Prova selecionada não encontrada.');
             }
             const eventosProvasId = selectedProva.eventos_provas_id;
             await api.post('/resultadosEntrada/salvarResultados', { provaId: eventosProvasId, dados });
-            await api.post(`/pontuacoes/pontuar-evento/${eventoId}`); // Adiciona chamada para calcular pontuação
-            alert('Resultados e pontuações salvos com sucesso!');
-            window.location.reload();
+            // Chama a API para transmitir os resultados completos da prova
+            await api.post(`/resultadosEntrada/transmitirResultadoProva/${eventosProvasId}`);
+            await api.post(`/pontuacoes/pontuar-evento/${eventoId}`);
+
+            const indexAtual = provas.findIndex(p => String(p.prova_id) === String(provaId));
+            if (indexAtual !== -1 && indexAtual + 1 < provas.length) {
+                mostrarAlerta('Resultados salvos com sucesso! Próxima prova...');
+                const proximaProva = provas[indexAtual + 1];
+                setProvaId(String(proximaProva.prova_id));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                // Última prova: perguntar se deseja encerrar o evento
+                if (window.confirm('Resultados salvos com sucesso! Deseja encerrar o evento?')) {
+                    window.location.href = '/admin';
+                } else {
+                    mostrarAlerta('Resultados salvos com sucesso! Você pode revisar as provas.');
+                }
+            }
         } catch (err) {
             console.error('Erro ao salvar resultados:', err.message);
-            alert('Erro ao salvar resultados. Tente novamente.');
+            mostrarAlerta('Erro ao salvar resultados. Tente novamente.');
         }
     };
 
@@ -319,6 +331,7 @@ const ResultadosEntrada = () => {
     return (
         <div className={style.resultadosEntrada}>
             <CabecalhoAdmin />
+            {componenteAlerta}
             <div className={style.opcoesContainer}>
                 <h1>RESULTADOS DO EVENTO</h1>
                 <ListaSuspensa
@@ -329,17 +342,20 @@ const ResultadosEntrada = () => {
                 />
                 {eventoId && (
                     <ListaSuspensa
+                        key={eventoId} // <-- Força o reset do componente ao trocar de evento
                         fonteDados={urlProvasEvento}
                         textoPlaceholder="Escolha a prova disputada"
                         onChange={setProvaId}
                         selectId="prova_id"
+                        selectExibicao="nome_prova" // <-- CORRETO!
+                        value={provaId}
                     />
                 )}
             </div>
             <div className={style.listagemContainer}>
                 {baterias.length > 0 && (
                     <section>
-                        <h1>Prova: {nomeProvaSelecionada}</h1>
+                        <h1>{nomeProvaSelecionada}</h1>
                         {baterias.map((bateria) => {
                             // Calcula se todos os nadadores e equipes já possuem resultado salvo
                             const provaSalva = bateria.nadadores.every(nadador =>

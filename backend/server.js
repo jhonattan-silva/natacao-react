@@ -129,12 +129,12 @@ app.use('/api/etapas', etapasRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/nadadores', nadadoresRoutes);
 app.use('/api/inscricao', inscricaoRoutes);
-app.use('/api/rankings', rankingsRoutes);
+app.use('/api/rankings', rankingsRoutes.router); // Corrigido para usar o router do rankingsRoutes
 app.use(uploadRoutes);
 app.use('/api/migracao', migracao);
 app.use('/api/resultadosEntrada', resultadosEntrada);
-app.use('/api/resultados', resultadosRoutes);
-app.use('/api/pontuacoes', pontuacoesRoutes.router); // Use the router property
+app.use('/api/resultados', resultadosRoutes.router); // Corrigido para usar o router do resultadosRoutes
+app.use('/api/pontuacoes', pontuacoesRoutes.router); // Corrigido para usar o router do pontuacoesRoutes
 app.use('/api/estatisticas', estatisticasRoutes);
 app.use('/api/balizamentoExibicao', balizamentoExibicaoRoutes);
 app.use('/api/balizamentosAjuste', balizamentosAjusteRoutes);

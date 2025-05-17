@@ -191,4 +191,40 @@ router.get('/ranking-equipes-por-evento/:eventosId', async (req, res) => {
     }
 });
 
-module.exports = router;
+async function atualizarRankingEquipesPorEvento(eventosId) {
+    const TORNEIOS_ID = 3; // constante
+    const conn = await db.getConnection();
+    try {
+        await conn.beginTransaction();
+        await conn.execute(`DELETE FROM rankingEquipes WHERE eventos_id = ?`, [eventosId]);
+        // Calcular a soma dos pontos das equipes para o evento e para cada prova
+        const [resultados] = await conn.execute(
+            `SELECT c.equipes_id, c.eventos_provas_id, SUM(c.pontuacao_equipe) AS pontos
+             FROM classificacoes c
+             WHERE c.eventos_provas_id IN (
+                SELECT id FROM eventos_provas WHERE eventos_id = ?
+             )
+             GROUP BY c.equipes_id, c.eventos_provas_id`,
+            [eventosId]
+        );
+        // Inserir na tabela rankingEquipes com torneios_id = 3
+        for (const row of resultados) {
+            await conn.execute(
+                `INSERT INTO rankingEquipes (torneios_id, eventos_id, eventos_provas_id, equipes_id, pontos)
+                 VALUES (?, ?, ?, ?, ?)`,
+                [TORNEIOS_ID, eventosId, row.eventos_provas_id, row.equipes_id, row.pontos]
+            );
+        }
+        await conn.commit();
+    } catch (error) {
+        await conn.rollback();
+        throw error;
+    } finally {
+        conn.release();
+    }
+}
+
+module.exports = {
+  router,
+  atualizarRankingEquipesPorEvento,
+};

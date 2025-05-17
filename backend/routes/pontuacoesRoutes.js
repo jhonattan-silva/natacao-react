@@ -57,9 +57,10 @@ const calcularPontuacaoEvento = async (eventosId) => {
             } else {
                 // Obter classificações ordenadas por categoria semelhante à classificação por categoria dos resultados
                 [classificacoes] = await db.execute(
-                    `SELECT c.id, n.categorias_id, c.classificacao 
+                    `SELECT c.id, n.categorias_id, cat.eh_mirim, c.classificacao 
                      FROM classificacoes c
                      LEFT JOIN nadadores n ON c.nadadores_id = n.id
+                     LEFT JOIN categorias cat ON n.categorias_id = cat.id
                      WHERE c.eventos_provas_id = ?
                      AND c.status = 'OK'
                      ORDER BY n.categorias_id ASC, 
@@ -77,9 +78,12 @@ const calcularPontuacaoEvento = async (eventosId) => {
                 });
                 // Atualiza pontuação individual conforme ranking por categoria
                 for (const cat in categorias) {
-                    categorias[cat].forEach(async (row, index) => {
+                    for (let index = 0; index < categorias[cat].length; index++) {
+                        const row = categorias[cat][index];
                         let pontuacao_individual = 0;
-                        if (prova.eh_prova_categoria || prova.eh_prova_ouro) {
+                        // Regra: mirim só pontua em prova de categoria, não-mirim só pontua em prova ouro
+                        if ((row.eh_mirim && prova.eh_prova_categoria) ||
+                            (!row.eh_mirim && prova.eh_prova_ouro)) {
                             pontuacao_individual = PONTOS_INDIVIDUAL[index] || 0;
                         }
                         if (pontuacao_individual > 0) {
@@ -90,18 +94,23 @@ const calcularPontuacaoEvento = async (eventosId) => {
                                 [pontuacao_individual, row.id]
                             );
                         }
-                    });
+                    }
                 }
-                // Atualiza pontuação da equipe utilizando o ranking absoluto geral para provas individuais
-                [classificacoes] = await db.execute(
-                    `SELECT c.id, c.classificacao 
+                // Buscar o ranking absoluto da prova
+                const [absoluto] = await db.execute(
+                    `SELECT c.id
                      FROM classificacoes c
                      WHERE c.eventos_provas_id = ?
                      AND c.status = 'OK'
-                     ORDER BY c.classificacao ASC`,
+                     AND c.tipo = 'ABSOLUTO'
+                     ORDER BY c.classificacao ASC
+                     LIMIT 8`,
                     [prova.evento_prova_id]
                 );
-                classificacoes.forEach(async (row, index) => {
+
+                // Atualizar pontuação de equipe para os 8 primeiros do ranking absoluto
+                for (let index = 0; index < absoluto.length; index++) {
+                    const row = absoluto[index];
                     const pontuacao_equipe = PONTOS_INDIVIDUAL[index] || 0;
                     if (pontuacao_equipe > 0) {
                         await db.execute(
@@ -111,7 +120,7 @@ const calcularPontuacaoEvento = async (eventosId) => {
                             [pontuacao_equipe, row.id]
                         );
                     }
-                });
+                }
             }
         }
         return { success: "Pontuação do evento calculada e armazenada com sucesso!" };
@@ -141,5 +150,5 @@ router.post('/pontuar-evento/:eventoId', async (req, res) => {
 
 module.exports = {
     router,
-    calcularPontuacaoEvento, // Export the function
+    calcularPontuacaoEvento, // Exporta a função para calcular a pontuação em outros módulos
 };

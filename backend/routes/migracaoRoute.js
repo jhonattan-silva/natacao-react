@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { classificarProva } = require('./resultadosRoutes');
+const pontuacoesRoutes = require('./pontuacoesRoutes');
+const { atualizarRankingEquipesPorEvento } = require('./rankingsRoutes');
 
 router.post('/vincula-equipes', async (req, res) => {
     try {
@@ -65,7 +68,31 @@ router.post('/add-nadador-id-temp', async (req, res) => {
     }
 });
 
+router.post('/classificar-todas-provas/:eventoId', async (req, res) => {
+    const { eventoId } = req.params;
+    const db = require('../config/db');
+    try {
+        // Busca todas as provas do evento
+        const [provas] = await db.query('SELECT id FROM eventos_provas WHERE eventos_id = ?', [eventoId]);
+        let total = 0;
+        let erros = [];
+        for (const prova of provas) {
+            try {
+                await classificarProva(prova.id);
+                total++;
+            } catch (err) {
+                erros.push({ provaId: prova.id, error: err.message });
+            }
+        }
+        // Calcula pontuação do evento
+        await pontuacoesRoutes.calcularPontuacaoEvento(eventoId);
+        // Atualiza ranking de equipes do evento
+        await atualizarRankingEquipesPorEvento(eventoId);
 
-
+        res.json({ success: true, totalProvas: total, erros });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 module.exports = router;

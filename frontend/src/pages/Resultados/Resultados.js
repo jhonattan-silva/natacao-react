@@ -20,17 +20,70 @@ const Resultados = () => {
   const [loading, setLoading] = useState(true);
   const [eventosComResultados, setEventosComResultados] = useState([]);
   const [pontuacaoEtapa, setPontuacaoEtapa] = useState([]);
-  const apiResultados = '/resultados/resultadosEvento';
+  const [eventoFinalizado, setEventoFinalizado] = useState(null);
+
+
+  //const apiResultados = '/resultados/resultadosEvento';
   const apiClassificacao = '/resultados/resultadosPorCategoria';
   const apiAbsoluto = '/resultados/resultadosAbsoluto';
   const apiResultadosBanco = '/resultados/listarDoBanco';
   const apiEventosComResultados = '/resultados/listarEventosComResultados';
   const apiRankingEquipesPorEvento = '/rankings/ranking-equipes-por-evento';
+  const apiBuscaResultadosCompleto = '/resultados/buscaResultadosCompleto';
+  const apiStatusEvento = '/resultados/statusEvento';
+
+  const agruparPorProvaEBateria = (dados) => {
+    // Agrupa por prova
+    const provas = {};
+    dados.forEach(row => {
+      if (!provas[row.eventos_provas_id]) {
+        provas[row.eventos_provas_id] = {
+          nome: row.nome_prova,
+          ordem: row.ordem,
+          revezamento: !!row.eh_revezamento,
+          baterias: {}
+        };
+      }
+      // Agrupa por bateria
+      if (!provas[row.eventos_provas_id].baterias[row.bateria_id]) {
+        provas[row.eventos_provas_id].baterias[row.bateria_id] = {
+          numeroBateria: row.numero_bateria,
+          nadadores: []
+        };
+      }
+      provas[row.eventos_provas_id].baterias[row.bateria_id].nadadores.push(row);
+    });
+    // Transforma em array para renderizar
+    return Object.values(provas)
+      .sort((a, b) => a.ordem - b.ordem) // <-- garante a ordem correta das provas!
+      .map(prova => ({
+        ...prova,
+        baterias: Object.values(prova.baterias)
+      }));
+  };
+
+  // Agrupa por nome da prova (sem categoria)
+  const provasAgrupadas = {};
+
+  Object.entries(classificacao).forEach(([chave, atletas]) => {
+    // Extrai nome da prova e categoria
+    // Exemplo de chave: "1ª PROVA - 200 METROS BORBOLETA FEMININO - Infantil I (Feminino)"
+    const idx = chave.lastIndexOf(' - ');
+    let nomeProva = chave;
+    let categoria = '';
+    if (idx !== -1) {
+      nomeProva = chave.substring(0, idx).trim();
+      categoria = chave.substring(idx + 3).trim();
+    }
+    if (!provasAgrupadas[nomeProva]) provasAgrupadas[nomeProva] = [];
+    provasAgrupadas[nomeProva].push({ categoria, atletas });
+  });
 
   const fetchResultadosEClassificacao = async () => {
     try {
       const [resultadosResponse, classificacaoResponse, absolutoResponse] = await Promise.all([
-        api.get(`${apiResultados}/${eventoId}`),
+        //api.get(`${apiResultados}/${eventoId}`),
+        api.get(`${apiBuscaResultadosCompleto}/${eventoId}`),
         api.get(`${apiClassificacao}/${eventoId}`),
         api.get(`${apiAbsoluto}/${eventoId}`)
       ]);
@@ -79,12 +132,35 @@ const Resultados = () => {
     }
   };
 
+  const fetchResultadosCompleto = async () => {
+    try {
+      const response = await api.get(`${apiBuscaResultadosCompleto}/${eventoId}`);
+      setDados(response.data || []);
+      setErro(null);
+    } catch (err) {
+      setErro("Erro ao buscar resultados completos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStatusEvento = async () => {
+    try {
+      const response = await api.get(`${apiStatusEvento}/${eventoId}`);
+      setEventoFinalizado(response.data.classificacao_finalizada === 1);
+    } catch {
+      setEventoFinalizado(null);
+    }
+  };
+
   useEffect(() => {
     if (eventoId) {
       setLoading(true);
       fetchResultadosEClassificacao();
+      fetchResultadosCompleto(); // nova forma de buscar resultados
       fetchResultadosBanco();
       fetchPontuacaoEtapa(eventoId);
+      fetchStatusEvento(); // verifica se o evento ainda aguarda resultados
     } else {
       setLoading(true);
       fetchEventosComResultados();
@@ -107,55 +183,6 @@ const Resultados = () => {
     return classificacao;
   };
 
-  const renderTabelaBalizamento = (item) => {
-    return item.baterias.map(bateria => {
-      const tableData = bateria.nadadores.map(nadador => {
-        let tempo = nadador.tempo;
-        if (nadador.status === 'NC') {
-          tempo = 'NC';
-        } else if (nadador.status === 'DQL') {
-          tempo = 'DQL';
-        }
-        const rowData = item.prova.revezamento ? {
-          Raia: nadador.raia,
-          Equipe: nadador.equipe,
-          Tempo: tempo
-        } : {
-          Raia: nadador.raia,
-          Nome: nadador.nome,
-          Tempo: tempo,
-          Equipe: nadador.equipe,
-          Categoria: nadador.categoria
-        };
-        return rowData;
-      });
-      const textoExibicao = item.prova.revezamento ? {
-        Raia: 'Raia',
-        Equipe: 'Equipe',
-        Tempo: 'Tempo'
-      } : {
-        Raia: 'Raia',
-        Nome: 'Nadador',
-        Tempo: 'Tempo',
-        Equipe: 'Equipe',
-        Categoria: 'Categoria'
-      };
-      const colunasOcultas = item.prova.revezamento ? [] : [];
-      return (
-        <div key={bateria.bateriaId}>
-          <h3 className={style.titulo}>{bateria.numeroBateria}</h3>
-          <div className={`${style.tabelaPersonalizada} ${style.tabelaResultadosBalizamento}`}>
-            <Tabela
-              dados={tableData}
-              textoExibicao={textoExibicao}
-              colunasOcultas={colunasOcultas}
-            />
-          </div>
-        </div>
-      );
-    });
-  };
-
   return (
     <>
       <Cabecalho />
@@ -175,10 +202,45 @@ const Resultados = () => {
                         label: 'Resultados pelo Balizamento',
                         content: (
                           <div className={style.resultadosContainer}>
-                            {dados.map(item => (
-                              <div key={item.prova.eventos_provas_id}>
-                                <h2 className={style.titulo}>{item.prova.nome.replace('(M)', 'MASCULINO').replace('(F)', 'FEMININO')}</h2>
-                                {renderTabelaBalizamento(item)}
+                            {eventoFinalizado === false && (
+                              <h2 className={style.eventoAndamento}>
+                                EVENTO EM ANDAMENTO - ATUALIZE A PÁGINA APÓS CADA PROVA
+                              </h2>
+                            )}
+                            {agruparPorProvaEBateria(dados).map(prova => (
+                              <div key={prova.nome}>
+                                <h2 className={style.titulo}>
+                                  {prova.nome.replace('(M)', 'MASCULINO').replace('(F)', 'FEMININO')}
+                                </h2>
+                                {prova.baterias.map(bateria => (
+                                  <div key={bateria.numeroBateria}>
+                                    <h3 className={style.titulo}>{bateria.numeroBateria}</h3>
+                                    <div className={`${style.tabelaPersonalizada} ${style.tabelaResultadosBalizamento}`}>
+                                      <Tabela
+                                        dados={bateria.nadadores.map(nadador => {
+                                          let tempo;
+                                          if (eventoFinalizado === false && (!nadador.tempo || nadador.tempo === "NC" || nadador.tempo === "A DISPUTAR")) {
+                                            tempo = "A DISPUTAR";
+                                          } else if (nadador.status === 'NC') {
+                                            tempo = 'NC';
+                                          } else if (nadador.status === 'DQL') {
+                                            tempo = 'DQL';
+                                          } else {
+                                            tempo = nadador.tempo;
+                                          }
+                                          return prova.revezamento
+                                            ? { Raia: nadador.raia, Equipe: nadador.nome_equipe, Tempo: tempo }
+                                            : { Raia: nadador.raia, Nome: nadador.nome_nadador, Tempo: tempo, Equipe: nadador.nome_equipe, Categoria: nadador.categoria_nadador };
+                                        })}
+                                        textoExibicao={prova.revezamento
+                                          ? { Raia: 'Raia', Equipe: 'Equipe', Tempo: 'Tempo' }
+                                          : { Raia: 'Raia', Nome: 'Nadador', Tempo: 'Tempo', Equipe: 'Equipe', Categoria: 'Categoria' }
+                                        }
+                                        colunasOcultas={[]}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                             ))}
                           </div>
@@ -188,43 +250,70 @@ const Resultados = () => {
                         label: 'Classificação por Categoria',
                         content: (
                           <div className={style.resultadosContainer}>
-                            {Object.keys(classificacao).length > 0 ? (
-                              Object.entries(classificacao).map(([categoria, atletas]) => {
-                                const colunasOcultas = [];
-                                if (categoria.includes('Revezamento')) {
-                                  colunasOcultas.push('Categoria', 'Nome');
-                                }
-                                const ehProvaCategoria = atletas.some(atleta => atleta.eh_prova_categoria);
-                                return (
-                                  <div key={categoria}>
-                                    <h2 className={style.titulo}>{categoria.replace('(M)', '(Masculino)').replace('(F)', '(Feminino)')}</h2>
-                                    <div className={style.classificacaoTabela}>
-                                      <Tabela
-                                        className={style.tabelaClassificacaoCategoria}
-                                        dados={atletas.map(atleta => ({
-                                          Classificação: renderMedalha(atleta.classificacao, ehProvaCategoria),
-                                          Nome: atleta.nomeNadador,
-                                          Tempo: `${String(atleta.minutos).padStart(2, '0')}:${String(atleta.segundos).padStart(2, '0')}:${String(atleta.centesimos).padStart(2, '0')}`,
-                                          Equipe: atleta.nomeEquipe,
-                                          Categoria: atleta.categoria
-                                        }))}
-                                        textoExibicao={{
-                                          Classificação: 'Classificação',
-                                          Nome: 'Nadador',
-                                          Tempo: 'Tempo',
-                                          Equipe: 'Equipe',
-                                          Categoria: 'Categoria'
-                                        }}
-                                        colunasOcultas={colunasOcultas}
-                                        ehProvaCategoria={ehProvaCategoria}
-                                      />
-                                    </div>
-                                  </div>
-                                );
-                              })
-                            ) : (
-                              <p>Nenhuma classificação encontrada.</p>
+                            {eventoFinalizado === false && (
+                              <h2 className={style.eventoAndamento}>
+                                EVENTO EM ANDAMENTO - ATUALIZE A PÁGINA APÓS CADA PROVA
+                              </h2>
                             )}
+                            {Object.entries(provasAgrupadas)
+                              .sort((a, b) => {
+                                const getOrdem = str => {
+                                  const match = str.match(/^(\d+)ª PROVA/);
+                                  return match ? parseInt(match[1], 10) : 9999;
+                                };
+                                const ordemA = getOrdem(a[0]);
+                                const ordemB = getOrdem(b[0]);
+                                if (ordemA !== ordemB) return ordemA - ordemB;
+                                return a[0].localeCompare(b[0]);
+                              })
+                              .filter(([_, categorias]) =>
+                                categorias.some(({ atletas }) =>
+                                  atletas.some(atleta =>
+                                    atleta.eh_prova_categoria &&
+                                    atleta.tempo && atleta.tempo !== "A DISPUTAR" && atleta.tempo !== "NC"
+                                  )
+                                )
+                              )
+                              .map(([nomeProva, categorias]) => (
+                                <div key={nomeProva}>
+                                  <h2 className={style.titulo}>{nomeProva.replace('(M)', 'MASCULINO').replace('(F)', 'FEMININO')}</h2>
+                                  {categorias
+                                    .filter(({ atletas }) =>
+                                      atletas.some(atleta =>
+                                        atleta.eh_prova_categoria &&
+                                        atleta.tempo && atleta.tempo !== "A DISPUTAR" && atleta.tempo !== "NC"
+                                      )
+                                    )
+                                    .map(({ categoria, atletas }) => (
+                                      <div key={categoria}>
+                                        <h3 className={style.tituloCategoria}>
+                                          {categoria.replace(/\s*\([MF]\)$/, '')}
+                                        </h3>
+                                        <div className={style.classificacaoTabela}>
+                                          <Tabela
+                                            className={style.tabelaClassificacaoCategoria}
+                                            dados={atletas.map(atleta => ({
+                                              Classificação: renderMedalha(atleta.classificacao, true),
+                                              Nome: atleta.nomeNadador,
+                                              Tempo: `${String(atleta.minutos).padStart(2, '0')}:${String(atleta.segundos).padStart(2, '0')}:${String(atleta.centesimos).padStart(2, '0')}`,
+                                              Equipe: atleta.nomeEquipe,
+                                              Categoria: atleta.categoria
+                                            }))}
+                                            textoExibicao={{
+                                              Classificação: 'Classificação',
+                                              Nome: 'Nadador',
+                                              Tempo: 'Tempo',
+                                              Equipe: 'Equipe',
+                                              Categoria: 'Categoria'
+                                            }}
+                                            colunasOcultas={['Categoria']}
+                                            ehProvaCategoria={true}
+                                          />
+                                        </div>
+                                      </div>
+                                    ))}
+                                </div>
+                              ))}
                           </div>
                         ),
                       },
@@ -232,9 +321,14 @@ const Resultados = () => {
                         label: 'Classificação Absoluto',
                         content: (
                           <div className={style.resultadosContainer}>
+                            {eventoFinalizado === false && (
+                              <h2 className={style.eventoAndamento}>
+                                EVENTO EM ANDAMENTO - ATUALIZE A PÁGINA APÓS CADA PROVA
+                              </h2>
+                            )}
                             {Object.keys(resultadosBanco).length > 0 ? (
                               Object.entries(resultadosBanco)
-                                .filter(([_, resultados]) => resultados.some(item => item.tipo === 'ABSOLUTO')) // Filtra apenas os resultados do tipo 'ABSOLUTO'
+                                .filter(([_, resultados]) => resultados.some(item => item.tipo === 'ABSOLUTO'))
                                 .map(([prova, resultados]) => {
                                   const colunasOcultas = [];
                                   const ehRevezamento = resultados.some(item => item.eh_revezamento);
@@ -248,7 +342,7 @@ const Resultados = () => {
                                         <Tabela
                                           className={style.tabelaClassificacaoFinal}
                                           dados={resultados
-                                            .filter(item => item.tipo === 'ABSOLUTO') // Filtra apenas os itens do tipo 'ABSOLUTO'
+                                            .filter(item => item.tipo === 'ABSOLUTO')
                                             .map(item => ({
                                               Classificação: item.status === 'NC' || item.status === 'DQL' ? item.status : item.classificacao,
                                               Nome: item.nome_nadador || '-',
@@ -285,17 +379,22 @@ const Resultados = () => {
                         label: 'Pontuação da Etapa',
                         content: (
                           <div className={style.resultadosContainer}>
+                            {eventoFinalizado === false && (
+                              <h2 className={style.eventoAndamento}>
+                                EVENTO EM ANDAMENTO - ATUALIZE A PÁGINA APÓS CADA PROVA
+                              </h2>
+                            )}
                             {pontuacaoEtapa.length > 0 ? (
                               <Tabela
                                 className={style.tabelaPontuacaoEtapa}
                                 dados={pontuacaoEtapa
-                                  .sort((a, b) => b.pontos - a.pontos) // Ordena por pontos em ordem decrescente
+                                  .sort((a, b) => b.pontos - a.pontos)
                                   .map((item, index, array) => {
                                     const posicao = index === 0 || item.pontos !== array[index - 1].pontos
-                                      ? index + 1 // Define a posição apenas se não houver empate
-                                      : null; // Mantém a posição anterior em caso de empate
+                                      ? index + 1
+                                      : null;
                                     return {
-                                      Posição: posicao || '', // Exibe a posição ou vazio para empates
+                                      Posição: posicao || '',
                                       Equipe: item.equipe,
                                       Pontos: item.pontos
                                     };
@@ -325,13 +424,13 @@ const Resultados = () => {
                   eventosComResultados.map(evento => {
                     const { dataEvento, horario } = formataData(evento.data);
                     return (
-                      <Card 
-                        key={evento.id} 
+                      <Card
+                        key={evento.id}
                         className={`${style.eventoCard} ${style.cardContainer}`}
-                        nome={`${evento.nome}`} 
-                        data={`Data: ${dataEvento}`} 
-                        horario={`Horário: ${horario}`} 
-                        local={`Sede: ${evento.sede}`} 
+                        nome={`${evento.nome}`}
+                        data={`Data: ${dataEvento}`}
+                        horario={`Horário: ${horario}`}
+                        local={`Sede: ${evento.sede}`}
                         cidade={`Cidade: ${evento.cidade}`}
                         onClick={() => aoClicarNoCard(evento.id)}
                       >

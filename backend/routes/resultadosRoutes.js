@@ -12,7 +12,7 @@ const db = require('../config/db');
  * atualizar-recordes - Rota para atualizar recordes individuais e de revezamento - Inclui/Atualiza os recordes de cada nadador/equipe
  */
 
-//Página inicial, sem evento selecionado
+//Página inicial, sem evento selecionado só para mostrar os eventos que já tiveram resultados digitados
 router.get('/listarEventosComResultados', async (req, res) => {
   try {
       const [rows] = await db.query('SELECT * FROM eventos WHERE teve_resultados = true');
@@ -27,7 +27,7 @@ router.get('/listarEventosComResultados', async (req, res) => {
   }
 });
 
-// Rota para listar resultados de um evento específico
+/* Rota para listar resultados de um evento específico
 router.get('/resultadosEvento/:eventoId', async (req, res) => {
   const { eventoId } = req.params;
   try {
@@ -161,68 +161,73 @@ router.get('/resultadosEvento/:eventoId', async (req, res) => {
     console.error('Erro ao buscar resultados:', error.message);
     res.status(500).json({ error: 'Erro ao buscar resultados' });
   }
-});
+});*/
 
 // Rota para listar resultados por categoria e prova
 router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
     const { eventoId } = req.params;
 
     try {
-        // Buscar resultados com provas, categorias e sexo
+        // Buscar resultados completos do evento
         const [resultados] = await db.query(`
             SELECT 
-                r.id AS resultadoId,
-                r.nadadores_id AS nadadorId,
-                n.nome AS nomeNadador,
-                n.equipes_id AS equipeId,
-                e.nome AS nomeEquipe,
-                c.id AS categoriaId,
-                c.nome AS categoria,
-                n.sexo AS sexoNadador,
-                ep.id AS eventosProvasId,
-                p.id AS provaId,
-                p.sexo AS sexoProva,
-                CONCAT(p.estilo, ' ', p.distancia, ' METROS') AS nomeProva,
-                r.minutos,
-                r.segundos,
-                r.centesimos,
-                r.status,
-                p.eh_revezamento,
-                p.eh_prova_categoria  -- Ensure this field is selected
-            FROM resultados r
-            LEFT JOIN nadadores n ON r.nadadores_id = n.id
-            LEFT JOIN categorias c ON n.categorias_id = c.id
-            LEFT JOIN equipes e ON COALESCE(r.equipes_id, n.equipes_id) = e.id
-            JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
+                rc.eventos_provas_id,
+                rc.prova_id,
+                rc.nome_prova,
+                rc.categoria_nadador,
+                rc.sexo_nadador,
+                rc.nome_nadador,
+                rc.equipes_id,
+                rc.nome_equipe,
+                rc.tempo,
+                rc.minutos,
+                rc.segundos,
+                rc.centesimos,
+                rc.status,
+                rc.eh_revezamento,
+                p.eh_prova_categoria,
+                p.sexo AS sexo_prova
+            FROM resultadosCompletos rc
+            JOIN eventos_provas ep ON rc.eventos_provas_id = ep.id
             JOIN provas p ON ep.provas_id = p.id
-            WHERE ep.eventos_id = ?
-            ORDER BY p.eh_revezamento ASC, p.id ASC, c.id ASC, n.sexo ASC, r.minutos ASC, r.segundos ASC, r.centesimos ASC;
+            WHERE rc.eventos_id = ?
+            ORDER BY rc.eh_revezamento ASC, rc.ordem ASC, rc.categoria_nadador ASC, rc.sexo_nadador ASC, rc.minutos ASC, rc.segundos ASC, rc.centesimos ASC
         `, [eventoId]);
 
         // Agrupar por prova, categoria e sexo (revezamento separado por sexo)
         const classificacao = {};
         resultados.forEach(row => {
-            const provaKey = row.eh_revezamento 
-                ? `Revezamento - ${row.nomeProva} (${row.sexoProva})` 
-                : `${row.nomeProva} - ${row.categoria} (${row.sexoNadador})`;
+            const provaKey = row.eh_revezamento
+                ? `Revezamento - ${row.nome_prova} (${row.sexo_prova})`
+                : `${row.nome_prova} - ${row.categoria_nadador} (${row.sexo_nadador})`;
 
             if (!classificacao[provaKey]) {
                 classificacao[provaKey] = [];
             }
 
             // Formatar tempo ou definir texto personalizado
-            if (row.status === 'DQL') { // Alterado de 'DESC'
+            if (row.status === 'DQL') {
                 row.tempo = 'DQL';
                 row.classificacao = 'DQL';
-            } else if (row.status === 'NC' || (row.minutos === 0 && row.segundos === 0 && row.centesimos === 0)) {
+            } else if (row.status === 'NC' || !row.tempo) {
                 row.tempo = 'NC';
                 row.classificacao = 'NC';
             } else {
-                row.tempo = `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`;
                 row.classificacao = null; // Definir depois
             }
 
-            classificacao[provaKey].push(row);
+            classificacao[provaKey].push({
+              classificacao: row.classificacao,
+              nomeNadador: row.nome_nadador,
+              nomeEquipe: row.nome_equipe,
+              minutos: row.minutos,
+              segundos: row.segundos,
+              centesimos: row.centesimos,
+              categoria: row.categoria_nadador,
+              status: row.status,
+              tempo: row.tempo,
+              eh_prova_categoria: row.eh_prova_categoria === 1 // ou true/false conforme seu banco
+            });
         });
 
         // Adicionar posição no ranking dentro de cada prova + categoria + sexo
@@ -232,7 +237,7 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
             const invalidos = [];
             classificacao[prova].forEach(row => {
                 if (row.classificacao) {
-                    invalidos.push(row); // Já possui status (DESC ou NC)
+                    invalidos.push(row); // Já possui status (DQL ou NC)
                 } else {
                     validos.push(row);
                 }
@@ -250,7 +255,7 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
         res.json(classificacao);
     } catch (error) {
         console.error('Erro ao buscar resultados por categoria e prova:', error.message);
-        res.status(500).json({ error: 'Erro ao buscar resultados' });
+        res.status(500).json({ error: 'Erro ao buscar resultados por categoria e prova' });
     }
 });
 
@@ -636,5 +641,117 @@ router.post('/atualizar-recordes/:torneioId', async (req, res) => {
   }
 });
 
+// Rota para buscar resultados completos direto da nova tabela
+router.get('/buscaResultadosCompleto/:eventoId', async (req, res) => {
+  const { eventoId } = req.params;
+  try {
+    const [rows] = await db.query(
+      `SELECT * FROM resultadosCompletos WHERE eventos_id = ? ORDER BY ordem ASC, bateria_id ASC, raia ASC`,
+      [eventoId]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Erro ao buscar resultados completos:', error.message);
+    res.status(500).json({ error: 'Erro ao buscar resultados completos' });
+  }
+});
 
-module.exports = router;
+// Rota para buscar status do evento (classificacao_finalizada)
+router.get('/statusEvento/:eventoId', async (req, res) => {
+  const { eventoId } = req.params;
+  try {
+    const [rows] = await db.query(
+      `SELECT classificacao_finalizada FROM eventos WHERE id = ?`,
+      [eventoId]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Evento não encontrado' });
+    }
+    res.json({ classificacao_finalizada: rows[0].classificacao_finalizada });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar status do evento' });
+  }
+});
+
+// Função nomeada para classificar uma prova
+async function classificarProva(provaId) {
+  let connection;
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    await connection.query(
+      `DELETE FROM classificacoes WHERE eventos_provas_id = ?`,
+      [provaId]
+    );
+
+    const [resultados] = await connection.query(`
+      SELECT 
+        r.nadadores_id AS nadadorId,
+        r.equipes_id AS equipeId,
+        r.eventos_provas_id AS eventosProvasId,
+        p.eh_revezamento,
+        p.eh_prova_ouro,
+        r.minutos, r.segundos, r.centesimos,
+        r.status
+      FROM resultados r
+      JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
+      JOIN provas p ON ep.provas_id = p.id
+      WHERE r.eventos_provas_id = ?
+      ORDER BY p.eh_revezamento ASC, p.id ASC, r.minutos ASC, r.segundos ASC, r.centesimos ASC
+    `, [provaId]);
+
+    const classificacoes = [];
+    let posicao = 1;
+    resultados.forEach(row => {
+      const tempo = row.status === 'OK'
+        ? `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`
+        : row.status === 'DQL' ? 'DQL' : 'NC';
+      const classificacao = row.status === 'OK' ? posicao++ : null;
+      classificacoes.push([
+        row.eventosProvasId,
+        row.nadadorId || null,
+        row.equipeId || null,
+        tempo,
+        classificacao,
+        row.status,
+        row.eh_revezamento || row.eh_prova_ouro ? 'ABSOLUTO' : 'CATEGORIA'
+      ]);
+    });
+
+    if (classificacoes.length > 0) {
+      await connection.query(`
+        INSERT INTO classificacoes (eventos_provas_id, nadadores_id, equipes_id, tempo, classificacao, status, tipo)
+        VALUES ?
+      `, [classificacoes]);
+    }
+
+    await connection.commit();
+    connection.release();
+
+    return { success: true, message: 'Classificação da prova gerada com sucesso!' };
+  } catch (error) {
+    if (connection) {
+      await connection.rollback();
+      connection.release();
+    }
+    console.error('Erro ao classificar prova:', error.message);
+    throw error;
+  }
+}
+
+// Rota HTTP usa a função nomeada
+router.post('/classificarProva/:provaId', async (req, res) => {
+  const { provaId } = req.params;
+  try {
+    const resultado = await classificarProva(provaId);
+    res.json(resultado);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao classificar prova' });
+  }
+});
+
+module.exports = {
+    router,
+    classificarProva, // ou calcularPontuacaoEvento
+};
