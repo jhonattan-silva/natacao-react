@@ -27,141 +27,6 @@ router.get('/listarEventosComResultados', async (req, res) => {
   }
 });
 
-/* Rota para listar resultados de um evento específico
-router.get('/resultadosEvento/:eventoId', async (req, res) => {
-  const { eventoId } = req.params;
-  try {
-    // Query para listar todas as provas do evento
-    const queryProvas = `
-        SELECT DISTINCT
-            ep.id AS eventos_provas_id,
-            p.id AS prova_id,
-            CONCAT(ep.ordem, 'ª PROVA - ', p.distancia, ' METROS ', p.estilo, ' ', IF(p.eh_revezamento, 'REVEZAMENTO ', ''), '(', p.sexo, ')') AS nome,
-            p.estilo AS prova_estilo,
-            p.distancia,
-            p.sexo,
-            p.eh_revezamento,
-            ep.ordem
-        FROM 
-            eventos_provas ep
-        JOIN 
-            provas p ON ep.provas_id = p.id
-        WHERE 
-            ep.eventos_id = ?
-        ORDER BY ep.ordem ASC;
-    `;
-    const [provas] = await db.query(queryProvas, [eventoId]);
-    if (provas.length === 0) {
-      return res.status(404).json({ error: 'Evento não encontrado' });
-    }
-
-    // Para cada prova, obter as baterias e nadadores e incluir resultado ou "A DISPUTAR"
-    const resultadosEvento = [];
-    for (const prova of provas) {
-      const queryBaterias = `
-      SELECT
-          b.id AS bateriaId,
-          b.descricao AS numeroBateria,
-          bi.raia,
-          n.id AS nadadorId,
-          n.nome AS nomeNadador,
-          COALESCE(e.id, eq.id) AS equipeId,  
-          COALESCE(e.nome, eq.nome) AS nomeEquipe,  
-          c.nome AS categoriaNadador
-      FROM baterias b
-      INNER JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
-      LEFT JOIN inscricoes i ON bi.inscricoes_id = i.id
-      LEFT JOIN nadadores n ON i.nadadores_id = n.id
-      LEFT JOIN categorias c ON n.categorias_id = c.id
-      LEFT JOIN revezamentos_inscricoes ri ON bi.revezamentos_inscricoes_id = ri.id
-      LEFT JOIN equipes e ON ri.equipes_id = e.id  -- Equipe em revezamentos
-      LEFT JOIN equipes eq ON n.equipes_id = eq.id  -- Equipe de nadadores individuais
-      WHERE b.eventos_provas_id = ?
-      ORDER BY b.id, bi.raia;
-      `;
-      const [baterias] = await db.query(queryBaterias, [prova.eventos_provas_id]);
-
-      // Para cada nadador, buscar seu resultado para esta prova
-      for (let row of baterias) {
-        const equipesProcessadas = new Set(); // Para evitar buscar o mesmo resultado várias vezes
-
-        for (let row of baterias) {
-          let resultadoQuery, resultadoParams;
-        
-          if (prova.eh_revezamento && row.nadadorId === null) { // Se for revezamento e nadadorId for null
-            if (!row.equipeId || equipesProcessadas.has(row.equipeId)) { // Se não tiver equipe ou já foi processada
-              row.tempo = "A DISPUTAR";
-              row.status = null;
-              continue; // Evita buscar múltiplas vezes para a mesma equipe
-            }
-            equipesProcessadas.add(row.equipeId); // Marca a equipe como processada
-            resultadoQuery = 'SELECT minutos, segundos, centesimos, status FROM resultados WHERE equipes_id = ? AND eventos_provas_id = ?';
-            resultadoParams = [row.equipeId, prova.eventos_provas_id];
-          } else if (!prova.eh_revezamento && row.nadadorId !== null) { // Se for prova individual e nadadorId não for null
-            resultadoQuery = 'SELECT minutos, segundos, centesimos, status FROM resultados WHERE nadadores_id = ? AND eventos_provas_id = ?';
-            resultadoParams = [row.nadadorId, prova.eventos_provas_id];
-          } else {
-            row.tempo = "A DISPUTAR";
-            row.status = null;
-            continue;
-          }
-        
-          const [resultadoRows] = await db.query(resultadoQuery, resultadoParams);
-          if (resultadoRows.length > 0) {
-            const { minutos, segundos, centesimos, status } = resultadoRows[0];
-            row.tempo = `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}:${String(centesimos).padStart(2, '0')}`;
-            row.status = status === 'DQL' ? 'DQL' : status;
-          } else {
-            row.tempo = "A DISPUTAR";
-            row.status = null;
-          }
-        }        
-      }
-
-      // Organiza as baterias em grupos, cada grupo representa uma bateria
-      const bateriasOrganizadas = baterias.reduce((acc, row) => {
-        let bateria = acc.find(b => b.bateriaId === row.bateriaId);
-        if (!bateria) {
-          bateria = {
-            bateriaId: row.bateriaId,
-            numeroBateria: row.numeroBateria,
-            nadadores: [],
-          };
-          acc.push(bateria);
-        }
-        const nadadorData = { // Dados do nadador
-          id: row.nadadorId,
-          raia: row.raia,
-          tempo: row.tempo,
-          status: row.status,
-          equipe: row.nomeEquipe
-        };
-        if (!prova.eh_revezamento) { // Se não for revezamento
-          nadadorData.nome = row.nomeNadador;
-          nadadorData.categoria = row.categoriaNadador;
-        }        
-        bateria.nadadores.push(nadadorData);
-        return acc;
-      }, []);
-
-      resultadosEvento.push({
-        prova: {
-          eventos_provas_id: prova.eventos_provas_id,
-          prova_id: prova.prova_id,
-          nome: prova.nome,
-          ordem: prova.ordem,
-          revezamento: prova.eh_revezamento === 1 // Use the boolean field
-        },
-        baterias: bateriasOrganizadas,
-      });
-    }
-
-    res.json(resultadosEvento);
-  } catch (error) {
-    console.error('Erro ao buscar resultados:', error.message);
-    res.status(500).json({ error: 'Erro ao buscar resultados' });
-  }
-});*/
 
 // Rota para listar resultados por categoria e prova
 router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
@@ -190,7 +55,7 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
             FROM resultadosCompletos rc
             JOIN eventos_provas ep ON rc.eventos_provas_id = ep.id
             JOIN provas p ON ep.provas_id = p.id
-            WHERE rc.eventos_id = ?
+            WHERE rc.eventos_id = 24
             ORDER BY rc.eh_revezamento ASC, rc.ordem ASC, rc.categoria_nadador ASC, rc.sexo_nadador ASC, rc.minutos ASC, rc.segundos ASC, rc.centesimos ASC
         `, [eventoId]);
 
@@ -226,7 +91,7 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
               categoria: row.categoria_nadador,
               status: row.status,
               tempo: row.tempo,
-              eh_prova_categoria: row.eh_prova_categoria === 1 // ou true/false conforme seu banco
+              eh_prova_categoria: row.eh_prova_categoria === 1 
             });
         });
 

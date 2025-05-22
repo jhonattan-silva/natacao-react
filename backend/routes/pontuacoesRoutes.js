@@ -13,6 +13,38 @@ const db = require('../config/db');
 const PONTOS_INDIVIDUAL = [9, 7, 6, 5, 4, 3, 2, 1];
 const PONTOS_REVEZAMENTO = [18, 14, 12, 10, 8, 6, 4, 2];
 
+// Função para distribuir pontuação considerando empates
+function distribuirPontuacaoComEmpate(classificacoes, tabelaPontuacao, campoTempo = 'tempo') {
+    let i = 0;
+    while (i < classificacoes.length) {
+        // Identifica todos os empatados nesta posição
+        const empatados = [classificacoes[i]];
+        let j = i + 1;
+        while (
+            j < classificacoes.length &&
+            classificacoes[j][campoTempo] === classificacoes[i][campoTempo]
+        ) {
+            empatados.push(classificacoes[j]);
+            j++;
+        }
+
+        // Soma as pontuações das posições empatadas e divide pelo número de empatados
+        let somaPontuacao = 0;
+        for (let k = 0; k < empatados.length; k++) {
+            somaPontuacao += tabelaPontuacao[i + k] || 0;
+        }
+        const mediaPontuacao = somaPontuacao / empatados.length;
+
+        // Atribui a média para todos os empatados
+        for (const emp of empatados) {
+            emp.pontuacao = mediaPontuacao;
+        }
+
+        i += empatados.length; // Pula para a próxima posição após os empatados
+    }
+    return classificacoes;
+}
+
 // Função para calcular e armazenar a pontuação no evento
 const calcularPontuacaoEvento = async (eventosId) => {
     try {
@@ -57,7 +89,7 @@ const calcularPontuacaoEvento = async (eventosId) => {
             } else {
                 // Obter classificações ordenadas por categoria semelhante à classificação por categoria dos resultados
                 [classificacoes] = await db.execute(
-                    `SELECT c.id, n.categorias_id, cat.eh_mirim, c.classificacao 
+                    `SELECT c.id, n.categorias_id, cat.eh_mirim, c.classificacao, c.tempo
                      FROM classificacoes c
                      LEFT JOIN nadadores n ON c.nadadores_id = n.id
                      LEFT JOIN categorias cat ON n.categorias_id = cat.id
@@ -78,27 +110,30 @@ const calcularPontuacaoEvento = async (eventosId) => {
                 });
                 // Atualiza pontuação individual conforme ranking por categoria
                 for (const cat in categorias) {
-                    for (let index = 0; index < categorias[cat].length; index++) {
-                        const row = categorias[cat][index];
-                        let pontuacao_individual = 0;
+                    // Ordene por tempo/classificação se necessário
+                    const lista = categorias[cat]
+                        .filter(row => row.tempo !== 'NC' && row.tempo !== 'DQL')
+                        .slice()
+                        .sort((a, b) => a.tempo.localeCompare(b.tempo))
+                        .slice(0, 8);
+                    // Aplique a função de empate
+                    const classificados = distribuirPontuacaoComEmpate(lista, PONTOS_INDIVIDUAL, 'tempo');
+                    for (const row of classificados) {
                         // Regra: mirim só pontua em prova de categoria, não-mirim só pontua em prova ouro
                         if ((row.eh_mirim && prova.eh_prova_categoria) ||
                             (!row.eh_mirim && prova.eh_prova_ouro)) {
-                            pontuacao_individual = PONTOS_INDIVIDUAL[index] || 0;
-                        }
-                        if (pontuacao_individual > 0) {
-                            await db.execute(
-                                `UPDATE classificacoes 
-                                 SET pontuacao_individual = ? 
-                                 WHERE id = ?`,
-                                [pontuacao_individual, row.id]
-                            );
+                            if (row.pontuacao > 0) {
+                                await db.execute(
+                                    `UPDATE classificacoes SET pontuacao_individual = ? WHERE id = ?`,
+                                    [row.pontuacao, row.id]
+                                );
+                            }
                         }
                     }
                 }
                 // Buscar o ranking absoluto da prova
                 const [absoluto] = await db.execute(
-                    `SELECT c.id
+                    `SELECT c.id, c.tempo
                      FROM classificacoes c
                      WHERE c.eventos_provas_id = ?
                      AND c.status = 'OK'
@@ -108,16 +143,12 @@ const calcularPontuacaoEvento = async (eventosId) => {
                     [prova.evento_prova_id]
                 );
 
-                // Atualizar pontuação de equipe para os 8 primeiros do ranking absoluto
-                for (let index = 0; index < absoluto.length; index++) {
-                    const row = absoluto[index];
-                    const pontuacao_equipe = PONTOS_INDIVIDUAL[index] || 0;
-                    if (pontuacao_equipe > 0) {
+                const classificadosEquipe = distribuirPontuacaoComEmpate(absoluto, PONTOS_INDIVIDUAL);
+                for (const row of classificadosEquipe) {
+                    if (row.pontuacao > 0) {
                         await db.execute(
-                            `UPDATE classificacoes 
-                             SET pontuacao_equipe = ? 
-                             WHERE id = ?`,
-                            [pontuacao_equipe, row.id]
+                            `UPDATE classificacoes SET pontuacao_equipe = ? WHERE id = ?`,
+                            [row.pontuacao, row.id]
                         );
                     }
                 }

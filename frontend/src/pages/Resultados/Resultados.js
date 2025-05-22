@@ -266,10 +266,11 @@ const Resultados = () => {
                                 if (ordemA !== ordemB) return ordemA - ordemB;
                                 return a[0].localeCompare(b[0]);
                               })
-                              .filter(([_, categorias]) =>
-                                categorias.some(({ atletas }) =>
-                                  atletas.some(atleta =>
-                                    atleta.eh_prova_categoria &&
+                              .filter(([_, categorias]) => // filtra categorias que possuem atletas com tempo onde _ é o nome da prova
+                                Array.isArray(categorias) && // filtra se categorias é um array
+                                categorias.some(cat => // some para verificar se há atletas com tempo
+                                  Array.isArray(cat.atletas) &&
+                                  cat.atletas.some(atleta =>
                                     atleta.tempo && atleta.tempo !== "A DISPUTAR" && atleta.tempo !== "NC"
                                   )
                                 )
@@ -280,7 +281,7 @@ const Resultados = () => {
                                   {categorias
                                     .filter(({ atletas }) =>
                                       atletas.some(atleta =>
-                                        atleta.eh_prova_categoria &&
+                                        //atleta.eh_prova_categoria && // mostrava só as provas de categoria
                                         atleta.tempo && atleta.tempo !== "A DISPUTAR" && atleta.tempo !== "NC"
                                       )
                                     )
@@ -293,7 +294,7 @@ const Resultados = () => {
                                           <Tabela
                                             className={style.tabelaClassificacaoCategoria}
                                             dados={atletas.map(atleta => ({
-                                              Classificação: renderMedalha(atleta.classificacao, true),
+                                              Classificação: renderMedalha(atleta.classificacao, atleta.eh_prova_categoria),
                                               Nome: atleta.nomeNadador,
                                               Tempo: `${String(atleta.minutos).padStart(2, '0')}:${String(atleta.segundos).padStart(2, '0')}:${String(atleta.centesimos).padStart(2, '0')}`,
                                               Equipe: atleta.nomeEquipe,
