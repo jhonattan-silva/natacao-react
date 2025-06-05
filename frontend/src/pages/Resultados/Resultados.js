@@ -298,17 +298,20 @@ const Resultados = () => {
                                               Nome: atleta.nomeNadador,
                                               Tempo: `${String(atleta.minutos).padStart(2, '0')}:${String(atleta.segundos).padStart(2, '0')}:${String(atleta.centesimos).padStart(2, '0')}`,
                                               Equipe: atleta.nomeEquipe,
-                                              Categoria: atleta.categoria
+                                              Categoria: atleta.categoria,
+                                              Pontuação: atleta.pontuacao_individual != null ? atleta.pontuacao_individual : 0,
+                                              Pontuação_Equipe: atleta.pontuacao_equipe != null ? atleta.pontuacao_equipe : 0
                                             }))}
                                             textoExibicao={{
                                               Classificação: 'Classificação',
                                               Nome: 'Nadador',
                                               Tempo: 'Tempo',
                                               Equipe: 'Equipe',
-                                              Categoria: 'Categoria'
+                                              Categoria: 'Categoria',
+                                              Pontuação: 'Pontuação',
+                                              Pontuação_Equipe: 'Pontuação Equipe'
                                             }}
                                             colunasOcultas={['Categoria']}
-                                            ehProvaCategoria={true}
                                           />
                                         </div>
                                       </div>
@@ -329,7 +332,6 @@ const Resultados = () => {
                             )}
                             {Object.keys(resultadosBanco).length > 0 ? (
                               Object.entries(resultadosBanco)
-                                .filter(([_, resultados]) => resultados.some(item => item.tipo === 'ABSOLUTO'))
                                 .map(([prova, resultados]) => {
                                   const colunasOcultas = [];
                                   const ehRevezamento = resultados.some(item => item.eh_revezamento);
@@ -343,7 +345,7 @@ const Resultados = () => {
                                         <Tabela
                                           className={style.tabelaClassificacaoFinal}
                                           dados={resultados
-                                            .filter(item => item.tipo === 'ABSOLUTO')
+                                            .filter(item => item.tipo === 'ABSOLUTO' || item.tipo === 'CATEGORIA') // Mostra todos
                                             .map(item => ({
                                               Classificação: item.status === 'NC' || item.status === 'DQL' ? item.status : item.classificacao,
                                               Nome: item.nome_nadador || '-',
@@ -351,8 +353,8 @@ const Resultados = () => {
                                               Equipe: item.nome_equipe || '-',
                                               Categoria: item.categoria_nadador || '-',
                                               Tipo: item.tipo,
-                                              Pontuação_Individual: item.pontuacao_individual,
-                                              Pontuação_Equipe: item.pontuacao_equipe
+                                              Pontuação_Individual: item.pontuacao_individual ?? '-',
+                                              Pontuação_Equipe: item.pontuacao_equipe ?? '-'
                                             }))}
                                           textoExibicao={{
                                             Classificação: 'Classificação',

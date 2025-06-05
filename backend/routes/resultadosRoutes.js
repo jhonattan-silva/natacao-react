@@ -51,11 +51,14 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
                 rc.status,
                 rc.eh_revezamento,
                 p.eh_prova_categoria,
-                p.sexo AS sexo_prova
+                p.sexo AS sexo_prova,
+                c.pontuacao_individual,
+                c.pontuacao_equipe
             FROM resultadosCompletos rc
             JOIN eventos_provas ep ON rc.eventos_provas_id = ep.id
             JOIN provas p ON ep.provas_id = p.id
-            WHERE rc.eventos_id = 24
+            LEFT JOIN classificacoes c ON c.eventos_provas_id = rc.eventos_provas_id AND c.nadadores_id = rc.nadadores_id
+            WHERE rc.eventos_id = ?
             ORDER BY rc.eh_revezamento ASC, rc.ordem ASC, rc.categoria_nadador ASC, rc.sexo_nadador ASC, rc.minutos ASC, rc.segundos ASC, rc.centesimos ASC
         `, [eventoId]);
 
@@ -91,6 +94,8 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
               categoria: row.categoria_nadador,
               status: row.status,
               tempo: row.tempo,
+              pontuacao_individual: row.pontuacao_individual,
+              pontuacao_equipe: row.pontuacao_equipe,
               eh_prova_categoria: row.eh_prova_categoria === 1 
             });
         });
