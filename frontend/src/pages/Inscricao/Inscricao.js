@@ -20,6 +20,8 @@ const Inscricao = () => {
     const [inscricoesIndividuais, setInscricoesIndividuais] = useState([]); // Inscrições individuais
     const [inscricoesRevezamento, setInscricoesRevezamento] = useState([]); // Inscrições de revezamento
     const [nomeEquipe, setNomeEquipe] = useState(''); // Novo estado para nome da equipe
+    const [provas400, setProvas400] = useState([]);
+    const [limite400, setLimite400] = useState({});
     const user = useUser(); // Obter o usuário do contexto do usuário
     const { mostrar: mostrarAlerta, componente: alertaComponente } = useAlerta(); // Usar o hook useAlerta
 
@@ -89,6 +91,27 @@ const Inscricao = () => {
             setSelecoesRevezamento(novasSelecoesRevezamento);
             setInscricoesIndividuais(inscricoesResponse.data.inscricoesIndividuais); // Atualiza com inscrições individuais
             setInscricoesRevezamento(inscricoesResponse.data.inscricoesRevezamento); // Atualiza com inscrições de revezamento
+
+            // Regra: máximo 4 atletas por sexo em provas de 400m
+            const provas400Local = provasFiltradas.filter(prova => String(prova.distancia) === "400");
+            setProvas400(provas400Local);
+
+            const sexoPorProva400 = {};
+            provas400Local.forEach(prova => {
+                sexoPorProva400[prova.id] = { M: 0, F: 0 };
+            });
+
+            // Conta quantos já estão inscritos por sexo em cada prova 400
+            inscricoesResponse.data.inscricoesIndividuais.forEach(inscricao => {
+                const prova = provas400Local.find(p => p.id === inscricao.provaId);
+                if (prova) {
+                    const nadador = nadadoresResponse.data.find(n => n.id === inscricao.nadadorId);
+                    if (nadador && nadador.sexo) {
+                        sexoPorProva400[prova.id][nadador.sexo] = (sexoPorProva400[prova.id][nadador.sexo] || 0) + 1;
+                    }
+                }
+            });
+            setLimite400(sexoPorProva400);
         } catch (error) {
             console.error("Erro ao buscar dados do evento:", error);
         }
@@ -169,6 +192,60 @@ const Inscricao = () => {
                 return prevSelecoes;
             }
 
+            // REGRA: Máximo 4 atletas por sexo em provas de 400m
+            const provaSelecionada400 = provas400.find(p => p.id === provaId);
+            if (provaSelecionada400) {
+                const sexoNadador = nadadores.find(n => n.id === nadadorId)?.sexo;
+
+                // Novo estado de seleções após após checkar/desmarcar
+                const novasSelecoesNadador = {
+                    ...(prevSelecoes[nadadorId] || {}),
+                    [provaId]: isChecked
+                };
+
+                // Nova array de IDs que estarão marcados após a checkagem/desmarcação
+                const idsMarcados = new Set();
+
+                // 1. Considera todos os nadadores já salvos no banco,
+                //    exceto os que estão sendo desmarcados na tela (checkbox ficará false)
+                inscricoesIndividuais.forEach(insc => {
+                    if (insc.provaId === provaId) {
+                        // Se o nadador está sendo desmarcado na tela, não conta
+                        if (String(insc.nadadorId) === String(nadadorId) && !isChecked) return;
+                        // Se o nadador está sendo desmarcado em prevSelecoes, não conta
+                        if (
+                            prevSelecoes[insc.nadadorId] &&
+                            prevSelecoes[insc.nadadorId][provaId] === false
+                        ) return;
+                        const nad = nadadores.find(n => n.id === insc.nadadorId);
+                        if (nad && nad.sexo === sexoNadador) idsMarcados.add(String(insc.nadadorId));
+                    }
+                });
+
+                // 2. Considera todos marcados na tela (após o clique atual)
+                Object.entries(prevSelecoes).forEach(([nid, provas]) => {
+                    // Se for o nadador atual, usa o valor do clique atual
+                    const marcado = String(nid) === String(nadadorId)
+                        ? isChecked
+                        : provas[provaId];
+                    if (marcado) {
+                        const n = nadadores.find(nad => String(nad.id) === String(nid));
+                        if (n && n.sexo === sexoNadador) idsMarcados.add(String(nid));
+                    }
+                });
+
+                // 3. Se o nadador atual ainda não está em prevSelecoes, mas está sendo marcado agora...
+                if (isChecked && !prevSelecoes[nadadorId]) {
+                    const n = nadadores.find(nad => String(nad.id) === String(nadadorId));
+                    if (n && n.sexo === sexoNadador) idsMarcados.add(String(nadadorId));
+                }
+
+                if (idsMarcados.size > 4) {
+                    mostrarAlerta("Só é permitido inscrever até 4 atletas do mesmo sexo por equipe na prova de 400m.");
+                    return prevSelecoes;
+                }
+            }
+
             const novasSelecoes = {
                 ...prevSelecoes,
                 [nadadorId]: {
@@ -228,7 +305,7 @@ const Inscricao = () => {
                     provaId,
                     equipeId,
                     distancia: prova?.distancia || 'N/D',
-                    estilo: prova?.estilo || 'N/D', 
+                    estilo: prova?.estilo || 'N/D',
                     sexo: prova?.sexo || 'N/D'
                 };
             });
@@ -296,15 +373,15 @@ const Inscricao = () => {
             {alertaComponente}
             <h1>INSCRIÇÃO</h1>
             <ListaSuspensa
-                    fonteDados={apiEventos}
-                    onChange={(id) => setEventoSelecionado(id)}
-                    textoPlaceholder="Selecione um evento"
-                    obrigatorio={true}
-                    className={styles.listaSuspensa}
-                />
+                fonteDados={apiEventos}
+                onChange={(id) => setEventoSelecionado(id)}
+                textoPlaceholder="Selecione um evento"
+                obrigatorio={true}
+                className={styles.listaSuspensa}
+            />
             <div>
                 {eventoSelecionado && (
-                    <div  className={styles.centralizado}>
+                    <div className={styles.centralizado}>
                         <div className={styles.provasLegenda}>
                             <h3>Provas do Evento</h3>
                             <ul>
