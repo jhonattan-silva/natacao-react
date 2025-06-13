@@ -195,53 +195,42 @@ const Inscricao = () => {
             // REGRA: Máximo 4 atletas por sexo em provas de 400m
             const provaSelecionada400 = provas400.find(p => p.id === provaId);
             if (provaSelecionada400) {
-                const sexoNadador = nadadores.find(n => n.id === nadadorId)?.sexo;
-
-                // Novo estado de seleções após após checkar/desmarcar
+                // Monta o novo estado de seleções após o clique atual
                 const novasSelecoesNadador = {
                     ...(prevSelecoes[nadadorId] || {}),
                     [provaId]: isChecked
                 };
-
-                // Nova array de IDs que estarão marcados após a checkagem/desmarcação
                 const idsMarcados = new Set();
 
-                // 1. Considera todos os nadadores já salvos no banco,
-                //    exceto os que estão sendo desmarcados na tela (checkbox ficará false)
+                // 1. Já salvos no banco, exceto os desmarcados na tela
                 inscricoesIndividuais.forEach(insc => {
                     if (insc.provaId === provaId) {
-                        // Se o nadador está sendo desmarcado na tela, não conta
                         if (String(insc.nadadorId) === String(nadadorId) && !isChecked) return;
-                        // Se o nadador está sendo desmarcado em prevSelecoes, não conta
                         if (
                             prevSelecoes[insc.nadadorId] &&
                             prevSelecoes[insc.nadadorId][provaId] === false
                         ) return;
-                        const nad = nadadores.find(n => n.id === insc.nadadorId);
-                        if (nad && nad.sexo === sexoNadador) idsMarcados.add(String(insc.nadadorId));
+                        idsMarcados.add(String(insc.nadadorId));
                     }
                 });
 
-                // 2. Considera todos marcados na tela (após o clique atual)
+                // 2. Marcados na tela (após o clique atual)
                 Object.entries(prevSelecoes).forEach(([nid, provas]) => {
-                    // Se for o nadador atual, usa o valor do clique atual
                     const marcado = String(nid) === String(nadadorId)
                         ? isChecked
                         : provas[provaId];
                     if (marcado) {
-                        const n = nadadores.find(nad => String(nad.id) === String(nid));
-                        if (n && n.sexo === sexoNadador) idsMarcados.add(String(nid));
+                        idsMarcados.add(String(nid));
                     }
                 });
 
-                // 3. Se o nadador atual ainda não está em prevSelecoes, mas está sendo marcado agora...
+                // 3. Se o nadador atual ainda não está em prevSelecoes, mas está sendo marcado agora
                 if (isChecked && !prevSelecoes[nadadorId]) {
-                    const n = nadadores.find(nad => String(nad.id) === String(nadadorId));
-                    if (n && n.sexo === sexoNadador) idsMarcados.add(String(nadadorId));
+                    idsMarcados.add(String(nadadorId));
                 }
 
                 if (idsMarcados.size > 4) {
-                    mostrarAlerta("Só é permitido inscrever até 4 atletas do mesmo sexo por equipe na prova de 400m.");
+                    mostrarAlerta("Só é permitido inscrever até 4 atletas por equipe na prova de 400m.");
                     return prevSelecoes;
                 }
             }
