@@ -399,45 +399,92 @@ router.post('/salvarResultados', async (req, res) => {
 router.post('/transmitirResultadoProva/:provaId', async (req, res) => {
     const { provaId } = req.params;
     try {
-        // Buscar dados completos da prova (ajuste os campos conforme sua estrutura)
-        const [dados] = await db.query(`
-            SELECT
-                ep.eventos_id,
-                ep.id AS eventos_provas_id,
-                p.id AS prova_id,
-                CONCAT(ep.ordem, 'ª PROVA - ', p.distancia, ' METROS ', p.estilo, ' ', 
-                CASE 
-                  WHEN p.sexo = 'F' THEN 'FEMININO'
-                  WHEN p.sexo = 'M' THEN 'MASCULINO'
-                  ELSE p.sexo
-                END) AS nome_prova,
-                ep.ordem,
-                p.eh_revezamento,
-                p.sexo AS sexo_prova,
-                b.id AS bateria_id,
-                b.descricao AS numero_bateria,
-                bi.raia,
-                n.id AS nadadores_id,
-                n.nome AS nome_nadador,
-                c.nome AS categoria_nadador,
-                n.sexo AS sexo_nadador,
-                eq.id AS equipes_id,
-                eq.nome AS nome_equipe,
-                r.minutos,
-                r.segundos,
-                r.centesimos,
-                r.status
-            FROM eventos_provas ep
-            JOIN provas p ON ep.provas_id = p.id
-            JOIN baterias b ON b.eventos_provas_id = ep.id
-            JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
-            LEFT JOIN inscricoes i ON bi.inscricoes_id = i.id
-            LEFT JOIN nadadores n ON i.nadadores_id = n.id
-            LEFT JOIN categorias c ON n.categorias_id = c.id
-            LEFT JOIN equipes eq ON n.equipes_id = eq.id
-            LEFT JOIN resultados r ON r.nadadores_id = n.id AND r.eventos_provas_id = ep.id
-            WHERE ep.id = ?
-        `, [provaId]);
+        // Descobre se é revezamento
+        const [[provaInfo]] = await db.query(
+            'SELECT p.eh_revezamento FROM eventos_provas ep JOIN provas p ON ep.provas_id = p.id WHERE ep.id = ?',
+            [provaId]
+        );
+
+        let dados = [];
+        if (provaInfo.eh_revezamento) {
+            // SELECT para revezamento
+            [dados] = await db.query(`
+                SELECT
+                    ep.eventos_id,
+                    ep.id AS eventos_provas_id,
+                    p.id AS prova_id,
+                    CONCAT(ep.ordem, 'ª PROVA - ', p.distancia, ' METROS ', p.estilo, ' ', 
+                        CASE 
+                          WHEN p.sexo = 'F' THEN 'FEMININO'
+                          WHEN p.sexo = 'M' THEN 'MASCULINO'
+                          ELSE p.sexo
+                        END) AS nome_prova,
+                    ep.ordem,
+                    p.eh_revezamento,
+                    p.sexo AS sexo_prova,
+                    b.id AS bateria_id,
+                    b.descricao AS numero_bateria,
+                    bi.raia,
+                    NULL AS nadadores_id,
+                    NULL AS nome_nadador,
+                    NULL AS categoria_nadador,
+                    NULL AS sexo_nadador,
+                    ri.equipes_id,
+                    eq.nome AS nome_equipe,
+                    r.minutos,
+                    r.segundos,
+                    r.centesimos,
+                    r.status
+                FROM eventos_provas ep
+                JOIN provas p ON ep.provas_id = p.id
+                JOIN baterias b ON b.eventos_provas_id = ep.id
+                JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
+                LEFT JOIN revezamentos_inscricoes ri ON bi.revezamentos_inscricoes_id = ri.id
+                LEFT JOIN equipes eq ON ri.equipes_id = eq.id
+                LEFT JOIN resultados r ON r.equipes_id = ri.equipes_id AND r.eventos_provas_id = ep.id
+                WHERE ep.id = ?
+            `, [provaId]);
+        } else {
+            // SELECT para individual (como já faz)
+            [dados] = await db.query(`
+                SELECT
+                    ep.eventos_id,
+                    ep.id AS eventos_provas_id,
+                    p.id AS prova_id,
+                    CONCAT(ep.ordem, 'ª PROVA - ', p.distancia, ' METROS ', p.estilo, ' ', 
+                    CASE 
+                      WHEN p.sexo = 'F' THEN 'FEMININO'
+                      WHEN p.sexo = 'M' THEN 'MASCULINO'
+                      ELSE p.sexo
+                    END) AS nome_prova,
+                    ep.ordem,
+                    p.eh_revezamento,
+                    p.sexo AS sexo_prova,
+                    b.id AS bateria_id,
+                    b.descricao AS numero_bateria,
+                    bi.raia,
+                    n.id AS nadadores_id,
+                    n.nome AS nome_nadador,
+                    c.nome AS categoria_nadador,
+                    n.sexo AS sexo_nadador,
+                    eq.id AS equipes_id,
+                    eq.nome AS nome_equipe,
+                    r.minutos,
+                    r.segundos,
+                    r.centesimos,
+                    r.status
+                FROM eventos_provas ep
+                JOIN provas p ON ep.provas_id = p.id
+                JOIN baterias b ON b.eventos_provas_id = ep.id
+                JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
+                LEFT JOIN inscricoes i ON bi.inscricoes_id = i.id
+                LEFT JOIN nadadores n ON i.nadadores_id = n.id
+                LEFT JOIN categorias c ON n.categorias_id = c.id
+                LEFT JOIN equipes eq ON n.equipes_id = eq.id
+                LEFT JOIN resultados r ON r.nadadores_id = n.id AND r.eventos_provas_id = ep.id
+                WHERE ep.id = ?
+            `, [provaId]);
+        }
 
         // Limpa registros antigos dessa prova
         await db.query('DELETE FROM resultadosCompletos WHERE eventos_provas_id = ?', [provaId]);
@@ -467,8 +514,8 @@ router.post('/transmitirResultadoProva/:provaId', async (req, res) => {
             row.segundos,
             row.centesimos,
             row.status,
-            null, // classificacao (pode ser calculada depois)
-            null, // tipo (ABSOLUTO/CATEGORIA, pode ser calculado depois)
+            null, // classificacao
+            null, // tipo
             null, // pontuacao_individual
             null  // pontuacao_equipe
         ]);
@@ -505,45 +552,90 @@ router.post('/migrarTodosResultados', async (req, res) => {
             totalProvas += provas.length;
 
             for (const prova of provas) {
-                // Buscar dados completos da prova
-                const [dados] = await db.query(`
-                    SELECT
-                        ep.eventos_id,
-                        ep.id AS eventos_provas_id,
-                        p.id AS prova_id,
-                        CONCAT(ep.ordem, 'ª PROVA - ', p.distancia, ' METROS ', p.estilo, ' ', 
-                        CASE 
-                          WHEN p.sexo = 'F' THEN 'FEMININO'
-                          WHEN p.sexo = 'M' THEN 'MASCULINO'
-                          ELSE p.sexo
-                        END) AS nome_prova,
-                        ep.ordem,
-                        p.eh_revezamento,
-                        p.sexo AS sexo_prova,
-                        b.id AS bateria_id,
-                        b.descricao AS numero_bateria,
-                        bi.raia,
-                        n.id AS nadadores_id,
-                        n.nome AS nome_nadador,
-                        c.nome AS categoria_nadador,
-                        n.sexo AS sexo_nadador,
-                        eq.id AS equipes_id,
-                        eq.nome AS nome_equipe,
-                        r.minutos,
-                        r.segundos,
-                        r.centesimos,
-                        r.status
-                    FROM eventos_provas ep
-                    JOIN provas p ON ep.provas_id = p.id
-                    JOIN baterias b ON b.eventos_provas_id = ep.id
-                    JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
-                    LEFT JOIN inscricoes i ON bi.inscricoes_id = i.id
-                    LEFT JOIN nadadores n ON i.nadadores_id = n.id
-                    LEFT JOIN categorias c ON n.categorias_id = c.id
-                    LEFT JOIN equipes eq ON n.equipes_id = eq.id
-                    LEFT JOIN resultados r ON r.nadadores_id = n.id AND r.eventos_provas_id = ep.id
-                    WHERE ep.id = ?
-                `, [prova.id]);
+                // Descobre se é revezamento
+                const [[provaInfo]] = await db.query(
+                    'SELECT p.eh_revezamento FROM eventos_provas ep JOIN provas p ON ep.provas_id = p.id WHERE ep.id = ?',
+                    [prova.id]
+                );
+
+                let dados = [];
+                if (provaInfo.eh_revezamento) {
+                    [dados] = await db.query(`
+                        SELECT
+                            ep.eventos_id,
+                            ep.id AS eventos_provas_id,
+                            p.id AS prova_id,
+                            CONCAT(ep.ordem, 'ª PROVA - ', p.distancia, ' METROS ', p.estilo, ' ', 
+                                CASE 
+                                  WHEN p.sexo = 'F' THEN 'FEMININO'
+                                  WHEN p.sexo = 'M' THEN 'MASCULINO'
+                                  ELSE p.sexo
+                                END) AS nome_prova,
+                            ep.ordem,
+                            p.eh_revezamento,
+                            p.sexo AS sexo_prova,
+                            b.id AS bateria_id,
+                            b.descricao AS numero_bateria,
+                            bi.raia,
+                            NULL AS nadadores_id,
+                            NULL AS nome_nadador,
+                            NULL AS categoria_nadador,
+                            NULL AS sexo_nadador,
+                            ri.equipes_id,
+                            eq.nome AS nome_equipe,
+                            r.minutos,
+                            r.segundos,
+                            r.centesimos,
+                            r.status
+                        FROM eventos_provas ep
+                        JOIN provas p ON ep.provas_id = p.id
+                        JOIN baterias b ON b.eventos_provas_id = ep.id
+                        JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
+                        LEFT JOIN revezamentos_inscricoes ri ON bi.revezamentos_inscricoes_id = ri.id
+                        LEFT JOIN equipes eq ON ri.equipes_id = eq.id
+                        LEFT JOIN resultados r ON r.equipes_id = ri.equipes_id AND r.eventos_provas_id = ep.id
+                        WHERE ep.id = ?
+                    `, [prova.id]);
+                } else {
+                    [dados] = await db.query(`
+                        SELECT
+                            ep.eventos_id,
+                            ep.id AS eventos_provas_id,
+                            p.id AS prova_id,
+                            CONCAT(ep.ordem, 'ª PROVA - ', p.distancia, ' METROS ', p.estilo, ' ', 
+                            CASE 
+                              WHEN p.sexo = 'F' THEN 'FEMININO'
+                              WHEN p.sexo = 'M' THEN 'MASCULINO'
+                              ELSE p.sexo
+                            END) AS nome_prova,
+                            ep.ordem,
+                            p.eh_revezamento,
+                            p.sexo AS sexo_prova,
+                            b.id AS bateria_id,
+                            b.descricao AS numero_bateria,
+                            bi.raia,
+                            n.id AS nadadores_id,
+                            n.nome AS nome_nadador,
+                            c.nome AS categoria_nadador,
+                            n.sexo AS sexo_nadador,
+                            eq.id AS equipes_id,
+                            eq.nome AS nome_equipe,
+                            r.minutos,
+                            r.segundos,
+                            r.centesimos,
+                            r.status
+                        FROM eventos_provas ep
+                        JOIN provas p ON ep.provas_id = p.id
+                        JOIN baterias b ON b.eventos_provas_id = ep.id
+                        JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
+                        LEFT JOIN inscricoes i ON bi.inscricoes_id = i.id
+                        LEFT JOIN nadadores n ON i.nadadores_id = n.id
+                        LEFT JOIN categorias c ON n.categorias_id = c.id
+                        LEFT JOIN equipes eq ON n.equipes_id = eq.id
+                        LEFT JOIN resultados r ON r.nadadores_id = n.id AND r.eventos_provas_id = ep.id
+                        WHERE ep.id = ?
+                    `, [prova.id]);
+                }
 
                 // Limpa registros antigos dessa prova
                 await db.query('DELETE FROM resultadosCompletos WHERE eventos_provas_id = ?', [prova.id]);
@@ -574,7 +666,7 @@ router.post('/migrarTodosResultados', async (req, res) => {
                     row.centesimos,
                     row.status,
                     null, // classificacao (pode ser calculada depois)
-                    null, // tipo (ABSOLUTO/CATEGORIA, pode ser calculado depois)
+                    null, // tipo (ABSOLUTO/CATEGORIA, pode ser calculada depois)
                     null, // pontuacao_individual
                     null  // pontuacao_equipe
                 ]);

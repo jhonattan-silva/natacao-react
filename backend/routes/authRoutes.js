@@ -10,10 +10,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secreto_super_seguro'; // Chave se
 
 router.post('/cadastrarUsuarioInicial', async (req, res) => {
     const nome = "Jhonattan Silva";
-    const cpf = "22341688802";
-    const celular = "14988014282";
+    const cpf = "*************";
+    const celular = "**********";
     const email = "jhonattanwcs@hotmail.com";
-    const senha = "123";
+    const senha = "***";
     const perfis = ["admin"];
     const ativo = 1;
 

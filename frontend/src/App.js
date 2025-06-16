@@ -14,6 +14,8 @@ import ProtecaoRota from "./componentes/ProtecaoRota";
 import Login from "./pages/Login/Login"; // Página de login para autenticação
 import Balizamentos from "./pages/Balizamentos/Balizamentos";
 import BalizamentosAjuste from "./pages/BalizamentosAjuste/BalizamentosAjuste"; // Página de ajuste de balizamentos
+import Noticias from "./pages/Noticias/Noticias"; 
+import NoticiasAdmin from "./pages/NoticiasAdmin/NoticiasAdmin"; // Página de administração de notícias
 
 
 const App = () => {
@@ -28,6 +30,8 @@ const App = () => {
                 <Route path="/rankings" element={<Rankings />}/>
                 <Route path="/balizamentos" element={<Balizamentos />}/>
                 <Route path="/balizamentos/:eventoId" element={<Balizamentos />} /> {/* alterado de :provaId para :eventoId */}
+                <Route path="/noticias" element={<Noticias />} />
+                <Route path="/noticias/:id" element={<Noticias />} /> {/* Rota para detalhes de uma notícia específica */}
 
                 {/* Rotas protegidas */}
                 <Route
@@ -99,6 +103,14 @@ const App = () => {
                     element={
                         <ProtecaoRota requiredRoles={['admin']}>
                             <ResultadosEntrada />
+                        </ProtecaoRota>
+                    }
+                />
+                <Route
+                    path="/noticiasAdmin"
+                    element={
+                        <ProtecaoRota requiredRoles={['admin']}>
+                            <NoticiasAdmin />
                         </ProtecaoRota>
                     }
                 />
