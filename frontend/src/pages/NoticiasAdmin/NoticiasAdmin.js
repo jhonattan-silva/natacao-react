@@ -2,8 +2,8 @@ import { useState } from 'react';
 import InputTexto from '../../componentes/InputTexto/InputTexto';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import Botao from '../../componentes/Botao/Botao';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+// import ReactQuill from 'react-quill';
+// import 'react-quill/dist/quill.snow.css';
 import api from '../../servicos/api';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import Rodape from '../../componentes/Rodape/Rodape';
@@ -97,7 +97,13 @@ const NoticiasAdmin = ({ noticiaInicial = {}, onSalvo }) => {
 
         <div className={style.campoNoticiasAdmin}>
           <label className={style.labelNoticiasAdmin}>Conteúdo*:</label>
-          <ReactQuill value={texto} onChange={setTexto} />
+          {/* <ReactQuill value={texto} onChange={setTexto} /> */}
+          <textarea
+            value={texto}
+            onChange={e => setTexto(e.target.value)}
+            rows={8}
+            style={{width: '100%'}}
+          />
         </div>
 
         <div className={style.campoNoticiasAdmin}>
