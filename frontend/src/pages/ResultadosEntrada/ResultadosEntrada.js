@@ -213,10 +213,17 @@ const ResultadosEntrada = () => {
         setInputSalvo({ bateriaId, id, isEquipe });
     };
 
+    // Função robusta para normalizar tempo: sempre 6 dígitos numéricos (mm:ss:cc)
     const formatarTempo = (tempo) => {
-        const apenasNumeros = tempo.replace(/\D/g, '');
-        const limitado = apenasNumeros.slice(-6);
-        const preenchido = limitado.padStart(6, '0');
+        if (!tempo) return '00:00:00';
+        // Remove tudo que não for número
+        let apenasNumeros = String(tempo).replace(/\D/g, '');
+        // Limita a 6 dígitos (se vier mais, pega os últimos)
+        apenasNumeros = apenasNumeros.slice(-6);
+        // Preenche à esquerda com zeros
+        const preenchido = apenasNumeros.padStart(6, '0');
+        // Se não for número, retorna zeros
+        if (!/^[0-9]{6}$/.test(preenchido)) return '00:00:00';
         const minutos = preenchido.slice(0, 2);
         const segundos = preenchido.slice(2, 4);
         const centesimos = preenchido.slice(4, 6);

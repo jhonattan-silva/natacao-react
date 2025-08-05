@@ -30,6 +30,45 @@ function parseTime(timeStr) {
     };
 }
 
+
+// Função utilitária robusta para converter tempo "mm:ss:cc" em centésimos
+function converterTempoParaCentesimos(tempoStr) {
+  if (!tempoStr || typeof tempoStr !== 'string') return null;
+  if (tempoStr === 'NC' || tempoStr === 'DQL') return null;
+  const partes = tempoStr.split(':');
+  if (partes.length !== 3) return null;
+  const [min, seg, cent] = partes.map(Number);
+  if ([min, seg, cent].some(n => isNaN(n) || n < 0)) return null;
+  return min * 6000 + seg * 100 + cent;
+}
+
+// Função utilitária: classificação por tempo com empate
+function classificarPorTempoComEmpate(resultados) {
+  // Válidos: status OK e tempo válido
+  const validos = resultados
+    .filter(r => r.status === 'OK' && r.tempo && r.tempo !== 'NC' && r.tempo !== 'DQL')
+    .map(r => ({ ...r, tempoCentesimos: converterTempoParaCentesimos(r.tempo) }))
+    .sort((a, b) => a.tempoCentesimos - b.tempoCentesimos);
+
+  // Inválidos: NC, DQL, tempo nulo, status diferente de OK
+  const invalidos = resultados.filter(r => r.status !== 'OK' || !r.tempo || r.tempo === 'NC' || r.tempo === 'DQL');
+
+  // Classificação com empate
+  let classificacao = 1;
+  for (let i = 0; i < validos.length; i++) {
+    if (i > 0 && validos[i].tempoCentesimos === validos[i - 1].tempoCentesimos) {
+      validos[i].classificacao = validos[i - 1].classificacao;
+    } else {
+      validos[i].classificacao = classificacao;
+    }
+    classificacao++;
+  }
+  // NC/DQL sem classificação
+  invalidos.forEach(r => r.classificacao = null);
+  // Retorna todos, válidos primeiro
+  return [...validos, ...invalidos];
+}
+
 // Listar todos os eventos
 router.get('/listarEventos', async (req, res) => {
     try {
@@ -372,10 +411,10 @@ router.post('/salvarResultados', async (req, res) => {
         await connection.commit();
         connection.release();
 
-        // Chama a rota de classificação da prova
+        // Garante que a classificação está atualizada antes de pontuar
         await classificarProva(provaId);
 
-        // (Opcional) Chama a função de pontuação, se quiser pontuar logo após classificar
+        // Só pontua após garantir classificação
         const resultadoPontuacao = await pontuacoesRoutes.calcularPontuacaoEvento(rows[0].eventoId);
         if (resultadoPontuacao.error) {
             throw new Error(resultadoPontuacao.error);
@@ -395,147 +434,234 @@ router.post('/salvarResultados', async (req, res) => {
     }
 });
 
-// Transmitir dados completos de uma prova para a tabela resultadosCompletos, substituindo as querys de exibição antigas
-router.post('/transmitirResultadoProva/:provaId', async (req, res) => {
-    const { provaId } = req.params;
-    try {
-        // Descobre se é revezamento
-        const [[provaInfo]] = await db.query(
-            'SELECT p.eh_revezamento FROM eventos_provas ep JOIN provas p ON ep.provas_id = p.id WHERE ep.id = ?',
-            [provaId]
-        );
 
-        let dados = [];
-        if (provaInfo.eh_revezamento) {
-            // SELECT para revezamento
-            [dados] = await db.query(`
-                SELECT
-                    ep.eventos_id,
-                    ep.id AS eventos_provas_id,
-                    p.id AS prova_id,
-                    CONCAT(ep.ordem, 'ª PROVA - ', p.distancia, ' METROS ', p.estilo, ' ', 
-                        CASE 
-                          WHEN p.sexo = 'F' THEN 'FEMININO'
-                          WHEN p.sexo = 'M' THEN 'MASCULINO'
-                          ELSE p.sexo
-                        END) AS nome_prova,
-                    ep.ordem,
-                    p.eh_revezamento,
-                    p.sexo AS sexo_prova,
-                    b.id AS bateria_id,
-                    b.descricao AS numero_bateria,
-                    bi.raia,
-                    NULL AS nadadores_id,
-                    NULL AS nome_nadador,
-                    NULL AS categoria_nadador,
-                    NULL AS sexo_nadador,
-                    ri.equipes_id,
-                    eq.nome AS nome_equipe,
-                    r.minutos,
-                    r.segundos,
-                    r.centesimos,
-                    r.status
-                FROM eventos_provas ep
-                JOIN provas p ON ep.provas_id = p.id
-                JOIN baterias b ON b.eventos_provas_id = ep.id
-                JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
-                LEFT JOIN revezamentos_inscricoes ri ON bi.revezamentos_inscricoes_id = ri.id
-                LEFT JOIN equipes eq ON ri.equipes_id = eq.id
-                LEFT JOIN resultados r ON r.equipes_id = ri.equipes_id AND r.eventos_provas_id = ep.id
-                WHERE ep.id = ?
-            `, [provaId]);
-        } else {
-            // SELECT para individual (como já faz)
-            [dados] = await db.query(`
-                SELECT
-                    ep.eventos_id,
-                    ep.id AS eventos_provas_id,
-                    p.id AS prova_id,
-                    CONCAT(ep.ordem, 'ª PROVA - ', p.distancia, ' METROS ', p.estilo, ' ', 
-                    CASE 
-                      WHEN p.sexo = 'F' THEN 'FEMININO'
-                      WHEN p.sexo = 'M' THEN 'MASCULINO'
-                      ELSE p.sexo
-                    END) AS nome_prova,
-                    ep.ordem,
-                    p.eh_revezamento,
-                    p.sexo AS sexo_prova,
-                    b.id AS bateria_id,
-                    b.descricao AS numero_bateria,
-                    bi.raia,
-                    n.id AS nadadores_id,
-                    n.nome AS nome_nadador,
-                    c.nome AS categoria_nadador,
-                    n.sexo AS sexo_nadador,
-                    eq.id AS equipes_id,
-                    eq.nome AS nome_equipe,
-                    r.minutos,
-                    r.segundos,
-                    r.centesimos,
-                    r.status
-                FROM eventos_provas ep
-                JOIN provas p ON ep.provas_id = p.id
-                JOIN baterias b ON b.eventos_provas_id = ep.id
-                JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
-                LEFT JOIN inscricoes i ON bi.inscricoes_id = i.id
-                LEFT JOIN nadadores n ON i.nadadores_id = n.id
-                LEFT JOIN categorias c ON n.categorias_id = c.id
-                LEFT JOIN equipes eq ON n.equipes_id = eq.id
-                LEFT JOIN resultados r ON r.nadadores_id = n.id AND r.eventos_provas_id = ep.id
-                WHERE ep.id = ?
-            `, [provaId]);
-        }
+// Função interna para transmitir resultado de uma prova
+async function transmitirResultadoProva(provaId) {
+  console.log(`[transmitirResultadoProva] Iniciando transmissão da prova ${provaId}`);
+  // Descobre se é revezamento e pega eventos_id
+  const [provaRows] = await db.query(
+    'SELECT ep.eventos_id, p.eh_revezamento FROM eventos_provas ep JOIN provas p ON ep.provas_id = p.id WHERE ep.id = ?',
+    [provaId]
+  );
+  if (!provaRows || provaRows.length === 0) {
+    throw new Error('Prova não encontrada para o ID informado.');
+  }
+  const provaInfo = provaRows[0];
+  const eventoId = provaInfo.eventos_id;
 
-        // Limpa registros antigos dessa prova
-        await db.query('DELETE FROM resultadosCompletos WHERE eventos_provas_id = ?', [provaId]);
+  // Garante que a tabela classificacoes está atualizada para o cálculo de pontuação
+  console.log(`[transmitirResultadoProva] Atualizando classificacoes da prova ${provaId} antes da pontuação`);
+  await classificarProva(provaId);
 
-        // Monta os dados para inserir
-        const valores = dados.map(row => [
-            row.eventos_id,
-            row.eventos_provas_id,
-            row.prova_id,
-            row.nome_prova,
-            row.ordem,
-            row.eh_revezamento,
-            row.sexo_prova,
-            row.bateria_id,
-            row.numero_bateria,
-            row.raia,
-            row.nadadores_id,
-            row.nome_nadador,
-            row.categoria_nadador,
-            row.sexo_nadador,
-            row.equipes_id,
-            row.nome_equipe,
-            row.minutos !== null && row.segundos !== null && row.centesimos !== null
-                ? `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`
-                : null,
-            row.minutos,
-            row.segundos,
-            row.centesimos,
-            row.status,
-            null, // classificacao
-            null, // tipo
-            null, // pontuacao_individual
-            null  // pontuacao_equipe
-        ]);
+  let dados = [];
+  if (provaInfo.eh_revezamento) {
+    [dados] = await db.query(`
+      SELECT
+        ep.eventos_id,
+        ep.id AS eventos_provas_id,
+        p.id AS prova_id,
+        CONCAT(ep.ordem, 'ª PROVA - ', p.distancia, ' METROS ', p.estilo, ' ', 
+          CASE 
+            WHEN p.sexo = 'F' THEN 'FEMININO'
+            WHEN p.sexo = 'M' THEN 'MASCULINO'
+            ELSE p.sexo
+          END) AS nome_prova,
+        ep.ordem,
+        p.eh_revezamento,
+        p.sexo AS sexo_prova,
+        b.id AS bateria_id,
+        b.descricao AS numero_bateria,
+        bi.raia,
+        NULL AS nadadores_id,
+        NULL AS nome_nadador,
+        NULL AS categoria_nadador,
+        NULL AS sexo_nadador,
+        ri.equipes_id,
+        eq.nome AS nome_equipe,
+        r.minutos,
+        r.segundos,
+        r.centesimos,
+        r.status
+      FROM eventos_provas ep
+      JOIN provas p ON ep.provas_id = p.id
+      JOIN baterias b ON b.eventos_provas_id = ep.id
+      JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
+      LEFT JOIN revezamentos_inscricoes ri ON bi.revezamentos_inscricoes_id = ri.id
+      LEFT JOIN equipes eq ON ri.equipes_id = eq.id
+      LEFT JOIN resultados r ON r.equipes_id = ri.equipes_id AND r.eventos_provas_id = ep.id
+      WHERE ep.id = ?
+    `, [provaId]);
+  } else {
+    [dados] = await db.query(`
+      SELECT
+        ep.eventos_id,
+        ep.id AS eventos_provas_id,
+        p.id AS prova_id,
+        CONCAT(ep.ordem, 'ª PROVA - ', p.distancia, ' METROS ', p.estilo, ' ', 
+          CASE 
+            WHEN p.sexo = 'F' THEN 'FEMININO'
+            WHEN p.sexo = 'M' THEN 'MASCULINO'
+            ELSE p.sexo
+          END) AS nome_prova,
+        ep.ordem,
+        p.eh_revezamento,
+        p.sexo AS sexo_prova,
+        b.id AS bateria_id,
+        b.descricao AS numero_bateria,
+        bi.raia,
+        n.id AS nadadores_id,
+        n.nome AS nome_nadador,
+        c.nome AS categoria_nadador,
+        n.sexo AS sexo_nadador,
+        eq.id AS equipes_id,
+        eq.nome AS nome_equipe,
+        r.minutos,
+        r.segundos,
+        r.centesimos,
+        r.status
+      FROM eventos_provas ep
+      JOIN provas p ON ep.provas_id = p.id
+      JOIN baterias b ON b.eventos_provas_id = ep.id
+      JOIN baterias_inscricoes bi ON bi.baterias_id = b.id
+      LEFT JOIN inscricoes i ON bi.inscricoes_id = i.id
+      LEFT JOIN nadadores n ON i.nadadores_id = n.id
+      LEFT JOIN categorias c ON n.categorias_id = c.id
+      LEFT JOIN equipes eq ON n.equipes_id = eq.id
+      LEFT JOIN resultados r ON r.nadadores_id = n.id AND r.eventos_provas_id = ep.id
+      WHERE ep.id = ?
+    `, [provaId]);
+  }
 
-        if (valores.length > 0) {
-            await db.query(`
-                INSERT INTO resultadosCompletos (
-                    eventos_id, eventos_provas_id, prova_id, nome_prova, ordem, eh_revezamento, sexo_prova,
-                    bateria_id, numero_bateria, raia, nadadores_id, nome_nadador, categoria_nadador, sexo_nadador,
-                    equipes_id, nome_equipe, tempo, minutos, segundos, centesimos, status, classificacao, tipo,
-                    pontuacao_individual, pontuacao_equipe
-                ) VALUES ?
-            `, [valores]);
-        }
+  // Limpa registros antigos dessa prova
+  await db.query('DELETE FROM resultadosCompletos WHERE eventos_provas_id = ?', [provaId]);
 
-        res.json({ success: true, message: 'Transmissão da prova concluída!' });
-    } catch (error) {
-        console.error('Erro ao transmitir prova:', error.message);
-        res.status(500).json({ error: 'Erro ao transmitir prova' });
+  // Monta array para classificação
+  const resultadosParaClassificar = dados.map(row => {
+    let tempo = null;
+    if (row.minutos !== null && row.segundos !== null && row.centesimos !== null) {
+      tempo = `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`;
     }
+    return {
+      ...row,
+      tempo,
+      status: row.status || 'NC',
+    };
+  });
+
+  // Classifica por tempo com empate
+  const classificados = classificarPorTempoComEmpate(resultadosParaClassificar);
+
+  // Monta os dados para inserir, já com classificação
+  const valores = classificados.map(row => [
+    row.eventos_id,
+    row.eventos_provas_id,
+    row.prova_id,
+    row.nome_prova,
+    row.ordem,
+    row.eh_revezamento,
+    row.sexo_prova,
+    row.bateria_id,
+    row.numero_bateria,
+    row.raia,
+    row.nadadores_id,
+    row.nome_nadador,
+    row.categoria_nadador,
+    row.sexo_nadador,
+    row.equipes_id,
+    row.nome_equipe,
+    row.tempo,
+    row.minutos,
+    row.segundos,
+    row.centesimos,
+    row.status,
+    row.classificacao,
+    null, // tipo
+    null, // pontuacao_individual
+    null  // pontuacao_equipe
+  ]);
+
+  if (valores.length > 0) {
+    await db.query(`
+      INSERT INTO resultadosCompletos (
+        eventos_id, eventos_provas_id, prova_id, nome_prova, ordem, eh_revezamento, sexo_prova,
+        bateria_id, numero_bateria, raia, nadadores_id, nome_nadador, categoria_nadador, sexo_nadador,
+        equipes_id, nome_equipe, tempo, minutos, segundos, centesimos, status, classificacao, tipo,
+        pontuacao_individual, pontuacao_equipe
+      ) VALUES ?
+    `, [valores]);
+  }
+
+  // Após transmitir e classificar, sincroniza pontuação da classificacoes para resultadosCompletos
+  await db.query(`
+    UPDATE resultadosCompletos rc
+    JOIN classificacoes c ON rc.eventos_provas_id = c.eventos_provas_id
+      AND (
+        (rc.nadadores_id IS NOT NULL AND rc.nadadores_id = c.nadadores_id)
+        OR (rc.equipes_id IS NOT NULL AND rc.equipes_id = c.equipes_id)
+      )
+      AND (rc.tipo IS NULL OR rc.tipo = c.tipo OR (rc.tipo IS NULL AND c.tipo IS NULL))
+    SET rc.pontuacao_individual = c.pontuacao_individual,
+        rc.pontuacao_equipe = c.pontuacao_equipe
+    WHERE rc.eventos_provas_id = ?
+  `, [provaId]);
+
+  console.log(`[transmitirResultadoProva] Fim da transmissão, classificação e sincronização de pontuação da prova ${provaId}`);
+  return { success: true, message: 'Transmissão da prova concluída, classificação e pontuação sincronizadas!' };
+}
+
+// Endpoint HTTP usa a função interna
+router.post('/transmitirResultadoProva/:provaId', async (req, res) => {
+  const { provaId } = req.params;
+  try {
+    const resultado = await transmitirResultadoProva(provaId);
+    res.json(resultado);
+  } catch (error) {
+    console.error('Erro ao transmitir prova:', error.message);
+    res.status(500).json({ error: 'Erro ao transmitir prova' });
+  }
+});
+
+
+// Endpoint para transmitir resultados de todas as provas de um evento (FLUXO POSTMAN)
+router.post('/transmitir-resultados-evento/:eventoId', async (req, res) => {
+  try {
+    const { eventoId } = req.params;
+    if (!eventoId) {
+      return res.status(400).json({ error: 'O ID do evento é obrigatório!' });
+    }
+    // Busca todos os eventos_provas_id do evento
+    const [provas] = await db.execute(
+      `SELECT ep.id FROM eventos_provas ep WHERE ep.eventos_id = ?`,
+      [eventoId]
+    );
+    if (!provas || provas.length === 0) {
+      return res.status(404).json({ error: 'Nenhuma prova encontrada para este evento.' });
+    }
+    let total = 0;
+    let erros = [];
+    for (const prova of provas) {
+      try {
+        await transmitirResultadoProva(prova.id);
+        total++;
+      } catch (err) {
+        erros.push({ provaId: prova.id, erro: err.message });
+      }
+    }
+    // Após transmitir todas as provas, recalcula a pontuação do evento UMA VEZ
+    console.log(`[transmitir-resultados-evento] Recalculando pontuação do evento ${eventoId} após transmissão de todas as provas`);
+    const resultadoPontuacao = await pontuacoesRoutes.calcularPontuacaoEvento(eventoId);
+    if (resultadoPontuacao.error) {
+      console.error(`[transmitir-resultados-evento] Erro ao recalcular pontuação:`, resultadoPontuacao.error);
+      return res.status(207).json({ success: false, message: `Transmitidas ${total} provas, mas erro ao recalcular pontuação.`, erros: [...erros, { eventoId, erro: resultadoPontuacao.error }] });
+    }
+    if (erros.length > 0) {
+      return res.status(207).json({ success: false, message: `Transmitidas ${total} provas, ${erros.length} com erro. Pontuação recalculada.`, erros });
+    }
+    return res.status(200).json({ success: true, message: `Transmitidas ${total} provas do evento ${eventoId} com sucesso! Pontuação recalculada.` });
+  } catch (error) {
+    console.error('Erro ao transmitir resultados do evento:', error);
+    return res.status(500).json({ error: 'Erro ao transmitir resultados do evento.' });
+  }
 });
 
 // Migrar todos os resultados antigos para resultadosCompletos

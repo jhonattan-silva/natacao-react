@@ -20,6 +20,7 @@ const calcularRankingEquipes = async (conn, torneiosId) => {
              JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
              JOIN eventos e ON ep.eventos_id = e.id
              WHERE e.torneios_id = ?
+               AND c.tipo = 'ABSOLUTO'    -- soma só ABSOLUTO
              GROUP BY c.equipes_id, c.eventos_provas_id`,
             [torneiosId]
         );
@@ -191,6 +192,7 @@ router.get('/ranking-equipes-por-evento/:eventosId', async (req, res) => {
     }
 });
 
+// Função para atualizar ranking por evento
 async function atualizarRankingEquipesPorEvento(eventosId) {
     const TORNEIOS_ID = 3; // constante
     const conn = await db.getConnection();
@@ -202,8 +204,9 @@ async function atualizarRankingEquipesPorEvento(eventosId) {
             `SELECT c.equipes_id, c.eventos_provas_id, SUM(c.pontuacao_equipe) AS pontos
              FROM classificacoes c
              WHERE c.eventos_provas_id IN (
-                SELECT id FROM eventos_provas WHERE eventos_id = ?
+               SELECT id FROM eventos_provas WHERE eventos_id = ?
              )
+             AND c.tipo = 'ABSOLUTO'   -- soma só ABSOLUTO
              GROUP BY c.equipes_id, c.eventos_provas_id`,
             [eventosId]
         );
@@ -223,6 +226,28 @@ async function atualizarRankingEquipesPorEvento(eventosId) {
         conn.release();
     }
 }
+
+// Endpoint para consultar ranking de equipes mirins por evento
+router.get('/ranking-mirim/:eventoId', async (req, res) => {
+  try {
+    const { eventoId } = req.params;
+    // Agrupa por equipe, somando todos os pontos dos nadadores mirins no evento
+    const [ranking] = await db.execute(`
+      SELECT e.id AS equipes_id, e.nome AS equipe_nome, SUM(r.pontos) AS pontos
+      FROM rankingEquipesMirim r
+      JOIN equipes e ON r.equipes_id = e.id
+      WHERE r.eventos_id = ?
+      GROUP BY e.id, e.nome
+      HAVING pontos > 0
+      ORDER BY pontos DESC
+    `, [eventoId]);
+    console.log('[rankingsRoutes] Ranking Mirim retornado:', ranking);
+    res.status(200).json(ranking);
+  } catch (error) {
+    console.error('[rankingsRoutes] Erro ao consultar ranking mirim:', error);
+    res.status(500).json({ error: 'Erro ao consultar ranking mirim.' });
+  }
+});
 
 module.exports = {
   router,

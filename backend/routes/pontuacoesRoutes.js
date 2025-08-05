@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { classificarProva } = require('./resultadosRoutes'); 
 
 /*
 **
@@ -13,153 +14,372 @@ const db = require('../config/db');
 const PONTOS_INDIVIDUAL = [9, 7, 6, 5, 4, 3, 2, 1];
 const PONTOS_REVEZAMENTO = [18, 14, 12, 10, 8, 6, 4, 2];
 
-// Função para distribuir pontuação considerando empates
-function distribuirPontuacaoComEmpate(classificacoes, tabelaPontuacao, campoTempo = 'tempo') {
-    let i = 0;
-    while (i < classificacoes.length) {
-        // Identifica todos os empatados nesta posição
-        const empatados = [classificacoes[i]];
-        let j = i + 1;
-        while (
-            j < classificacoes.length &&
-            classificacoes[j][campoTempo] === classificacoes[i][campoTempo]
-        ) {
-            empatados.push(classificacoes[j]);
-            j++;
-        }
-
-        // Soma as pontuações das posições empatadas e divide pelo número de empatados
-        let somaPontuacao = 0;
-        for (let k = 0; k < empatados.length; k++) {
-            somaPontuacao += tabelaPontuacao[i + k] || 0;
-        }
-        const mediaPontuacao = somaPontuacao / empatados.length;
-
-        // Atribui a média para todos os empatados
-        for (const emp of empatados) {
-            emp.pontuacao = mediaPontuacao;
-        }
-
-        i += empatados.length; // Pula para a próxima posição após os empatados
-    }
-    return classificacoes;
+// Função utilitária para converter tempo em centésimos
+function tempoParaCentesimo(tempo) {
+  if (!tempo || tempo === 'NC' || tempo === 'DQL') return null;
+  const [min, seg, cent] = tempo.split(':').map(Number);
+  return min * 6000 + seg * 100 + cent;
 }
 
-// Função para calcular e armazenar a pontuação no evento
-const calcularPontuacaoEvento = async (eventosId) => {
-    try {
-        const [provasEvento] = await db.execute( // Obter provas do evento
-            `SELECT ep.id AS evento_prova_id, p.eh_revezamento, p.eh_prova_ouro, p.eh_prova_categoria 
-             FROM eventos_provas ep 
-             JOIN provas p ON ep.provas_id = p.id 
-             WHERE ep.eventos_id = ?`,
-            [eventosId]
-        );
+// Função para atribuir pontuação considerando empates reais (por tempo em centésimos)
+function atribuirPontuacao(classificacoes, tabelaPontuacao, campoTempo = 'tempo') {
+  // Filtra apenas status OK e tempo válido
+  const validos = classificacoes.filter(row => row.status === 'OK' && row[campoTempo] && row[campoTempo] !== 'NC' && row[campoTempo] !== 'DQL')
+    .map(row => ({ ...row, tempoCentesimos: tempoParaCentesimo(row[campoTempo]) }))
+    .sort((a, b) => a.tempoCentesimos - b.tempoCentesimos);
 
-        if (provasEvento.length === 0) return { error: "Nenhuma prova encontrada para este evento." };
-
-        for (const prova of provasEvento) { // Obter cada prova do evento
-            if (!prova.eh_prova_ouro) {
-                continue; // Pula para a próxima prova
-            }
-            let classificacoes;
-            if (prova.eh_revezamento) {
-                [classificacoes] = await db.execute( // Obter classificações de revezamento
-                    `SELECT c.id, c.nadadores_id, c.equipes_id, c.classificacao, n.categorias_id, c.tipo
-                     FROM classificacoes c
-                     LEFT JOIN nadadores n ON c.nadadores_id = n.id
-                     WHERE c.eventos_provas_id = ? 
-                     AND c.classificacao BETWEEN 1 AND 8
-                     AND c.status = 'OK'
-                     ORDER BY c.classificacao ASC`,
-                    [prova.evento_prova_id]
-                );
-                // Atualiza pontuação de equipes para revezamento
-                for (const classificacao of classificacoes) {
-                    const pontuacao_equipe = PONTOS_REVEZAMENTO[classificacao.classificacao - 1] || 0;
-                    if (pontuacao_equipe > 0) {
-                        await db.execute(
-                            `UPDATE classificacoes 
-                             SET pontuacao_equipe = ? 
-                             WHERE id = ?`,
-                            [pontuacao_equipe, classificacao.id]
-                        );
-                    }
-                }
-            } else {
-                // Obter classificações ordenadas por categoria semelhante à classificação por categoria dos resultados
-                [classificacoes] = await db.execute(
-                    `SELECT c.id, n.categorias_id, cat.eh_mirim, c.classificacao, c.tempo
-                     FROM classificacoes c
-                     LEFT JOIN nadadores n ON c.nadadores_id = n.id
-                     LEFT JOIN categorias cat ON n.categorias_id = cat.id
-                     WHERE c.eventos_provas_id = ?
-                     AND c.status = 'OK'
-                     ORDER BY n.categorias_id ASC, 
-                              CASE WHEN c.status IN ('DQL', 'NC') THEN 1 ELSE 0 END, 
-                              c.classificacao ASC`,
-                    [prova.evento_prova_id]
-                );
-                // Agrupar por categoria para pontuação individual
-                const categorias = {};
-                classificacoes.forEach((row) => {
-                    if (!categorias[row.categorias_id]) {
-                        categorias[row.categorias_id] = [];
-                    }
-                    categorias[row.categorias_id].push(row);
-                });
-                // Atualiza pontuação individual conforme ranking por categoria
-                for (const cat in categorias) {
-                    // Ordene por tempo/classificação se necessário
-                    const lista = categorias[cat]
-                        .filter(row => row.tempo !== 'NC' && row.tempo !== 'DQL')
-                        .slice()
-                        .sort((a, b) => a.tempo.localeCompare(b.tempo))
-                        .slice(0, 8);
-                    // Aplique a função de empate
-                    const classificados = distribuirPontuacaoComEmpate(lista, PONTOS_INDIVIDUAL, 'tempo');
-                    for (const row of classificados) {
-                        // Regra: mirim só pontua em prova de categoria, não-mirim só pontua em prova ouro
-                        if ((row.eh_mirim && prova.eh_prova_categoria) ||
-                            (!row.eh_mirim && prova.eh_prova_ouro)) {
-                            if (row.pontuacao > 0) {
-                                await db.execute(
-                                    `UPDATE classificacoes SET pontuacao_individual = ? WHERE id = ?`,
-                                    [row.pontuacao, row.id]
-                                );
-                            }
-                        }
-                    }
-                }
-                // Buscar o ranking absoluto da prova
-                const [absoluto] = await db.execute(
-                    `SELECT c.id, c.tempo
-                     FROM classificacoes c
-                     WHERE c.eventos_provas_id = ?
-                     AND c.status = 'OK'
-                     AND c.tipo = 'ABSOLUTO'
-                     ORDER BY c.classificacao ASC
-                     LIMIT 8`,
-                    [prova.evento_prova_id]
-                );
-
-                const classificadosEquipe = distribuirPontuacaoComEmpate(absoluto, PONTOS_INDIVIDUAL);
-                for (const row of classificadosEquipe) {
-                    if (row.pontuacao > 0) {
-                        await db.execute(
-                            `UPDATE classificacoes SET pontuacao_equipe = ? WHERE id = ?`,
-                            [row.pontuacao, row.id]
-                        );
-                    }
-                }
-            }
-        }
-        return { success: "Pontuação do evento calculada e armazenada com sucesso!" };
-    } catch (error) {
-        console.error(error);
-        return { error: "Erro ao calcular pontuação do evento." };
+  let i = 0;
+  let premiados = [];
+  let posicao = 0;
+  while (i < validos.length && posicao < tabelaPontuacao.length) {
+    const empatados = [validos[i]];
+    let j = i + 1;
+    while (
+      j < validos.length &&
+      validos[j].tempoCentesimos === validos[i].tempoCentesimos
+    ) {
+      empatados.push(validos[j]);
+      j++;
     }
+    // Só atribui pontuação se ainda houver posições premiadas
+    if (posicao < tabelaPontuacao.length) {
+      let somaPontuacao = 0;
+      for (let k = 0; k < empatados.length; k++) {
+        somaPontuacao += tabelaPontuacao[posicao + k] || 0;
+      }
+      const mediaPontuacao = somaPontuacao / empatados.length;
+      for (const emp of empatados) {
+        emp.pontuacao = mediaPontuacao;
+        premiados.push({ id: emp.id, pontuacao: emp.pontuacao });
+      }
+      posicao += empatados.length;
+    }
+    i += empatados.length;
+  }
+  return premiados;
+}
+
+
+// Função para calcular e armazenar a pontuação no evento, com logs detalhados
+const calcularPontuacaoEvento = async (eventosId) => {
+  try {
+    console.log(`[pontuacoesRoutes] Iniciando cálculo de pontuação para evento ${eventosId}`);
+    const [provasEvento] = await db.execute(
+      `SELECT ep.id AS evento_prova_id, p.eh_revezamento, p.eh_prova_ouro, p.eh_prova_categoria, p.eh_prova_festival,
+              p.estilo, p.distancia, p.sexo
+       FROM eventos_provas ep 
+       JOIN provas p ON ep.provas_id = p.id 
+       WHERE ep.eventos_id = ?`,
+      [eventosId]
+    );
+    if (provasEvento.length === 0) {
+      console.log(`[pontuacoesRoutes] Nenhuma prova encontrada para o evento ${eventosId}`);
+      return { error: "Nenhuma prova encontrada para este evento." };
+    }
+
+    // Zerar todas as pontuações primeiro
+    await db.execute(
+      `UPDATE classificacoes c
+       JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
+       SET c.pontuacao_individual = 0, c.pontuacao_equipe = 0
+       WHERE ep.eventos_id = ?`,
+      [eventosId]
+    );
+
+    for (const prova of provasEvento) {
+      // Garante que a classificação existe para esta prova
+      await classificarProva(prova.evento_prova_id);
+
+      const nomeProva = `${prova.estilo} ${prova.distancia} ${prova.sexo}`;
+      console.log(`[pontuacoesRoutes] Processando prova: "${nomeProva}" (ID: ${prova.evento_prova_id}) | revezamento: ${prova.eh_revezamento} | ouro: ${prova.eh_prova_ouro} | categoria: ${prova.eh_prova_categoria} | festival: ${prova.eh_prova_festival}`);
+      
+      if (prova.eh_revezamento) {
+        // Revezamentos: pontuação dobrada (18, 14, 12...)
+        const [classificacoes] = await db.execute(
+          `SELECT c.id, c.nadadores_id, c.equipes_id, c.classificacao, n.categorias_id, cat.eh_mirim, c.tipo, c.status, c.tempo
+           FROM classificacoes c
+           LEFT JOIN nadadores n ON c.nadadores_id = n.id
+           LEFT JOIN categorias cat ON n.categorias_id = cat.id
+           WHERE c.eventos_provas_id = ? 
+           AND c.status = 'OK'
+           AND c.classificacao BETWEEN 1 AND 8
+           ORDER BY c.classificacao ASC`,
+          [prova.evento_prova_id]
+        );
+        console.log(`[pontuacoesRoutes] Revezamento "${nomeProva}" - Encontradas ${classificacoes.length} classificações válidas`);
+        
+        // EQUIPE: todos os revezamentos pontuam para a equipe (pontuação dobrada)
+        const pontuadosEquipe = atribuirPontuacao(classificacoes, PONTOS_REVEZAMENTO, 'tempo');
+        if (pontuadosEquipe.length > 0) {
+          console.log(`[pontuacoesRoutes] Pontuação equipe revezamento:`, pontuadosEquipe);
+          const equipeUpdates = pontuadosEquipe.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
+          const idsEquipe = pontuadosEquipe.map(row => row.id);
+          await db.execute(
+            `UPDATE classificacoes SET pontuacao_equipe = CASE id ${equipeUpdates.join(' ')} END WHERE id IN (${idsEquipe.join(',')})`
+          );
+        }
+        
+        // INDIVIDUAL: revezamentos sempre pontuam individualmente (pontuação dobrada)
+        const pontuadosInd = atribuirPontuacao(classificacoes, PONTOS_REVEZAMENTO, 'tempo');
+        if (pontuadosInd.length > 0) {
+          console.log(`[pontuacoesRoutes] Pontuação individual revezamento:`, pontuadosInd);
+          const indUpdates = pontuadosInd.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
+          const idsInd = pontuadosInd.map(row => row.id);
+          await db.execute(
+            `UPDATE classificacoes SET pontuacao_individual = CASE id ${indUpdates.join(' ')} END WHERE id IN (${idsInd.join(',')})`
+          );
+        }
+        
+      } else if (prova.eh_prova_categoria) {
+        // Provas de Categoria: só Mirim pontua individual e equipe
+        // Buscar todos Mirins por categoria, agrupando corretamente
+        const [classificacoes] = await db.execute(
+          `SELECT c.id, n.categorias_id, cat.eh_mirim, cat.nome AS categoria_nome, c.tempo, c.tipo, c.status
+           FROM classificacoes c
+           LEFT JOIN nadadores n ON c.nadadores_id = n.id
+           LEFT JOIN categorias cat ON n.categorias_id = cat.id
+           WHERE c.eventos_provas_id = ?
+           AND c.tipo = 'CATEGORIA'
+           AND c.status = 'OK'
+           AND cat.eh_mirim = 1
+           ORDER BY cat.nome ASC, c.tempo ASC`,
+          [prova.evento_prova_id]
+        );
+        // Agrupa por categoria Mirim
+        const categoriasMirim = [...new Set(classificacoes.map(row => row.categoria_nome))];
+        let pontuadosMirim = [];
+        for (const categoria of categoriasMirim) {
+          const atletasCategoria = classificacoes.filter(row => row.categoria_nome === categoria);
+          // Ordena por tempo (posição real na categoria)
+          atletasCategoria.sort((a, b) => tempoParaCentesimo(a.tempo) - tempoParaCentesimo(b.tempo));
+          // Atribui pontuação conforme posição real (até 8)
+          pontuadosMirim = pontuadosMirim.concat(
+            atletasCategoria.slice(0, 8).map((row, idx) => ({
+              id: row.id,
+              pontuacao: PONTOS_INDIVIDUAL[idx] || 0
+            }))
+          );
+        }
+        if (pontuadosMirim.length > 0) {
+          const updates = pontuadosMirim.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
+          const ids = pontuadosMirim.map(row => row.id);
+          await db.execute(
+            `UPDATE classificacoes 
+               SET pontuacao_individual = CASE id ${updates.join(' ')} END,
+                   pontuacao_equipe     = CASE id ${updates.join(' ')} END
+             WHERE id IN (${ids.join(',')})`
+          );
+        }
+
+        // sincroniza pontuação_individual e equipe do registro CATEGORIA para o ABSOLUTO
+        await db.execute(
+          `UPDATE classificacoes cat
+             JOIN classificacoes abs 
+               ON cat.eventos_provas_id = abs.eventos_provas_id
+              AND cat.nadadores_id      = abs.nadadores_id
+              AND abs.tipo             = 'ABSOLUTO'
+           SET abs.pontuacao_individual = cat.pontuacao_individual,
+               abs.pontuacao_equipe     = cat.pontuacao_equipe
+           WHERE cat.eventos_provas_id = ?
+             AND cat.tipo = 'CATEGORIA'
+             AND cat.pontuacao_individual > 0`,
+          [prova.evento_prova_id]
+        );
+      } else if (prova.eh_prova_ouro) {
+        // Provas Ouro: só Petiz+ pontua individual, TODOS pontuam para equipe
+
+        // Busca classificações ABSOLUTO para pontuação de equipe (apenas os 8 primeiros)
+        const [classificacoesEquipe] = await db.execute(
+          `SELECT c.id, n.categorias_id, cat.eh_mirim, cat.nome AS categoria_nome, c.tempo, c.status, c.classificacao, c.tipo
+           FROM classificacoes c
+           LEFT JOIN nadadores n ON c.nadadores_id = n.id
+           LEFT JOIN categorias cat ON n.categorias_id = cat.id
+           WHERE c.eventos_provas_id = ?
+           AND c.tipo = 'ABSOLUTO'
+           AND c.status = 'OK'
+           AND c.classificacao BETWEEN 1 AND 8
+           ORDER BY c.classificacao ASC`,
+          [prova.evento_prova_id]
+        );
+        // EQUIPE: todos pontuam para a equipe em provas ouro (posição absoluta)
+        const pontuadosEquipe = atribuirPontuacao(classificacoesEquipe, PONTOS_INDIVIDUAL, 'tempo');
+        if (pontuadosEquipe.length > 0) {
+          const equipeUpdates = pontuadosEquipe.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
+          const idsEquipe = pontuadosEquipe.map(row => row.id);
+          await db.execute(
+            `UPDATE classificacoes SET pontuacao_equipe = CASE id ${equipeUpdates.join(' ')} END WHERE id IN (${idsEquipe.join(',')})`
+          );
+        }
+
+        // Pontuação individual: Mirins recebem a pontuação que receberam na categoria
+        // Busca todos Mirins absolutos e sincroniza pontuacao_individual do registro CATEGORIA
+        const [mirinsAbsoluto] = await db.execute(
+          `SELECT c.id, c.nadadores_id, c.eventos_provas_id
+           FROM classificacoes c
+           LEFT JOIN nadadores n ON c.nadadores_id = n.id
+           LEFT JOIN categorias cat ON n.categorias_id = cat.id
+           WHERE c.eventos_provas_id = ?
+           AND c.tipo = 'ABSOLUTO'
+           AND c.status = 'OK'
+           AND cat.eh_mirim = 1`,
+          [prova.evento_prova_id]
+        );
+        if (mirinsAbsoluto.length > 0) {
+          // Busca todos registros de categoria para esse eventos_provas_id
+          const [mirinsCategoria] = await db.execute(
+            `SELECT nadadores_id, pontuacao_individual FROM classificacoes
+             WHERE eventos_provas_id = ? AND tipo = 'CATEGORIA'`,
+            [prova.evento_prova_id]
+          );
+          // Cria um mapa nadadores_id -> pontuacao_individual
+          const pontuacaoPorNadador = {};
+          for (const cat of mirinsCategoria) {
+            pontuacaoPorNadador[cat.nadadores_id] = cat.pontuacao_individual;
+          }
+          // Atualiza todos mirins absolutos com a pontuação da categoria
+          for (const abs of mirinsAbsoluto) {
+            const pontos = pontuacaoPorNadador[abs.nadadores_id] || 0;
+            await db.execute(
+              `UPDATE classificacoes SET pontuacao_individual = ? WHERE id = ?`,
+              [pontos, abs.id]
+            );
+          }
+        }
+
+        // Busca todos Petiz+ para pontuação individual (sem limitar por classificação absoluta)
+        const [classificacoesInd] = await db.execute(
+          `SELECT c.id, n.categorias_id, cat.eh_mirim, c.tempo, c.status, c.classificacao, c.tipo
+           FROM classificacoes c
+           LEFT JOIN nadadores n ON c.nadadores_id = n.id
+           LEFT JOIN categorias cat ON n.categorias_id = cat.id
+           WHERE c.eventos_provas_id = ?
+           AND c.tipo = 'ABSOLUTO'
+           AND c.status = 'OK'
+           AND cat.eh_mirim <> 1
+           ORDER BY n.categorias_id, c.classificacao ASC`,
+          [prova.evento_prova_id]
+        );
+        // Agrupa por categoria e atribui pontuação por posição na categoria (até 8 por categoria)
+        let pontuadosInd = [];
+        const categoriasPetizMais = [...new Set(classificacoesInd.map(row => row.categorias_id))];
+        for (const categoriaId of categoriasPetizMais) {
+          const atletasCategoria = classificacoesInd.filter(row => row.categorias_id === categoriaId);
+          const pontuadosCat = atribuirPontuacao(atletasCategoria, PONTOS_INDIVIDUAL, 'tempo');
+          pontuadosInd = pontuadosInd.concat(pontuadosCat);
+        }
+        if (pontuadosInd.length > 0) {
+          const indUpdates = pontuadosInd.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
+          const idsInd = pontuadosInd.map(row => row.id);
+          await db.execute(
+            `UPDATE classificacoes SET pontuacao_individual = CASE id ${indUpdates.join(' ')} END WHERE id IN (${idsInd.join(',')})`
+          );
+        }
+      } else if (prova.eh_prova_festival) {
+        // Provas Festival: NÃO pontuam
+        console.log(`[pontuacoesRoutes] Festival "${nomeProva}" - Prova festival não pontua, pulando...`);
+        
+      } else {
+        console.log(`[pontuacoesRoutes] ATENÇÃO: Prova "${nomeProva}" (ID: ${prova.evento_prova_id}) não está marcada com nenhum tipo específico. Assumindo como OURO.`);
+        
+        // Se não está marcada como nenhuma, assumir que é OURO
+        const [classificacoes] = await db.execute(
+          `SELECT c.id, n.categorias_id, cat.eh_mirim, c.tempo, c.status, c.classificacao, c.tipo
+           FROM classificacoes c
+           LEFT JOIN nadadores n ON c.nadadores_id = n.id
+           LEFT JOIN categorias cat ON n.categorias_id = cat.id
+           WHERE c.eventos_provas_id = ?
+           AND c.tipo = 'ABSOLUTO'
+           AND c.status = 'OK'
+           AND c.classificacao BETWEEN 1 AND 8
+           ORDER BY c.classificacao ASC`,
+          [prova.evento_prova_id]
+        );
+        
+        if (classificacoes.length > 0) {
+          console.log(`[pontuacoesRoutes] Assumindo OURO "${nomeProva}" - Encontradas ${classificacoes.length} classificações`);
+          
+          // EQUIPE: todos pontuam para a equipe em provas ouro
+          const pontuadosEquipe = atribuirPontuacao(classificacoes, PONTOS_INDIVIDUAL, 'tempo');
+          if (pontuadosEquipe.length > 0) {
+            console.log(`[pontuacoesRoutes] Pontuação equipe:`, pontuadosEquipe);
+            const equipeUpdates = pontuadosEquipe.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
+            const idsEquipe = pontuadosEquipe.map(row => row.id);
+            await db.execute(
+              `UPDATE classificacoes SET pontuacao_equipe = CASE id ${equipeUpdates.join(' ')} END WHERE id IN (${idsEquipe.join(',')})`
+            );
+          }
+          
+          // INDIVIDUAL: só Petiz+ (não Mirim) pontua individualmente em provas ouro
+          const petizMais = classificacoes.filter(row => row.eh_mirim !== 1);
+          console.log(`[pontuacoesRoutes] Petiz+ encontrados: ${petizMais.length}`);
+          
+          const pontuadosInd = atribuirPontuacao(petizMais, PONTOS_INDIVIDUAL, 'tempo');
+          if (pontuadosInd.length > 0) {
+            console.log(`[pontuacoesRoutes] Pontuação individual Petiz+:`, pontuadosInd);
+            const indUpdates = pontuadosInd.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
+            const idsInd = pontuadosInd.map(row => row.id);
+            await db.execute(
+              `UPDATE classificacoes SET pontuacao_individual = CASE id ${indUpdates.join(' ')} END WHERE id IN (${idsInd.join(',')})`
+            );
+          }
+        }
+      }
+    }
+    // Fim do cálculo de pontuação para evento
+    console.log(`[pontuacoesRoutes] Fim do cálculo de pontuação para evento ${eventosId}`);
+
+    // Cálculo do ranking de equipes mirins (centralizado aqui)
+    const [rankingMirim] = await db.execute(`
+      SELECT 
+        e.id AS equipes_id,
+        e.nome AS equipe_nome,
+        SUM(r.pontos) AS pontos
+      FROM rankingEquipesMirim r
+      JOIN equipes e ON r.equipes_id = e.id
+      WHERE r.eventos_id = ?
+      GROUP BY e.id, e.nome
+      HAVING pontos > 0
+      ORDER BY pontos DESC
+    `, [eventosId]);
+
+    // <-- SINCRONIZA RANKING MIRIM NA TABELA rankingEquipesMirim -->
+    await db.execute(`DELETE FROM rankingEquipesMirim WHERE eventos_id = ?`, [eventosId]);
+    await db.execute(`
+      INSERT INTO rankingEquipesMirim (
+        torneios_id,
+        eventos_id,
+        eventos_provas_id,     -- adicionado
+        equipes_id,
+        pontos
+      )
+      SELECT 
+        3 AS torneios_id,
+        ep.eventos_id,
+        ep.id AS eventos_provas_id,  -- adicionado
+        c.equipes_id,
+        SUM(c.pontuacao_equipe) AS pontos
+      FROM classificacoes c
+      JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
+      WHERE ep.eventos_id = ?
+        AND c.tipo = 'CATEGORIA'
+        AND c.pontuacao_equipe > 0
+      GROUP BY 
+        ep.eventos_id,
+        ep.id,               -- adicionado
+        c.equipes_id
+    `, [eventosId]);
+
+    // Retorna resultado da pontuação + ranking mirim juntos
+    return {
+      success: "Pontuação do evento calculada e armazenada com sucesso!",
+      rankingMirim
+    };
+  } catch (error) {
+    console.error('[pontuacoesRoutes] Erro ao calcular pontuação:', error);
+    return { error: "Erro ao calcular pontuação do evento." };
+  }
 };
+
 
 // Rota para processar a pontuação de um evento
 router.post('/pontuar-evento/:eventoId', async (req, res) => {
@@ -178,6 +398,8 @@ router.post('/pontuar-evento/:eventoId', async (req, res) => {
         res.status(500).json({ error: "Erro ao processar a pontuação." });
     }
 });
+
+// Endpoint para consultar ranking de equipes mirins por evento
 
 module.exports = {
     router,

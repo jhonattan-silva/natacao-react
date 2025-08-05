@@ -33,94 +33,71 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
     const { eventoId } = req.params;
 
     try {
-        // Buscar resultados completos do evento
+        // Buscar registros do tipo CATEGORIA para provas categoria, e ABSOLUTO para provas ouro
         const [resultados] = await db.query(`
             SELECT 
-                rc.eventos_provas_id,
-                rc.prova_id,
-                rc.nome_prova,
-                rc.categoria_nadador,
-                rc.sexo_nadador,
-                rc.nome_nadador,
-                rc.equipes_id,
-                rc.nome_equipe,
-                rc.tempo,
-                rc.minutos,
-                rc.segundos,
-                rc.centesimos,
-                rc.status,
-                rc.eh_revezamento,
+                c.eventos_provas_id,
+                p.id AS prova_id,
+                CONCAT(p.distancia, ' METROS', ' ', p.estilo) AS nome_prova,
+                cat.nome AS categoria_nadador,
+                n.sexo AS sexo_nadador,
+                n.nome AS nome_nadador,
+                c.equipes_id,
+                e.nome AS nome_equipe,
+                c.tempo,
+                c.status,
+                c.classificacao,
+                p.eh_revezamento,
                 p.eh_prova_categoria,
+                p.eh_prova_ouro,
                 p.sexo AS sexo_prova,
                 c.pontuacao_individual,
                 c.pontuacao_equipe
-            FROM resultadosCompletos rc
-            JOIN eventos_provas ep ON rc.eventos_provas_id = ep.id
+            FROM classificacoes c
+            JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
             JOIN provas p ON ep.provas_id = p.id
-            LEFT JOIN classificacoes c ON c.eventos_provas_id = rc.eventos_provas_id AND c.nadadores_id = rc.nadadores_id
-            WHERE rc.eventos_id = ?
-            ORDER BY rc.eh_revezamento ASC, rc.ordem ASC, rc.categoria_nadador ASC, rc.sexo_nadador ASC, rc.minutos ASC, rc.segundos ASC, rc.centesimos ASC
+            LEFT JOIN nadadores n ON c.nadadores_id = n.id
+            LEFT JOIN equipes e ON c.equipes_id = e.id
+            LEFT JOIN categorias cat ON n.categorias_id = cat.id
+            WHERE ep.eventos_id = ? 
+            AND (
+                (p.eh_prova_categoria = 1 AND c.tipo = 'CATEGORIA') OR
+                (p.eh_prova_ouro = 1 AND c.tipo = 'ABSOLUTO') OR
+                (p.eh_revezamento = 1 AND c.tipo = 'ABSOLUTO')
+            )
+            ORDER BY p.eh_revezamento ASC, ep.ordem ASC, cat.nome ASC, n.sexo ASC, c.classificacao ASC
         `, [eventoId]);
 
         // Agrupar por prova, categoria e sexo (revezamento separado por sexo)
         const classificacao = {};
         resultados.forEach(row => {
-            const provaKey = row.eh_revezamento
-                ? `Revezamento - ${row.nome_prova} (${row.sexo_prova})`
-                : `${row.nome_prova} - ${row.categoria_nadador} (${row.sexo_nadador})`;
+            let provaKey;
+            
+            if (row.eh_revezamento) {
+                // Revezamentos: agrupar só por prova + sexo
+                provaKey = `Revezamento - ${row.nome_prova} (${row.sexo_prova})`;
+            } else {
+                // Provas individuais: agrupar por prova + categoria + sexo
+                provaKey = `${row.nome_prova} - ${row.categoria_nadador} (${row.sexo_nadador})`;
+            }
 
             if (!classificacao[provaKey]) {
                 classificacao[provaKey] = [];
-            }
-
-            // Formatar tempo ou definir texto personalizado
-            if (row.status === 'DQL') {
-                row.tempo = 'DQL';
-                row.classificacao = 'DQL';
-            } else if (row.status === 'NC' || !row.tempo) {
-                row.tempo = 'NC';
-                row.classificacao = 'NC';
-            } else {
-                row.classificacao = null; // Definir depois
             }
 
             classificacao[provaKey].push({
               classificacao: row.classificacao,
               nomeNadador: row.nome_nadador,
               nomeEquipe: row.nome_equipe,
-              minutos: row.minutos,
-              segundos: row.segundos,
-              centesimos: row.centesimos,
               categoria: row.categoria_nadador,
               status: row.status,
               tempo: row.tempo,
               pontuacao_individual: row.pontuacao_individual,
               pontuacao_equipe: row.pontuacao_equipe,
-              eh_prova_categoria: row.eh_prova_categoria === 1 
+              eh_prova_categoria: row.eh_prova_categoria === 1,
+              eh_prova_ouro: row.eh_prova_ouro === 1
             });
         });
-
-        // Adicionar posição no ranking dentro de cada prova + categoria + sexo
-        for (const prova in classificacao) {
-            // Separar resultados válidos e inválidos
-            const validos = [];
-            const invalidos = [];
-            classificacao[prova].forEach(row => {
-                if (row.classificacao) {
-                    invalidos.push(row); // Já possui status (DQL ou NC)
-                } else {
-                    validos.push(row);
-                }
-            });
-
-            // Classificar válidos e adicionar posição
-            validos.forEach((atleta, index) => {
-                atleta.classificacao = index + 1; // 1º, 2º, 3º...
-            });
-
-            // Combinar válidos e inválidos
-            classificacao[prova] = [...validos, ...invalidos];
-        }
 
         res.json(classificacao);
     } catch (error) {
@@ -135,7 +112,7 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
     const { eventoId } = req.params;
 
     try {
-        // Buscar resultados com provas, sexo e categoria
+        // Buscar apenas resultados ABSOLUTO (ranking geral)
         const [resultados] = await db.query(`
           SELECT 
               c.id, 
@@ -163,56 +140,44 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
           LEFT JOIN nadadores n ON c.nadadores_id = n.id
           LEFT JOIN equipes e ON c.equipes_id = e.id
           LEFT JOIN categorias cat ON n.categorias_id = cat.id  
-          WHERE ep.eventos_id = ?
-          ORDER BY ep.ordem ASC, c.tipo ASC, c.eventos_provas_id ASC, c.classificacao ASC; 
+          WHERE ep.eventos_id = ? AND c.tipo = 'ABSOLUTO'
+          ORDER BY ep.ordem ASC, c.eventos_provas_id ASC, c.classificacao ASC; 
         `, [eventoId]);
 
-        // Agrupar por prova e sexo (revezamento separado por sexo)
+        // Agrupar por prova e sexo (sem categoria, apenas absoluto)
         const classificacao = {};
         resultados.forEach(row => {
             const provaKey = row.eh_revezamento 
-                ? `Revezamento - ${row.nomeProva} (${row.sexoProva})` 
-                : `${row.nomeProva} (${row.sexoNadador})`;
+                ? `Revezamento - ${row.prova_nome} (${row.sexo_prova})` 
+                : `${row.prova_nome} (${row.sexo_nadador})`;
 
             if (!classificacao[provaKey]) {
                 classificacao[provaKey] = [];
             }
 
-            // Formatar tempo ou definir texto personalizado
-            if (row.status === 'DQL') { // Alterado de 'DESC'
-                row.tempo = 'DQL';
-                row.classificacao = 'DQL';
-            } else if (row.status === 'NC' || (row.minutos === 0 && row.segundos === 0 && row.centesimos === 0)) {
-                row.tempo = 'NC';
-                row.classificacao = 'NC';
-            } else {
-                row.tempo = `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`;
-                row.classificacao = null; // Definir depois
-            }
-
-            classificacao[provaKey].push(row);
+            classificacao[provaKey].push({
+                id: row.id,
+                classificacao: row.classificacao,
+                nome_nadador: row.nome_nadador,
+                nome_equipe: row.nome_equipe,
+                tempo: row.tempo,
+                status: row.status,
+                categoria_nadador: row.categoria_nadador,
+                pontuacao_individual: row.pontuacao_individual,
+                pontuacao_equipe: row.pontuacao_equipe,
+                eh_revezamento: row.eh_revezamento
+            });
         });
 
-        // Adicionar posição no ranking dentro de cada prova + sexo
+        // Ordenar por classificação dentro de cada prova
         for (const prova in classificacao) {
-            // Separar resultados válidos e inválidos
-            const validos = [];
-            const invalidos = [];
-            classificacao[prova].forEach(row => {
-                if (row.classificacao) {
-                    invalidos.push(row); // Já possui status (DESC ou NC)
-                } else {
-                    validos.push(row);
-                }
+            classificacao[prova].sort((a, b) => {
+                // Status inválidos vão para o final
+                if (a.status === 'DQL' || a.status === 'NC') return 1;
+                if (b.status === 'DQL' || b.status === 'NC') return -1;
+                // Ordenar por classificação
+                return a.classificacao - b.classificacao;
             });
-
-            // Classificar válidos e adicionar posição
-            validos.forEach((atleta, index) => {
-                atleta.classificacao = index + 1; // 1º, 2º, 3º...
-            });
-
-            // Combinar válidos e inválidos
-            classificacao[prova] = [...validos, ...invalidos];
         }
 
         res.json(classificacao);
@@ -281,6 +246,8 @@ router.post('/fecharClassificacao/:eventoId', async (req, res) => {
           ? `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`
           : row.status === 'DQL' ? 'DQL' : 'NC';
         const classificacao = row.status === 'OK' ? posicao++ : null;
+
+        // Sempre gera ABSOLUTO
         classificacoes.push([
           row.eventosProvasId,
           row.nadadorId || null,
@@ -288,8 +255,20 @@ router.post('/fecharClassificacao/:eventoId', async (req, res) => {
           tempo,
           classificacao,
           row.status,
-          row.eh_revezamento || row.eh_prova_ouro ? 'ABSOLUTO' : 'CATEGORIA'
+          'ABSOLUTO'
         ]);
+        // Se não for revezamento, gera também CATEGORIA
+        if (!row.eh_revezamento) {
+          classificacoes.push([
+            row.eventosProvasId,
+            row.nadadorId || null,
+            row.equipeId || null,
+            tempo,
+            classificacao,
+            row.status,
+            'CATEGORIA'
+          ]);
+        }
       });
     }
 
@@ -578,6 +557,8 @@ async function classificarProva(provaId) {
         ? `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`
         : row.status === 'DQL' ? 'DQL' : 'NC';
       const classificacao = row.status === 'OK' ? posicao++ : null;
+
+      // Sempre gera ABSOLUTO
       classificacoes.push([
         row.eventosProvasId,
         row.nadadorId || null,
@@ -585,8 +566,20 @@ async function classificarProva(provaId) {
         tempo,
         classificacao,
         row.status,
-        row.eh_revezamento || row.eh_prova_ouro ? 'ABSOLUTO' : 'CATEGORIA'
+        'ABSOLUTO'
       ]);
+      // Se não for revezamento, gera também CATEGORIA
+      if (!row.eh_revezamento) {
+        classificacoes.push([
+          row.eventosProvasId,
+          row.nadadorId || null,
+          row.equipeId || null,
+          tempo,
+          classificacao,
+          row.status,
+          'CATEGORIA'
+        ]);
+      }
     });
 
     if (classificacoes.length > 0) {
@@ -610,7 +603,7 @@ async function classificarProva(provaId) {
   }
 }
 
-// Rota HTTP usa a função nomeada
+// Rota para classificar uma prova específica
 router.post('/classificarProva/:provaId', async (req, res) => {
   const { provaId } = req.params;
   try {
@@ -623,5 +616,5 @@ router.post('/classificarProva/:provaId', async (req, res) => {
 
 module.exports = {
     router,
-    classificarProva, // ou calcularPontuacaoEvento
+    classificarProva,
 };

@@ -241,3 +241,24 @@ body {
 .abasContainer .aba {
   color: #3498db; /* Azul padrão para abas antes de clicar */
 }
+
+/* Aba Pontuação da Etapa: herda padding, borda e sombra de .resultadosContainer */
+.pontuacaoEtapaContainer {
+  /* mesmo container das outras abas, só muda a cor de fundo */
+  background-color: #f4e8ff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease;
+}
+.pontuacaoEtapaContainer:hover {
+  transform: translateY(-3px);
+}
+.pontuacaoEtapaContainer h2 {
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #9b59b6;
+  padding-bottom: 0.5rem;
+  color: #9b59b6;
+  font-size: 1.5rem;
+}
