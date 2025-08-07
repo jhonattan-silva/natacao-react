@@ -171,15 +171,14 @@ const calcularPontuacaoEvento = async (eventosId) => {
           );
         }
 
-        // sincroniza pontuação_individual e equipe do registro CATEGORIA para o ABSOLUTO
+        // sincroniza pontuação_individual do registro CATEGORIA para o ABSOLUTO (NÃO sincroniza pontuacao_equipe!)
         await db.execute(
           `UPDATE classificacoes cat
              JOIN classificacoes abs 
                ON cat.eventos_provas_id = abs.eventos_provas_id
               AND cat.nadadores_id      = abs.nadadores_id
               AND abs.tipo             = 'ABSOLUTO'
-           SET abs.pontuacao_individual = cat.pontuacao_individual,
-               abs.pontuacao_equipe     = cat.pontuacao_equipe
+           SET abs.pontuacao_individual = cat.pontuacao_individual
            WHERE cat.eventos_provas_id = ?
              AND cat.tipo = 'CATEGORIA'
              AND cat.pontuacao_individual > 0`,
@@ -341,21 +340,19 @@ const calcularPontuacaoEvento = async (eventosId) => {
       HAVING pontos > 0
       ORDER BY pontos DESC
     `, [eventosId]);
-
+/* 
     // <-- SINCRONIZA RANKING MIRIM NA TABELA rankingEquipesMirim -->
     await db.execute(`DELETE FROM rankingEquipesMirim WHERE eventos_id = ?`, [eventosId]);
     await db.execute(`
       INSERT INTO rankingEquipesMirim (
         torneios_id,
         eventos_id,
-        eventos_provas_id,     -- adicionado
         equipes_id,
         pontos
       )
       SELECT 
         3 AS torneios_id,
         ep.eventos_id,
-        ep.id AS eventos_provas_id,  -- adicionado
         c.equipes_id,
         SUM(c.pontuacao_equipe) AS pontos
       FROM classificacoes c
@@ -363,11 +360,8 @@ const calcularPontuacaoEvento = async (eventosId) => {
       WHERE ep.eventos_id = ?
         AND c.tipo = 'CATEGORIA'
         AND c.pontuacao_equipe > 0
-      GROUP BY 
-        ep.eventos_id,
-        ep.id,               -- adicionado
-        c.equipes_id
-    `, [eventosId]);
+      GROUP BY ep.eventos_id, c.equipes_id
+    `, [eventosId]); */
 
     // Retorna resultado da pontuação + ranking mirim juntos
     return {

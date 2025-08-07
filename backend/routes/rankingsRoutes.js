@@ -3,35 +3,44 @@ const router = express.Router();
 const db = require('../config/db');
 
 /**
- * calcularRankingEquipes: Função para calcular o ranking das equipes
- * calcularRankingNadadores: Função para calcular o ranking dos nadadores
- * obterRankingEquipesPorEvento: Função para obter o ranking das equipes por evento
- * atualizarRanking: Rota para atualizar o ranking das equipes e nadadores
- * rankingEquipes: Rota para obter o ranking das equipes
- * ranking-equipes-por-evento: Rota para obter o ranking das equipes por evento
+ * Rotas e funções para cálculo e consulta de rankings de equipes e nadadores.
+ *
+ * Funções principais:
+ * - calcularRankingEquipes: Calcula o ranking geral de equipes (Provas Ouro) por torneio.
+ * - calcularRankingEquipesMirim: Calcula o ranking de equipes mirim (Provas Categoria - Pré-Mirim/Mirim/Mirim II) por torneio.
+ * - calcularRankingNadadores: Calcula o ranking de nadadores por torneio.
+ * - obterRankingEquipesPorEvento: Consulta o ranking de equipes para em um evento.
+ * - atualizarRankingEquipesPorEvento: Atualiza o ranking de equipes para um evento específico (exportada para uso externo).
+ *
+ * Endpoints:
+ * - POST   /atualizar-ranking/:torneiosId         → Atualiza todos os rankings (equipes, mirim, nadadores) do torneio.
+ * - GET    /ranking-equipes/:torneiosId           → Consulta ranking geral de equipes do torneio.
+ * - GET    /ranking-equipes-mirim/:torneiosId     → Consulta ranking de equipes mirim do torneio.
+ * - GET    /ranking-nadadores/:torneiosId         → Consulta ranking de nadadores (masculino/feminino) do torneio.
+ * - GET    /ranking-equipes-por-evento/:eventosId → Consulta ranking de equipes para um evento específico.
+ * - GET    /ranking-mirim/:eventoId               → Consulta ranking de equipes mirim para um evento específico.
+ * - GET    /ranking-mirim-geral/:torneioId        → Consulta ranking geral de equipes mirim do torneio.
  */
 
-// Função para calcular o ranking das equipes
+// Função para calcular o ranking das equipes (ABSOLUTO)
 const calcularRankingEquipes = async (conn, torneiosId) => {
     try {
         const [resultados] = await conn.execute(
-            `SELECT c.equipes_id, SUM(c.pontuacao_equipe) AS total_pontos, ep.eventos_id, c.eventos_provas_id
+            `SELECT c.equipes_id, ep.eventos_id, SUM(c.pontuacao_equipe) AS total_pontos
              FROM classificacoes c
              JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
              JOIN eventos e ON ep.eventos_id = e.id
              WHERE e.torneios_id = ?
-               AND c.tipo = 'ABSOLUTO'    -- soma só ABSOLUTO
-             GROUP BY c.equipes_id, c.eventos_provas_id`,
+               AND c.tipo = 'ABSOLUTO'
+             GROUP BY c.equipes_id, ep.eventos_id`,
             [torneiosId]
         );
-
-        // Atualiza rankingEquipes
         for (const row of resultados) {
             await conn.execute(
-                `INSERT INTO rankingEquipes (torneios_id, eventos_id, eventos_provas_id, equipes_id, pontos)
-                 VALUES (?, ?, ?, ?, ?)
-                 ON DUPLICATE KEY UPDATE pontos = pontos + VALUES(pontos)`,
-                [torneiosId, row.eventos_id, row.eventos_provas_id, row.equipes_id, row.total_pontos]
+                `INSERT INTO rankingEquipes (torneios_id, eventos_id, equipes_id, pontos)
+                 VALUES (?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE pontos = VALUES(pontos)`,
+                [torneiosId, row.eventos_id, row.equipes_id, row.total_pontos]
             );
         }
     } catch (error) {
@@ -39,6 +48,32 @@ const calcularRankingEquipes = async (conn, torneiosId) => {
     }
 };
 
+// Função para calcular o ranking das equipes MIRIM (CATEGORIA)
+const calcularRankingEquipesMirim = async (conn, torneiosId) => {
+    try {
+        const [resultados] = await conn.execute(
+            `SELECT c.equipes_id, ep.eventos_id, SUM(c.pontuacao_equipe) AS total_pontos
+             FROM classificacoes c
+             JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
+             JOIN eventos e ON ep.eventos_id = e.id
+             WHERE e.torneios_id = ?
+               AND c.tipo = 'CATEGORIA'
+               AND c.pontuacao_equipe > 0
+             GROUP BY c.equipes_id, ep.eventos_id`,
+            [torneiosId]
+        );
+        for (const row of resultados) {
+            await conn.execute(
+                `INSERT INTO rankingEquipesMirim (torneios_id, eventos_id, equipes_id, pontos)
+                 VALUES (?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE pontos = VALUES(pontos)`,
+                [torneiosId, row.eventos_id, row.equipes_id, row.total_pontos]
+            );
+        }
+    } catch (error) {
+        console.error("Erro ao calcular ranking de equipes mirim:", error);
+    }
+};
 
 // Função para calcular o ranking dos nadadores
 const calcularRankingNadadores = async (conn, torneiosId) => {
@@ -63,7 +98,7 @@ const calcularRankingNadadores = async (conn, torneiosId) => {
     }
 };
 
-
+// Função para calcular o ranking na etapa
 const obterRankingEquipesPorEvento = async (conn, eventosId) => {
     try {
         const [ranking] = await conn.execute(
@@ -83,7 +118,7 @@ const obterRankingEquipesPorEvento = async (conn, eventosId) => {
     }
 };
 
-// Rota para calcular e atualizar os rankings usando transação
+// Rota para calcular e atualizar os rankings
 router.post('/atualizar-ranking/:torneiosId', async (req, res) => {
     let connection;
     try {
@@ -91,20 +126,19 @@ router.post('/atualizar-ranking/:torneiosId', async (req, res) => {
         if (!torneiosId) {
             return res.status(400).json({ error: "O ID do torneio é obrigatório!" });
         }
-        
-        // Adquire uma conexão da pool e inicia a transação
         connection = await db.getConnection();
         await connection.beginTransaction();
-        
+
         // Limpa rankings anteriores dentro da transação
         await connection.execute(`DELETE FROM rankingEquipes WHERE torneios_id = ?`, [torneiosId]);
         await connection.execute(`DELETE FROM rankingNadadores WHERE torneios_id = ?`, [torneiosId]);
+        await connection.execute(`DELETE FROM rankingEquipesMirim WHERE torneios_id = ?`, [torneiosId]);
 
         // Calcula e insere os novos rankings usando a mesma conexão
         await calcularRankingEquipes(connection, torneiosId);
         await calcularRankingNadadores(connection, torneiosId);
-        
-        // Confirma as operações
+        await calcularRankingEquipesMirim(connection, torneiosId);
+
         await connection.commit();
         connection.release();
 
@@ -119,7 +153,7 @@ router.post('/atualizar-ranking/:torneiosId', async (req, res) => {
     }
 });
 
-// Rota para obter o ranking das equipes
+// Rota para obter o ranking das equipes (ABSOLUTO)
 router.get('/ranking-equipes/:torneiosId', async (req, res) => {
     try {
         const { torneiosId } = req.params;
@@ -136,6 +170,26 @@ router.get('/ranking-equipes/:torneiosId', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Erro ao buscar o ranking das equipes." });
+    }
+});
+
+// Rota para obter o ranking das equipes MIRIM
+router.get('/ranking-equipes-mirim/:torneiosId', async (req, res) => {
+    try {
+        const { torneiosId } = req.params;
+        const [ranking] = await db.execute(
+            `SELECT e.nome AS 'Equipe', SUM(r.pontos) AS 'Pontos'
+             FROM rankingEquipesMirim r
+             JOIN equipes e ON r.equipes_id = e.id
+             WHERE r.torneios_id = ?
+             GROUP BY e.nome
+             ORDER BY pontos DESC`,
+            [torneiosId]
+        );
+        res.status(200).json(ranking);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Erro ao buscar o ranking das equipes mirim." });
     }
 });
 
@@ -199,23 +253,22 @@ async function atualizarRankingEquipesPorEvento(eventosId) {
     try {
         await conn.beginTransaction();
         await conn.execute(`DELETE FROM rankingEquipes WHERE eventos_id = ?`, [eventosId]);
-        // Calcular a soma dos pontos das equipes para o evento e para cada prova
+        // Corrigido: soma total dos pontos da equipe no evento (todas as provas)
         const [resultados] = await conn.execute(
-            `SELECT c.equipes_id, c.eventos_provas_id, SUM(c.pontuacao_equipe) AS pontos
+            `SELECT c.equipes_id, ? AS eventos_id, SUM(c.pontuacao_equipe) AS pontos
              FROM classificacoes c
-             WHERE c.eventos_provas_id IN (
-               SELECT id FROM eventos_provas WHERE eventos_id = ?
-             )
-             AND c.tipo = 'ABSOLUTO'   -- soma só ABSOLUTO
-             GROUP BY c.equipes_id, c.eventos_provas_id`,
-            [eventosId]
+             JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
+             WHERE ep.eventos_id = ?
+               AND c.tipo = 'ABSOLUTO'
+             GROUP BY c.equipes_id`,
+            [eventosId, eventosId]
         );
-        // Inserir na tabela rankingEquipes com torneios_id = 3
+        // Inserir na tabela rankingEquipes com torneios_id = 3, um registro por equipe/evento
         for (const row of resultados) {
             await conn.execute(
-                `INSERT INTO rankingEquipes (torneios_id, eventos_id, eventos_provas_id, equipes_id, pontos)
-                 VALUES (?, ?, ?, ?, ?)`,
-                [TORNEIOS_ID, eventosId, row.eventos_provas_id, row.equipes_id, row.pontos]
+                `INSERT INTO rankingEquipes (torneios_id, eventos_id, equipes_id, pontos)
+                 VALUES (?, ?, ?, ?)`,
+                [TORNEIOS_ID, row.eventos_id, row.equipes_id, row.pontos]
             );
         }
         await conn.commit();
@@ -231,7 +284,6 @@ async function atualizarRankingEquipesPorEvento(eventosId) {
 router.get('/ranking-mirim/:eventoId', async (req, res) => {
   try {
     const { eventoId } = req.params;
-    // Agrupa por equipe, somando todos os pontos dos nadadores mirins no evento
     const [ranking] = await db.execute(`
       SELECT e.id AS equipes_id, e.nome AS equipe_nome, SUM(r.pontos) AS pontos
       FROM rankingEquipesMirim r
@@ -241,7 +293,6 @@ router.get('/ranking-mirim/:eventoId', async (req, res) => {
       HAVING pontos > 0
       ORDER BY pontos DESC
     `, [eventoId]);
-    console.log('[rankingsRoutes] Ranking Mirim retornado:', ranking);
     res.status(200).json(ranking);
   } catch (error) {
     console.error('[rankingsRoutes] Erro ao consultar ranking mirim:', error);
@@ -249,7 +300,30 @@ router.get('/ranking-mirim/:eventoId', async (req, res) => {
   }
 });
 
+// Rota para obter o ranking geral de equipes mirim por torneio
+router.get('/ranking-mirim-geral/:torneioId', async (req, res) => {
+  try {
+    const { torneioId } = req.params;
+    const [geral] = await db.execute(`
+      SELECT 
+        r.equipes_id,
+        e.nome       AS equipe_nome,
+        SUM(r.pontos) AS pontos_total
+      FROM rankingEquipesMirim r
+      JOIN equipes e ON r.equipes_id = e.id
+      WHERE r.torneios_id = ?
+      GROUP BY r.equipes_id, e.nome
+      HAVING pontos_total > 0
+      ORDER BY pontos_total DESC
+    `, [torneioId]);
+    res.json(geral);
+  } catch (error) {
+    console.error('[rankingsRoutes] Erro ao buscar ranking mirim geral:', error);
+    res.status(500).json({ error: 'Erro ao buscar ranking mirim geral' });
+  }
+});
+
 module.exports = {
   router,
-  atualizarRankingEquipesPorEvento,
+  atualizarRankingEquipesPorEvento, //exporto para atualizar ranking quando algum resultado de prova é inserido
 };

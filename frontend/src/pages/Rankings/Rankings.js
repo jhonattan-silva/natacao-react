@@ -7,12 +7,16 @@ import Cabecalho from '../../componentes/Cabecalho/Cabecalho';
 import Rodape from '../../componentes/Rodape/Rodape';
 
 const Rankings = () => {
-    const torneiosId = 3; //torneio de 2025
+    const torneiosId = 3; // torneio de 2025
 
     const [rankingsEquipes, setRankingsEquipes] = useState([]);
     const [errorEquipes, setErrorEquipes] = useState(null);
     const [rankingsNadadores, setRankingsNadadores] = useState({ masculino: [], feminino: [] });
     const [errorNadadores, setErrorNadadores] = useState(null);
+
+    // novo estado para ranking mirim geral
+    const [rankingMirimGeral, setRankingMirimGeral] = useState([]);
+    const [errorMirimGeral, setErrorMirimGeral] = useState(null);
 
     const fetchRankingsEquipes = async () => {
         try {
@@ -40,39 +44,67 @@ const Rankings = () => {
         }
     };
 
+    // fetch para ranking mirim geral
+    const fetchRankingMirimGeral = async () => {
+        try {
+            const response = await api.get(`/rankings/ranking-mirim-geral/${torneiosId}`);
+            if (!Array.isArray(response.data)) throw new Error('Resposta inesperada');
+            setRankingMirimGeral(response.data);
+            setErrorMirimGeral(null);
+        } catch (err) {
+            console.error('Erro ao buscar ranking mirim geral:', err);
+            setErrorMirimGeral(err.message);
+        }
+    };
+
     useEffect(() => {
         fetchRankingsEquipes();
         fetchRankingsNadadores();
+        fetchRankingMirimGeral(); // carrega também o ranking mirim
     }, []);
 
-    // Adiciona a posição como a primeira coluna nos rankings, considerando empates e ajustando corretamente as posições seguintes
+    /*
+     * Adiciona posição considerando empates:
+     * - Mesma pontuação → mesma posição
+     * - Próxima posição = posição anterior + número de itens avaliados
+     */
     const addPositionToRanking = (ranking) => {
-        let currentPosition = 1;
-        return ranking.map((item, index, array) => {
-            if (index > 0 && item.pontos === array[index - 1].pontos) {
-                return { posicao: "", ...item }; // Deixa a posição em branco para empates
+        let previousScore = null;
+        let currentPosition = 0;
+        let offset = 1;
+        return ranking.map(item => {
+            if (item.pontos !== previousScore) {
+                currentPosition = offset;
+                previousScore = item.pontos;
             }
-            const position = currentPosition;
-            currentPosition += array.slice(index).filter((el) => el.pontos === item.pontos).length; // Incrementa com base no número de itens empatados
-            return { posicao: position, ...item };
+            offset++;
+            return { posicao: currentPosition, ...item };
         });
     };
 
-    // Agrupa os nadadores por categoria para cada gênero
+    // Agrupa nadadores por categoria, incluindo pontos normalizados
     const groupedMasculino = rankingsNadadores.masculino.reduce((acc, curr) => {
-        const cat = curr.categoria || curr.Categoria; // Ajusta para usar o nome correto da propriedade
+        const cat = curr.categoria || curr.Categoria;
         if (!acc[cat]) acc[cat] = [];
-        acc[cat].push({ ...curr, equipe: curr.equipe }); // Inclui a equipe
+        acc[cat].push({
+            ...curr,
+            equipe: curr.equipe,
+            pontos: Number(curr.Pontos || curr.pontos || 0)   // normaliza o campo
+        });
         return acc;
     }, {});
     const groupedFeminino = rankingsNadadores.feminino.reduce((acc, curr) => {
-        const cat = curr.categoria || curr.Categoria; // Ajusta para usar o nome correto da propriedade
+        const cat = curr.categoria || curr.Categoria;
         if (!acc[cat]) acc[cat] = [];
-        acc[cat].push({ ...curr, equipe: curr.equipe }); // Inclui a equipe
+        acc[cat].push({
+            ...curr,
+            equipe: curr.equipe,
+            pontos: Number(curr.Pontos || curr.pontos || 0)   // normaliza o campo
+        });
         return acc;
     }, {});
 
-    // Adiciona posição aos rankings agrupados
+    // Adiciona posição usando o campo pontos normalizado
     Object.keys(groupedMasculino).forEach(cat => {
         groupedMasculino[cat] = addPositionToRanking(groupedMasculino[cat]);
     });
@@ -80,16 +112,54 @@ const Rankings = () => {
         groupedFeminino[cat] = addPositionToRanking(groupedFeminino[cat]);
     });
 
-    // Adiciona posição ao ranking de equipes
-    const rankingsEquipesWithPosition = addPositionToRanking(rankingsEquipes);
+    // Normaliza ranking de equipes, padronizando a key 'pontos'
+    const normalizedRankingsEquipes = rankingsEquipes.map(item => ({
+        equipes_id: item.equipes_id,
+        equipe: item.Equipe || item.equipe,
+        pontos: Number(item.Pontos || item.pontos || 0)
+    }));
+    const rankingsEquipesWithPosition = addPositionToRanking(normalizedRankingsEquipes);
 
-    // Conteúdo da aba para equipes
+    // Normaliza ranking mirim geral
+    const normalizedRankingMirim = rankingMirimGeral.map(item => ({
+        equipes_id: item.equipes_id,
+        equipe: item.equipe_nome,
+        pontos: Number(item.pontos_total || item.pontos || 0)
+    }));
+    const mirimWithPosition = addPositionToRanking(normalizedRankingMirim);
+
+    // Conteúdo da aba para equipes + mirim juntos
     const equipeTabContent = errorEquipes ? (
         <div style={{ color: 'red', marginTop: '10px' }}>
             <strong>Erro:</strong> {errorEquipes}
         </div>
     ) : (
-        rankingsEquipesWithPosition.length > 0 ? <Tabela dados={rankingsEquipesWithPosition} /> : <p>Nenhum dado disponível para o ranking das equipes.</p>
+        <>
+            {/* Ranking normal de equipes */}
+            {rankingsEquipesWithPosition.length > 0 ? (
+                <Tabela
+                    dados={rankingsEquipesWithPosition}
+                    textoExibicao={{ posicao: 'Posição', equipe: 'Equipe', pontos: 'Pontos' }}
+                    colunasOcultas={['equipes_id']} // esconde id interno
+                />
+            ) : (
+                <p>Nenhum dado disponível para o ranking das equipes.</p>
+            )}
+
+            {/* Ranking Mirim Geral abaixo */}
+            <h2 style={{ marginTop: '2rem' }}>Ranking Mirim Geral</h2>
+            {errorMirimGeral ? (
+                <div style={{ color: 'red' }}>{errorMirimGeral}</div>
+            ) : mirimWithPosition.length > 0 ? (
+                <Tabela
+                    dados={mirimWithPosition}
+                    textoExibicao={{ posicao: 'Posição', equipe: 'Equipe', pontos: 'Pontos Mirim' }}
+                    colunasOcultas={['equipes_id']} // esconde id interno
+                />
+            ) : (
+                <p>Nenhum dado mirim disponível.</p>
+            )}
+        </>
     );
 
     // Conteúdo da aba para atletas (nadadores), exibindo por gênero e categoria
@@ -130,13 +200,13 @@ const Rankings = () => {
 
     const tabs = [
         { label: 'Classificação por Equipe', content: equipeTabContent },
-        { label: 'Classificação por Atleta', content: atletaTabContent },
+        { label: 'Classificação por Atleta', content: atletaTabContent }
     ];
 
     return (
         <>
             <Cabecalho />
-            <div className={`${style.rankings}`}>
+            <div className={style.rankings}>
                 <h1>Rankings</h1>
                 <Abas tabs={tabs} />
             </div>

@@ -99,7 +99,7 @@ const Resultados = () => {
       }));
   };
 
-  // Agrupa por nome da prova (sem categoria)
+  // Agrupa por nome da prova E sexo (para evitar sobrescrever masculino/feminino)
   const provasAgrupadas = {};
 
   Object.entries(classificacao).forEach(([chave, atletas]) => {
@@ -113,8 +113,10 @@ const Resultados = () => {
       categoria = match[2].trim();
       sexo = match[3] === 'M' ? 'Masculino' : 'Feminino';
     }
-    if (!provasAgrupadas[nomeProva]) provasAgrupadas[nomeProva] = { sexo, categorias: [] };
-    provasAgrupadas[nomeProva].categorias.push({ categoria, atletas });
+    // Chave composta para evitar sobrescrever masculino/feminino
+    const chaveAgrupada = `${nomeProva} (${sexo})`;
+    if (!provasAgrupadas[chaveAgrupada]) provasAgrupadas[chaveAgrupada] = { nomeProva, sexo, categorias: [] };
+    provasAgrupadas[chaveAgrupada].categorias.push({ categoria, atletas });
   });
 
   const fetchResultadosEClassificacao = async () => {
@@ -305,9 +307,11 @@ const Resultados = () => {
                   )}
                   {Object.entries(provasAgrupadas)
                     .sort((a, b) => a[0].localeCompare(b[0]))
-                    .map(([nomeProva, { sexo, categorias }]) => (
-                      <div key={nomeProva}>
-                        <h2 className={style.titulo}>{nomeProva} {sexo && <span>({sexo})</span>}</h2>
+                    .map(([chaveAgrupada, { nomeProva, sexo, categorias }]) => (
+                      <div key={chaveAgrupada}>
+                        <h2 className={style.titulo}>
+                          {nomeProva} <span>({sexo})</span>
+                        </h2>
                         {categorias.map(({ categoria, atletas }) => {
                           // Recalcula classificação dentro da categoria
                           const atletasOrdenados = [...atletas].sort((a, b) => {
