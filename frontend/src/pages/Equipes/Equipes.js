@@ -7,6 +7,7 @@ import Formulario from '../../componentes/Formulario/Formulario';
 import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import stylesBotao from '../../componentes/Botao/Botao.module.css';
+import Busca from '../../componentes/Busca/Busca';
 
 const Equipes = () => {
   const [equipes, setEquipes] = useState([]);
@@ -20,13 +21,18 @@ const Equipes = () => {
   const [cidadeEquipe, setCidadeEquipe] = useState(''); // Para input de cidade
   const [treinadorEquipe, setTreinadorEquipe] = useState(''); // Para o treinador escolhido
   const [listaTreinadores, setListaTreinadores] = useState([]); // Para listar os treinadores
-
+  const [busca, setBusca] = useState('');
 
   useEffect(() => { // Busca as equipes e treinadores ao carregar a página
     const fetchData = async () => {
       try {
         const response = await api.get(`${apiListaEquipes}`);
-        setEquipes(response.data);
+        // Mapeia Ativo para ativo para garantir consistência
+        const equipesTratadas = response.data.map(e => ({
+          ...e,
+          ativo: e.ativo !== undefined ? e.ativo : (e.Ativo !== undefined ? e.Ativo : 1)
+        }));
+        setEquipes(equipesTratadas);
 
         const responseTreinadores = await api.get(`${apiListaTreinadores}`);
         setListaTreinadores(responseTreinadores.data);
@@ -167,22 +173,33 @@ const Equipes = () => {
     }
   };
 
+  // Filtra equipes pelo nome digitado na busca
+  const equipesFiltradas = equipes.filter(equipe =>
+    equipe.Equipe?.toLowerCase().includes(busca.toLowerCase())
+  );
+
   return (
     <>
       <CabecalhoAdmin />
       <div className={style.equipesPage}>
-        <h2>EQUIPES</h2>
+        <h1>EQUIPES</h1>
+        <div className={style.centralizarBotao}>
+          <Busca valor={busca} aoAlterar={setBusca} placeholder="Buscar equipe pelo nome..." />
+        </div>
         {!formVisivel && (
           <>
             <TabelaEdicao
-              dados={equipes}
+              dados={equipesFiltradas}
               onEdit={handleEdit}
-              colunasOcultas={['id']}
+              colunasOcultas={['id', 'Ativo']}
               funcExtra={(equipe) => (
                 <Botao onClick={() => handleInativar(equipe.id, equipe.ativo)}>
-                  {equipe.ativo ? 'Ativar' : 'Inativar'}
+                  {equipe.ativo ? 'Inativar' : 'Ativar'}
                 </Botao>
               )}
+              renderLinha={(equipe) => ({
+                style: { backgroundColor: equipe.ativo === 0 ? '#f44336' : 'transparent' }
+              })}
             />
             <div className={style.centralizarBotao}>
               <Botao className={stylesBotao.botao} onClick={handleAdicionar}>Adicionar Nova Equipe</Botao>

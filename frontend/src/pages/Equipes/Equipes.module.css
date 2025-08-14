@@ -16,7 +16,9 @@
 }
 
 .centralizarBotao {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0; /* Espaçamento acima e abaixo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+  width: 100%;
 }

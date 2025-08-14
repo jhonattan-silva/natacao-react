@@ -39,7 +39,7 @@ router.post('/cadastrarUsuario', async (req, res) => {
     await connection.beginTransaction(); // Inicia uma transação
 
     // VERIFICAÇÃO SE JÁ NÃO ESTÁ CADASTRADO
-    const [cpfRepetido] = await connection.query('SELECT id FROM usuarios WHERE cpf = ?', [cpf]);
+    const [cpfRepetido] = await connection.query('SELECT id FROM usuarios WHERE cpf = ?', [cpfNumeros]);
     if (cpfRepetido.length > 0) {
       return res.status(400).json({ message: 'CPF já registrado' });
     }

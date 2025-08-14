@@ -9,6 +9,7 @@ import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
 import { validarCPF, validarCelular, aplicarMascaraCPF, aplicarMascaraCelular } from '../../servicos/functions';
 import useAlerta from '../../hooks/useAlerta';
+import Busca from '../../componentes/Busca/Busca';
 
 const Usuarios = () => {
     const { mostrar: mostrarAlerta, componente: AlertaComponente } = useAlerta();
@@ -22,6 +23,7 @@ const Usuarios = () => {
     const [editUserId, setEditUserId] = useState(null); // Armazena o ID do usuário em edição
     const perfilEspecificoId = "2"; // ID 2 = treinador
     const [mostrarListaSuspensa, setMostrarListaSuspensa] = useState(false); // Controla a visibilidade da lista suspensa de equipes
+    const [busca, setBusca] = useState('');
 
 
     /* URLS de API */
@@ -237,6 +239,12 @@ const Usuarios = () => {
         setFormVisivel(false);
     };
 
+    // Filtra usuários pelo nome ou CPF digitado na busca
+    const usuariosFiltrados = usuarios.filter(usuario =>
+        usuario.nome?.toLowerCase().includes(busca.toLowerCase()) ||
+        usuario.cpf?.replace(/\D/g, '').includes(busca.replace(/\D/g, ''))
+    );
+
     const aoSalvar = async (evento) => {
         evento.preventDefault();
 
@@ -286,7 +294,11 @@ const Usuarios = () => {
             await fetchUsuarios(); // Atualiza a lista de usuários
             limparFormulario(); // Reseta o formulário
         } catch (error) {
-            mostrarAlerta('Erro ao salvar o usuário. Verifique os logs.');
+            if (error?.response?.data?.message === 'CPF já registrado') {
+                mostrarAlerta('Erro: CPF já cadastrado.');
+            } else {
+                mostrarAlerta('Erro ao salvar o usuário. Verifique os logs.');
+            }
         }
     };
 
@@ -298,8 +310,11 @@ const Usuarios = () => {
                 <h1>USUÁRIOS</h1>
                 {!formVisivel && (
                     <>
+                        <div className={style.centralizarBotao}>
+                            <Busca valor={busca} aoAlterar={setBusca} placeholder="Buscar usuário por nome ou CPF..." />
+                        </div>
                         <TabelaEdicao 
-                            dados={usuarios} 
+                            dados={usuariosFiltrados} 
                             onEdit={handleEdit} 
                             colunasOcultas={['id', 'ativo' ]}
                             funcExtra={(usuario) => (

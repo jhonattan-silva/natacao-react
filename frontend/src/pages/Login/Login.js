@@ -42,11 +42,11 @@ const Login = () => {
         } catch (err) {
             console.error("Erro ao fazer login:", err);
             if (err.response?.data?.message === 'CPF inválido.') {
-                mostrarAlerta("CPF inválido.");
+                mostrarAlerta("CPF inválido.", 4000);
             } else if (err.response?.data?.message === 'Senha inválida.') {
-                mostrarAlerta("Senha inválida.");
+                mostrarAlerta("Senha inválida.", 4000);
             } else {
-                mostrarAlerta("Erro ao fazer login. Tente novamente.");
+                mostrarAlerta("Erro ao fazer login. Tente novamente.", 4000);
             }
         }
     };

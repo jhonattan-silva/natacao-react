@@ -83,3 +83,11 @@
 .form-container .button-group button:hover {
     background-color: #0056b3;
 }
+
+.centralizarBotao {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+  width: 100%;
+}

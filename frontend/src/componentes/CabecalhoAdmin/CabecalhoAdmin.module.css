@@ -56,6 +56,11 @@ nav {
     transition: transform 0.3s ease-in-out;
 }
 
+nav a {
+    /* ...existing code... */
+    white-space: nowrap; /* Impede quebra de linha dentro do botão/link */
+}
+
 .dadosUsuario {
     font-family: 'Arial', sans-serif; /* Change font */
     font-size: 16px; /* Increase font size */
@@ -250,6 +255,7 @@ nav {
   .center nav a {
     padding: 4px 10px;
     font-size: 0.92rem;
+    white-space: nowrap; /* Garante que cada botão fique inteiro */
   }
 }
 

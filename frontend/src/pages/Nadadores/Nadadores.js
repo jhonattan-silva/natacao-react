@@ -11,6 +11,7 @@ import { useUser } from '../../servicos/UserContext';
 import { validarCPF, aplicarMascaraCPF, aplicarMascaraCelular, validarCelular } from '../../servicos/functions';
 import BotaoTabela from '../../componentes/BotaoTabela/BotaoTabela';
 import useAlerta from '../../hooks/useAlerta'; // Importa o hook useAlerta
+import Busca from '../../componentes/Busca/Busca'; // <-- ADICIONE ESTA LINHA
 
 const Nadadores = () => {
     const { user, loading } = useUser(); // Pega o estado de carregamento também
@@ -34,6 +35,7 @@ const Nadadores = () => {
 
     /* Estado para controlar a visualização de nadadores inativos */
     const [mostrarInativos, setMostrarInativos] = useState(false);
+    const [busca, setBusca] = useState(''); // <-- ADICIONE ESTA LINHA
 
     /* URLS de API */
     const apiListaNadadores = `nadadores/listarNadadores`;
@@ -392,6 +394,9 @@ const Nadadores = () => {
             <CabecalhoAdmin />
             <div className={style.nadadores}>
                 <h2 className={style.titulo}>NADADORES</h2>
+                <div className={style.centralizarBotao}>
+                    <Busca valor={busca} aoAlterar={setBusca} placeholder="Buscar nadador pelo nome..." />
+                </div>
                 {/* Container com classe específica para o checkbox de filtro de inativos */}
                 <div className={style.filtroInativosContainer}>
                     <input 
@@ -407,8 +412,11 @@ const Nadadores = () => {
                         <Botao classBtn={style.btnAdd} onClick={handleAdicionar}>Adicionar Novo Nadador</Botao>
                         <TabelaEdicao
                             dados={[...nadadores]
-                                .filter(n => mostrarInativos ? true : n.ativo === 1)
-                                .sort((a, b) => b.ativo - a.ativo)} // Alteração: filtrar ativos com base no checkbox
+                                .filter(n => 
+                                    (mostrarInativos ? true : n.ativo === 1) &&
+                                    (busca.trim() === '' || n.nome?.toLowerCase().includes(busca.toLowerCase()))
+                                )
+                                .sort((a, b) => b.ativo - a.ativo)}
                             onEdit={handleEdit}
                             colunasOcultas={['id', 'equipes_id', 'ativo', 'categorias_id']}
                             colunasTitulos={{
