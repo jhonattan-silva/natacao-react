@@ -40,7 +40,7 @@ const headerFunction = (currentPage, pageCount, etapa) => {
   };
 };
 
-export const balizamentoPDF = (dados, etapa) => { // Alteração para receber etapa
+export const balizamentoPDF = (dados, etapa) => { 
   // Formatação da data e hora com ajuste de fuso horário (+3 horas)
   const eventDate = etapa?.data ? new Date(etapa.data) : new Date();
   const adjustedDate = new Date(eventDate);
@@ -48,7 +48,7 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
   const formattedDate = eventDate.toLocaleDateString('pt-BR');
   const formattedTime = adjustedDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-  // Formata os dados para exibir no PDF, agora incluindo categoria e equipe
+  // Formata os dados para exibir no PDF, incluindo categoria e equipe
   const formattedData = Object.keys(dados).map(prova => {
     const nomeProvaFormatado = prova.replace(/\bF\b/, 'FEMININO').replace(/\bM\b/, 'MASCULINO'); // Substituição adicionada
     const isRevezamento = nomeProvaFormatado.toLowerCase().includes('x');
@@ -69,7 +69,7 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
 
   // Definição do conteúdo do PDF com informações do evento em maiúsculas
   const docDefinition = {
-    header: (currentPage, pageCount) => headerFunction(currentPage, pageCount, etapa), // Pass etapa to headerFunction
+    header: (currentPage, pageCount) => headerFunction(currentPage, pageCount, etapa), // Passa etapa para headerFunction
     pageMargins: [10, 80, 10, 10], 
     content: [
       // Título padrão
@@ -140,7 +140,7 @@ export const balizamentoPDF = (dados, etapa) => { // Alteração para receber et
       subheader: {
         fontSize: 10, 
         bold: true,
-        margin: [0, 0, 0, 0] //margin = 
+        margin: [0, 0, 0, 0]
       },
       tableHeader: {
         fontSize: 8, 
@@ -213,14 +213,12 @@ export const gerarFilipetas = (dadosBalizamento, evento) => {
             stack: [
               { image: logo, width: 70, alignment: 'center', margin: [0, 0, 0, 2] },
               { text: `Prova: ${nadador.tipoProva}`, style: 'tableHeader', margin: [0, 2, 0, 2] },
-              { text: `Série: ${nadador.bateria} - Raia: ${nadador.raia}`, style: 'tableHeader', margin: [0, 2, 0, 2] },
+              { text: `Série: ${nadador.bateria} - Raia: ${nadador.raia} - Categoria: ${nadador.categoria}`, style: 'tableHeader', margin: [0, 2, 0, 2] },
               { text: `Nadador: ${nadador.nome}`, style: 'tableHeader', margin: [0, 2, 0, 2] },
-              { text: `Categoria: ${nadador.categoria}`, style: 'tableHeader', margin: [0, 2, 0, 2] },
               { text: `Equipe: ${nadador.equipe}`, style: 'tableHeader', margin: [0, 2, 0, 2] },
               { text: 'TEMPO: ______________________', style: 'tableHeader', margin: [0, 2, 0, 2] }
             ],
-            margin: [2, 2, 2, 2],
-            // Alteração: definir a altura fixa para 5,5cm (≈156 pontos)
+            margin: [2, 1, 2, 1],
             fixedHeight: 200 
           }
         ]]
@@ -231,7 +229,7 @@ export const gerarFilipetas = (dadosBalizamento, evento) => {
         hLineColor: () => 'black', // Cor da linha horizontal
         vLineColor: () => 'black'  // Cor da linha vertical
       },
-      // Alteração: definir a largura fixa para 8,5cm (≈241 pontos)
+      // Definida a largura fixa para 8,5cm (≈241 pontos)
       width: 241 
     };    
 
@@ -239,13 +237,12 @@ export const gerarFilipetas = (dadosBalizamento, evento) => {
 
     // Verifica se a coluna atingiu 2 registros
     if (currentColumn.length === 2) {
-      // Aumente o valor de columnGap para aumentar o espaçamento lateral entre as colunas
       currentPage.push({ columnGap: 40, columns: currentColumn, margin: [40, 0, 20, 20] });
       currentColumn = [];
     }
 
-    // Verifica se a página atingiu 5 linhas completas
-    if (currentPage.length === 4) {
+    // 5 linhas por página
+    if (currentPage.length === 5) {
       pages.push({ stack: currentPage, pageBreak: 'after' });
       currentPage = [];
     }
@@ -258,7 +255,6 @@ export const gerarFilipetas = (dadosBalizamento, evento) => {
   // Definição do conteúdo do PDF
   const docDefinition = {
     pageSize: 'A4',
-    // Alteração: diminua o top margin (segundo valor) de 70 para 10
     pageMargins: [10, 40, 10, 10],
     content: pages,
     styles: {
@@ -266,15 +262,15 @@ export const gerarFilipetas = (dadosBalizamento, evento) => {
         bold: true,
         fontSize: 10,
         color: 'black',
-        margin: [0, 5, 0, 5] // Aumentado o margin vertical
+        margin: [0, 2, 0, 2]
       },
       recordBorder: {
-        border: [true, true, true, true], // Ensure borders are applied by default
-        margin: [5, 5, 5, 5] // Add margin to separate records
+        border: [true, true, true, true], 
+        margin: [5, 5, 5, 5] 
       }
     },
     defaultStyle: {
-      border: [true, true, true, true] // Ensure borders are applied by default
+      border: [true, true, true, true] 
     }
   };
 
