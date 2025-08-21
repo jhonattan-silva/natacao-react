@@ -19,21 +19,15 @@ const Noticias = () => {
   const backendOrigin = process.env.REACT_APP_API_URL;
   const getImageUrl = url => {
     if (!url) return '';
-    if (url.startsWith('http')) {
-      if (url.includes('localhost')) {
-        alert('[getImageUrl] URL absoluta apontando para localhost:\n' + url);
-      }
-      return url;
+    // Se vier com localhost, substitui pelo domínio correto e força https
+    if (url.includes('localhost')) {
+      // Remove http://localhost:5000 e coloca o backendOrigin
+      const path = url.replace(/^https?:\/\/localhost:5000/, '');
+      return `${backendOrigin}${path}`;
     }
-    if (backendOrigin) {
-      const prefix = backendOrigin.startsWith('http') ? backendOrigin : `https://${backendOrigin.replace(/^\/+/, '')}`;
-      const fullUrl = `${prefix}${url}`;
-      if (fullUrl.includes('localhost')) {
-        alert('[getImageUrl] URL montada apontando para localhost:\n' + fullUrl);
-      }
-      return fullUrl;
-    }
-    return '';
+    if (url.startsWith('http')) return url;
+    if (backendOrigin) return `${backendOrigin}${url}`;
+    return url;
   };
 
   const handleImageError = (e) => {
