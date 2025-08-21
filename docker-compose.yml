@@ -55,16 +55,16 @@ services:
     depends_on:
       - db
 
-  frontend:
-    build:
-      context: ./frontend
-    volumes:
-      - ./frontend:/app # Monta o código do frontend
-      - /app/node_modules # Evita conflitos de dependências
-    command: sh -c "npm run build"
-    image: lpn2025-frontend
-    depends_on:
-      - backend
+frontend:
+  build:
+    context: ./frontend
+  volumes:
+    - ./frontend:/app
+    - /app/node_modules
+    - ./frontend/build:/app/build   
+  command: sh -c "npm run build"
+  image: lpn2025-frontend
+
 
   db:
     image: mysql:8.0
