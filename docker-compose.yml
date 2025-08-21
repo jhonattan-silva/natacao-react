@@ -55,15 +55,15 @@ services:
     depends_on:
       - db
 
-frontend:
-  build:
-    context: ./frontend
-  volumes:
-    - ./frontend:/app
-    - /app/node_modules
-    - ./frontend/build:/app/build   
-  command: sh -c "npm run build"
-  image: lpn2025-frontend
+  frontend:
+    build:
+      context: ./frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - ./frontend/build:/app/build   
+    command: sh -c "npm run build"
+    image: lpn2025-frontend
 
 
   db:
