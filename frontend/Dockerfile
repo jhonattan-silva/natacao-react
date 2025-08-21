@@ -3,20 +3,23 @@ FROM node:20.12.1-alpine AS build
 
 WORKDIR /app
 
-# Copia apenas os arquivos de manifesto para aproveitar o cache do Docker
+# Copia os manifestos de dependência
 COPY package*.json ./
 
-# Instala as dependências de forma otimizada
+# Instala as dependências
 RUN npm ci
 
-# Copia o restante do código-fonte
+# Copia o código-fonte
 COPY . .
 
-# Executa o build de produção. Os arquivos serão gerados em /app/build
+# COPIA O ARQUIVO .ENV PARA DENTRO DO CONTEXTO DE BUILD
+# Esta é a linha crucial que estava faltando.
+COPY .env ./
+
+# Agora, o build usará a REACT_APP_API_URL do arquivo .env do servidor
 RUN npm run build
 
 # Estágio 2: Criar uma imagem final leve
-# Esta imagem não faz nada, apenas contém a pasta 'build' que será copiada.
 FROM alpine:latest
 
 # Copia a pasta 'build' do estágio anterior para a imagem final
