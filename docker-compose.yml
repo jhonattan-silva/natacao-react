@@ -1,20 +1,15 @@
 # A versão é obsoleta, então a removemos para limpar os avisos.
 services:
   nginx:
-    # O build agora usa o Dockerfile corrigido da pasta ./nginx
     build: ./nginx
     container_name: nginx
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      # Os volumes de configuração não são mais necessários aqui,
-      # pois o build da imagem já copia o nginx.prod.conf.
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-      # Monta o volume com os arquivos do frontend construídos
       - frontend_build:/usr/share/nginx/html
-      # Monta os uploads do backend
       - ./backend/uploads:/usr/share/nginx/html/uploads
     depends_on:
       - backend
@@ -29,8 +24,17 @@ services:
   backend:
     build: ./backend
     image: ${DOCKER_USERNAME:-default_user}/backend:latest
+    # CORREÇÃO AQUI: A seção 'environment' precisa ser um mapa de chave-valor.
     environment:
-      # ... suas variáveis de ambiente ...
+      NODE_ENV: ${NODE_ENV:-production}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_DB_HOST: db
+      MYSQL_DB_PORT: 3306
+      JWT_SECRET: ${JWT_SECRET}
+      API_URL: ${API_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./backend/uploads:/app/uploads
@@ -41,8 +45,6 @@ services:
       - db
 
   frontend:
-    # Este serviço apenas constrói a imagem e popula o volume.
-    # Ele não precisa ficar rodando.
     build: ./frontend
     image: lpn2025-frontend-image
     volumes:
@@ -51,16 +53,14 @@ services:
   db:
     image: mysql:8.0
     environment:
-      # ... suas variáveis de ambiente ...
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
     volumes:
-      # O volume 'db_data' é montado aqui
       - db_data:/var/lib/mysql
       - ./backend/config/my.cnf:/etc/mysql/conf.d/my.cnf
 
-# Declaração de volumes
 volumes:
   frontend_build:
-  # PROTEÇÃO DO BANCO DE DADOS:
-  # Declarar o volume como externo impede que 'docker-compose down --volumes' o remova.
   db_data:
+    # Protege o volume do banco de dados contra exclusão acidental
     external: true
