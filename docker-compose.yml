@@ -1,9 +1,8 @@
+version: '3.8'
+
 services:
   nginx:
-    build: 
-      context: ./nginx
-      dockerfile: Dockerfile
-    image: nginx:alpine
+    build: ./nginx
     container_name: nginx
     ports:
       - "80:80"
@@ -12,8 +11,10 @@ services:
       - ./nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-      - ./frontend/build:/usr/share/nginx/html
-      - ./backend/uploads:/usr/share/nginx/html/uploads  # <--- ADICIONE ESTA LINHA
+      # Monta o volume com os arquivos do frontend no diretório do Nginx
+      - frontend_build:/usr/share/nginx/html
+      # Monta os uploads do backend para serem servidos pelo Nginx
+      - ./backend/uploads:/usr/share/nginx/html/uploads
     depends_on:
       - backend
       - frontend
@@ -28,14 +29,10 @@ services:
       /bin/sh -c ' if [ ! -f /etc/letsencrypt/live/ligapaulistadenatacao.com.br/fullchain.pem ]; then
         certbot certonly --webroot -w /var/www/certbot --agree-tos -n --email jhonattanwcs@hotmail.com -d ligapaulistadenatacao.com.br -d www.ligapaulistadenatacao.com.br;
       fi; while :; do certbot renew; sleep 12h; done;'
-    depends_on:
-      - nginx
-
 
   backend:
     image: ${DOCKER_USERNAME:-default_user}/backend:latest
-    build:
-      context: ./backend
+    build: ./backend
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       MYSQL_USER: ${MYSQL_USER}
@@ -47,8 +44,8 @@ services:
       API_URL: ${API_URL}
       FRONTEND_URL: ${FRONTEND_URL}
     volumes:
-      - ./certbot/conf:/etc/letsencrypt # Monta certificados SSL
-      - ./backend/uploads:/app/uploads   # <--- ADICIONE ESTA LINHA
+      - ./certbot/conf:/etc/letsencrypt
+      - ./backend/uploads:/app/uploads
     ports:
       - "5000:5000"
     command: sh -c "./wait-for.sh db 3306 && npm start"
@@ -56,15 +53,11 @@ services:
       - db
 
   frontend:
-    build:
-      context: ./frontend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - ./frontend/build:/app/build   
-    command: sh -c "npm run build"
+    build: ./frontend
     image: lpn2025-frontend
-
+    # Este serviço agora usa o volume nomeado para expor sua pasta de build
+    volumes:
+      - frontend_build:/app/build
 
   db:
     image: mysql:8.0
@@ -75,6 +68,7 @@ services:
       - db_data:/var/lib/mysql
       - ./backend/config/my.cnf:/etc/mysql/conf.d/my.cnf
 
+# Volumes nomeados que permitem a comunicação entre contêineres
 volumes:
   db_data:
   frontend_build:
