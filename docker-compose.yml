@@ -13,6 +13,7 @@ services:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
       - ./frontend/build:/usr/share/nginx/html
+      - ./backend/uploads:/usr/share/nginx/html/uploads  # <--- ADICIONE ESTA LINHA
     depends_on:
       - backend
       - frontend
@@ -47,6 +48,7 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
     volumes:
       - ./certbot/conf:/etc/letsencrypt # Monta certificados SSL
+      - ./backend/uploads:/app/uploads   # <--- ADICIONE ESTA LINHA
     ports:
       - "5000:5000"
     command: sh -c "./wait-for.sh db 3306 && npm start"

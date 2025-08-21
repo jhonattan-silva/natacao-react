@@ -10,12 +10,12 @@ import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
 import { useUser } from '../../servicos/UserContext';
 import { validarCPF, aplicarMascaraCPF, aplicarMascaraCelular, validarCelular } from '../../servicos/functions';
 import BotaoTabela from '../../componentes/BotaoTabela/BotaoTabela';
-import useAlerta from '../../hooks/useAlerta'; // Importa o hook useAlerta
-import Busca from '../../componentes/Busca/Busca'; // <-- ADICIONE ESTA LINHA
+import useAlerta from '../../hooks/useAlerta';
+import Busca from '../../componentes/Busca/Busca'; 
 
 const Nadadores = () => {
     const { user, loading } = useUser(); // Pega o estado de carregamento também
-    const { mostrar: mostrarAlerta, componente: alertaComponente } = useAlerta(); // Usa o hook useAlerta
+    const { mostrar: mostrarAlerta, componente: alertaComponente, confirmar: confirmarAlerta } = useAlerta(); // Usa o hook useAlerta
     const [nadadores, setNadadores] = useState([]); //controle de nadadores
     const [equipes, setEquipes] = useState(''); // Controle de equipes listadas
     const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
@@ -112,28 +112,28 @@ const Nadadores = () => {
             setFormVisivel(true);
 
         } catch (error) {
-            mostrarAlerta('Erro ao editar nadador: ' + error.message); // Substitui alert pelo hook
+            mostrarAlerta('Erro ao editar nadador: ' + error.message); 
         }
     };
 
     //Botão inativa cadastro
-    const handleInativar = async (id, ativo) => {
-        try {    
-            // Converter `ativo` para número, caso esteja vindo como string
-            const ativoNumero = Number(ativo);
-            const novoStatus = ativoNumero === 1 ? 0 : 1;
-        
-            const confirmacao = window.confirm(
-                `Tem certeza que deseja ${ativoNumero === 1 ? "inativar" : "ativar"} este nadador?`
-            );
-    
-            if (!confirmacao) return;
-            await api.put(`${apiInativarNadador}/${id}`, { ativo: novoStatus });    
-            mostrarAlerta(`Nadador ${ativoNumero === 1 ? "inativado" : "ativado"} com sucesso!`); // Substitui alert pelo hook
-            setTimeout(() => fetchNadadores(user?.equipeId), 500);
-        } catch (error) {
-            mostrarAlerta("Erro ao alterar status do nadador."); // Substitui alert pelo hook
-        }
+    const handleInativar = (id, ativo) => {
+        // Converter `ativo` para número, caso esteja vindo como string
+        const ativoNumero = Number(ativo);
+        const novoStatus = ativoNumero === 1 ? 0 : 1;
+
+        confirmarAlerta(
+            `Tem certeza que deseja ${ativoNumero === 1 ? "inativar" : "ativar"} este nadador?`,
+            async () => {
+                try {
+                    await api.put(`${apiInativarNadador}/${id}`, { ativo: novoStatus });
+                    mostrarAlerta(`Nadador ${ativoNumero === 1 ? "inativado" : "ativado"} com sucesso!`);
+                    setTimeout(() => fetchNadadores(user?.equipeId), 500);
+                } catch (error) {
+                    mostrarAlerta("Erro ao alterar status do nadador.");
+                }
+            }
+        );
     };
     
     
@@ -157,9 +157,7 @@ const Nadadores = () => {
             await fetchNadadores(user?.equipeId);
             
             // Esconde o formulário após salvar
-            setFormVisivel(false);
-            
-            // Exibe mensagem de sucesso
+            setFormVisivel(false);       
             mostrarAlerta('Nadador salvo com sucesso!');
             
             return true; // Indica que a operação foi bem-sucedida
@@ -195,10 +193,10 @@ const Nadadores = () => {
             setFormVisivel(false); // Esconde o formulário após salvar
         } catch (error) {
             if (error.response && error.response.status === 401) {
-                mostrarAlerta('Sessão expirada. Por favor, faça login novamente.'); // Substitui alert pelo hook
+                mostrarAlerta('Sessão expirada. Por favor, faça login novamente.'); 
                 window.location.href = '/login'; // Redireciona para a página de login
             } else {
-                mostrarAlerta('Erro ao atualizar Nadador: ' + error.message); // Substitui alert pelo hook
+                mostrarAlerta('Erro ao atualizar Nadador: ' + error.message); 
             }
         }
     };
@@ -330,7 +328,7 @@ const Nadadores = () => {
 
         // Validações
         if (!nomeNadador || !cpf || !dataNasc || !celular || !sexo) {
-            mostrarAlerta('Por favor, preencha todos os campos obrigatórios.'); // Substitui alert pelo hook
+            mostrarAlerta('Por favor, preencha todos os campos obrigatórios.'); 
             return; // Interrompe o processo de salvamento se houver campos vazios
         }
 
@@ -341,18 +339,18 @@ const Nadadores = () => {
 
         // Validação do CPF
         if (!validarCPF(cpf)) {
-            mostrarAlerta('CPF inválido. Por favor, insira um CPF válido.'); // Substitui alert pelo hook
+            mostrarAlerta('CPF inválido. Por favor, insira um CPF válido.'); 
             return;
         }
 
         if (!validarCelular(celular)) {
-            mostrarAlerta('Celular/Telefone Inválido'); // Substitui alert pelo hook
+            mostrarAlerta('Celular/Telefone Inválido'); 
             return;
         }
 
         // Verifica se `equipes` está definido
         if (!equipes) {
-            mostrarAlerta('Por favor, selecione uma equipe.'); // Substitui alert pelo hook
+            mostrarAlerta('Por favor, selecione uma equipe.'); 
             return;
         }
 
@@ -438,8 +436,6 @@ const Nadadores = () => {
                                 </BotaoTabela>
                             )}
                             renderLinha={(nadador) => ({
-                                // Modificando para usar uma classe em vez de estilo inline
-                                // para permitir que o hover funcione adequadamente
                                 className: nadador.ativo === 0 ? 'inativo' : '',
                                 style: { 
                                     backgroundColor: nadador.ativo === 0 ? '#ffcccc' : null 

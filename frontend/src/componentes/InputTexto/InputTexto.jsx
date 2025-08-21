@@ -13,6 +13,7 @@ import style from './InputTexto.module.css';
  * @param {string} props.placeholder - Texto exibido como dica no campo.
  * @param {string} props.label - Rótulo exibido acima do campo.
  * @param {function} [props.onBlur] - Função chamada ao perder o foco (onBlur).
+ * @param {boolean} [props.disabled] - Define se o campo está desabilitado.
  * @returns {JSX.Element} Componente de input de texto estilizado.
  */
 const InputTexto = (props) => {
@@ -31,6 +32,8 @@ const InputTexto = (props) => {
                 onBlur={props.onBlur}
                 required={props.obrigatorio}
                 placeholder={props.placeholder}
+                disabled={props.disabled} // adiciona disabled se passado via props
+                readOnly={props.disabled} // reforça que não pode ser editado
             />
         </div>
     );

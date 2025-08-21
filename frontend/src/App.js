@@ -31,6 +31,7 @@ const App = () => {
                 <Route path="/balizamentos" element={<Balizamentos />}/>
                 <Route path="/balizamentos/:eventoId" element={<Balizamentos />} /> {/* alterado de :provaId para :eventoId */}
                 <Route path="/noticias" element={<Noticias />} />
+                <Route path="/noticias/:year/:slug" element={<Noticias />} /> {/* Nova rota para detalhe da notícia com ano e slug */}
                 <Route path="/noticias/:id" element={<Noticias />} /> {/* Rota para detalhes de uma notícia específica */}
 
                 {/* Rotas protegidas */}

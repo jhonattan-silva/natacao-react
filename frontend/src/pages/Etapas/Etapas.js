@@ -9,7 +9,7 @@ import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
-import useAlerta from '../../hooks/useAlerta'; // Importa o hook useAlerta
+import useAlerta from '../../hooks/useAlerta'; 
 
 const Etapas = () => {
     const [etapas, setEtapas] = useState([]);
@@ -17,12 +17,15 @@ const Etapas = () => {
     const [etapaEditando, setEtapaEditando] = useState(null); //estado para edição
     const [provasCarregadas, setProvasCarregadas] = useState(false); //estado para carregamento de provas no editar
     const [raias, setRaias] = useState(''); //estado para quantidade de raias
-    const [anoSelecionado, setAnoSelecionado] = useState('2025'); // Estado para o ano selecionado
+    const currentYear = new Date().getFullYear();
+    const [anosDisponiveis, setAnosDisponiveis] = useState([currentYear]);
+    const [anoSelecionado, setAnoSelecionado] = useState(currentYear.toString());
+    const [anoEvento, setAnoEvento] = useState(currentYear.toString()); // <-- sempre começa com o ano atual
     const [horaEtapa, setHoraEtapa] = useState(''); // Novo estado para o horário do evento
     const [etapaAtual, setEtapaAtual] = useState(1); // Novo estado para controlar a etapa atual
     const [provasSelecionadas, setProvasSelecionadas] = useState([]); // Novo estado para armazenar as provas selecionadas
     const ordemInputRefs = useRef({}); //ref para não perder o foco do input de ordem depois de alterar qualquer caracter
-    const { mostrar: mostrarAlerta, componente: alertaComponente } = useAlerta(); // Usa o hook useAlerta
+    const { mostrar: mostrarAlerta, componente: alertaComponente, confirmar: confirmarAlerta } = useAlerta(); // Usa o hook useAlerta
 
     const apiListaEtapas = `/etapas/listarEtapas`;
     const apiCadastraEtapas = `/etapas/cadastrarEtapas`;
@@ -41,6 +44,28 @@ const Etapas = () => {
         fecharInscricao: 'Fechar Inscrição',
         gerarPontuacao: 'Gerar Pontuação'
     };
+
+    // Buscar anos disponíveis ao montar o componente
+    useEffect(() => {
+        const fetchAnos = async () => {
+            try {
+                const response = await api.get('/etapas/listarEtapas');
+                if (response.data && response.data.length > 0) {
+                    const anos = Array.from(
+                        new Set(response.data.map(etapa => new Date(etapa.data).getFullYear()))
+                    ).sort((a, b) => b - a);
+                    setAnosDisponiveis(anos);
+                    // Se o ano atual não existir, seleciona o mais recente
+                    if (!anos.includes(currentYear)) {
+                        setAnoSelecionado(anos[0].toString());
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao buscar anos disponíveis:', error);
+            }
+        };
+        fetchAnos();
+    }, []);
 
     useEffect(() => {
         fetchData(anoSelecionado); // Chama a função `fetchData` ao montar o componente
@@ -108,6 +133,8 @@ const Etapas = () => {
             setSelecionadasFeminino(selecionadasFeminino);
             setSelecionadasAmbos(selecionadasAmbos);
 
+            setAnoEvento(new Date(etapa.data).getFullYear().toString());
+
             setFormVisivel(true);
         } catch (error) {
             console.error('Erro ao carregar etapa para edição:', error);
@@ -115,21 +142,27 @@ const Etapas = () => {
     };
 
     const handleExcluir = async (id) => {
-        if (window.confirm("Tem certeza que deseja excluir esta etapa?")) {
-            try {
-                await api.delete(`${apiExcluiEtapa}/${id}`);
-                mostrarAlerta("Etapa excluída com sucesso!"); // Usa o hook para exibir o alerta
-                fetchData(); // Atualiza a lista após exclusão
-            } catch (error) {
-                console.error("Erro ao excluir etapa:", error);
-                mostrarAlerta("Não foi possível excluir a etapa."); // Usa o hook para exibir o alerta
+        confirmarAlerta(
+            "Tem certeza que deseja excluir esta etapa?",
+            async () => {
+                try {
+                    await api.delete(`${apiExcluiEtapa}/${id}`);
+                    mostrarAlerta("Etapa excluída com sucesso!");
+                    fetchData(anoSelecionado);
+                } catch (error) {
+                    console.error("Erro ao excluir etapa:", error);
+                    mostrarAlerta("Não foi possível excluir a etapa.");
+                }
             }
-        }
+        );
     };
 
     const handleAdicionar = () => {
-        setEtapaEditando(null); //como é nova editando é null
-        limparFormulario();//garante o form limpo
+        setEtapaEditando(null);
+        limparFormulario();
+        // Seleciona automaticamente o torneio do ano atual, se existir
+        const torneioAtual = listaTorneios.find(t => t.nome.includes(currentYear.toString()));
+        setTorneioEtapa(torneioAtual ? torneioAtual.id : '');
         setFormVisivel(true);
     };
 
@@ -200,7 +233,7 @@ const Etapas = () => {
             placeholder: "DD/MM/AAAA",
             valor: dataEtapa,
             aoAlterar: (valor) => {
-                let valorFormatado = valor.replace(/\D/g, ""); // Remove tudo que não for número
+                let valorFormatado = valor.replace(/\D/g, ""); // Removes tudo que não é número
 
                 let dia = valorFormatado.substring(0, 2);
                 let mes = valorFormatado.substring(2, 4);
@@ -230,7 +263,7 @@ const Etapas = () => {
         },
         {
             obrigatorio: true,
-            tipo: "time", // Novo campo para horário
+            tipo: "time", // time funciona bem no mobile
             label: "Horário do Evento",
             valor: horaEtapa,
             aoAlterar: setHoraEtapa
@@ -365,11 +398,11 @@ const Etapas = () => {
     const abreInscricao = async (id, inscricaoAberta) => {
         try {
             await api.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota para abrir/fechar inscrição
-            mostrarAlerta(`Inscrição ${inscricaoAberta ? 'fechada' : 'aberta'} com sucesso!`); // Usa o hook
+            mostrarAlerta(`Inscrição ${inscricaoAberta ? 'fechada' : 'aberta'} com sucesso!`);
             fetchData(anoSelecionado); // Recarrega a lista de etapas do backend
         } catch (error) {
             console.error('Erro ao alterar inscrição:', error);
-            mostrarAlerta('Erro ao alterar inscrição.'); // Usa o hook
+            mostrarAlerta('Erro ao alterar inscrição.'); 
         }
     };
 
@@ -415,7 +448,7 @@ const Etapas = () => {
                     newProvas[index].ordem = ordemCorrigida;
                 } else {
                     mostrarAlerta(`A ordem deve ser um número entre 1 e ${newProvas.length}.`);
-                    return newProvas; // Ignora valores inválidos
+                    return newProvas;
                 }
             }
 
@@ -439,15 +472,31 @@ const Etapas = () => {
             return;
         }
 
+        // Validação do torneio
+        if (!torneioEtapa || torneioEtapa === '' || torneioEtapa === undefined) {
+            mostrarAlerta('Por favor, selecione um torneio.');
+            return;
+        }
+
+        // Validação da quantidade de raias
+        if (!raias || isNaN(raias) || parseInt(raias, 10) <= 0) {
+            mostrarAlerta('Por favor, selecione a quantidade de raias.');
+            return;
+        }
+
         try {
             // Criando o objeto de envio com TODOS os dados
+            const dataSplit = dataEtapa.split('/');
+            const dataFormatada = dataSplit.length === 3
+                ? `${anoEvento}-${dataSplit[1].padStart(2, '0')}-${dataSplit[0].padStart(2, '0')}`
+                : '';
             const etapaCompleta = {
                 nome: nomeEtapa,
-                data: `${dataEtapa.split('/').reverse().join('-')} ${horaEtapa}:00`, // Convertendo formato DD/MM/AAAA para AAAA-MM-DD
+                data: `${dataFormatada} ${horaEtapa}:00`,
                 cidade: cidadeEtapa,
                 sede: sedeEtapa,
                 endereco: enderecoEtapa,
-                torneios_id: torneioEtapa,
+                torneios_id: parseInt(torneioEtapa, 10),
                 quantidade_raias: parseInt(raias, 10),
                 provas: provasSelecionadas.map(prova => ({
                     provas_id: prova.id,
@@ -478,9 +527,9 @@ const Etapas = () => {
 
     const gerarPontuacao = async (id) => {
         try {
-            mostrarAlerta(`Pontuação gerada para a etapa ${id}!`); // Usa o hook
+            mostrarAlerta(`Pontuação gerada para a etapa ${id}!`);
         } catch (error) {
-            mostrarAlerta('Erro ao gerar pontuação.'); // Usa o hook
+            mostrarAlerta('Erro ao gerar pontuação.'); 
         }
     };
 
@@ -493,22 +542,31 @@ const Etapas = () => {
                 <h1>ETAPAS</h1>
                 {!formVisivel && (
                     <>
+                        {/* ListaSuspensa para seleção de ano */}
                         <ListaSuspensa
-                            textoPlaceholder={"Escolha o torneio"}
-                            opcoes={listaTorneios} // Passa a lista de torneios diretamente
-                            onChange={torneioSelecionado}
+                            textoPlaceholder="Escolha o ano"
+                            opcoes={anosDisponiveis.map(ano => ({ id: ano.toString(), nome: ano.toString() }))}
+                            onChange={setAnoSelecionado}
                             obrigatorio={true}
-                            selectId="id" // Campo que será usado como valor do `option`
-                            selectExibicao="nome" // Campo que será usado como texto visível no `option`
+                            selectId="id"
+                            selectExibicao="nome"
+                            valorSelecionado={anoSelecionado}
                         />
                         <TabelaEdicao
-                            dados={etapas.map(etapa => ({
-                                ...etapa,
-                                inscricao_aberta_txt: formatBoolean(etapa.inscricao_aberta),
-                                teve_balizamento: formatBoolean(etapa.teve_balizamento),
-                                teve_resultados: formatBoolean(etapa.teve_resultados),
-                                classificacao_finalizada: formatBoolean(etapa.classificacao_finalizada),
-                            }))}
+                            dados={
+                                [...etapas].sort((a, b) => {
+                                    // Ordena por data (mais antiga primeiro)
+                                    const dataA = new Date(a.data.split('/').reverse().join('-'));
+                                    const dataB = new Date(b.data.split('/').reverse().join('-'));
+                                    return dataA - dataB;
+                                }).map(etapa => ({
+                                    ...etapa,
+                                    inscricao_aberta_txt: formatBoolean(etapa.inscricao_aberta),
+                                    teve_balizamento: formatBoolean(etapa.teve_balizamento),
+                                    teve_resultados: formatBoolean(etapa.teve_resultados),
+                                    classificacao_finalizada: formatBoolean(etapa.classificacao_finalizada),
+                                }))
+                            }
                             colunasOcultas={['id', 'torneios_id', 'observacoes', 'cidade', 'sede', 'endereco', 'quantidade_raias', 'inscricao_aberta']}
                             colunasTitulos={{
                                 nome: 'Nome',
@@ -540,6 +598,16 @@ const Etapas = () => {
                 )}
                 {formVisivel && (
                     <div className={style.cadastroContainer}>
+                        {/* Apenas a ListaSuspensa de torneio deve aparecer aqui */}
+                        <ListaSuspensa
+                            textoPlaceholder={"Escolha o torneio"}
+                            opcoes={listaTorneios}
+                            onChange={setTorneioEtapa}
+                            obrigatorio={true}
+                            selectId="id"
+                            selectExibicao="nome"
+                            valorSelecionado={torneioEtapa}
+                        />
                         {etapaAtual === 1 && (
                             <>
                                 <Formulario inputs={inputs} aoSalvar={handleSalvar} />

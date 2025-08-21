@@ -1,0 +1,136 @@
+.container {
+  /* Fundo branco semi-transparente para destacar sobre o gradient */
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  color: #333; /* Texto escuro para boa legibilidade */
+}
+
+.backButton {
+  margin-top: 20px;
+}
+
+.titulo {
+  font-size: 2.5em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #002F52; /* Azul escuro, coerente com o fundo */
+}
+
+.subtitulo {
+  font-size: 1.5em;
+  font-weight: normal;
+  color: #326589; /* Azul suave */
+  margin-bottom: 20px;
+}
+
+.mainImageWrapper {
+  width: 100%;
+  height: 400px;  /* Tamanho fixo conforme resolução; pode ajustar breakpoints com media queries */
+  overflow: hidden;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.mainImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.texto {
+  margin: 30px auto 40px auto; /* espaços maiores acima e abaixo do texto */
+  max-width: 800px;         /* largura máxima para limitar o texto */
+  color: #333;              /* cor para alto contraste */
+  white-space: pre-wrap;    /* preserva quebras de linha e permite wrap */
+  word-break: break-word;   /* quebra palavras longas */
+  line-height: 1.8;         /* melhora a legibilidade */
+  font-size: 1.2em;         /* aumenta o tamanho da fonte */
+}
+
+.galeria {
+  margin-top: 20px;
+  padding: 10px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+}
+
+.galeriaTitulo {
+  margin-bottom: 10px;
+}
+
+.galeriaDestaque {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.galeriaMiniaturas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.galeriaItem {
+  width: calc(33.33% - 10px);
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+}
+
+.modalContent img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+}
+
+.closeButton {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.pageWrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+}

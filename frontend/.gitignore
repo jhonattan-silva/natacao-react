@@ -45,3 +45,7 @@ certificados/
 docker-compose.override.yml
 nginx.dev.conf
 certbot/
+
+# Ignore tudo dentro de uploads/imagens, mas mantem a pasta
+uploads/imagens/*
+!uploads/imagens/.gitkeep

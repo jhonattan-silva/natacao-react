@@ -112,7 +112,7 @@ const usuariosRoutes = require('./routes/usuariosRoutes');
 const nadadoresRoutes = require('./routes/nadadoresRoutes');
 const inscricaoRoutes = require('./routes/inscricaoRoutes');
 const rankingsRoutes = require('./routes/rankingsRoutes');
-const uploadRoutes = require('./uploads'); // Rotas de upload
+const uploadsRoutes = require('./routes/uploadsRoutes'); // Nova rota de uploads
 const migracao = require('./routes/migracaoRoute');
 const resultadosEntrada = require('./routes/resultadosEntradaRoutes');
 const resultadosRoutes = require('./routes/resultadosRoutes');
@@ -131,7 +131,7 @@ app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/nadadores', nadadoresRoutes);
 app.use('/api/inscricao', inscricaoRoutes);
 app.use('/api/rankings', rankingsRoutes.router); // Corrigido para usar o router do rankingsRoutes
-app.use(uploadRoutes);
+app.use('/api/upload', uploadsRoutes); // Usando a nova rota de uploads
 app.use('/api/migracao', migracao);
 app.use('/api/resultadosEntrada', resultadosEntrada);
 app.use('/api/resultados', resultadosRoutes.router); // Corrigido para usar o router do resultadosRoutes
@@ -139,8 +139,29 @@ app.use('/api/pontuacoes', pontuacoesRoutes.router); // Corrigido para usar o ro
 app.use('/api/estatisticas', estatisticasRoutes);
 app.use('/api/balizamentoExibicao', balizamentoExibicaoRoutes);
 app.use('/api/balizamentosAjuste', balizamentosAjusteRoutes);
-app.use('/api/noticias', noticiasRoutes);
+app.use('/api/news', noticiasRoutes);
 
+// Garante que o Nginx sirva /uploads/ diretamente para o frontend
+// Substitui a chamada direta a express.static por middleware que adiciona headers CORS
+// Melhorar o middleware para servir arquivos estáticos com CORS mais permissivo
+app.use('/uploads', (req, res, next) => {
+  // Headers CORS mais permissivos para imagens
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.header('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+}, express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res, path) => {
+    // Headers adicionais para compatibilidade
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}));
 
 // Servir o frontend em produção
 if (process.env.NODE_ENV === 'production') {

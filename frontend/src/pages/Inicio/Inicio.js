@@ -13,6 +13,8 @@ const formatarParaMaps = (endereco, cidade) => {
 
 const Inicio = () => {
     const [etapas, setEtapas] = useState([]);
+    const [noticias, setNoticias] = useState([]); // Estado para notícias
+    const backendOrigin = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
     useEffect(() => {
         const fetchEtapas = async () => {
@@ -27,10 +29,40 @@ const Inicio = () => {
         fetchEtapas();
     }, []);
 
+    // Buscar notícias para o carrossel
+    useEffect(() => {
+        const fetchNoticias = async () => {
+            try {
+                const response = await api.get('/news');
+                setNoticias(response.data);
+            } catch (error) {
+                console.error('Erro ao carregar notícias:', error);
+            }
+        };
+        fetchNoticias();
+    }, []);
+
+    // Seleciona os três primeiros itens (mais recentes)
+    const newsSlides = noticias.slice(0, 3);
+    // Mapeia as notícias para o formato esperado pelo Carrossel
+    const slidesData = newsSlides.map(news => ({
+        image: news.imagem.startsWith('http')
+            ? news.imagem
+            : `${backendOrigin}${news.imagem}`,
+        title: news.titulo,
+        subtitle: news.resumo,
+        link: `/noticias/${new Date(news.data).getFullYear()}/${news.slug}`
+    }));
+
     return (
         <div>
             <Cabecalho />
-            <Carrossel />
+            {/* Carrossel para Notícias */}
+            {slidesData.length > 0 && (
+                <section className={style.noticiasCarrossel}>
+                    <Carrossel slides={slidesData} autoSlideTime={15000} />
+                </section>
+            )}
             <section className={style.container}>
                 <h1>ETAPAS 2025</h1>
                 <div className={style.cardsContainer}>
