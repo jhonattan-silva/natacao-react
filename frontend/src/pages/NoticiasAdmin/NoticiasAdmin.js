@@ -138,7 +138,7 @@ const FormNoticia = ({ noticiaInicial = {}, onSalvo, onCancelar }) => {
   };
 
   // helper para transformar caminhos relativos em URLs acessíveis (dev/prod)
-  const backendOrigin = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const backendOrigin = process.env.REACT_APP_API_URL;
   const getImageUrl = url => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
