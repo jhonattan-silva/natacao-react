@@ -15,7 +15,8 @@ const Noticias = () => {
   const [loading, setLoading] = useState(true);
   const [modalImg, setModalImg] = useState('');
   
-  const backendOrigin = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  //apenas a variável de ambiente, sem fallback para localhost
+  const backendOrigin = process.env.REACT_APP_API_URL;
   const getImageUrl = url => {
     if (!url) return '';
     if (url.startsWith('http')) return url;

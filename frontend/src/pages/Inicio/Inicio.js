@@ -14,7 +14,7 @@ const formatarParaMaps = (endereco, cidade) => {
 const Inicio = () => {
     const [etapas, setEtapas] = useState([]);
     const [noticias, setNoticias] = useState([]); // Estado para notícias
-    const backendOrigin = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const backendOrigin = process.env.REACT_APP_API_URL;
 
     useEffect(() => {
         const fetchEtapas = async () => {
