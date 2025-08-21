@@ -70,28 +70,38 @@ const CabecalhoAdmin = () => {
             <div className={style.center}>
                 <nav className={menuOpen ? style.open : ''}>
                     <span className={style.closeButton} onClick={toggleMenu}>&times;</span>
-
                     <CabecalhoLink url='../Nadadores' onClick={() => { handleLinkClick('../Nadadores'); setMenuOpen(false); }}>Nadadores</CabecalhoLink>
                     <CabecalhoLink url='../Inscricao' onClick={() => { handleLinkClick('../Inscricao'); setMenuOpen(false); }}>Inscrição</CabecalhoLink>
-
                     {userProfile.includes('admin') && (
                         <>
                             <CabecalhoLink url='../Etapas' onClick={() => { handleLinkClick('../Etapas'); setMenuOpen(false); }}>Etapas</CabecalhoLink>
                             <CabecalhoLink url='../Usuarios' onClick={() => { handleLinkClick('../Usuarios'); setMenuOpen(false); }}>Usuários</CabecalhoLink>
                         </>
                     )}
-
                     <CabecalhoLink url='../Admin' onClick={() => { handleLinkClick('../Admin'); setMenuOpen(false); }}>ADMIN</CabecalhoLink>
+                    {/* Usuário/equipe/sair dentro do sanduíche no mobile */}
+                    {menuOpen && (
+                        <div className={style.mobileUserInfo}>
+                            <div className={style.dadosUsuario}>
+                                {nome && <p>{nome}</p>}
+                                {equipe && <p>{equipe}</p>}
+                            </div>
+                            <button onClick={handleLogout} className={style.logoutButton}>Sair</button>
+                        </div>
+                    )}
                 </nav>
             </div>
 
-            <div className={style.userInfo}>
-                <div className={style.dadosUsuario}>
-                    {nome && <p>{nome}</p>}
-                    {equipe && <p>{equipe}</p>}
+            {/* Usuário/equipe/sair fora do sanduíche no desktop */}
+            {!menuOpen && (
+                <div className={style.userInfo}>
+                    <div className={style.dadosUsuario}>
+                        {nome && <p>{nome}</p>}
+                        {equipe && <p>{equipe}</p>}
+                    </div>
+                    <button onClick={handleLogout} className={style.logoutButton}>Sair</button>
                 </div>
-                <button onClick={handleLogout} className={style.logoutButton}>Sair</button>
-            </div>
+            )}
 
             <div className={style.right}>
                 {!menuOpen && <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>}

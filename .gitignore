@@ -45,3 +45,8 @@ nginx.dev.conf
 
 certbot/
 backupSEMANA1.sql
+
+# Arquivos de desenvolvimento do Docker Compose
+docker-compose.dev.yml
+frontend/Dockerfile.dev
+backend/uploads/imagens/2025/*
