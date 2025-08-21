@@ -45,7 +45,10 @@ services:
       - db
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL}
     image: lpn2025-frontend-image
     volumes:
       - frontend_build:/app/build

@@ -3,20 +3,21 @@ FROM node:20.12.1-alpine AS build
 
 WORKDIR /app
 
-# Copia os manifestos de dependência
+# 1. Declare o argumento que virá do docker-compose
+ARG REACT_APP_API_URL
+
+# 2. Defina-o como uma variável de ambiente para o restante do build
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
+# O resto do processo continua o mesmo
 COPY package*.json ./
-
-# Instala as dependências
 RUN npm ci
-
-# Copia o código-fonte
 COPY . .
+RUN npm run build
 
-# COPIA O ARQUIVO .ENV PARA DENTRO DO CONTEXTO DE BUILD
-# Esta é a linha crucial que estava faltando.
-COPY .env ./
-
-# Agora, o build usará a REACT_APP_API_URL do arquivo .env do servidor
+# Estágio 2: Imagem final
+FROM alpine:latest
+COPY --from=build /app/build /app/build
 RUN npm run build
 
 # Estágio 2: Criar uma imagem final leve
