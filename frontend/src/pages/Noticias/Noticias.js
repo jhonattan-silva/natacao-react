@@ -20,7 +20,11 @@ const Noticias = () => {
   const getImageUrl = url => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    if (url.startsWith('/uploads')) return `${backendOrigin}${url}`;
+    if (backendOrigin) {
+      // Garante HTTPS mesmo se backendOrigin vier sem protocolo
+      const prefix = backendOrigin.startsWith('http') ? backendOrigin : `https://${backendOrigin.replace(/^\/+/, '')}`;
+      return `${prefix}${url}`;
+    }
     return url;
   };
 
