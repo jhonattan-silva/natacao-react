@@ -18,6 +18,14 @@ const formatDate = (data) => {
   return d.toISOString().slice(0, 10);
 };
 
+function gerarSlug(title) {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 const FormNoticia = ({ noticiaInicial = {}, onSalvo, onCancelar }) => {
   const [titulo, setTitulo] = useState('');
   const [slug, setSlug] = useState(''); 
