@@ -20,12 +20,13 @@ const Noticias = () => {
   const getImageUrl = url => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
+    // Corrige: se backendOrigin não está definido, retorna string vazia (nunca localhost)
     if (backendOrigin) {
-      // Garante HTTPS mesmo se backendOrigin vier sem protocolo
       const prefix = backendOrigin.startsWith('http') ? backendOrigin : `https://${backendOrigin.replace(/^\/+/, '')}`;
       return `${prefix}${url}`;
     }
-    return url;
+    // Nunca retorna url relativa sem backendOrigin em produção
+    return '';
   };
 
   const handleImageError = (e) => {
