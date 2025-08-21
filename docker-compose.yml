@@ -1,23 +1,21 @@
-version: '3.8'
-
+# A versão é obsoleta, então a removemos para limpar os avisos.
 services:
   nginx:
-    # Usa o Dockerfile dentro da pasta ./nginx para construir a imagem
+    # O build agora usa o Dockerfile corrigido da pasta ./nginx
     build: ./nginx
     container_name: nginx
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      # Mapeia o arquivo de configuração para o local CORRETO
-      - ./nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf
+      # Os volumes de configuração não são mais necessários aqui,
+      # pois o build da imagem já copia o nginx.prod.conf.
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-      # Monta o volume com os arquivos do frontend no diretório do Nginx
+      # Monta o volume com os arquivos do frontend construídos
       - frontend_build:/usr/share/nginx/html
-      # Monta os uploads do backend para serem servidos pelo Nginx
+      # Monta os uploads do backend
       - ./backend/uploads:/usr/share/nginx/html/uploads
-    # O Nginx só inicia depois que o backend estiver pronto
     depends_on:
       - backend
 
@@ -27,24 +25,12 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    entrypoint: >
-      /bin/sh -c ' if [ ! -f /etc/letsencrypt/live/ligapaulistadenatacao.com.br/fullchain.pem ]; then
-        certbot certonly --webroot -w /var/www/certbot --agree-tos -n --email jhonattanwcs@hotmail.com -d ligapaulistadenatacao.com.br -d www.ligapaulistadenatacao.com.br;
-      fi; while :; do certbot renew; sleep 12h; done;'
 
   backend:
-    image: ${DOCKER_USERNAME:-default_user}/backend:latest
     build: ./backend
+    image: ${DOCKER_USERNAME:-default_user}/backend:latest
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_DB_HOST: db
-      MYSQL_DB_PORT: 3306
-      JWT_SECRET: ${JWT_SECRET}
-      API_URL: ${API_URL}
-      FRONTEND_URL: ${FRONTEND_URL}
+      # ... suas variáveis de ambiente ...
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./backend/uploads:/app/uploads
@@ -55,25 +41,26 @@ services:
       - db
 
   frontend:
-    # Constrói a imagem usando o Dockerfile da pasta ./frontend
+    # Este serviço apenas constrói a imagem e popula o volume.
+    # Ele não precisa ficar rodando.
     build: ./frontend
-    # Dá um nome à imagem construída
     image: lpn2025-frontend-image
-    # Este serviço usa o volume nomeado para expor sua pasta de build
-    # O contêiner irá construir os arquivos e parar. O volume persistirá.
     volumes:
       - frontend_build:/app/build
 
   db:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      # ... suas variáveis de ambiente ...
     volumes:
+      # O volume 'db_data' é montado aqui
       - db_data:/var/lib/mysql
       - ./backend/config/my.cnf:/etc/mysql/conf.d/my.cnf
 
-# Volumes nomeados que permitem a comunicação entre contêineres
+# Declaração de volumes
 volumes:
-  db_data:
   frontend_build:
+  # PROTEÇÃO DO BANCO DE DADOS:
+  # Declarar o volume como externo impede que 'docker-compose down --volumes' o remova.
+  db_data:
+    external: true

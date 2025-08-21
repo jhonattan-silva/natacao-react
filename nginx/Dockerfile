@@ -1,8 +1,8 @@
-# Usando a imagem oficial do Nginx como base
-FROM nginx:alpine
+# Usar a imagem oficial do Nginx
+FROM nginx:stable-alpine
 
-# Copiar os arquivos de build do React para o diretório de documentos do Nginx
-COPY --from=lpn2025-frontend /app/build /usr/share/nginx/html
+# Remover a configuração padrão para evitar conflitos
+RUN rm /etc/nginx/conf.d/default.conf
 
-# Copiar o arquivo de configuração do Nginx
-COPY nginx.prod.conf /etc/nginx/nginx.conf
+# Copiar o arquivo de configuração do seu site para o local CORRETO
+COPY nginx.prod.conf /etc/nginx/conf.d/default.conf
