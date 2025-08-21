@@ -2,12 +2,14 @@ version: '3.8'
 
 services:
   nginx:
+    # Usa o Dockerfile dentro da pasta ./nginx para construir a imagem
     build: ./nginx
     container_name: nginx
     ports:
       - "80:80"
       - "443:443"
     volumes:
+      # Mapeia o arquivo de configuração para o local CORRETO
       - ./nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
@@ -15,9 +17,9 @@ services:
       - frontend_build:/usr/share/nginx/html
       # Monta os uploads do backend para serem servidos pelo Nginx
       - ./backend/uploads:/usr/share/nginx/html/uploads
+    # O Nginx só inicia depois que o backend estiver pronto
     depends_on:
       - backend
-      - frontend
 
   certbot:
     image: certbot/certbot
@@ -53,9 +55,12 @@ services:
       - db
 
   frontend:
+    # Constrói a imagem usando o Dockerfile da pasta ./frontend
     build: ./frontend
-    image: lpn2025-frontend
-    # Este serviço agora usa o volume nomeado para expor sua pasta de build
+    # Dá um nome à imagem construída
+    image: lpn2025-frontend-image
+    # Este serviço usa o volume nomeado para expor sua pasta de build
+    # O contêiner irá construir os arquivos e parar. O volume persistirá.
     volumes:
       - frontend_build:/app/build
 
