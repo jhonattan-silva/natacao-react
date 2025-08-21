@@ -4,8 +4,7 @@ import style from './TileFoto.module.css';
 const getImagemUrl = (imagem) => {
   if (!imagem) return '';
   if (imagem.startsWith('http')) return imagem;
-  // Ajuste para produção se necessário
-  const apiUrl = process.env.REACT_APP_API_URL || '';
+  const apiUrl = process.env.REACT_APP_API_URL;
   return `${apiUrl}${imagem}`;
 };
 

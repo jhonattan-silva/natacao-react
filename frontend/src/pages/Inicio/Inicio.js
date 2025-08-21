@@ -15,6 +15,12 @@ const Inicio = () => {
     const [etapas, setEtapas] = useState([]);
     const [noticias, setNoticias] = useState([]); // Estado para notícias
     const backendOrigin = process.env.REACT_APP_API_URL;
+    const getImageUrl = (url) => {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        if (backendOrigin) return `${backendOrigin}${url}`;
+        return url;
+    };
 
     useEffect(() => {
         const fetchEtapas = async () => {
@@ -46,9 +52,7 @@ const Inicio = () => {
     const newsSlides = noticias.slice(0, 3);
     // Mapeia as notícias para o formato esperado pelo Carrossel
     const slidesData = newsSlides.map(news => ({
-        image: news.imagem.startsWith('http')
-            ? news.imagem
-            : `${backendOrigin}${news.imagem}`,
+        image: getImageUrl(news.imagem),
         title: news.titulo,
         subtitle: news.resumo,
         link: `/noticias/${new Date(news.data).getFullYear()}/${news.slug}`
