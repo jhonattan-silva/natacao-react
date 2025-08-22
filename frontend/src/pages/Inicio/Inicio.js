@@ -54,7 +54,7 @@ const Inicio = () => {
     const slidesData = newsSlides.map(news => ({
         image: getImageUrl(news.imagem),
         title: news.titulo,
-        subtitle: news.resumo,
+        subtitle: news.subtitulo, 
         link: `/noticias/${new Date(news.data).getFullYear()}/${news.slug}`
     }));
 
