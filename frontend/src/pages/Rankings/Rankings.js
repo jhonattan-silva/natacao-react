@@ -68,17 +68,24 @@ const Rankings = () => {
      * - Mesma pontuação → mesma posição
      * - Próxima posição = posição anterior + número de itens avaliados
      */
-    const addPositionToRanking = (ranking) => {
-        let previousScore = null;
-        let currentPosition = 0;
+    const addPosicaoNoRanking = (ranking) => {
+        let pontuacaoAnterior = null;
+        let posicaoAtual = 0;
         let offset = 1;
-        return ranking.map(item => {
-            if (item.pontos !== previousScore) {
-                currentPosition = offset;
-                previousScore = item.pontos;
+        let posicaoAnterior = null; 
+        return ranking.map((item, idx) => {
+            const pontos = item.Pontos !== undefined ? item.Pontos : item.pontos;
+            let posicao = '';
+            if (pontos !== pontuacaoAnterior) {
+                posicaoAtual = offset;
+                posicao = posicaoAtual;
+                posicaoAnterior = posicaoAtual;
+                pontuacaoAnterior = pontos;
+            } else {
+                posicao = ''; // Suprime a posição nos empatados
             }
             offset++;
-            return { posicao: currentPosition, ...item };
+            return { posicao, ...item };
         });
     };
 
@@ -88,8 +95,7 @@ const Rankings = () => {
         if (!acc[cat]) acc[cat] = [];
         acc[cat].push({
             ...curr,
-            equipe: curr.equipe,
-            pontos: Number(curr.Pontos || curr.pontos || 0)   // normaliza o campo
+            Pontos: Number(curr.Pontos || curr.pontos || 0) // normaliza o campo, mas mantém o nome original
         });
         return acc;
     }, {});
@@ -98,18 +104,17 @@ const Rankings = () => {
         if (!acc[cat]) acc[cat] = [];
         acc[cat].push({
             ...curr,
-            equipe: curr.equipe,
-            pontos: Number(curr.Pontos || curr.pontos || 0)   // normaliza o campo
+            Pontos: Number(curr.Pontos || curr.pontos || 0)
         });
         return acc;
     }, {});
 
     // Adiciona posição usando o campo pontos normalizado
     Object.keys(groupedMasculino).forEach(cat => {
-        groupedMasculino[cat] = addPositionToRanking(groupedMasculino[cat]);
+        groupedMasculino[cat] = addPosicaoNoRanking(groupedMasculino[cat]);
     });
     Object.keys(groupedFeminino).forEach(cat => {
-        groupedFeminino[cat] = addPositionToRanking(groupedFeminino[cat]);
+        groupedFeminino[cat] = addPosicaoNoRanking(groupedFeminino[cat]);
     });
 
     // Normaliza ranking de equipes, padronizando a key 'pontos'
@@ -118,7 +123,7 @@ const Rankings = () => {
         equipe: item.Equipe || item.equipe,
         pontos: Number(item.Pontos || item.pontos || 0)
     }));
-    const rankingsEquipesWithPosition = addPositionToRanking(normalizedRankingsEquipes);
+    const rankingsEquipesWithPosition = addPosicaoNoRanking(normalizedRankingsEquipes);
 
     // Normaliza ranking mirim geral
     const normalizedRankingMirim = rankingMirimGeral.map(item => ({
@@ -126,7 +131,7 @@ const Rankings = () => {
         equipe: item.equipe_nome,
         pontos: Number(item.pontos_total || item.pontos || 0)
     }));
-    const mirimWithPosition = addPositionToRanking(normalizedRankingMirim);
+    const mirimWithPosition = addPosicaoNoRanking(normalizedRankingMirim);
 
     // Conteúdo da aba para equipes + mirim juntos
     const equipeTabContent = errorEquipes ? (
@@ -175,7 +180,10 @@ const Rankings = () => {
                     Object.keys(groupedMasculino).map(cat => (
                         <div key={cat}>
                             <h3>{cat}</h3>
-                            <Tabela dados={groupedMasculino[cat]} />
+                            <Tabela
+                                dados={groupedMasculino[cat]}
+                                colunasOcultas={['categoria', 'Categoria']}
+                            />
                         </div>
                     ))
                 ) : (
@@ -188,7 +196,10 @@ const Rankings = () => {
                     Object.keys(groupedFeminino).map(cat => (
                         <div key={cat}>
                             <h3>{cat}</h3>
-                            <Tabela dados={groupedFeminino[cat]} />
+                            <Tabela
+                                dados={groupedFeminino[cat]}
+                                colunasOcultas={['categoria', 'Categoria']}
+                            />
                         </div>
                     ))
                 ) : (

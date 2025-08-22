@@ -84,6 +84,7 @@ const calcularRankingNadadores = async (conn, torneiosId) => {
          JOIN eventos e ON ep.eventos_id = e.id
          JOIN nadadores n ON c.nadadores_id = n.id
          WHERE e.torneios_id = ?
+           AND c.tipo = 'ABSOLUTO'
          GROUP BY c.nadadores_id, n.categorias_id, ep.eventos_id, c.eventos_provas_id`,
         [torneiosId]
     );
