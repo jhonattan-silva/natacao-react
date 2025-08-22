@@ -2,33 +2,40 @@
   position: relative;
   overflow: hidden;
   width: 100%;
+  height: 100%; /* Ocupe toda a altura do pai */
+  max-width: 100vw;
+  background: #222; /* Fundo escuro para as barras laterais */
 }
 
-.carrossel img {
+@media (max-width: 900px) {
+  .carrossel {
+    height: 100%; /* Herdar da section */
+  }
+}
+
+.carrossel img,
+.image {
   width: 100%;
-  background-size: cover;
-  background-repeat: no-repeat;
+  height: 100%;
+  object-fit: fill; 
+  background: #222; 
 }
 
 .slider {
   display: flex;
   transition: transform 0.5s ease-in-out;
+  height: 100%;
 }
 
 .slide {
   min-width: 100%;
   position: relative;
-}
-
-.image {
-  width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
 .caption {
   position: absolute;
-  top: 70%;
+  top: 70%; /* 70% da altura do carrossel */
   left: 50%;
   transform: translate(-50%, -50%);
   color: #fff;
@@ -74,11 +81,10 @@
 
 @media (max-width: 600px) {
   .caption {
-    top: auto;
-    bottom: 16px;
+    top: 70%;
     left: 50%;
-    transform: translateX(-50%);
-    padding: 12px 10px;
+    transform: translate(-50%, -50%);
+    padding: 10px 8px;
     font-size: 0.95rem;
   }
 }
