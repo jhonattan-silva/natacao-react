@@ -313,6 +313,13 @@ const ResultadosEntrada = () => {
             } else {
                 // Última prova: perguntar se deseja encerrar o evento
                 if (window.confirm('Resultados salvos com sucesso! Deseja encerrar o evento?')) {
+                    try {
+                        await api.post(`/resultados/fecharClassificacao/${eventoId}`);
+                    } catch (err) {
+                        console.error('Erro ao encerrar o evento:', err.message);
+                        mostrarAlerta('Erro ao encerrar o evento. Tente novamente.');
+                        return;
+                    }
                     window.location.href = '/admin';
                 } else {
                     mostrarAlerta('Resultados salvos com sucesso! Você pode revisar as provas.');
