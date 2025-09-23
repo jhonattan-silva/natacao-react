@@ -53,8 +53,15 @@ if (process.env.DISABLE_SSL === 'true') {
   console.log("SSL desabilitado. Iniciando servidor HTTP.");
   startHttpServer();
 } else if (process.env.NODE_ENV === 'production') {
+  // --- INÍCIO DO TRECHO ERRADO ---
+  /*
   // Em produção, utiliza os certificados do diretório padrão
   startHttpsServer(path.join(PROD_CERT_PATH, "privkey.pem"), path.join(PROD_CERT_PATH, "fullchain.pem"));
+  */
+  // --- FIM DO TRECHO ERRADO ---
+
+  // Em produção, roda apenas HTTP, Nginx faz o SSL
+  startHttpServer();
 } else if (process.env.NODE_ENV === 'development') {
   // Em desenvolvimento, tenta usar os certificados informados nas variáveis SSL_CERT_PATH/SSL_KEY_PATH,
   // se estiverem definidos; caso contrário, roda HTTP.
