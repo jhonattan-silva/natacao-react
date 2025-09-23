@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL =
-  process.env.NODE_ENV === 'development'
-    ? 'http://localhost:5000/api'
-    : 'https://www.ligapaulistadenatacao.com.br:5000/api';
+// Corrigido: usa sempre a variável de ambiente
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 // Cria uma instância do Axios com configuração base
 const api = axios.create({
