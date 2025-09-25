@@ -8,7 +8,7 @@ import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import style from './Nadadores.module.css';
 import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
 import { useUser } from '../../servicos/UserContext';
-import { validarCPF, aplicarMascaraCPF, aplicarMascaraCelular, validarCelular } from '../../servicos/functions';
+import { validarCPF, aplicarMascaraCPF, aplicarMascaraCelular, validarCelular, validarDataNasc } from '../../servicos/functions';
 import BotaoTabela from '../../componentes/BotaoTabela/BotaoTabela';
 import useAlerta from '../../hooks/useAlerta';
 import Busca from '../../componentes/Busca/Busca'; 
@@ -345,6 +345,12 @@ const Nadadores = () => {
 
         if (!validarCelular(celular)) {
             mostrarAlerta('Celular/Telefone Inválido'); 
+            return;
+        }
+
+        // Validação da Data de Nascimento
+        if (!validarDataNasc(dataNasc)) {
+            mostrarAlerta('Data de nascimento inválida. Use o formato DD/MM/AAAA.');
             return;
         }
 

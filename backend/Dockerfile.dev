@@ -1,0 +1,23 @@
+# Estágio base para desenvolvimento
+FROM node:20.12.1
+
+WORKDIR /app
+
+# Instala dependências do sistema (se necessário)
+RUN apt-get update && apt-get install -y netcat-openbsd && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copia arquivos de dependências e instala tudo (inclui devDependencies)
+COPY package*.json ./
+RUN npm install
+
+# Copia o script wait-for.sh e dá permissão de execução
+COPY wait-for.sh /app/
+RUN chmod +x /app/wait-for.sh
+
+# Copia o restante do código
+COPY . .
+
+EXPOSE 5000
+
+# Comando de entrada para dev (hot reload)
+CMD ["sh", "-c", "./wait-for.sh db 3306 && npx nodemon server.js"]

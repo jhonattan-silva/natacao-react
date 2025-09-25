@@ -14,12 +14,11 @@ const formatarParaMaps = (endereco, cidade) => {
 const Inicio = () => {
     const [etapas, setEtapas] = useState([]);
     const [noticias, setNoticias] = useState([]); // Estado para notícias
-    const backendOrigin = process.env.REACT_APP_API_URL;
+    const backendOrigin = process.env.REACT_APP_API_URL.replace('/api', '');
     const getImageUrl = (url) => {
         if (!url) return '';
         if (url.startsWith('http')) return url;
-        if (backendOrigin) return `${backendOrigin}${url}`;
-        return url;
+        return `${backendOrigin}${url}`;
     };
 
     useEffect(() => {

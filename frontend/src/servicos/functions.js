@@ -135,3 +135,18 @@ export function formataData(dateString) {
     return { dataEvento, horario };
 }
 
+// Função para validar data de nascimento (formato DD/MM/AAAA)
+export function validarDataNasc(dataNasc) {
+    if (!dataNasc || dataNasc.length !== 10) return false;
+    const [dia, mes, ano] = dataNasc.split('/');
+    if (!dia || !mes || !ano) return false;
+    const data = new Date(`${ano}-${mes}-${dia}`);
+    return (
+        !isNaN(data.getTime()) &&
+        dia.length === 2 && mes.length === 2 && ano.length === 4 &&
+        parseInt(dia) >= 1 && parseInt(dia) <= 31 &&
+        parseInt(mes) >= 1 && parseInt(mes) <= 12 &&
+        parseInt(ano) > 1900 && parseInt(ano) < 2100
+    );
+}
+

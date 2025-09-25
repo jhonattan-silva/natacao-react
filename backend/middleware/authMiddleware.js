@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secreto_super_seguro'; // Chave secreta para o JWT 
+const JWT_SECRET = process.env.JWT_SECRET; // Chave secreta para o JWT 
 
 // Middleware para autenticação (se o usuário está logado)
 const authMiddleware = (req, res, next) => { // Recebe a requisição, a resposta e a próxima função a ser chamada

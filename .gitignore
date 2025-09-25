@@ -50,3 +50,4 @@ backupSEMANA1.sql
 docker-compose.dev.yml
 frontend/Dockerfile.dev
 backend/uploads/imagens/2025/*
+frontend/.env
