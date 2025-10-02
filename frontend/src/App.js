@@ -16,6 +16,7 @@ import Balizamentos from "./pages/Balizamentos/Balizamentos";
 import BalizamentosAjuste from "./pages/BalizamentosAjuste/BalizamentosAjuste"; // Página de ajuste de balizamentos
 import Noticias from "./pages/Noticias/Noticias"; 
 import NoticiasAdmin from "./pages/NoticiasAdmin/NoticiasAdmin"; // Página de administração de notícias
+import Records from "./pages/Records/Records"; // Página de records
 
 
 const App = () => {
@@ -33,6 +34,7 @@ const App = () => {
                 <Route path="/noticias" element={<Noticias />} />
                 <Route path="/noticias/:year/:slug" element={<Noticias />} /> {/* Nova rota para detalhe da notícia com ano e slug */}
                 <Route path="/noticias/:id" element={<Noticias />} /> {/* Rota para detalhes de uma notícia específica */}
+                <Route path="/records" element={<Records />} /> {/* Página de records */}
 
                 {/* Rotas protegidas */}
                 <Route

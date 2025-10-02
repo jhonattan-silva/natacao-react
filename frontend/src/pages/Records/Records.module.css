@@ -1,0 +1,120 @@
+/* Estilos para a página Records */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+.recordsContainer {
+    font-family: 'Poppins', sans-serif; /* Define a nova fonte */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+.filtros {
+    font-family: 'Poppins', sans-serif; /* Aplica a fonte aos filtros */
+    display: flex;
+    flex-direction: column; /* Alinha os elementos verticalmente */
+    gap: 15px; /* Espaçamento entre os elementos */
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    justify-content: center; /* Centraliza os filtros horizontalmente */
+    align-items: center; /* Centraliza os filtros verticalmente */
+}
+
+.filtros h2, .filtros h3 {
+    font-weight: 600; 
+    margin-right: 20px;
+    color: #333;
+}
+
+.filtros h3.ativo {
+    color: #28a745; /* Verde para o título da lista ativa */
+}
+
+.filtros h3.inativo {
+    color: #dc3545; /* Vermelho para o título da lista inativa */
+}
+
+.filtros h3.ignorado {
+    text-decoration: line-through; /* Adiciona o tachado ao título */
+    color: #dc3545; /* Vermelho para indicar que está sendo ignorado */
+}
+
+.filtros button {
+    font-family: 'Poppins', sans-serif; /* Aplica a fonte aos botões */
+    flex: 0 0 auto; /* Impede que os botões se expandam */
+    padding: 8px 12px;
+    font-size: 14px;
+    width: auto; /* Garante que os botões não ocupem 100% da largura */
+}
+
+.filtros .selecionado {
+    background-color: #0056b3; /* Cor de fundo para o botão selecionado */
+    color: #fff; /* Cor do texto para o botão selecionado */
+    font-weight: bold;
+}
+
+.resultados {
+    font-family: 'Poppins', sans-serif; /* Aplica a fonte aos resultados */
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.resultados h2 {
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.resultados ul {
+    list-style: none;
+    padding: 0;
+}
+
+.resultados li {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.avisoSexo {
+    color: #d9534f; /* Cor vermelha para destacar o aviso */
+    font-size: 14px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.listaAtiva {
+    border: 2px solid #28a745; /* Verde para a lista ativa */
+    background-color: #d4edda; /* Fundo verde claro */
+    color: #155724; /* Texto verde escuro */
+}
+
+.listaInativa {
+    border: 2px solid #dc3545; /* Vermelho para a lista inativa */
+    background-color: #f8d7da; /* Fundo vermelho claro */
+    color: #721c24; /* Texto vermelho escuro */
+}
+
+.listaIgnorada {
+    text-decoration: line-through; /* Adiciona o tachado ao texto da ListaSuspensa */
+    color: #dc3545; /* Vermelho para indicar que está sendo ignorado */
+}
+
+@media (max-width: 768px) {
+    .filtros {
+        flex-direction: column; /* Alinha os elementos verticalmente */
+        gap: 10px;
+    }
+
+    .filtros button {
+        display: none; /* Oculta os botões em dispositivos móveis */
+    }
+
+    .listaSuspensaMobile {
+        display: block; /* Exibe as listas suspensas em dispositivos móveis */
+    }
+}

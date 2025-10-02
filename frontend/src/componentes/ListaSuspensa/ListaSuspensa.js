@@ -12,6 +12,7 @@ import api from '../../servicos/api';
  * selectId: Campo que será usado como valor do `option`
  * selectExibicao: Campo que será usado como texto visível no `option`
  * valorSelecionado: Valor inicial selecionado
+ * className: Classe CSS adicional para estilização personalizada
  */
 const ListaSuspensa = ({ fonteDados,
     opcoes: opcoesExternas = [], // Opções passadas diretamente (opcional)
@@ -20,7 +21,8 @@ const ListaSuspensa = ({ fonteDados,
     obrigatorio = false,
     selectId = 'id', // Campo que será usado como valor do `option`
     selectExibicao = 'nome', // Campo que será usado como texto visível no `option`
-    valorSelecionado = '' // Valor inicial selecionado
+    valorSelecionado = '', // Valor inicial selecionado
+    className = '' // Classe adicional para o componente
 }) => {
 
     const [opcoes, setOpcoes] = useState([]); // Inicializa com array vazio
@@ -58,7 +60,7 @@ const ListaSuspensa = ({ fonteDados,
     }
 
     return (
-        <div className={style.listaSuspensa}>
+        <div className={`${style.listaSuspensa} ${className}`}>
             <select className={style.selectModern} onChange={aoEscolher} required={obrigatorio} value={valor}>
                 <option value=''>{textoPlaceholder}</option>
                 {opcoes.map((opcao) => (

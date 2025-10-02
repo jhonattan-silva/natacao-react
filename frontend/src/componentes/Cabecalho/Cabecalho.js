@@ -32,6 +32,7 @@ const Cabecalho = () => {
                     <span className={style.closeButton} onClick={toggleMenu}>&times;</span>
                     <CabecalhoLink url='/Resultados' onClick={() => { handleLinkClick('/Resultados'); setMenuOpen(false); }}>Resultados</CabecalhoLink>
                     <CabecalhoLink url='/Rankings' onClick={() => { handleLinkClick('/Rankings'); setMenuOpen(false); }}>Rankings</CabecalhoLink>
+                    <CabecalhoLink url='/Records' onClick={() => { handleLinkClick('/Records'); setMenuOpen(false); }}>Records</CabecalhoLink>
                     <CabecalhoLink url='/Balizamentos' onClick={() => { handleLinkClick('/Balizamentos'); setMenuOpen(false); }}>Balizamentos</CabecalhoLink>
                     <CabecalhoLink url='/admin' onClick={() => { handleLinkClick('/admin'); setMenuOpen(false); }}>Acesso Restrito</CabecalhoLink>
                 </nav>

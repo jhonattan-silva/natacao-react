@@ -1,0 +1,36 @@
+/* Estilos para o componente ButtonWall */
+
+.wall {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0; /* Remove espaçamento entre os botões */
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.button {
+    flex: 1 1 auto;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    border: 1px solid #ccc; /* borda para destacar cada botão */
+    background-color: #f0f0f0;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* sombra para destacar */
+}
+
+.button:hover {
+    background-color: #ddd;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Aumenta a sombra ao passar o mouse */
+}
+
+.button.selecionado {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #0056b3; /* Destaca a borda do botão selecionado */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra mais forte para o botão selecionado */
+}
