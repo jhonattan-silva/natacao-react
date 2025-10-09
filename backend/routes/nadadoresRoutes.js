@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { authMiddleware } = require('../middleware/authMiddleware'); // Autenticação
+const { validarData, validarDataNaoFutura, validarCPF, somenteNumeros, validarCelular } = require('../servicos/functions');
 
 router.get('/listarNadadores', authMiddleware, async (req, res) => {
     try {
@@ -41,10 +42,21 @@ router.get('/listarEquipes', authMiddleware, async (req, res) => {
 router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
     const { nome, cpf, data_nasc, telefone, sexo, equipeId, cidade } = req.body;
 
-    const cpfNumeros = cpf.replace(/\D/g, '');
-    const telefoneNumeros = telefone.replace(/\D/g, '');
+    const cpfNumeros = somenteNumeros(cpf);
+    const telefoneNumeros = somenteNumeros(telefone);
 
     try {
+        // Validações
+        if (!validarCPF(cpfNumeros)) {
+            return res.status(400).json({ message: 'CPF inválido.' });
+        }
+        if (!validarData(data_nasc) || !validarDataNaoFutura(data_nasc)) {
+            return res.status(400).json({ message: 'Data de nascimento inválida ou no futuro.' });
+        }
+        if (!validarCelular(telefoneNumeros)) {
+            return res.status(400).json({ message: 'Telefone inválido. Certifique-se de que o número está correto.' });
+        }
+
         // Verifica se o CPF já está cadastrado
         const [cpfExistente] = await db.query(
             'SELECT id FROM nadadores WHERE cpf = ?',
@@ -80,7 +92,7 @@ router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
         res.status(201).json({ id: result.insertId }); // Retorna o ID do novo nadador
     } catch (error) {
         console.error('Erro ao adicionar nadador:', error);
-        res.status(500).send('Erro ao adicionar nadador');
+        res.status(500).json({ message: 'Erro ao adicionar nadador.', details: error.message });
     }
 });
 

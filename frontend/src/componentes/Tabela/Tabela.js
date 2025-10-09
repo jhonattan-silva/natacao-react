@@ -8,7 +8,7 @@ import style from './Tabela.module.css';
  * colunasOcultas: Array de strings com os nomes das colunas a serem ocultadas
  * textoExibicao: Objeto com os textos de exibição para cada coluna
  */
-const Tabela = ({ dados, colunasOcultas = [], textoExibicao = {} }) => {
+const Tabela = ({ dados = [], colunasOcultas = [], textoExibicao = {} }) => {
     const [ordenaConfig, setOrdenaConfig] = useState({ key: null, direction: 'asc' });
 
     // Computa as colunas disponíveis filtrando as ocultas

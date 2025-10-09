@@ -132,9 +132,22 @@ const Balizamento = () => {
             return;
         }
         try {
+            // Verificar se a etapa já foi realizada (teve_resultados = 1)
+            if (etapa.teve_resultados === 1) {
+                alert("Esta etapa já foi realizada. Não é possível gerar o balizamento.");
+                return;
+            }
+
             // Buscar nadadores individuais
             const response = await api.get(`${apiInscritos}/${eventoId}`);
             const originais = response.data;
+
+            // Verificar se há nadadores inscritos
+            if (!originais || originais.length === 0) {
+                alert("Não há nadadores inscritos neste evento. Não é possível gerar o balizamento.");
+                return;
+            }
+
             setInscritosOriginais(originais);
 
             // Buscar inscritos por equipe (Dados Brutos)

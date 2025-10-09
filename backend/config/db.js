@@ -31,4 +31,20 @@ pool.getConnection()
     process.exit(1);
   });
 
+/*/ Para lidar com eventos do pool
+pool.on('connection', (connection) => {
+  console.log('Nova conexão criada no pool.');
+  connection.on('error', (err) => {
+    console.error('Erro na conexão do MySQL:', err);
+  });
+});
+
+pool.on('acquire', () => {
+  console.log('Conexão adquirida do pool.');
+});
+
+pool.on('release', () => {
+  console.log('Conexão liberada de volta ao pool.');
+});
+*/
 module.exports = pool;

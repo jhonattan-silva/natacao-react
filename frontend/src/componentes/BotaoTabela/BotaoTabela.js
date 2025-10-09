@@ -11,7 +11,19 @@ import style from './BotaoTabela.module.css';
 * @param {object} labels - Labels dos botões
 *
 */
-const BotaoTabela = ({ tipo, onClick, labels }) => {
+const BotaoTabela = ({
+  tipo,
+  onClick,
+  labels = {
+    editar: 'Editar',
+    excluir: 'Excluir',
+    abrirInscricao: 'Abrir Inscrição',
+    fecharInscricao: 'Fechar Inscrição',
+    gerarPontuacao: 'Gerar Pontuação',
+    inativar: 'Inativar',
+    ativar: 'Ativar',
+  },
+}) => {
   const getButtonLabel = (tipo) => {
     return labels[tipo] || '';
   };
@@ -26,22 +38,11 @@ const BotaoTabela = ({ tipo, onClick, labels }) => {
   );
 };
 
+// Definição dos tipos de propriedades esperadas
 BotaoTabela.propTypes = {
   tipo: PropTypes.string.isRequired,
   onClick: PropTypes.func.isRequired,
-  labels: PropTypes.objectOf(PropTypes.string).isRequired,
-};
-
-BotaoTabela.defaultProps = {
-  labels: {
-    editar: 'Editar',
-    excluir: 'Excluir',
-    abrirInscricao: 'Abrir Inscrição',
-    fecharInscricao: 'Fechar Inscrição',
-    gerarPontuacao: 'Gerar Pontuação',
-    inativar: 'Inativar',
-    ativar: 'Ativar'
-  }
+  labels: PropTypes.objectOf(PropTypes.string),
 };
 
 export default BotaoTabela;

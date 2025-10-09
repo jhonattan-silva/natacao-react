@@ -150,3 +150,19 @@ export function validarDataNasc(dataNasc) {
     );
 }
 
+// Valida se uma data de nascimento é válida e não está no futuro.
+export function validarDataNascNaoFutura(dataNasc) {
+    if (!dataNasc || dataNasc.length !== 10) return false;
+    const [dia, mes, ano] = dataNasc.split('/');
+    const data = new Date(`${ano}-${mes}-${dia}`);
+    const hoje = new Date();
+    return (
+        !isNaN(data.getTime()) &&
+        data <= hoje &&
+        dia.length === 2 && mes.length === 2 && ano.length === 4 &&
+        parseInt(dia) >= 1 && parseInt(dia) <= 31 &&
+        parseInt(mes) >= 1 && parseInt(mes) <= 12 &&
+        parseInt(ano) > 1900 && parseInt(ano) < 2100
+    );
+}
+

@@ -28,17 +28,18 @@ const Formulario = ({ inputs, aoSalvar }) => {
         <section className={style.formulario}>
             <form onSubmit={aoSalvar}>
                 {inputs.map((input, index) => (
-                    <InputTexto
-                        key={index}
-                        obrigatorio={input.obrigatorio}
-                        id={input.id}
-                        tipo={input.tipo}
-                        label={input.label}
-                        placeholder={input.placeholder}
-                        valor={input.valor}
-                        aoAlterar={input.aoAlterar}
-                        onBlur={input.onBlur}
-                    />
+                    <div key={index} className={style.campoTexto}>
+                        <label htmlFor={input.id}>{input.label}</label> {/* Associa o label ao input */}
+                        <InputTexto
+                            obrigatorio={input.obrigatorio}
+                            id={input.id}
+                            tipo={input.tipo}
+                            placeholder={input.placeholder}
+                            valor={input.valor}
+                            aoAlterar={input.aoAlterar}
+                            onBlur={input.onBlur}
+                        />
+                    </div>
                 ))}
             </form>
         </section>

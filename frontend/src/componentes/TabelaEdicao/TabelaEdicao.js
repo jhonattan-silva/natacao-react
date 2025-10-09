@@ -14,7 +14,16 @@ import BotaoTabela from '../BotaoTabela/BotaoTabela';
  * funcExtra: Botão extra com função personalizada 
  * renderLinha: Função para aplicar estilos personalizados às linhas da tabela
  */
-const TabelaEdicao = ({ dados, colunasOcultas = [], colunasTitulos = {}, onEdit, onInativar, onDelete, funcExtra, renderLinha }) => {
+const TabelaEdicao = ({
+  dados = [],
+  colunasOcultas = [],
+  colunasTitulos = {},
+  onEdit = null,
+  onInativar = null,
+  onDelete = null,
+  funcExtra = null,
+  renderLinha = null,
+}) => {
   // Detecta as colunas automaticamente e exclui as especificadas em `colunasOcultas`
   const colunas = dados.length > 0
     ? Object.keys(dados[0]).filter(coluna => !colunasOcultas.includes(coluna))
@@ -63,7 +72,10 @@ const TabelaEdicao = ({ dados, colunasOcultas = [], colunasTitulos = {}, onEdit,
                   <td>
                     {isMobile ? (
                       <div className={style.escondeAcoes}>
-                        <button className={style.btnAcaoMobile} onClick={() => setAcoesDropdownId(acoesDropdownId === linha.id ? null : linha.id)}>
+                        <button
+                          className={style.btnAcaoMobile}
+                          onClick={() => setAcoesDropdownId(acoesDropdownId === linha.id ? null : linha.id)}
+                        >
                           Ações
                         </button>
                         {acoesDropdownId === linha.id && (
@@ -115,13 +127,6 @@ TabelaEdicao.propTypes = {
   onDelete: PropTypes.func,
   funcExtra: PropTypes.func,
   renderLinha: PropTypes.func,
-};
-
-TabelaEdicao.defaultProps = {
-  colunasOcultas: [],
-  colunasTitulos: {},
-  funcExtra: null,
-  renderLinha: null,
 };
 
 export default TabelaEdicao;

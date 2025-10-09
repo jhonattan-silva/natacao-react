@@ -8,12 +8,14 @@ import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import style from './Nadadores.module.css';
 import RadioButtons from '../../componentes/RadioButtons/RadioButtons';
 import { useUser } from '../../servicos/UserContext';
-import { validarCPF, aplicarMascaraCPF, aplicarMascaraCelular, validarCelular, validarDataNasc } from '../../servicos/functions';
+import { validarCPF, aplicarMascaraCPF, aplicarMascaraCelular, validarCelular, validarDataNascNaoFutura } from '../../servicos/functions';
 import BotaoTabela from '../../componentes/BotaoTabela/BotaoTabela';
 import useAlerta from '../../hooks/useAlerta';
 import Busca from '../../componentes/Busca/Busca'; 
+import { useNavigate } from 'react-router-dom'; // Adicione o import do useNavigate
 
 const Nadadores = () => {
+    const navigate = useNavigate(); // Substitui o uso de window.location.href
     const { user, loading } = useUser(); // Pega o estado de carregamento também
     const { mostrar: mostrarAlerta, componente: alertaComponente, confirmar: confirmarAlerta } = useAlerta(); // Usa o hook useAlerta
     const [nadadores, setNadadores] = useState([]); //controle de nadadores
@@ -167,7 +169,7 @@ const Nadadores = () => {
                     mostrarAlerta('Erro: CPF já cadastrado.'); // Trata erro de CPF duplicado
                 } else if (error.response.status === 401) {
                     mostrarAlerta('Sessão expirada. Por favor, faça login novamente.');
-                    window.location.href = '/login'; // Redireciona para a página de login
+                    navigate('/login'); // Substitui window.location.href
                 } else {
                     mostrarAlerta('Erro ao cadastrar Nadador: ' + error.response.data.message);
                 }
@@ -194,7 +196,7 @@ const Nadadores = () => {
         } catch (error) {
             if (error.response && error.response.status === 401) {
                 mostrarAlerta('Sessão expirada. Por favor, faça login novamente.'); 
-                window.location.href = '/login'; // Redireciona para a página de login
+                navigate('/login'); // Substitui window.location.href
             } else {
                 mostrarAlerta('Erro ao atualizar Nadador: ' + error.message); 
             }
@@ -344,13 +346,13 @@ const Nadadores = () => {
         }
 
         if (!validarCelular(celular)) {
-            mostrarAlerta('Celular/Telefone Inválido'); 
+            mostrarAlerta('Celular inválido. Certifique-se de que o número está correto.');
             return;
         }
 
         // Validação da Data de Nascimento
-        if (!validarDataNasc(dataNasc)) {
-            mostrarAlerta('Data de nascimento inválida. Use o formato DD/MM/AAAA.');
+        if (!validarDataNascNaoFutura(dataNasc)) {
+            mostrarAlerta('Data de nascimento inválida ou no futuro.');
             return;
         }
 

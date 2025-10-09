@@ -2,9 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 const db = require('../config/db');
-
-// Limpar a mascara aplicada e salvar somente numeros
-const somenteNumeros = (str) => str.replace(/\D/g, '');
+const { validarCPF, somenteNumeros, validarCelular } = require('../servicos/functions');
 
 router.get('/listarUsuarios', async (req, res) => {
   try {
@@ -28,60 +26,67 @@ router.get('/listarUsuarios', async (req, res) => {
 
 
 router.post('/cadastrarUsuario', async (req, res) => {
-  const { nome, cpf, celular, email, senha, perfis, equipeId, ativo } = req.body;
+    const { nome, cpf, celular, email, senha, perfis, equipeId, ativo } = req.body;
 
-  const connection = await db.getConnection(); // Obtém uma conexão do pool para usar o transaction
+    const cpfNumeros = somenteNumeros(cpf);
+    const celularNumeros = somenteNumeros(celular);
 
-  const cpfNumeros = somenteNumeros(cpf);
-  const celularNumeros = somenteNumeros(celular);
+    let connection; // Define a variável `connection` fora do bloco `try`
 
-  try {
-    await connection.beginTransaction(); // Inicia uma transação
+    try {
+        connection = await db.getConnection(); // Obtém a conexão do pool
+        await connection.beginTransaction(); // Inicia a transação
 
-    // VERIFICAÇÃO SE JÁ NÃO ESTÁ CADASTRADO
-    const [cpfRepetido] = await connection.query('SELECT id FROM usuarios WHERE cpf = ?', [cpfNumeros]);
-    if (cpfRepetido.length > 0) {
-      return res.status(400).json({ message: 'CPF já registrado' });
+        // Validações
+        if (!validarCPF(cpfNumeros)) {
+            return res.status(400).json({ message: 'CPF inválido.' });
+        }
+        if (!validarCelular(celularNumeros)) {
+            return res.status(400).json({ message: 'Celular inválido. Certifique-se de que o número está correto.' });
+        }
+        // Verifica se o CPF já está cadastrado
+        const [cpfRepetido] = await connection.query('SELECT id FROM usuarios WHERE cpf = ?', [cpfNumeros]);
+        if (cpfRepetido.length > 0) {
+            return res.status(400).json({ message: 'CPF já registrado' });
+        }
+
+        // Verifica se os campos obrigatórios estão preenchidos
+        if (!nome || !cpf || !celular || !email || !senha || perfis.length === 0) {
+            return res.status(400).send('Todos os campos são obrigatórios');
+        }
+
+        // Criptografar a senha antes de armazená-la no banco de dados
+        const hashedSenha = await bcrypt.hash(senha, 10);
+
+        // Insere o usuário na tabela `usuarios`
+        const [userResult] = await connection.query(
+            'INSERT INTO usuarios (nome, cpf, celular, email, senha, ativo) VALUES (?, ?, ?, ?, ?, 1)', //cadastro vira com ativo = 1
+            [nome, cpfNumeros, celularNumeros, email, hashedSenha, ativo]
+        );
+
+        const userId = userResult.insertId;
+
+        // Insere os perfis associados ao usuário
+        const perfilPromises = perfis.map(perfilId => {
+            return connection.query('INSERT INTO usuarios_perfis (usuarios_id, perfis_id) VALUES (?, ?)', [userId, perfilId]);
+        });
+
+        await Promise.all(perfilPromises); // Executa todas as inserções de perfis em paralelo
+
+        // Insere na tabela `usuarios_equipes` somente se `equipeId` for fornecido
+        if (equipeId !== null) {
+            await connection.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [userId, equipeId]);
+        }
+
+        await connection.commit(); // Finaliza a transação
+        res.status(201).send('Usuário cadastrado com sucesso');
+    } catch (error) {
+        if (connection) await connection.rollback(); // Desfaz a transação em caso de erro
+        console.error('Erro ao cadastrar usuário:', error);
+        res.status(500).send('Erro ao cadastrar usuário');
+    } finally {
+        if (connection) connection.release(); // Libera a conexão
     }
-
-    // VERIFICA SE OS CAMPOS OBRIGATÓRIOS ESTÃO PREENCHIDOS (SEM EQUIPEID)
-    if (!nome || !cpf || !celular || !email || !senha || perfis.length === 0) {
-      return res.status(400).send('Todos os campos são obrigatórios');
-    }
-
-    // Criptografar a senha antes de armazená-la no banco de dados
-    const hashedSenha = await bcrypt.hash(senha, 10);
-
-    // INSERE O USUÁRIO NA TABELA usuarios
-    const [userResult] = await connection.query(
-      'INSERT INTO usuarios (nome, cpf, celular, email, senha, ativo) VALUES (?, ?, ?, ?, ?, 1)', //cadastro vira com ativo = 1
-      [nome, cpfNumeros, celularNumeros, email, hashedSenha, ativo]
-    );
-
-    const userId = userResult.insertId;
-
-    // INSERE OS PERFIS ASSOCIADOS AO USUÁRIO
-    const perfilPromises = perfis.map(perfilId => {
-      return connection.query('INSERT INTO usuarios_perfis (usuarios_id, perfis_id) VALUES (?, ?)', [userId, perfilId]);
-    });
-
-    await Promise.all(perfilPromises); // Executa todas as inserções de perfis em paralelo
-
-    // INSERE NA TABELA usuarios_equipes SOMENTE SE equipeId FOR FORNECIDO
-    if (equipeId !== null) {
-      await connection.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [userId, equipeId]);
-    }
-
-    await connection.commit(); // Finaliza a transação
-    res.status(201).send('Usuário cadastrado com sucesso BE message');
-  } catch (error) {
-    await connection.rollback(); // Desfaz a transação em caso de erro
-
-    console.error('Erro ao cadastrar usuário:', error);
-    res.status(500).send('Erro ao cadastrar usuário');
-  } finally {
-    connection.release(); // Libera a conexão
-  }
 });
 
 

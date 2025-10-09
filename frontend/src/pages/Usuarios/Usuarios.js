@@ -90,7 +90,10 @@ const Usuarios = () => {
 
     //Botão para abrir o formulario de novo usuário
     const handleAdicionar = () => {
-        setFormVisivel(true);
+        setFormVisivel(true); // Exibe o formulário
+        setIsEditing(false); // Garante que o formulário esteja em modo de novo cadastro
+        setEditUserId(null); // Reseta o ID do usuário em edição
+        limparFormulario(); // Limpa os campos do formulário
     };
 
     //Botão editar cadastro
@@ -230,13 +233,15 @@ const Usuarios = () => {
         setEmail('');
         setSenha('');
         SetPerfisSelecionados([]);
-        setFormVisivel(false);
+        //setFormVisivel(false);
     };
 
     // Função auxiliar para limpar os campos do formulário e fechar o formulário
     const fecharFormulario = () => {
         limparFormulario();
+        setIsEditing(false);   // garante reset do modo edição
         setFormVisivel(false);
+        setEditUserId(null);
     };
 
     // Filtra usuários pelo nome ou CPF digitado na busca
@@ -259,9 +264,19 @@ const Usuarios = () => {
             return;
         }
 
-        if (!validarCelular(celular)) {
-            mostrarAlerta('Celular inválido.');
+        if (!validarCelular(celular.replace(/\D/g, ''))) {
+            mostrarAlerta('Celular inválido. Certifique-se de que o número está correto.');
             return;
+        }
+
+        // Verifica se o CPF já está cadastrado (somente para novos cadastros)
+        if (!isEditing) {
+            const cpfNumeros = cpf.replace(/\D/g, '');
+            const cpfDuplicado = usuarios.some((usuario) => usuario.cpf.replace(/\D/g, '') === cpfNumeros);
+            if (cpfDuplicado) {
+                mostrarAlerta('CPF já cadastrado. Não é possível salvar.');
+                return;
+            }
         }
 
         // Verifica se o perfil de treinador está selecionado sem equipe associada
@@ -293,9 +308,10 @@ const Usuarios = () => {
 
             await fetchUsuarios(); // Atualiza a lista de usuários
             limparFormulario(); // Reseta o formulário
+            setFormVisivel(false); // Fecha o formulário
         } catch (error) {
-            if (error?.response?.data?.message === 'CPF já registrado') {
-                mostrarAlerta('Erro: CPF já cadastrado.');
+            if (error.response && error.response.status === 400) {
+                mostrarAlerta(error.response.data.message || 'Erro ao salvar o usuário.');
             } else {
                 mostrarAlerta('Erro ao salvar o usuário. Verifique os logs.');
             }
@@ -312,6 +328,9 @@ const Usuarios = () => {
                     <>
                         <div className={style.centralizarBotao}>
                             <Busca valor={busca} aoAlterar={setBusca} placeholder="Buscar usuário por nome ou CPF..." />
+                        </div>
+                        <div className={style.centralizarBotao}>
+                            <Botao onClick={handleAdicionar}>Adicionar Novo Usuário</Botao>
                         </div>
                         <TabelaEdicao 
                             dados={usuariosFiltrados} 
