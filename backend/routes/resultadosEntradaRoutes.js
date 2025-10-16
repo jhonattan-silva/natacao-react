@@ -435,9 +435,15 @@ router.post('/salvarResultados', async (req, res) => {
 });
 
 
+// Função para calcular a diferença em centésimos de segundo entre dois tempos
+function calcularDiferencaCentesimos(tempoInscricao, tempoRealizado) {
+  if (tempoInscricao === null || tempoRealizado === null) return null;
+  return tempoRealizado - tempoInscricao; // Retorna a diferença com sinal
+}
+
 // Função interna para transmitir resultado de uma prova
 async function transmitirResultadoProva(provaId) {
-  console.log(`[transmitirResultadoProva] Iniciando transmissão da prova ${provaId}`);
+  console.log(`[transmitirResultadoProva] Transmitindo resultados da prova ${provaId}`);
   // Descobre se é revezamento e pega eventos_id
   const [provaRows] = await db.query(
     'SELECT ep.eventos_id, p.eh_revezamento FROM eventos_provas ep JOIN provas p ON ep.provas_id = p.id WHERE ep.id = ?',
@@ -450,7 +456,7 @@ async function transmitirResultadoProva(provaId) {
   const eventoId = provaInfo.eventos_id;
 
   // Garante que a tabela classificacoes está atualizada para o cálculo de pontuação
-  console.log(`[transmitirResultadoProva] Atualizando classificacoes da prova ${provaId} antes da pontuação`);
+  console.log(`[transmitirResultadoProva] Atualizando classificações da prova ${provaId}`);
   await classificarProva(provaId);
 
   let dados = [];
@@ -536,17 +542,46 @@ async function transmitirResultadoProva(provaId) {
   await db.query('DELETE FROM resultadosCompletos WHERE eventos_provas_id = ?', [provaId]);
 
   // Monta array para classificação
-  const resultadosParaClassificar = dados.map(row => {
+  const resultadosParaClassificar = await Promise.all(dados.map(async row => {
     let tempo = null;
     if (row.minutos !== null && row.segundos !== null && row.centesimos !== null) {
       tempo = `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`;
     }
+
+    // Recupera o tempo de inscrição do nadador
+    let tempoInscricaoCentesimos = null;
+    if (row.nadadores_id) {
+      const [inscricao] = await db.query(
+        'SELECT minutos, segundos, centesimos FROM inscricoes WHERE nadadores_id = ? AND eventos_provas_id = ? LIMIT 1',
+        [row.nadadores_id, provaId]
+      );
+
+      if (inscricao.length > 0) {
+        const { minutos, segundos, centesimos } = inscricao[0];
+        // Valida se os valores não são null, undefined ou 0
+        if (minutos != null && segundos != null && centesimos != null) {
+          const calculado = minutos * 6000 + segundos * 100 + centesimos;
+          // Só atribui se o tempo total for maior que 0
+          if (calculado > 0) {
+            tempoInscricaoCentesimos = calculado;
+          }
+        }
+      }
+    }
+
+    // Calcula a diferença em centésimos, mas só preenche se o tempo de inscrição existir e for válido
+    const tempoRealizadoCentesimos = row.minutos * 6000 + row.segundos * 100 + row.centesimos;
+    const diferencaCentesimos = tempoInscricaoCentesimos !== null && tempoInscricaoCentesimos > 0
+      ? calcularDiferencaCentesimos(tempoInscricaoCentesimos, tempoRealizadoCentesimos)
+      : null;
+
     return {
       ...row,
       tempo,
       status: row.status || 'NC',
+      diferenca_centesimos: diferencaCentesimos
     };
-  });
+  }));
 
   // Classifica por tempo com empate
   const classificados = classificarPorTempoComEmpate(resultadosParaClassificar);
@@ -577,8 +612,11 @@ async function transmitirResultadoProva(provaId) {
     row.classificacao,
     null, // tipo
     null, // pontuacao_individual
-    null  // pontuacao_equipe
+    null, // pontuacao_equipe
+    row.diferenca_centesimos // Adiciona a diferença de centésimos
   ]);
+
+  console.log(`[transmitirResultadoProva] Valores a serem inseridos na tabela resultadosCompletos:`, valores);
 
   if (valores.length > 0) {
     await db.query(`
@@ -586,7 +624,7 @@ async function transmitirResultadoProva(provaId) {
         eventos_id, eventos_provas_id, prova_id, nome_prova, ordem, eh_revezamento, sexo_prova,
         bateria_id, numero_bateria, raia, nadadores_id, nome_nadador, categoria_nadador, sexo_nadador,
         equipes_id, nome_equipe, tempo, minutos, segundos, centesimos, status, classificacao, tipo,
-        pontuacao_individual, pontuacao_equipe
+        pontuacao_individual, pontuacao_equipe, diferenca_centesimos
       ) VALUES ?
     `, [valores]);
   }

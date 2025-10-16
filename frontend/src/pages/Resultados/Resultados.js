@@ -73,6 +73,8 @@ const Resultados = () => {
     // Agrupa por prova
     const provas = {};
     dados.forEach(row => {
+      console.log('Dados do nadador:', row); // Log para verificar os dados do nadador
+      console.log('Melhor tempo recebido:', row.melhor_tempo); // Log específico para o campo melhor_tempo
       if (!provas[row.eventos_provas_id]) {
         provas[row.eventos_provas_id] = {
           nome: row.nome_prova,
@@ -184,6 +186,7 @@ const Resultados = () => {
   const fetchResultadosCompleto = async () => {
     try {
       const response = await api.get(`${apiBuscaResultadosCompleto}/${eventoId}`);
+      console.log('Dados recebidos da API:', response.data); // Log para verificar os dados recebidos
       setDados(response.data || []);
       setErro(null);
     } catch (err) {
@@ -233,6 +236,50 @@ const Resultados = () => {
     return classificacao;
   };
 
+  const calcularDiferencaTempo = (tempoRealizado, tempoBalizamento) => {
+    if (!tempoRealizado || !tempoBalizamento || tempoRealizado === 'NC' || tempoRealizado === 'DQL') {
+      return null;
+    }
+
+    const [minR, secR, centR] = tempoRealizado.split(':').map(Number);
+    const [minB, secB, centB] = tempoBalizamento.split(':').map(Number);
+
+    const totalCentR = minR * 6000 + secR * 100 + centR;
+    const totalCentB = minB * 6000 + secB * 100 + centB;
+
+    const diferenca = totalCentR - totalCentB;
+    const minutos = Math.floor(Math.abs(diferenca) / 6000);
+    const segundos = Math.floor((Math.abs(diferenca) % 6000) / 100);
+    const centesimos = Math.abs(diferenca) % 100;
+
+    return `${diferenca < 0 ? '-' : '+'}${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}:${String(centesimos).padStart(2, '0')}`;
+  };
+
+  const renderDiferencaTempo = (tempoRealizado, diferencaCentesimos) => {
+    if (!diferencaCentesimos || tempoRealizado === 'NC' || tempoRealizado === 'DQL') {
+      return tempoRealizado;
+    }
+
+    const diferenca = Math.abs(diferencaCentesimos);
+    const minutos = Math.floor(diferenca / 6000);
+    const segundos = Math.floor((diferenca % 6000) / 100);
+    const centesimos = diferenca % 100;
+
+    const diferencaFormatada = `${diferencaCentesimos < 0 ? '-' : '+'}${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}:${String(centesimos).padStart(2, '0')}`;
+
+    return (
+      <>
+        {tempoRealizado}{' '}
+        <span
+          className={diferencaCentesimos < 0 ? style.tempoMelhorado : style.tempoPiorado}
+          title="Diferença em relação ao tempo de balizamento"
+        >
+          ({diferencaFormatada})
+        </span>
+      </>
+    );
+  };
+
   return (
     <>
       <Cabecalho />
@@ -268,19 +315,16 @@ const Resultados = () => {
                           <div className={`${style.tabelaPersonalizada} ${style.tabelaResultadosBalizamento}`}>
                             <Tabela
                               dados={bateria.nadadores.map(nadador => {
-                                let tempo;
-                                if (eventoFinalizado === false && (!nadador.tempo || nadador.tempo === "NC" || nadador.tempo === "A DISPUTAR")) {
-                                  tempo = "A DISPUTAR";
-                                } else if (nadador.status === 'NC') {
-                                  tempo = 'NC';
-                                } else if (nadador.status === 'DQL') {
-                                  tempo = 'DQL';
-                                } else {
-                                  tempo = nadador.tempo;
-                                }
+                                const tempo = renderDiferencaTempo(nadador.tempo, nadador.diferenca_centesimos);
                                 return prova.revezamento
                                   ? { Raia: nadador.raia, Equipe: nadador.nome_equipe, Tempo: tempo }
-                                  : { Raia: nadador.raia, Nome: nadador.nome_nadador, Tempo: tempo, Equipe: nadador.nome_equipe, Categoria: nadador.categoria_nadador };
+                                  : { 
+                                      Raia: nadador.raia, 
+                                      Nome: nadador.nome_nadador, 
+                                      Tempo: tempo, 
+                                      Equipe: nadador.nome_equipe, 
+                                      Categoria: nadador.categoria_nadador 
+                                    };
                               })}
                               textoExibicao={prova.revezamento
                                 ? { Raia: 'Raia', Equipe: 'Equipe', Tempo: 'Tempo' }

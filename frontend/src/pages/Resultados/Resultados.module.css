@@ -273,3 +273,21 @@ body {
   gap: 16px;
   justify-content: center;
 }
+
+/* ======================= */
+/* Tempos Melhorados e Piorados */
+/* ======================= */
+
+.tempoMelhorado {
+  background-color: #d4edda; /* Verde claro */
+  color: #155724; /* Verde escuro */
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}
+
+.tempoPiorado {
+  background-color: #f8d7da; /* Vermelho claro */
+  color: #721c24; /* Vermelho escuro */
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}

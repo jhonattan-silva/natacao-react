@@ -1,0 +1,18 @@
+.historico {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.conteudo {
+    flex: 1;
+    padding: 20px;
+    text-align: center;
+}
+
+.botoes {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
