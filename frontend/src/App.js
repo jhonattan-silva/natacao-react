@@ -18,6 +18,7 @@ import Noticias from "./pages/Noticias/Noticias";
 import NoticiasAdmin from "./pages/NoticiasAdmin/NoticiasAdmin"; // Página de administração de notícias
 import Records from "./pages/Records/Records"; // Página de records
 import Historico from "./pages/Historico/Historico"; // Página de histórico de competições
+import Relatorios from "./pages/Relatorios/Relatorios"; // Página de relatórios 
 
 
 const App = () => {
@@ -116,6 +117,14 @@ const App = () => {
                     element={
                         <ProtecaoRota requiredRoles={['admin']}>
                             <NoticiasAdmin />
+                        </ProtecaoRota>
+                    }
+                />
+                <Route
+                    path="/relatorios"
+                    element={
+                        <ProtecaoRota requiredRoles={['admin', 'gerencial']}>
+                            <Relatorios />
                         </ProtecaoRota>
                     }
                 />

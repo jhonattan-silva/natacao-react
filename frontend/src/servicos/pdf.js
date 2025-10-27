@@ -19,8 +19,6 @@ try {
   console.error('Erro ao configurar VFS:', error);
 }
 
-console.log('pdfMake.vfs:', pdfMake.vfs); // Deve mostrar um objeto, não undefined
-
 // Define as fontes padrão (Roboto) para o pdfMake
 pdfMake.fonts = {
   Roboto: {

@@ -90,8 +90,6 @@ router.post('/cadastrarEtapas', async (req, res) => {
     const { nome, data, cidade, sede, endereco, quantidade_raias, torneios_id, provas } = req.body;
 
     try {
-        console.log('Dados recebidos para cadastro:', req.body); // Adiciona log para depuração
-
         // Cria o evento na tabela etapas
         const [result] = await db.query(
             'INSERT INTO eventos (nome, data, cidade, sede, endereco, quantidade_raias, torneios_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -100,9 +98,7 @@ router.post('/cadastrarEtapas', async (req, res) => {
         const etapaId = result.insertId; // ID do novo evento (etapa) criado
 
         // Insere as provas na tabela eventos_provas
-        for (const prova of provas) {
-            console.log('Inserindo prova COMPLETA:', prova); // Adiciona log para depuração
-            
+        for (const prova of provas) {            
             await db.query(
                 'INSERT INTO eventos_provas (eventos_id, provas_id) VALUES (?, ?)',
                 [etapaId, prova.id]

@@ -199,3 +199,228 @@ export const gerarPDFInscricoes = (inscricoes, evento, equipeNome, geradorNome, 
     const fileName = `Relatorio_Inscricoes_${evento?.nome?.replace(/\s+/g, '_') || 'Evento'}_${equipe}_${anoAtual}.pdf`;
     pdfMake.createPdf(docDefinition).download(fileName);
 };
+
+// Função para gerar PDF do Relatório de Resultados da Equipe
+export const gerarPDFResultadosEquipe = (evento, provas, estatisticas, equipeNome) => {
+    const anoAtual = new Date().getFullYear();
+    
+    // Formatar data do evento
+    let formattedDate = 'N/D';
+    if (evento?.data) {
+        const dt = new Date(evento.data);
+        const dia = dt.getDate().toString().padStart(2, '0');
+        const mes = (dt.getMonth() + 1).toString().padStart(2, '0');
+        const ano = dt.getFullYear();
+        formattedDate = `${dia}/${mes}/${ano}`;
+    }
+
+    // Corpo da tabela de provas
+    const bodyProvas = [
+        ['Prova', 'Nadador', 'Categoria', 'Tempo', 'Classificação']
+    ];
+
+    provas.forEach(prova => {
+        const classificacao = prova.classificacao === 1 ? '🥇' :
+                            prova.classificacao === 2 ? '🥈' :
+                            prova.classificacao === 3 ? '🥉' :
+                            prova.classificacao || '-';
+        
+        bodyProvas.push([
+            prova.prova || '-',
+            prova.nadador || '-',
+            prova.categoria || '-',
+            prova.tempo || '-',
+            String(classificacao)
+        ]);
+    });
+
+    const docDefinition = {
+        pageMargins: [40, 150, 40, 60],
+        header: {
+            stack: [
+                { image: logo, width: 100, alignment: 'center', margin: [0, 10, 0, 10] },
+                {
+                    text: `Relatório de Resultados - ${equipeNome}\n${evento?.evento || 'Evento'} - ${anoAtual}`,
+                    style: 'header',
+                    alignment: 'center'
+                }
+            ]
+        },
+        content: [
+            // Dados do Evento
+            { text: 'Dados do Evento', style: 'subheader', margin: [0, 0, 0, 10] },
+            {
+                table: {
+                    body: [
+                        ['Nome do Evento', evento?.evento || 'N/D'],
+                        ['Data', formattedDate],
+                        ['Cidade', evento?.cidade || 'N/D'],
+                        ['Sede', evento?.sede || 'N/D']
+                    ]
+                },
+                layout: 'noBorders'
+            },
+            { text: '\n' },
+            // Estatísticas
+            { text: 'Resumo Geral', style: 'subheader', margin: [0, 0, 0, 10] },
+            {
+                table: {
+                    headerRows: 1,
+                    widths: ['*', 'auto'],
+                    body: [
+                        ['Métrica', 'Valor'],
+                        ['Total de Nadadores', String(estatisticas?.total_nadadores || 0)],
+                        ['Total de Provas', String(estatisticas?.total_provas || 0)],
+                        ['🥇 Ouro', String(estatisticas?.total_ouro || 0)],
+                        ['🥈 Prata', String(estatisticas?.total_prata || 0)],
+                        ['🥉 Bronze', String(estatisticas?.total_bronze || 0)],
+                        ['Pontos Individuais', String(estatisticas?.total_pontos_individuais || 0)],
+                        ['Pontos Equipe', String(estatisticas?.total_pontos_equipe || 0)]
+                    ]
+                },
+                layout: 'lightHorizontalLines'
+            },
+            { text: '\n' },
+            // Resultados das Provas
+            { text: 'Resultados das Provas', style: 'subheader', margin: [0, 0, 0, 10] },
+            {
+                table: {
+                    headerRows: 1,
+                    widths: ['*', '*', 'auto', 'auto', 'auto'],
+                    body: bodyProvas
+                },
+                layout: 'lightHorizontalLines'
+            }
+        ],
+        styles: {
+            header: { fontSize: 18, bold: true, margin: [0, 10, 0, 10] },
+            subheader: { fontSize: 14, bold: true }
+        }
+    };
+
+    const fileName = `Relatorio_Resultados_${equipeNome}_${evento?.evento?.replace(/\s+/g, '_') || 'Evento'}_${anoAtual}.pdf`;
+    pdfMake.createPdf(docDefinition).download(fileName);
+};
+
+// Função para gerar PDF dos Melhores Tempos por Nadador
+export const gerarPDFMelhoresTempos = (melhoresTempos, equipeNome) => {
+    const anoAtual = new Date().getFullYear();
+
+    const bodyTempos = [
+        ['Nadador', 'Categoria', 'Prova', 'Melhor Tempo', 'Evento', 'Data']
+    ];
+
+    melhoresTempos.forEach(tempo => {
+        const dataFormatada = new Date(tempo.evento_data).toLocaleDateString('pt-BR');
+        bodyTempos.push([
+            tempo.nadador_nome || '-',
+            tempo.categoria_nome || '-',
+            tempo.prova_nome || '-',
+            tempo.melhor_tempo || '-',
+            tempo.evento_nome || '-',
+            dataFormatada
+        ]);
+    });
+
+    const docDefinition = {
+        pageOrientation: 'landscape',
+        pageMargins: [40, 150, 40, 60],
+        header: {
+            stack: [
+                { image: logo, width: 100, alignment: 'center', margin: [0, 10, 0, 10] },
+                {
+                    text: `Melhores Tempos por Nadador - ${equipeNome} - ${anoAtual}`,
+                    style: 'header',
+                    alignment: 'center'
+                }
+            ]
+        },
+        content: [
+            { text: 'Melhores Tempos por Nadador', style: 'subheader', margin: [0, 0, 0, 10] },
+            {
+                table: {
+                    headerRows: 1,
+                    widths: ['*', 'auto', '*', 'auto', '*', 'auto'],
+                    body: bodyTempos
+                },
+                layout: 'lightHorizontalLines'
+            }
+        ],
+        styles: {
+            header: { fontSize: 18, bold: true, margin: [0, 10, 0, 10] },
+            subheader: { fontSize: 14, bold: true }
+        }
+    };
+
+    const fileName = `Melhores_Tempos_Nadador_${equipeNome}_${anoAtual}.pdf`;
+    pdfMake.createPdf(docDefinition).download(fileName);
+};
+
+// Função para gerar PDF dos Records por Prova
+export const gerarPDFRecordsPorProva = (records, equipeNome, filtros) => {
+    const anoAtual = new Date().getFullYear();
+
+    const bodyRecords = [
+        ['Prova', 'Sexo', 'Nadador', 'Categoria', 'Tempo', 'Evento', 'Data']
+    ];
+
+    records.forEach(record => {
+        const sexo = record.sexo_prova === 'M' ? 'Masculino' : 'Feminino';
+        const dataFormatada = new Date(record.evento_data).toLocaleDateString('pt-BR');
+        bodyRecords.push([
+            record.prova_nome || '-',
+            sexo,
+            record.nadador_nome || '-',
+            record.categoria_nome || '-',
+            record.tempo_record || '-',
+            record.evento_nome || '-',
+            dataFormatada
+        ]);
+    });
+
+    // Informação sobre filtros aplicados
+    const filtrosAplicados = [];
+    if (filtros.sexo !== 'todos') {
+        filtrosAplicados.push(`Sexo: ${filtros.sexo === 'M' ? 'Masculino' : 'Feminino'}`);
+    }
+    if (filtros.provas && filtros.provas.length > 0) {
+        filtrosAplicados.push(`${filtros.provas.length} prova(s) selecionada(s)`);
+    }
+
+    const docDefinition = {
+        pageOrientation: 'landscape',
+        pageMargins: [40, 150, 40, 60],
+        header: {
+            stack: [
+                { image: logo, width: 100, alignment: 'center', margin: [0, 10, 0, 10] },
+                {
+                    text: `Melhores Tempos por Prova - ${equipeNome} - ${anoAtual}`,
+                    style: 'header',
+                    alignment: 'center'
+                }
+            ]
+        },
+        content: [
+            ...(filtrosAplicados.length > 0 ? [
+                { text: 'Filtros Aplicados:', style: 'subheader', margin: [0, 0, 0, 5] },
+                { text: filtrosAplicados.join(', '), margin: [0, 0, 0, 10] }
+            ] : []),
+            { text: 'Melhores Tempos por Prova', style: 'subheader', margin: [0, 0, 0, 10] },
+            {
+                table: {
+                    headerRows: 1,
+                    widths: ['*', 'auto', '*', 'auto', 'auto', '*', 'auto'],
+                    body: bodyRecords
+                },
+                layout: 'lightHorizontalLines'
+            }
+        ],
+        styles: {
+            header: { fontSize: 18, bold: true, margin: [0, 10, 0, 10] },
+            subheader: { fontSize: 14, bold: true }
+        }
+    };
+
+    const fileName = `Melhores_Tempos_Prova_${equipeNome}_${anoAtual}.pdf`;
+    pdfMake.createPdf(docDefinition).download(fileName);
+};

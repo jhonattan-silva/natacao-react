@@ -73,8 +73,6 @@ const Resultados = () => {
     // Agrupa por prova
     const provas = {};
     dados.forEach(row => {
-      console.log('Dados do nadador:', row); // Log para verificar os dados do nadador
-      console.log('Melhor tempo recebido:', row.melhor_tempo); // Log específico para o campo melhor_tempo
       if (!provas[row.eventos_provas_id]) {
         provas[row.eventos_provas_id] = {
           nome: row.nome_prova,
@@ -186,7 +184,6 @@ const Resultados = () => {
   const fetchResultadosCompleto = async () => {
     try {
       const response = await api.get(`${apiBuscaResultadosCompleto}/${eventoId}`);
-      console.log('Dados recebidos da API:', response.data); // Log para verificar os dados recebidos
       setDados(response.data || []);
       setErro(null);
     } catch (err) {
@@ -530,7 +527,6 @@ const Resultados = () => {
                   )}
 
                   <h2 className={style.titulo}>Ranking de Equipes Mirins</h2>
-                  {console.log('pontuacaoMirim:', pontuacaoMirim)}
                   <Tabela
                     className={style.tabelaPontuacaoEtapa}
                     dados={
