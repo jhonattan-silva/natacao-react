@@ -275,6 +275,35 @@ body {
 }
 
 /* ======================= */
+/* Botões Anos Anteriores  */
+/* ======================= */
+
+.botoesAnosAnteriores {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  width: 100%;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #ddd;
+}
+
+.botaoAno {
+  min-width: 240px;
+  padding: 14px 28px;
+  background-color: #ff8c00;
+  font-size: 1.32rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.botaoAno:hover {
+  background-color: #ff7700;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 140, 0, 0.4);
+}
+
+/* ======================= */
 /* Tempos Melhorados e Piorados */
 /* ======================= */
 

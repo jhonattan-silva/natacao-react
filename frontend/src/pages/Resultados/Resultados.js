@@ -7,6 +7,7 @@ import Cabecalho from '../../componentes/Cabecalho/Cabecalho';
 import Rodape from '../../componentes/Rodape/Rodape';
 import Abas from '../../componentes/Abas/Abas';
 import Card from '../../componentes/Card/Card';
+import Botao from '../../componentes/Botao/Botao';
 import { formataData } from '../../servicos/functions';
 
 const Resultados = () => {
@@ -23,43 +24,6 @@ const Resultados = () => {
   const [eventoFinalizado, setEventoFinalizado] = useState(null);
   const [pontuacaoMirim, setPontuacaoMirim] = useState([]);
 
-  // Utilitários para regras de pontuação
-  const provasCategoria = [
-    '50M BORBOLETA', '50M COSTAS', '50M PEITO', '50M LIVRE', '100M MEDLEY'
-  ];
-  const provasOuro = [
-    '100M', '200M', '400M', '800M', '1500M'
-  ];
-  function isProvaCategoria(nomeProva) {
-    return provasCategoria.some(function (p) { return nomeProva.toUpperCase().includes(p); });
-  }
-  function isProvaOuro(nomeProva) {
-    return provasOuro.some(function (p) { return nomeProva.toUpperCase().includes(p); });
-  }
-  function isRevezamento(nomeProva) {
-    return nomeProva.toUpperCase().includes('REVEZAMENTO');
-  }
-  function faixaEtaria(categoria) {
-    if (!categoria) return 'OUTRO';
-    var cat = categoria.toUpperCase();
-    if (cat.includes('PRÉ-MIRIM')) return 'PRE_MIRIM';
-    if (cat.includes('MIRIM I')) return 'MIRIM_I';
-    if (cat.includes('MIRIM II')) return 'MIRIM_II';
-    if (cat.includes('PETIZ')) return 'PETIZ';
-    if (cat.includes('INFANTIL')) return 'INFANTIL';
-    if (cat.includes('JUNIOR')) return 'JUNIOR';
-    if (cat.includes('SÊNIOR')) return 'SENIOR';
-    return 'OUTRO';
-  }
-  function pontosPorColocacao(pos, revezamento) {
-    var tabela = [9, 7, 6, 5, 4, 3, 2, 1];
-    if (pos >= 1 && pos <= 8) {
-      return revezamento ? tabela[pos - 1] * 2 : tabela[pos - 1];
-    }
-    return 0;
-  }
-
-  //const apiResultados = '/resultados/resultadosEvento';
   const apiClassificacao = '/resultados/resultadosPorCategoria';
   const apiAbsoluto = '/resultados/resultadosAbsoluto';
   const apiResultadosBanco = '/resultados/listarDoBanco';
@@ -231,25 +195,6 @@ const Resultados = () => {
       return <span className={style.medalha}>🥉</span>;
     }
     return classificacao;
-  };
-
-  const calcularDiferencaTempo = (tempoRealizado, tempoBalizamento) => {
-    if (!tempoRealizado || !tempoBalizamento || tempoRealizado === 'NC' || tempoRealizado === 'DQL') {
-      return null;
-    }
-
-    const [minR, secR, centR] = tempoRealizado.split(':').map(Number);
-    const [minB, secB, centB] = tempoBalizamento.split(':').map(Number);
-
-    const totalCentR = minR * 6000 + secR * 100 + centR;
-    const totalCentB = minB * 6000 + secB * 100 + centB;
-
-    const diferenca = totalCentR - totalCentB;
-    const minutos = Math.floor(Math.abs(diferenca) / 6000);
-    const segundos = Math.floor((Math.abs(diferenca) % 6000) / 100);
-    const centesimos = Math.abs(diferenca) % 100;
-
-    return `${diferenca < 0 ? '-' : '+'}${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}:${String(centesimos).padStart(2, '0')}`;
   };
 
   const renderDiferencaTempo = (tempoRealizado, diferencaCentesimos) => {
@@ -586,6 +531,21 @@ const Resultados = () => {
                 ) : (
                   <p>Nenhum evento com resultados encontrado.</p>
                 )}
+                
+                <div className={style.botoesAnosAnteriores}>
+                  <Botao 
+                    onClick={() => navigate('/resultados/2024')}
+                    className={style.botaoAno}
+                  >
+                    Resultados 2024
+                  </Botao>
+                  <Botao 
+                    onClick={() => navigate('/resultados/2023')}
+                    className={style.botaoAno}
+                  >
+                    Resultados 2023
+                  </Botao>
+                </div>
               </div>
             )}
           </>

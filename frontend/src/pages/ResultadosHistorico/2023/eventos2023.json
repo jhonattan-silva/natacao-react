@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "nome": "Etapa Marília",
+    "data": "2023-02-25",
+    "cidade": "Marília",
+    "sede": "Avenida Brig. Eduardo Gomes, 1000",
+    "arquivo": "2023-etapa1.xlsx"
+  },
+  {
+    "id": 2,
+    "nome": "Etapa Lins",
+    "data": "2023-03-18",
+    "cidade": "Lins",
+    "sede": "Rod. Marechal Rondon, km444",
+    "arquivo": "2023-etapa2.xlsx"
+  },
+  {
+    "id": 3,
+    "nome": "Etapa Guaiçara",
+    "data": "2023-04-15",
+    "cidade": "Guaiçara",
+    "sede": "R: Dr. Arnaldo de Andrade",
+    "arquivo": "2023-etapa3.xlsx"
+  },
+  {
+    "id": 4,
+    "nome": "Etapa Lençóis Paulista",
+    "data": "2023-05-13",
+    "cidade": "Lençóis Paulista",
+    "sede": "Avenida Brasil, 1039",
+    "arquivo": "2023-etapa4.xlsx"
+  },
+  {
+    "id": 5,
+    "nome": "Etapa Assis",
+    "data": "2023-06-17",
+    "cidade": "Assis",
+    "sede": "Luis Carlos da Silveira, 10",
+    "arquivo": "2023-etapa5.xlsx"
+  },
+  {
+    "id": 6,
+    "nome": "Etapa Marilia II",
+    "data": "2023-08-19",
+    "cidade": "Marília",
+    "sede": "Avenida Brigadeiro Eduardo Gomes, 1000",
+    "arquivo": "2023-etapa6.xlsx"
+  },
+  {
+    "id": 7,
+    "nome": "Etapa Penápolis",
+    "data": "2023-09-16",
+    "cidade": "Penápolis",
+    "sede": "Avenida Luís Osório, 22",
+    "arquivo": "2023-etapa7.xlsx"
+  },
+  {
+    "id": 8,
+    "nome": "Etapa Tupã",
+    "data": "2023-10-21",
+    "cidade": "Tupã",
+    "sede": "Avenida dos Universitários, 145",
+    "arquivo": "2023-etapa8.xlsx"
+  },
+  {
+    "id": 9,
+    "nome": "Etapa Lençóis Paulista II",
+    "data": "2023-11-18",
+    "cidade": "Lençóis Paulista",
+    "sede": "Avenida Brasil, 1039",
+    "arquivo": "2023-etapa9.xlsx"
+  },
+  {
+    "id": 10,
+    "nome": "Etapa Jaú",
+    "data": "2023-12-16",
+    "cidade": "Jaú",
+    "sede": "Alameda Dr José R. Carneiro Lyra, 60",
+    "arquivo": "2023-etapa10.xlsx"
+  }
+]

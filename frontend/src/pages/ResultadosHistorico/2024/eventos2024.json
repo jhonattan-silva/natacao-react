@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "nome": "Etapa Tupã",
+    "data": "2024-02-24",
+    "cidade": "Tupã",
+    "sede": "Avenida dos Universitários, 145",
+    "arquivo": "2024-etapa1.xlsx"
+  },
+  {
+    "id": 2,
+    "nome": "Etapa Lins",
+    "data": "2024-03-16",
+    "cidade": "Lins",
+    "sede": "Rod. Marechal Rondon, km444",
+    "arquivo": "2024-etapa2.xlsx"
+  },
+  {
+    "id": 3,
+    "nome": "Etapa Guaiçara",
+    "data": "2024-04-13",
+    "cidade": "Guaiçara",
+    "sede": "Rua: Dr. Arnaldo de Andrade, 150",
+    "arquivo": "2024-etapa3.xlsx"
+  },
+  {
+    "id": 4,
+    "nome": "Etapa Lençóis Paulista",
+    "data": "2024-05-11",
+    "cidade": "Lençóis Paulista",
+    "sede": "Avenida Brasil, 1039",
+    "arquivo": "2024-etapa4.xlsx"
+  },
+  {
+    "id": 5,
+    "nome": "Etapa Assis",
+    "data": "2024-06-22",
+    "cidade": "Assis",
+    "sede": "Rua: Luis Carlos da Silveira, 10",
+    "arquivo": "2024-etapa5.xlsx"
+  },
+  {
+    "id": 6,
+    "nome": "Etapa Assis II",
+    "data": "2024-08-17",
+    "cidade": "Assis",
+    "sede": "Luis Carlos da Silveira, 10",
+    "arquivo": "2024-etapa6.xlsx"
+  },
+  {
+    "id": 7,
+    "nome": "Etapa Lins II",
+    "data": "2024-09-21",
+    "cidade": "Lins",
+    "sede": "Rua: Dr. Aureliano R. de Andrade, 51",
+    "arquivo": "2024-etapa7.xlsx"
+  },
+  {
+    "id": 8,
+    "nome": "Etapa Lençóis Paulista II",
+    "data": "2024-10-19",
+    "cidade": "Lençóis Paulista",
+    "sede": "Avenida Brasil, 1039",
+    "arquivo": "2024-etapa8.xlsx"
+  },
+  {
+    "id": 9,
+    "nome": "Etapa Penápolis",
+    "data": "2024-11-09",
+    "cidade": "Penápolis",
+    "sede": "Avenida Luis Osório, 22",
+    "arquivo": "2024-etapa9.xlsx"
+  },
+  {
+    "id": 10,
+    "nome": "Etapa Tupã II",
+    "data": "2024-12-07",
+    "cidade": "Tupã",
+    "sede": "Avenida dos Universitários, 145",
+    "arquivo": "2024-etapa10.xlsx"
+  }
+]

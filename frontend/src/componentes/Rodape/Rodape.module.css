@@ -12,6 +12,23 @@
     color: white;
 }
 
+.rodapeTextos {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: white;
+}
+
+.rodapeTextos h3,
+.rodapeTextos h4 {
+    color: white;
+    margin: 0;
+}
+
+.rodape > * {
+    color: white;
+}
+
 @media (max-width: 600px) {
     .rodape {
         font-size: 14px;

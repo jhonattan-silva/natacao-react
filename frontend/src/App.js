@@ -19,6 +19,8 @@ import NoticiasAdmin from "./pages/NoticiasAdmin/NoticiasAdmin"; // Página de a
 import Records from "./pages/Records/Records"; // Página de records
 import Historico from "./pages/Historico/Historico"; // Página de histórico de competições
 import Relatorios from "./pages/Relatorios/Relatorios"; // Página de relatórios 
+import Resultados2023 from "./pages/ResultadosHistorico/Resultados2023";
+import Resultados2024 from "./pages/ResultadosHistorico/Resultados2024";
 
 
 const App = () => {
@@ -38,6 +40,8 @@ const App = () => {
                 <Route path="/noticias/:id" element={<Noticias />} /> {/* Rota para detalhes de uma notícia específica */}
                 <Route path="/records" element={<Records />} /> {/* Página de records */}
                 <Route path="/historico" element={<Historico />} /> {/* Página de histórico de competições */}
+                <Route path="/resultados/2023" element={<Resultados2023 />} />
+                <Route path="/resultados/2024" element={<Resultados2024 />} />
 
                 {/* Rotas protegidas */}
                 <Route
