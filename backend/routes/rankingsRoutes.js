@@ -281,23 +281,69 @@ async function atualizarRankingEquipesPorEvento(eventosId) {
     }
 }
 
-// Endpoint para consultar ranking de equipes mirins por evento
+// Rota para ranking de equipes Mirim por evento
 router.get('/ranking-mirim/:eventoId', async (req, res) => {
+  const { eventoId } = req.params;
+
+  console.log('🔍 Backend: Buscando ranking mirim para evento:', eventoId);
+
   try {
-    const { eventoId } = req.params;
-    const [ranking] = await db.execute(`
-      SELECT e.id AS equipes_id, e.nome AS equipe_nome, SUM(r.pontos) AS pontos
-      FROM rankingEquipesMirim r
-      JOIN equipes e ON r.equipes_id = e.id
-      WHERE r.eventos_id = ?
-      GROUP BY e.id, e.nome
-      HAVING pontos > 0
-      ORDER BY pontos DESC
+    // 1️⃣ Buscar torneios_id do evento
+    const [[evento]] = await db.query(
+      'SELECT torneios_id FROM eventos WHERE id = ?',
+      [eventoId]
+    );
+    if (!evento) {
+      return res.status(404).json({ error: 'Evento não encontrado' });
+    }
+    const torneiosId = evento.torneios_id;
+
+    // 2️⃣ DELETE - Limpar dados antigos do evento
+    await db.query(
+      'DELETE FROM rankingEquipesMirim WHERE eventos_id = ?',
+      [eventoId]
+    );
+
+    // 3️⃣ INSERT - Calcular e inserir novos dados
+    await db.query(`
+      INSERT INTO rankingEquipesMirim (torneios_id, eventos_id, equipes_id, pontos)
+      SELECT 
+        ? AS torneios_id,
+        ep.eventos_id,
+        c.equipes_id,
+        SUM(c.pontuacao_equipe) AS pontos
+      FROM classificacoes c
+      JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
+      JOIN nadadores n ON c.nadadores_id = n.id
+      JOIN categorias cat ON n.categorias_id = cat.id
+      WHERE ep.eventos_id = ?
+        AND c.status = 'OK'
+        AND c.tipo = 'CATEGORIA'
+        AND cat.eh_mirim = 1
+        AND c.pontuacao_equipe IS NOT NULL
+        AND c.pontuacao_equipe > 0
+      GROUP BY ep.eventos_id, c.equipes_id
+    `, [torneiosId, eventoId]);
+
+    // 4️⃣ SELECT - Retornar o ranking atualizado
+    const [resultados] = await db.query(`
+      SELECT 
+        rem.equipes_id AS equipe_id,
+        e.nome AS equipe_nome,
+        rem.pontos
+      FROM rankingEquipesMirim rem
+      JOIN equipes e ON rem.equipes_id = e.id
+      WHERE rem.eventos_id = ?
+      ORDER BY rem.pontos DESC
     `, [eventoId]);
-    res.status(200).json(ranking);
+
+    res.json(resultados);
   } catch (error) {
-    console.error('[rankingsRoutes] Erro ao consultar ranking mirim:', error);
-    res.status(500).json({ error: 'Erro ao consultar ranking mirim.' });
+    console.error('❌ Backend: Erro ao buscar ranking mirim:', error);
+    res.status(500).json({ 
+      error: 'Erro ao buscar ranking mirim',
+      details: error.message 
+    });
   }
 });
 

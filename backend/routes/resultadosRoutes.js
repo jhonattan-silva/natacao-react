@@ -591,12 +591,11 @@ async function classificarProva(provaId) {
 
     await connection.commit();
     connection.release();
-
     return { success: true, message: 'Classificação da prova gerada com sucesso!' };
   } catch (error) {
     if (connection) {
       await connection.rollback();
-      connection.release();
+      connection.release(); // <-- garante liberação do lock
     }
     console.error('Erro ao classificar prova:', error.message);
     throw error;

@@ -293,7 +293,6 @@ router.post('/salvarResultados', async (req, res) => {
     }
 
     const connection = await db.getConnection();
-
     try {
         await connection.beginTransaction();
 
@@ -409,7 +408,7 @@ router.post('/salvarResultados', async (req, res) => {
 
         // Após salvar os resultados e commit
         await connection.commit();
-        connection.release();
+        // connection.release(); // <-- Mover para o finally
 
         // Garante que a classificação está atualizada antes de pontuar
         await classificarProva(provaId);
@@ -430,7 +429,7 @@ router.post('/salvarResultados', async (req, res) => {
         console.error('Erro ao salvar resultados:', error);
         res.status(500).json({ success: false, message: error.message });
     } finally {
-        connection.release();
+        if (connection) connection.release(); // <-- garante liberação do lock
     }
 });
 
@@ -615,8 +614,6 @@ async function transmitirResultadoProva(provaId) {
     null, // pontuacao_equipe
     row.diferenca_centesimos // Adiciona a diferença de centésimos
   ]);
-
-  console.log(`[transmitirResultadoProva] Valores a serem inseridos na tabela resultadosCompletos:`, valores);
 
   if (valores.length > 0) {
     await db.query(`

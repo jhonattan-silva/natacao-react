@@ -140,7 +140,14 @@ const Resultados = () => {
     try {
       const response = await api.get(`${apiRankingEquipesMirim}/${eventoId}`);
       setPontuacaoMirim(response.data || []);
+      
+      // Log adicional para verificar se há dados
+      if (!response.data || response.data.length === 0) {
+        console.warn('⚠️ Nenhum dado de ranking mirim retornado');
+      }
     } catch (err) {
+      console.error('❌ Erro ao buscar ranking mirim:', err);
+      console.error('Detalhes do erro:', err.response?.data);
       setErro('Erro ao buscar ranking mirim');
     }
   };

@@ -91,7 +91,6 @@ const calcularPontuacaoEvento = async (eventosId) => {
       await classificarProva(prova.evento_prova_id);
 
       const nomeProva = `${prova.estilo} ${prova.distancia} ${prova.sexo}`;
-      console.log(`[pontuacoesRoutes] Processando prova: "${nomeProva}" (ID: ${prova.evento_prova_id}) | revezamento: ${prova.eh_revezamento} | ouro: ${prova.eh_prova_ouro} | categoria: ${prova.eh_prova_categoria} | festival: ${prova.eh_prova_festival}`);
       
       if (prova.eh_revezamento) {
         // Revezamentos: pontuação dobrada (18, 14, 12...)
@@ -106,12 +105,10 @@ const calcularPontuacaoEvento = async (eventosId) => {
            ORDER BY c.classificacao ASC`,
           [prova.evento_prova_id]
         );
-        console.log(`[pontuacoesRoutes] Revezamento "${nomeProva}" - Encontradas ${classificacoes.length} classificações válidas`);
         
         // EQUIPE: todos os revezamentos pontuam para a equipe (pontuação dobrada)
         const pontuadosEquipe = atribuirPontuacao(classificacoes, PONTOS_REVEZAMENTO, 'tempo');
         if (pontuadosEquipe.length > 0) {
-          console.log(`[pontuacoesRoutes] Pontuação equipe revezamento:`, pontuadosEquipe);
           const equipeUpdates = pontuadosEquipe.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
           const idsEquipe = pontuadosEquipe.map(row => row.id);
           await db.execute(
@@ -122,7 +119,6 @@ const calcularPontuacaoEvento = async (eventosId) => {
         // INDIVIDUAL: revezamentos sempre pontuam individualmente (pontuação dobrada)
         const pontuadosInd = atribuirPontuacao(classificacoes, PONTOS_REVEZAMENTO, 'tempo');
         if (pontuadosInd.length > 0) {
-          console.log(`[pontuacoesRoutes] Pontuação individual revezamento:`, pontuadosInd);
           const indUpdates = pontuadosInd.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
           const idsInd = pontuadosInd.map(row => row.id);
           await db.execute(
@@ -295,12 +291,10 @@ const calcularPontuacaoEvento = async (eventosId) => {
         );
         
         if (classificacoes.length > 0) {
-          console.log(`[pontuacoesRoutes] Assumindo OURO "${nomeProva}" - Encontradas ${classificacoes.length} classificações`);
           
           // EQUIPE: todos pontuam para a equipe em provas ouro
           const pontuadosEquipe = atribuirPontuacao(classificacoes, PONTOS_INDIVIDUAL, 'tempo');
           if (pontuadosEquipe.length > 0) {
-            console.log(`[pontuacoesRoutes] Pontuação equipe:`, pontuadosEquipe);
             const equipeUpdates = pontuadosEquipe.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
             const idsEquipe = pontuadosEquipe.map(row => row.id);
             await db.execute(
@@ -310,11 +304,9 @@ const calcularPontuacaoEvento = async (eventosId) => {
           
           // INDIVIDUAL: só Petiz+ (não Mirim) pontua individualmente em provas ouro
           const petizMais = classificacoes.filter(row => row.eh_mirim !== 1);
-          console.log(`[pontuacoesRoutes] Petiz+ encontrados: ${petizMais.length}`);
           
           const pontuadosInd = atribuirPontuacao(petizMais, PONTOS_INDIVIDUAL, 'tempo');
           if (pontuadosInd.length > 0) {
-            console.log(`[pontuacoesRoutes] Pontuação individual Petiz+:`, pontuadosInd);
             const indUpdates = pontuadosInd.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
             const idsInd = pontuadosInd.map(row => row.id);
             await db.execute(
