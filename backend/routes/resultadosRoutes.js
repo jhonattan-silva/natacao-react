@@ -188,110 +188,28 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
 });
 
 
-// Rota para fechar a classificação de um evento
+// Rota para fechar a classificação de um evento (SIMPLIFICADA)
 router.post('/fecharClassificacao/:eventoId', async (req, res) => {
   const { eventoId } = req.params;
-  let connection;
+
+  console.log(`[fecharClassificacao] Encerrando evento ${eventoId}`);
 
   try {
-    connection = await db.getConnection();
-    await connection.beginTransaction();
-
-    const [evento] = await connection.query(
-      `SELECT classificacao_finalizada FROM eventos WHERE id = ?`, 
+    // Apenas atualiza a flag - classificação e pontuação já foram feitas
+    const [result] = await db.query(
+      'UPDATE eventos SET classificacao_finalizada = 1 WHERE id = ?',
       [eventoId]
     );
-    if (evento[0].classificacao_finalizada) {
-      await connection.release();
-      return res.status(400).json({ error: 'Classificação já foi fechada para este evento.' });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Evento não encontrado.' });
     }
 
-    // Excluir classificações anteriores para este evento
-    await connection.query(`
-      DELETE c FROM classificacoes c
-      INNER JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
-      WHERE ep.eventos_id = ?
-    `, [eventoId]);
-
-    // Buscar os resultados do evento
-    const [resultados] = await connection.query(`
-      SELECT 
-          r.nadadores_id AS nadadorId,
-          r.equipes_id AS equipeId,
-          r.eventos_provas_id AS eventosProvasId,
-          p.eh_revezamento,
-          p.eh_prova_ouro,
-          r.minutos, r.segundos, r.centesimos,
-          r.status
-      FROM resultados r
-      JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
-      JOIN provas p ON ep.provas_id = p.id
-      WHERE ep.eventos_id = ?
-      ORDER BY p.eh_revezamento ASC, p.id ASC, r.minutos ASC, r.segundos ASC, r.centesimos ASC;
-    `, [eventoId]);
-
-    const classificacoes = [];
-    const provas = {};
-
-    resultados.forEach(row => {
-      const chave = row.eventosProvasId;
-      if (!provas[chave]) provas[chave] = [];
-      provas[chave].push(row);
-    });
-
-    for (const eventosProvasId in provas) {
-      let posicao = 1;
-      provas[eventosProvasId].forEach(row => {
-        const tempo = row.status === 'OK' 
-          ? `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`
-          : row.status === 'DQL' ? 'DQL' : 'NC';
-        const classificacao = row.status === 'OK' ? posicao++ : null;
-
-        // Sempre gera ABSOLUTO
-        classificacoes.push([
-          row.eventosProvasId,
-          row.nadadorId || null,
-          row.equipeId || null,
-          tempo,
-          classificacao,
-          row.status,
-          'ABSOLUTO'
-        ]);
-        // Se não for revezamento, gera também CATEGORIA
-        if (!row.eh_revezamento) {
-          classificacoes.push([
-            row.eventosProvasId,
-            row.nadadorId || null,
-            row.equipeId || null,
-            tempo,
-            classificacao,
-            row.status,
-            'CATEGORIA'
-          ]);
-        }
-      });
-    }
-
-    if (classificacoes.length > 0) {
-      await connection.query(`
-        INSERT INTO classificacoes (eventos_provas_id, nadadores_id, equipes_id, tempo, classificacao, status, tipo)
-        VALUES ?
-      `, [classificacoes]);
-
-      await connection.query(`UPDATE eventos SET classificacao_finalizada = 1 WHERE id = ?`, [eventoId]);
-    }
-
-    await connection.commit();
-    connection.release();
-
-    res.json({ success: true, message: 'Classificação fechada com sucesso!' });
+    console.log(`[fecharClassificacao] Evento ${eventoId} encerrado com sucesso`);
+    res.json({ success: true, message: 'Evento finalizado com sucesso!' });
   } catch (error) {
-    if (connection) {
-      await connection.rollback();
-      connection.release();
-    }
-    console.error('Erro ao fechar classificação:', error.message);
-    res.status(500).json({ error: 'Erro ao fechar classificação' });
+    console.error(`[fecharClassificacao] Erro ao encerrar evento ${eventoId}:`, error);
+    res.status(500).json({ error: 'Erro ao finalizar evento.' });
   }
 });
 
