@@ -238,9 +238,11 @@ router.post('/salvarInscricao', async (req, res) => {
                          WHERE nadadores_id = ? AND provas_id = ?`,
                         [inscricao.nadadorId, provasId]
                     );
-                    minutos = record[0]?.minutos || null;
-                    segundos = record[0]?.segundos || null;
-                    centesimos = record[0]?.centesimos || null;
+
+                    // 🔹 Uso ?? em vez de || para aceitar 0
+                    minutos = record[0]?.minutos ?? null;
+                    segundos = record[0]?.segundos ?? null;
+                    centesimos = record[0]?.centesimos ?? null;
                 }
 
                 await connection.query(queryIndividual, [
@@ -265,13 +267,11 @@ router.post('/salvarInscricao', async (req, res) => {
                          WHERE equipes_id = ? AND provas_id = ?`,
                         [inscricao.equipeId, provasId]
                     );
-                    minutos = recordEquipe[0]?.minutos || null;
-                    segundos = recordEquipe[0]?.segundos || null;
-                    centesimos = recordEquipe[0]?.centesimos || null;
+                    // 🔹 Uso ?? em vez de || para aceitar 0
+                    minutos = recordEquipe[0]?.minutos ?? null;
+                    segundos = recordEquipe[0]?.segundos ?? null;
+                    centesimos = recordEquipe[0]?.centesimos ?? null;
                 }
-
-                // LOG para depuração
-                console.log(`Revezamento - Equipe: ${inscricao.equipeId}, Prova: ${inscricao.provaId}, Provas_id: ${provasId}, Minutos: ${minutos}, Segundos: ${segundos}, Centesimos: ${centesimos}`);
 
                 await connection.query(queryRevezamento, [
                     eventoId, inscricao.provaId, inscricao.equipeId, minutos, segundos, centesimos,

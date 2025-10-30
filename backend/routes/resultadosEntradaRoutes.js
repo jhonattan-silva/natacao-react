@@ -5,6 +5,7 @@ const pontuacoesRoutes = require('./pontuacoesRoutes'); // Importa as rotas de p
 const { classificarProva } = require('./resultadosRoutes'); // Importa a função classificarProva
 const rankingsRoutes = require('./rankingsRoutes'); // Importe o router/função
 const { atualizarRankingEquipesPorEvento } = require('./rankingsRoutes'); // Importa a função atualizarRankingEquipesPorEvento
+const { atualizarRecordsPorProva } = require('./recordsRoutes'); // Importa a função de atualizar records
 
 /*
 **
@@ -296,7 +297,6 @@ router.post('/salvarResultados', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        console.log(`Buscando se a prova ${provaId} é revezamento...`);
         const [provaRows] = await connection.query(
             `SELECT p.eh_revezamento 
              FROM eventos_provas ep
@@ -311,7 +311,6 @@ router.post('/salvarResultados', async (req, res) => {
         }
 
         const ehRevezamento = Boolean(provaRows[0].eh_revezamento);
-        console.log(`Prova ${provaId} é revezamento: ${ehRevezamento}`);
 
         for (const bateria of dados) {
             const { nadadores, equipes } = bateria;
@@ -322,7 +321,6 @@ router.post('/salvarResultados', async (req, res) => {
             }
 
             if (nadadores) {
-                console.log(`Processando nadadores da bateria...`);
                 for (const nadador of nadadores) {
                     const { id: nadadorId, tempo, status, equipeId } = nadador;
 
@@ -363,7 +361,6 @@ router.post('/salvarResultados', async (req, res) => {
                     }
 
                     const parsedTime = parseTime(tempo);
-                    console.log(`Equipe ID: ${equipeId}, Tempo: ${tempo}, Status: ${status}`);
 
                     try {
                         const [existingRows] = await connection.query(
@@ -408,10 +405,10 @@ router.post('/salvarResultados', async (req, res) => {
 
         // Após salvar os resultados e commit
         await connection.commit();
-        // connection.release(); // <-- Mover para o finally
 
         // Garante que a classificação está atualizada antes de pontuar
         await classificarProva(provaId);
+        await atualizarRecordsPorProva(provaId);
 
         // Só pontua após garantir classificação
         const resultadoPontuacao = await pontuacoesRoutes.calcularPontuacaoEvento(rows[0].eventoId);
@@ -423,7 +420,7 @@ router.post('/salvarResultados', async (req, res) => {
         await rankingsRoutes.atualizarRankingEquipesPorEvento(rows[0].eventoId);
         await atualizarRankingEquipesPorEvento(rows[0].eventoId);
 
-        res.status(200).json({ success: true, message: 'Resultados, classificação e pontuação salvos com sucesso!' });
+        res.status(200).json({ success: true, message: 'Resultados, classificação, records e pontuação salvos com sucesso!' });
     } catch (error) {
         await connection.rollback();
         console.error('Erro ao salvar resultados:', error);
