@@ -284,7 +284,6 @@ const Inscricao = () => {
         const inscricoesRevezamento = Object.entries(selecoesRevezamento)
             .filter(([, valor]) => valor === "Sim")
             .map(([provaId]) => {
-                // Buscar a prova correspondente, incluindo revezamentos
                 const prova = [...provas, ...revezamentos].find(p => String(p.id) === String(provaId));
                 if (!prova) {
                     console.error(`Prova não encontrada para o ID: ${provaId}`);
@@ -308,27 +307,31 @@ const Inscricao = () => {
 
         try {
             await api.post(apiSalvarInscricao, payload);
-            mostrarAlerta(`Inscrição realizada com sucesso! Total de inscritos da equipe: ${payload.length}`); // Ajustada mensagem
 
-            // Montar dados detalhados para cada inscrição individual
-            const inscricoesDetalhadas = inscricoesIndividuais.map(insc => {
+            // Buscar os dados atualizados com os tempos do backend
+            const inscricoesAtualizadas = await api.get(`${apiListaInscricoes}/${eventoSelecionado}?equipeId=${equipeId}`);
+
+            // Montar dados detalhados para cada inscrição individual COM OS TEMPOS DO BACKEND
+            const inscricoesDetalhadas = inscricoesAtualizadas.data.inscricoesIndividuais.map(insc => {
                 const nadador = nadadores.find(n => String(n.id) === String(insc.nadadorId));
                 const prova = [...provas, ...revezamentos].find(p => String(p.id) === String(insc.provaId));
                 return {
-                    nadadorNome: nadador?.nome || 'N/D',
+                    nadadorNome: insc.nadadorNome || nadador?.nome || 'N/D',
                     equipeNome: nomeEquipe || nadador?.equipe || user?.user?.equipeNome || 'N/D',
-                    distancia: prova?.distancia || '',
-                    estilo: prova?.estilo || '',
-                    sexo: prova?.sexo || ''
+                    distancia: insc.distancia || prova?.distancia || '',
+                    estilo: insc.estilo || prova?.estilo || '',
+                    sexo: insc.sexo || prova?.sexo || '',
+                    melhor_tempo: insc.melhor_tempo || '00:00:00'
                 };
             });
 
-            // Montar dados detalhados para inscrições de revezamento
-            const inscricoesRevezamentoDetalhadas = inscricoesRevezamento.map(insc => ({
+            // Montar dados detalhados para inscrições de revezamento COM OS TEMPOS
+            const inscricoesRevezamentoDetalhadas = inscricoesAtualizadas.data.inscricoesRevezamento.map(insc => ({
                 equipeNome: nomeEquipe || user?.user?.equipeNome || 'N/D',
                 distancia: insc.distancia,
                 estilo: insc.estilo,
-                sexo: insc.sexo
+                sexo: insc.sexo,
+                melhor_tempo: insc.melhor_tempo || '00:00:00' // Adicionar o tempo do revezamento
             }));
 
             // Buscar o evento selecionado para passar ao PDF
@@ -345,10 +348,18 @@ const Inscricao = () => {
                 provas
             );
 
-            setTimeout(() => {
-                window.location.reload(); // Recarrega a página após 3 segundos
-            }, 3000);
-            await fetchDadosEvento(); // Atualiza a lista de inscrições
+            // Mostrar alerta de sucesso e passar callback para resetar a página
+            mostrarAlerta(
+                `Inscrição realizada com sucesso! Total de inscritos da equipe: ${payload.length}.`,
+                () => {
+                    // Scroll para o topo da página
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    
+                    // Recarregar a página completamente para dar feedback visual claro
+                    window.location.reload();
+                }
+            );
+
         } catch (error) {
             console.error("Erro ao realizar a inscrição:", error);
             mostrarAlerta('Erro ao salvar a inscrição.');

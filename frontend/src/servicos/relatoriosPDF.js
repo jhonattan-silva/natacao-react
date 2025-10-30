@@ -127,28 +127,46 @@ export const relatorioInscritosPDF = (inscritos, inscritosEquipe, inscritosEquip
 };
 
 export const gerarPDFInscricoes = (inscricoes, evento, equipeNome, geradorNome, inscricoesRevezamento, provas) => {
-    const bodyInscricoes = [
-        ['Nadador', 'Prova', 'Sexo']
-    ];
+    // Separar inscrições individuais por sexo
+    const inscricoesmasculinas = inscricoes.filter(insc => insc.sexo === 'M');
+    const inscricoesFemininas = inscricoes.filter(insc => insc.sexo === 'F');
 
-    // Preencher linhas com os dados detalhados das inscrições individuais
-    inscricoes.forEach(inscricao => {
-        bodyInscricoes.push([
+    // Tabela de inscrições MASCULINAS
+    const bodyMasculino = [
+        ['Nadador', 'Prova', 'Tempo para Balizamento']
+    ];
+    inscricoesmasculinas.forEach(inscricao => {
+        bodyMasculino.push([
             inscricao.nadadorNome || 'N/D',
             `${inscricao.distancia || ''}m ${inscricao.estilo || ''}`.trim(),
-            inscricao.sexo === 'M' ? 'Masculino' : inscricao.sexo === 'F' ? 'Feminino' : (inscricao.sexo || 'N/D')
+            inscricao.melhor_tempo || '-'
         ]);
     });
 
-    // Adicionar inscrições de revezamento ao PDF
+    // Tabela de inscrições FEMININAS
+    const bodyFeminino = [
+        ['Nadadora', 'Prova', 'Tempo para Balizamento']
+    ];
+    inscricoesFemininas.forEach(inscricao => {
+        bodyFeminino.push([
+            inscricao.nadadorNome || 'N/D',
+            `${inscricao.distancia || ''}m ${inscricao.estilo || ''}`.trim(),
+            inscricao.melhor_tempo || '-'
+        ]);
+    });
+
+    // Tabela de REVEZAMENTOS
+    const bodyRevezamento = [
+        ['Prova', 'Sexo', 'Tempo para Balizamento']
+    ];
     if (inscricoesRevezamento && inscricoesRevezamento.length > 0) {
-        bodyInscricoes.push(['', '', '']); // Linha vazia para separação
         inscricoesRevezamento.forEach(inscricao => {
             const provaDescricao = `${inscricao.distancia || ''}m ${inscricao.estilo || ''}`.trim();
-            bodyInscricoes.push([
-                'Revezamento',
+            const sexo = inscricao.sexo === 'M' ? 'Masculino' : inscricao.sexo === 'F' ? 'Feminino' : (inscricao.sexo || 'N/D');
+            bodyRevezamento.push([
                 provaDescricao,
-                inscricao.sexo === 'M' ? 'Masculino' : inscricao.sexo === 'F' ? 'Feminino' : (inscricao.sexo || 'N/D') // Adicionada a coluna Sexo
+                sexo,
+                inscricao.melhor_tempo || '-'
             ]);
         });
     }
@@ -163,6 +181,65 @@ export const gerarPDFInscricoes = (inscricoes, evento, equipeNome, geradorNome, 
         hour: '2-digit', minute: '2-digit', second: '2-digit'
     });
 
+    // Construir o conteúdo do PDF
+    const content = [
+        { text: '\n' },
+        { text: `Total de Inscrições: ${inscricoes.length + (inscricoesRevezamento?.length || 0)}`, style: 'summary', margin: [0, 0, 0, 20] }
+    ];
+
+    // Adicionar seção MASCULINA se houver inscrições
+    if (inscricoesmasculinas.length > 0) {
+        content.push(
+            { text: `Provas Individuais Masculinas (${inscricoesmasculinas.length})`, style: 'subheader', margin: [0, 0, 0, 10] },
+            { 
+                table: { 
+                    headerRows: 1, 
+                    widths: ['*', '*', 'auto'],
+                    body: bodyMasculino 
+                }, 
+                layout: 'lightHorizontalLines',
+                margin: [0, 0, 0, 20]
+            }
+        );
+    }
+
+    // Adicionar seção FEMININA se houver inscrições
+    if (inscricoesFemininas.length > 0) {
+        content.push(
+            { text: `Provas Individuais Femininas (${inscricoesFemininas.length})`, style: 'subheader', margin: [0, 0, 0, 10] },
+            { 
+                table: { 
+                    headerRows: 1, 
+                    widths: ['*', '*', 'auto'],
+                    body: bodyFeminino 
+                }, 
+                layout: 'lightHorizontalLines',
+                margin: [0, 0, 0, 20]
+            }
+        );
+    }
+
+    // Adicionar seção de REVEZAMENTOS se houver inscrições
+    if (inscricoesRevezamento && inscricoesRevezamento.length > 0) {
+        content.push(
+            { text: `Revezamentos (${inscricoesRevezamento.length})`, style: 'subheader', margin: [0, 0, 0, 10] },
+            { 
+                table: { 
+                    headerRows: 1, 
+                    widths: ['*', 'auto', 'auto'],
+                    body: bodyRevezamento 
+                }, 
+                layout: 'lightHorizontalLines',
+                margin: [0, 0, 0, 20]
+            }
+        );
+    }
+
+    // Adicionar rodapé com informações de geração
+    content.push(
+        { text: `Gerado em: ${geradoEm} por: ${geradorNome}`, style: 'subfooter', alignment: 'right' }
+    );
+
     const docDefinition = {
         pageMargins: [40, 150, 40, 60],
         header: {
@@ -175,23 +252,11 @@ export const gerarPDFInscricoes = (inscricoes, evento, equipeNome, geradorNome, 
                 }
             ]
         },
-        content: [
-            { text: '\n' },
-            { text: 'Detalhes das Inscrições', style: 'subheader' },
-            { 
-                table: { 
-                    headerRows: 1, 
-                    widths: ['*', '*', 'auto'], 
-                    body: bodyInscricoes 
-                }, 
-                layout: 'lightHorizontalLines' 
-            },
-            { text: '\n' },
-            { text: `Gerado em: ${geradoEm} por: ${geradorNome}`, style: 'subfooter', alignment: 'right' }
-        ],
+        content: content,
         styles: {
             header: { fontSize: 18, bold: true, margin: [0, 10, 0, 10] },
             subheader: { fontSize: 14, bold: true },
+            summary: { fontSize: 12, italics: true },
             subfooter: { fontSize: 10, italics: true, margin: [0, 5, 0, 0] }
         }
     };

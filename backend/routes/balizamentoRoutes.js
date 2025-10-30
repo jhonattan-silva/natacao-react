@@ -29,9 +29,9 @@ router.get('/listarInscritos/:eventoId', async (req, res) => {
           n.id AS nadador_id,
           COALESCE(
             CONCAT(
-              LPAD(r.minutos, 2, '0'), ':',
-              LPAD(r.segundos, 2, '0'), ':',
-              LPAD(r.centesimos, 2, '0')
+              LPAD(i.minutos, 2, '0'), ':',
+              LPAD(i.segundos, 2, '0'), ':',
+              LPAD(i.centesimos, 2, '0')
             ), '00:00:00'
           ) AS melhor_tempo, 
           i.id AS inscricao_id,
@@ -43,7 +43,6 @@ router.get('/listarInscritos/:eventoId', async (req, res) => {
       INNER JOIN nadadores n ON i.nadadores_id = n.id
       INNER JOIN eventos_provas ep ON i.eventos_provas_id = ep.id
       INNER JOIN provas p ON ep.provas_id = p.id
-      LEFT JOIN records r ON n.id = r.Nadadores_id AND ep.provas_id = r.provas_id
       LEFT JOIN equipes e ON n.equipes_id = e.id
       LEFT JOIN categorias c ON n.categorias_id = c.id
       WHERE i.eventos_id = ?

@@ -77,7 +77,17 @@ router.get('/listarInscricoes/:eventoId', async (req, res) => {
                 n.nome AS nadadorNome,
                 i.eventos_provas_id AS provaId,
                 p.estilo,
-                p.distancia
+                p.distancia,
+                i.minutos,
+                i.segundos,
+                i.centesimos,
+                COALESCE(
+                  CONCAT(
+                    LPAD(i.minutos, 2, '0'), ':',
+                    LPAD(i.segundos, 2, '0'), ':',
+                    LPAD(i.centesimos, 2, '0')
+                  ), '00:00:00'
+                ) AS melhor_tempo
             FROM inscricoes i
             JOIN nadadores n ON n.id = i.nadadores_id
             JOIN eventos_provas ep ON ep.id = i.eventos_provas_id
@@ -90,7 +100,17 @@ router.get('/listarInscricoes/:eventoId', async (req, res) => {
                 r.equipes_id AS equipeId,
                 r.eventos_provas_id AS provaId,
                 p.estilo,
-                p.distancia
+                p.distancia,
+                r.minutos,
+                r.segundos,
+                r.centesimos,
+                COALESCE(
+                  CONCAT(
+                    LPAD(r.minutos, 2, '0'), ':',
+                    LPAD(r.segundos, 2, '0'), ':',
+                    LPAD(r.centesimos, 2, '0')
+                  ), '00:00:00'
+                ) AS melhor_tempo
             FROM revezamentos_inscricoes r
             JOIN eventos_provas ep ON ep.id = r.eventos_provas_id
             JOIN provas p ON p.id = ep.provas_id
@@ -215,7 +235,7 @@ router.post('/salvarInscricao', async (req, res) => {
                     const [record] = await connection.query(
                         `SELECT minutos, segundos, centesimos 
                          FROM records 
-                         WHERE Nadadores_id = ? AND provas_id = ?`,
+                         WHERE nadadores_id = ? AND provas_id = ?`,
                         [inscricao.nadadorId, provasId]
                     );
                     minutos = record[0]?.minutos || null;
