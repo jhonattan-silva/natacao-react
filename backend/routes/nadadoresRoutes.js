@@ -169,8 +169,25 @@ router.get('/verificarCpf', authMiddleware, async (req, res) => {
         const { cpf } = req.query;
         if (!cpf) return res.status(400).json({ message: 'CPF não fornecido.' });
         const cpfNumeros = cpf.replace(/\D/g, '');
-        const [rows] = await db.query('SELECT id FROM nadadores WHERE cpf = ?', [cpfNumeros]);
-        res.json({ exists: rows.length > 0 });
+        
+        //Busca também o nome do nadador e da equipe
+        const [rows] = await db.query(`
+            SELECT n.id, n.nome AS nadador_nome, e.nome AS equipe_nome
+            FROM nadadores n
+            LEFT JOIN equipes e ON n.equipes_id = e.id
+            WHERE n.cpf = ?
+        `, [cpfNumeros]);
+        
+        if (rows.length > 0) {
+            // Retorna informações completas
+            res.json({ 
+                exists: true, 
+                nadador: rows[0].nadador_nome,
+                equipe: rows[0].equipe_nome || 'Sem equipe' 
+            });
+        } else {
+            res.json({ exists: false });
+        }
     } catch (error) {
         console.error('Erro ao verificar CPF:', error);
         res.status(500).json({ message: 'Erro ao verificar CPF', error: error.message });

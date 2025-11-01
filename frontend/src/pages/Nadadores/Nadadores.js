@@ -238,7 +238,10 @@ const Nadadores = () => {
                     });
             
                     if (response?.data?.exists) {
-                        mostrarAlerta('CPF já cadastrado.');
+                        const { nadador, equipe } = response.data;
+                        mostrarAlerta(
+                            `CPF já cadastrado!\n\nNadador: ${nadador}\nEquipe: ${equipe}\n\nEntre em contato com a administração.`
+                        );
                         setCpfExistente(true);
                     } else {
                         setCpfExistente(false);
