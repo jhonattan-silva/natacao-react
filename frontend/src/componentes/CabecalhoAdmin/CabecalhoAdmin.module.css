@@ -6,7 +6,7 @@
     padding: 10px 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Borda mais suave */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Sombra suave */
-    gap: 20px; /* NOVO: Espaçamento entre os elementos */
+    gap: 20px; /* Espaçamento entre os elementos */
 }
 
 .left, .center, .right {
@@ -15,20 +15,20 @@
 }
 
 .left {
-    flex: 0 0 auto; /* ALTERADO: Não cresce nem encolhe, só ocupa o espaço da logo */
+    flex: 0 0 auto; /* Não cresce nem encolhe, só ocupa o espaço da logo */
     justify-content: flex-start;
 }
 
 .center {
-    flex: 1; /* ALTERADO: Ocupa todo o espaço disponível e centraliza os links */
+    flex: 1; /* Ocupa todo o espaço disponível e centraliza os links */
     justify-content: center;
     display: flex;
 }
 
 .right {
-    flex: 0 0 auto; /* ALTERADO: Não cresce nem encolhe, só ocupa o espaço dos dados do usuário */
+    flex: 0 0 auto; /* Não cresce nem encolhe, só ocupa o espaço dos dados do usuário */
     justify-content: flex-end;
-    min-width: 150px; /* NOVO: Largura mínima para balancear com a logo */
+    min-width: 150px; /* Largura mínima para balancear com a logo */
 }
 
 .logo {
@@ -82,9 +82,9 @@ nav a {
 }
 
 .dadosUsuario {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* ALTERADO: Fonte consistente */
-    font-size: 14px; /* ALTERADO: Tamanho reduzido */
-    font-weight: 500; /* ALTERADO: Menos negrito */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fonte consistente */
+    font-size: 14px; /* Tamanho reduzido */
+    font-weight: 500; /* Menos negrito */
     color: white;
     text-align: right;
     margin-right: 10px;
@@ -96,7 +96,7 @@ nav a {
     background-color: #ff4d4d;
     color: white;
     border: none;
-    padding: 6px 12px; /* ALTERADO: Padding ajustado */
+    padding: 6px 12px; /* Padding ajustado */
     cursor: pointer;
     border-radius: 5px;
     transition: background-color 0.3s ease;
@@ -109,7 +109,7 @@ nav a {
 .userInfo {
     display: flex;
     align-items: center;
-    gap: 10px; /* NOVO: Espaçamento entre nome e botão */
+    gap: 10px; /* Espaçamento entre nome e botão */
 }
 
 @media (max-width: 900px) {
@@ -137,7 +137,7 @@ nav a {
 
     nav a {
         display: block;
-        margin-bottom: 12px; /* ALTERADO: Espaçamento reduzido */
+        margin-bottom: 12px; /* Espaçamento reduzido */
         font-size: 18px;
         color: white;
         text-decoration: none;
@@ -194,12 +194,12 @@ nav a {
 
     .userInfo {
         display: flex;
-        flex-direction: column; /* ALTERADO: Empilha verticalmente */
+        flex-direction: column; /* Empilha verticalmente */
         align-items: flex-end;
     }
 
     .right {
-        display: none; /* 🔹 NOVO: Esconde completamente o .right em telas grandes */
+        display: none; /* 🔹 Esconde completamente o .right em telas grandes */
     }
 
     .menuIcon {
@@ -222,7 +222,7 @@ nav a {
     height: 80px;
   }
   .center {
-    width: auto; /* ALTERADO: Remove width 100% */
+    width: auto; /* Remove width 100% */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -249,8 +249,8 @@ nav a {
     gap: 8px;
   }
   .center nav a {
-    padding: 6px 12px; /* ALTERADO: Padding reduzido */
-    font-size: 0.95rem; /* ALTERADO: Fonte menor */
+    padding: 6px 12px; /* Padding reduzido */
+    font-size: 0.95rem; /* Fonte menor */
   }
 }
 

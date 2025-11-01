@@ -36,7 +36,7 @@
 /* Estado ativo (página atual) */
 .link.active {
     color: #4fc3f7;
-    font-weight: 700; /* 🔹 AUMENTADO: mais negrito quando ativo */
+    font-weight: 700; /* mais negrito quando ativo */
 }
 
 .link.active::after {
@@ -53,7 +53,7 @@
 @media (max-width: 900px) {
     .link {
         padding: 12px 20px;
-        font-size: 1.2rem; /* 🔹 AUMENTADO: maior em mobile */
+        font-size: 1.2rem; /* maior em mobile */
         width: 100%;
         text-align: left;
     }
