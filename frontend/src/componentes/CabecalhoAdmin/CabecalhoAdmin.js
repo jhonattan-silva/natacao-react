@@ -93,18 +93,17 @@ const CabecalhoAdmin = () => {
             </div>
 
             {/* Usuário/equipe/sair fora do sanduíche no desktop */}
-            {!menuOpen && (
-                <div className={style.userInfo}>
-                    <div className={style.dadosUsuario}>
-                        {nome && <p>{nome}</p>}
-                        {equipe && <p>{equipe}</p>}
-                    </div>
-                    <button onClick={handleLogout} className={style.logoutButton}>Sair</button>
+            <div className={style.userInfo}>
+                <div className={style.dadosUsuario}>
+                    {nome && <p>{nome}</p>}
+                    {equipe && <p>{equipe}</p>}
                 </div>
-            )}
+                <button onClick={handleLogout} className={style.logoutButton}>Sair</button>
+            </div>
 
+            {/* 🔹 Menu hambúrguer só para mobile */}
             <div className={style.right}>
-                {!menuOpen && <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>}
+                <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>
             </div>
         </header>
     )

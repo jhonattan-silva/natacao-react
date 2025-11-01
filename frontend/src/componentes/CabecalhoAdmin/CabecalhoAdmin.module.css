@@ -2,9 +2,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #003366;
+    background: linear-gradient(135deg, #003366 0%, #004080 100%); /* Gradiente sutil */
     padding: 10px 20px;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Borda mais suave */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Sombra suave */
+    gap: 20px; /* NOVO: Espaçamento entre os elementos */
 }
 
 .left, .center, .right {
@@ -13,22 +15,31 @@
 }
 
 .left {
-    flex: 1;
+    flex: 0 0 auto; /* ALTERADO: Não cresce nem encolhe, só ocupa o espaço da logo */
+    justify-content: flex-start;
 }
 
 .center {
-    flex: 2;
+    flex: 1; /* ALTERADO: Ocupa todo o espaço disponível e centraliza os links */
     justify-content: center;
+    display: flex;
 }
 
 .right {
-    flex: 1;
+    flex: 0 0 auto; /* ALTERADO: Não cresce nem encolhe, só ocupa o espaço dos dados do usuário */
     justify-content: flex-end;
+    min-width: 150px; /* NOVO: Largura mínima para balancear com a logo */
 }
 
 .logo {
     height: 100px;
     width: 100px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)); /* Sombra na logo */
+    transition: transform 0.3s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05); /* Efeito hover na logo */
 }
 
 .menuIcon {
@@ -36,6 +47,11 @@
     font-size: 30px;
     cursor: pointer;
     color: white;
+    transition: color 0.3s ease;
+}
+
+.menuIcon:hover {
+    color: #4fc3f7;
 }
 
 .closeButton {
@@ -46,113 +62,90 @@
     position: absolute;
     top: 10px;
     right: 10px;
+    transition: color 0.3s ease;
+}
+
+.closeButton:hover {
+    color: #4fc3f7;
 }
 
 nav {
-    /* Não defina display aqui */
     flex-direction: row;
     align-items: center;
     justify-content: center;
+    gap: 8px; /* Espaçamento entre links */
     transition: transform 0.3s ease-in-out;
 }
 
 nav a {
-    /* ...existing code... */
-    white-space: nowrap; /* Impede quebra de linha dentro do botão/link */
+    white-space: nowrap;
 }
 
 .dadosUsuario {
-    font-family: 'Arial', sans-serif; /* Change font */
-    font-size: 16px; /* Increase font size */
-    font-weight: bold; /* Make text bold */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* ALTERADO: Fonte consistente */
+    font-size: 14px; /* ALTERADO: Tamanho reduzido */
+    font-weight: 500; /* ALTERADO: Menos negrito */
     color: white;
     text-align: right;
     margin-right: 10px;
 }
 
 .logoutButton {
-    font-family: 'Arial', sans-serif; /* Match font */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 14px;
     background-color: #ff4d4d;
     color: white;
     border: none;
-    padding: 5px 10px;
+    padding: 6px 12px; /* ALTERADO: Padding ajustado */
     cursor: pointer;
     border-radius: 5px;
+    transition: background-color 0.3s ease;
 }
 
 .logoutButton:hover {
     background-color: #e60000;
 }
 
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* NOVO: Espaçamento entre nome e botão */
+}
+
 @media (max-width: 900px) {
     nav {
-        display: none; /* escondido por padrão */
+        display: none;
         position: fixed;
         top: 0;
         right: 0;
         height: 100%;
-        width: 250px;
-        background-color: #003366;
+        width: 280px; /* Largura maior para mobile */
+        background: linear-gradient(180deg, #003366 0%, #002244 100%); /* Gradiente vertical */
         flex-direction: column;
         align-items: flex-start;
         padding: 60px 20px;
         transform: translateX(100%);
         transition: transform 0.3s ease-in-out;
         z-index: 1000;
+        box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3); /* Sombra no menu lateral */
     }
 
     nav.open {
-        display: flex; /* só exibe se tiver .open */
+        display: flex;
         transform: translateX(0);
     }
 
     nav a {
         display: block;
-        margin-bottom: 20px;
+        margin-bottom: 12px; /* ALTERADO: Espaçamento reduzido */
         font-size: 18px;
         color: white;
         text-decoration: none;
+        width: 100%;
     }
 
     nav a:hover {
         text-decoration: underline;
-    }
-
-    .menuIcon {
-        display: block;
-    }
-
-    .closeButton {
-        display: block;
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        font-size: 30px;
-        cursor: pointer;
-        color: white;
-    }
-
-    .right {
-        justify-content: flex-end;
-    }
-
-    .cabecalho {
-        flex-direction: row; /* Alinha left, center, right em linha no mobile */
-        align-items: center;
-        position: relative;
-        width: 100%;
-    }
-
-    .left, .center, .right {
-        width: auto;      /* Remove width 100% */
-        margin-bottom: 0; /* Remove margin-bottom */
-        justify-content: flex-start;
-    }
-
-    .center {
-        justify-content: center;
-        margin-top: 0;
     }
 
     .menuIcon {
@@ -162,6 +155,31 @@ nav a {
         right: 18px;
         transform: translateY(-50%);
         z-index: 1100;
+    }
+
+    .closeButton {
+        display: block;
+    }
+
+    .right {
+        justify-content: flex-end;
+    }
+
+    .cabecalho {
+        flex-direction: row;
+        align-items: center;
+        position: relative;
+        width: 100%;
+    }
+
+    .left, .center, .right {
+        width: auto;
+        margin-bottom: 0;
+    }
+
+    .center {
+        justify-content: center;
+        margin-top: 0;
     }
 
     .userInfo {
@@ -176,66 +194,45 @@ nav a {
 
     .userInfo {
         display: flex;
-        flex-direction: column;
+        flex-direction: column; /* ALTERADO: Empilha verticalmente */
         align-items: flex-end;
-        margin-left: auto;
     }
 
     .right {
-        display: none; /* Hide menu icon on desktop */
+        display: none; /* 🔹 NOVO: Esconde completamente o .right em telas grandes */
+    }
+
+    .menuIcon {
+        display: none; /* 🔹 GARANTIA: Menu hambúrguer não aparece em desktop */
     }
 }
 
 @media (max-width: 1100px) {
   .cabecalho {
-    flex-direction: row; /* Garante linha também nesse breakpoint */
+    flex-direction: row;
     align-items: center;
     padding: 2px 4px;
   }
   .left, .center, .right {
     width: auto;
     margin-bottom: 0;
-    justify-content: flex-start;
   }
   .logo {
     width: 80px;
     height: 80px;
   }
-  .center, .right {
-    font-size: 0.95rem;
-  }
   .center {
-    font-size: 0.92rem;
-    gap: 8px;
-    width: 100%;
+    width: auto; /* ALTERADO: Remove width 100% */
     display: flex;
-    justify-content: center; /* Centraliza os botões */
+    justify-content: center;
     align-items: center;
     margin-bottom: 0;
   }
   .center nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center; /* Centraliza os links dentro do nav */
-  }
-  .center nav a {
-    padding: 4px 10px;
-    font-size: 0.92rem;
-    white-space: nowrap; /* Garante que cada botão fique inteiro */
-  }
-}
-
-@media (max-width: 900px) {
-  .center nav {
-    flex-direction: column;
-    gap: 0;
-  }
-  .center nav a {
-    width: 100%;
-    box-sizing: border-box;
-    text-align: left;
-    padding: 8px 12px;
+    gap: 6px;
+    justify-content: center;
   }
 }
 
@@ -248,17 +245,15 @@ nav a {
     width: 60px;
     height: 60px;
   }
-  .center, .right {
-    font-size: 0.98rem;
-    gap: 10px;
+  .center {
+    gap: 8px;
   }
   .center nav a {
-    padding: 6px 14px;
-    font-size: 0.98rem;
+    padding: 6px 12px; /* ALTERADO: Padding reduzido */
+    font-size: 0.95rem; /* ALTERADO: Fonte menor */
   }
 }
 
-/* Entre 900px e 2000px (ou seu limite), mantém em linha */
 @media (min-width: 901px) {
   .cabecalho {
     flex-direction: row;

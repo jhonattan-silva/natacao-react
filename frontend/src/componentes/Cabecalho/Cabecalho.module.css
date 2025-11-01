@@ -2,9 +2,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #003366;
+    background: linear-gradient(135deg, #003366 0%, #004080 100%); /* 🔹 Gradiente sutil */
     padding: 10px 20px;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* 🔹 Borda mais suave */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* 🔹 Sombra suave */
 }
 
 .left, .center, .right {
@@ -19,6 +20,7 @@
 .center {
     flex: 2;
     justify-content: center;
+    gap: 8px; /* 🔹 Espaçamento entre links */
 }
 
 .right {
@@ -29,6 +31,12 @@
 .logo {
     height: 100px;
     width: 100px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)); /* 🔹 Sombra na logo */
+    transition: transform 0.3s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05); /* 🔹 Efeito hover na logo */
 }
 
 .menuIcon {
@@ -36,6 +44,11 @@
     font-size: 30px;
     cursor: pointer;
     color: white;
+    transition: color 0.3s ease;
+}
+
+.menuIcon:hover {
+    color: #4fc3f7;
 }
 
 .closeButton {
@@ -46,53 +59,56 @@
     position: absolute;
     top: 10px;
     right: 10px;
+    transition: color 0.3s ease;
+}
+
+.closeButton:hover {
+    color: #4fc3f7;
 }
 
 nav {
-    /* Não defina display aqui */
     flex-direction: row;
     align-items: center;
     justify-content: center;
+    gap: 4px; /* 🔹 Espaçamento entre links */
     transition: transform 0.3s ease-in-out;
 }
 
 nav a {
-    white-space: nowrap; /* Impede quebra de linha dentro do botão/link */
+    white-space: nowrap;
 }
 
 @media (max-width: 900px) {
     nav {
-        display: none; /* escondido por padrão */
+        display: none;
         position: fixed;
         top: 0;
         right: 0;
         height: 100%;
-        width: 250px;
-        background-color: #003366;
+        width: 280px; /* 🔹 Largura maior para mobile */
+        background: linear-gradient(180deg, #003366 0%, #002244 100%); /* 🔹 Gradiente vertical */
         flex-direction: column;
         align-items: flex-start;
         padding: 60px 20px;
         transform: translateX(100%);
         transition: transform 0.3s ease-in-out;
         z-index: 1000;
+        box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3); /* 🔹 Sombra no menu lateral */
     }
 
     nav.open {
-        display: flex; /* só exibe se tiver .open */
+        display: flex;
         transform: translateX(0);
     }
 
     nav a {
         display: block;
-        margin-bottom: 20px;
+        margin-bottom: 8px; /* 🔹 Espaçamento reduzido */
         font-size: 18px;
         color: white;
         text-decoration: none;
-        white-space: nowrap; /* Impede quebra de linha dentro do botão/link */
-    }
-
-    nav a:hover {
-        text-decoration: underline;
+        white-space: nowrap;
+        width: 100%;
     }
 
     .menuIcon {
@@ -106,30 +122,18 @@ nav a {
 
     .closeButton {
         display: block;
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        font-size: 30px;
-        cursor: pointer;
-        color: white;
-    }
-
-    .right {
-        justify-content: flex-end;
-        position: relative;
-        width: 100%;
     }
 
     .cabecalho {
-        flex-direction: row; /* <-- Alinha left, center, right em linha no mobile */
+        flex-direction: row;
         align-items: center;
         position: relative;
         width: 100%;
     }
 
     .left, .center, .right {
-        width: auto;      /* Remove width 100% */
-        margin-bottom: 0; /* Remove margin-bottom */
+        width: auto;
+        margin-bottom: 0;
         justify-content: flex-start;
     }
 
@@ -141,55 +145,31 @@ nav a {
 
 @media (max-width: 1100px) {
   .cabecalho {
-    flex-direction: row; /* <-- Garante linha também nesse breakpoint */
+    flex-direction: row;
     align-items: center;
     padding: 2px 4px;
   }
   .left, .center, .right {
-    width: auto;      /* Remove width 100% */
-    margin-bottom: 0; /* Remove margin-bottom */
+    width: auto;
+    margin-bottom: 0;
     justify-content: flex-start;
   }
   .logo {
     width: 80px;
     height: 80px;
   }
-  .center, .right {
-    font-size: 0.95rem;
-  }
   .center {
-    font-size: 0.92rem;
-    gap: 8px;
     width: 100%;
     display: flex;
-    justify-content: center; /* Centraliza os botões */
+    justify-content: center;
     align-items: center;
     margin-bottom: 0;
   }
   .center nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center; /* Centraliza os links dentro do nav */
-  }
-  .center nav a {
-    padding: 4px 10px;
-    font-size: 0.92rem;
-    white-space: nowrap; /* Garante que cada botão fique inteiro */
-  }
-}
-
-@media (max-width: 900px) {
-  .center nav {
-    flex-direction: column;
-    gap: 0;
-  }
-  .center nav a {
-    width: 100%;
-    box-sizing: border-box;
-    text-align: left;
-    padding: 8px 12px;
-    white-space: nowrap; /* Garante que cada botão fique inteiro */
+    gap: 6px; /* 🔹 Espaçamento ajustado */
+    justify-content: center;
   }
 }
 
@@ -202,18 +182,11 @@ nav a {
     width: 60px;
     height: 60px;
   }
-  .center, .right {
-    font-size: 0.98rem;
-    gap: 10px;
-  }
-  .center nav a {
-    padding: 6px 14px;
-    font-size: 0.98rem;
-    white-space: nowrap; /* Garante que cada botão fique inteiro */
+  .center {
+    gap: 8px;
   }
 }
 
-/* Entre 900px e 2000px (ou seu limite), mantém em linha */
 @media (min-width: 901px) {
   .cabecalho {
     flex-direction: row;

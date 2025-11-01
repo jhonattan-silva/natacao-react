@@ -1,18 +1,73 @@
 .link {
-    color: white;
-    font-size: 22px;
+    color: #ffffff;
     text-decoration: none;
-    font-weight: bold;
-    padding: 1em;
-    margin: 5px;
-    background-color: #0099CC;
-    border-radius: 15px;
+    font-size: 1.6rem;
+    font-weight: 600; 
+    letter-spacing: 0.5px;
+    padding: 8px 25px;
+    position: relative;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Efeito de linha animada embaixo */
+.link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #4fc3f7, #00bcd4);
+    transform: translateX(-50%);
+    transition: width 0.3s ease;
+}
+
+.link:hover {
+    color: #4fc3f7;
+    transform: translateY(-2px);
+}
+
+.link:hover::after {
+    width: 80%;
+}
+
+/* Estado ativo (página atual) */
+.link.active {
+    color: #4fc3f7;
+    font-weight: 700; /* 🔹 AUMENTADO: mais negrito quando ativo */
+}
+
+.link.active::after {
+    width: 100%;
+    background: #4fc3f7;
+}
+
+/* Efeito de brilho sutil no hover */
+.link:hover {
+    text-shadow: 0 0 8px rgba(79, 195, 247, 0.4);
+}
+
+/* Responsivo */
 @media (max-width: 900px) {
     .link {
+        padding: 12px 20px;
+        font-size: 1.2rem; /* 🔹 AUMENTADO: maior em mobile */
         width: 100%;
         text-align: left;
-        margin-left: 0;
+    }
+
+    .link::after {
+        left: 0;
+        transform: translateX(0);
+    }
+
+    .link:hover::after,
+    .link.active::after {
+        width: 4px;
+        height: 100%;
+        left: 0;
+        bottom: 0;
     }
 }
