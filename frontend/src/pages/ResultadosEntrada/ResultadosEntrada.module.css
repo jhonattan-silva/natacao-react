@@ -3,11 +3,12 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    margin: 0 auto; /* Centralizar o container */
+    margin: 0 auto;
 }
 
+/* Container contendo as informações dos */
 .opcoesContainer.opcoesContainer, .listagemContainer.listagemContainer {
-    width: 80%;
+    width: 90%;
     margin: 0 auto;
     text-align: center;
 }
@@ -19,6 +20,7 @@
     margin-bottom: 20px;
 }
 
+/* Container contendo as informações de cada série (com os nadadores dentro) */
 .bateriaContainer {
     background-color: #f9f9f9;
     border: 1px solid #ddd;
@@ -26,12 +28,13 @@
     padding: 16px;
     margin-bottom: 16px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 100%; /* Altera para preencher 100% do container pai */
+    width: 100%;
 }
 
 .bateriaContainer.bateriaContainer h2 {
     margin-bottom: 10px;
 }
+
 .formulario.formulario {
     display: flex;
     flex-direction: column;
@@ -40,7 +43,7 @@
 
 .formulario.formulario div {
     display: flex;
-    justify-content: center;  /* Centraliza o conteúdo horizontalmente */
+    justify-content: center;
     align-items: center;
     margin-bottom: 10px;
 }
@@ -50,63 +53,55 @@
 }
 
 .formulario.formulario select {
-    text-align: center; /* Centraliza o texto dentro do select */
+    text-align: center;
 }
 
 .btnSalvar.btnSalvar {
     margin-top: 20px;
 }
 
+/* 🔹 CONTAINER PRINCIPAL: 100% de largura, flex para organizar os filhos */
 .nadadorContainer {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    margin-bottom: 10px;
-}
-
-.nadadorContainer {
-    display: flex;
-    align-items: center;
+    gap: 10px;
     margin-bottom: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    width: 100%;
 }
 
-/* Adicione a regra para alternar o fundo dos elementos .nadadorContainer */
+/* regra para alternar o fundo do .nadadorContainer */
 .nadadorContainer:nth-child(odd) {
-    background-color: #ffffff; /* Fundo claro */
+    background-color: #b8b8b8;
 }
 
 .nadadorContainer:nth-child(even) {
-    background-color: #c8b1b1; /* Fundo alternado */
+    background-color: #c8b1b1;
 }
 
+/* 🔹 NOME DO NADADOR: 70% da largura */
 .nadadorNome {
-    flex: 1;
+    flex: 0 0 70%; /* 70% fixo */
     text-align: left;
     font-weight: bold;
     color: #333;
-    font-size: 24px; /* Adicionado: define o tamanho do texto para 24px */
+    font-size: 24px;
+    padding-right: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.nadadorNome {
-    flex: 1;
-    font-weight: bold;
-    color: #333;
-}
-
+/* 🔹 INPUT DE TEMPO: 18% da largura */
 .nadadorInput {
-    flex: 1;
-    text-align: right;
-    margin-right: 10px;
-}
-
-.nadadorInput {
-    flex: 0.5;
+    flex: 0 0 18%; /* 18% fixo */
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 16px;
-    margin-left: 8px;
+    font-size: 20px;
+    text-align: center;
+    box-sizing: border-box;
 }
 
 .nadadorInput:focus {
@@ -116,11 +111,62 @@
 }
 
 .inputSalvo {
-    border: 4px solid green;  /* Mantém a borda */
-    padding: 2px;             /* Menor padding para input mais compacto */
-    font-size: 24px;          /* Tamanho do texto */
-    width: 120px;             /* Largura fixa para manter o input pequeno */
-    box-sizing: border-box;   /* Inclui padding e borda no cálculo da largura */
+    border: 4px solid green;
+    padding: 2px;
+    font-size: 24px;
+    box-sizing: border-box;
+}
+
+.inputBanco {
+    border: 4px solid blue;
+    padding: 2px;
+    font-size: 24px;
+    box-sizing: border-box;
+}
+
+/* 🔹 CONTAINER DOS CHECKBOXES: 11% da largura */
+.nadadorContainer :global(.checkboxGroupContainer) {
+    flex: 0 0 11%; /* 11% fixo */
+    width: auto;
+    display: flex;
+    justify-content: center;
+}
+
+/* 🔹 Grid dos checkboxes: inline, compacto */
+.nadadorContainer :global(.checkboxGrid) {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+
+/* 🔹 Itens dos checkboxes: sem background */
+.nadadorContainer :global(.checkboxItem) {
+    padding: 0.2rem;
+    background-color: transparent !important;
+    display: flex;
+    align-items: center;
+}
+
+.nadadorContainer :global(.checkboxItem:hover) {
+    background-color: transparent !important;
+}
+
+/* 🔹 Checkboxes: tamanho adequado */
+.nadadorContainer :global(.checkboxItem input[type="checkbox"]) {
+    margin-right: 0.25rem;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* 🔹 Labels dos checkboxes: compactas */
+.nadadorContainer :global(.checkboxItem label) {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0;
+    cursor: pointer;
 }
 
 label {
@@ -133,4 +179,168 @@ label {
     color: purple;
     font-weight: bold;
     margin-bottom: 10px;
+}
+
+/* 🔹 MEDIA QUERIES PARA RESPONSIVIDADE */
+
+/* Telas grandes (desktops) - 1200px+ */
+@media (min-width: 1200px) {
+    .nadadorNome {
+        flex: 0 0 70%;
+        font-size: 24px;
+    }
+    .nadadorInput {
+        flex: 0 0 18%;
+        font-size: 20px; 
+        padding: 10px; 
+    }
+    .nadadorContainer :global(.checkboxGroupContainer) {
+        flex: 0 0 11%;
+    }
+}
+
+/* Telas médias (tablets landscape) - 992px a 1199px */
+@media (max-width: 1199px) {
+    .nadadorNome {
+        flex: 0 0 65%;
+        font-size: 20px;
+    }
+    .nadadorInput {
+        flex: 0 0 20%;
+        font-size: 15px;
+    }
+    .nadadorContainer :global(.checkboxGroupContainer) {
+        flex: 0 0 14%;
+    }
+    .nadadorContainer :global(.checkboxItem label) {
+        font-size: 0.8rem;
+    }
+}
+
+/* Telas pequenas (tablets portrait) - 768px a 991px */
+@media (max-width: 991px) {
+    .opcoesContainer.opcoesContainer, .listagemContainer.listagemContainer {
+        width: 95%;
+    }
+    
+    .nadadorNome {
+        flex: 0 0 60%;
+        font-size: 18px;
+        min-width: 150px;
+    }
+    
+    .nadadorInput {
+        flex: 0 0 22%;
+        font-size: 14px;
+        padding: 6px;
+    }
+    
+    .nadadorContainer :global(.checkboxGroupContainer) {
+        flex: 0 0 16%;
+    }
+    
+    .nadadorContainer {
+        gap: 8px;
+        padding: 6px;
+    }
+    
+    .nadadorContainer :global(.checkboxItem label) {
+        font-size: 0.75rem;
+    }
+}
+
+/* Telas muito pequenas (smartphones) - menos de 768px */
+@media (max-width: 767px) {
+    .opcoesContainer.opcoesContainer, .listagemContainer.listagemContainer {
+        width: 98%;
+    }
+    
+    .bateriaContainer {
+        padding: 12px;
+    }
+    
+    .nadadorContainer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 10px;
+    }
+    
+    .nadadorNome {
+        flex: 1 1 auto;
+        width: 100%;
+        font-size: 16px;
+        text-align: center;
+        padding-right: 0;
+        margin-bottom: 5px;
+    }
+    
+    .nadadorInput {
+        flex: 1 1 auto;
+        width: 100%;
+        font-size: 18px;
+        padding: 10px;
+        text-align: center;
+    }
+    
+    .inputSalvo, .inputBanco {
+        font-size: 18px;
+        width: 100%;
+    }
+    
+    .nadadorContainer :global(.checkboxGroupContainer) {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: none;
+        justify-content: center;
+    }
+    
+    .nadadorContainer :global(.checkboxGrid) {
+        gap: 12px;
+        justify-content: center;
+    }
+    
+    .nadadorContainer :global(.checkboxItem) {
+        padding: 0.4rem;
+    }
+    
+    .nadadorContainer :global(.checkboxItem label) {
+        font-size: 0.9rem;
+    }
+    
+    .nadadorContainer :global(.checkboxItem input[type="checkbox"]) {
+        width: 18px;
+        height: 18px;
+        margin-right: 0.4rem;
+    }
+}
+
+/* Telas extra pequenas (smartphones pequenos) - menos de 576px */
+@media (max-width: 575px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    h2 {
+        font-size: 1.2rem;
+    }
+    
+    .nadadorNome {
+        font-size: 14px;
+    }
+    
+    .nadadorInput {
+        font-size: 16px;
+        padding: 8px;
+    }
+    
+    .bateriaContainer {
+        padding: 8px;
+    }
+    
+    .btnSalvar.btnSalvar {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+    }
 }
