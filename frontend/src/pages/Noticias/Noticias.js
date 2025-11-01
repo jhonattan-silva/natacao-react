@@ -15,13 +15,19 @@ const Noticias = () => {
   const [loading, setLoading] = useState(true);
   const [modalImg, setModalImg] = useState('');
   
-  //apenas a variável de ambiente, sem fallback para localhost
-  const backendOrigin = process.env.REACT_APP_API_URL.replace('/api', '');
+  //Fallback para produção
+  const backendOrigin = process.env.REACT_APP_API_URL 
+    ? process.env.REACT_APP_API_URL.replace('/api', '') 
+    : window.location.origin;
+    
   const getImageUrl = url => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    // Imagens devem ser servidas por /uploads, não /api/uploads
-    return `${backendOrigin}${url}`;
+    //Verifica se é um caminho relativo
+    if (url.startsWith('/uploads')) {
+      return `${backendOrigin}${url}`;
+    }
+    return url;
   };
 
   const handleImageError = (e) => {

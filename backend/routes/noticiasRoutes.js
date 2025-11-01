@@ -103,8 +103,8 @@ router.post('/', async (req, res) => {
         const base64Data = match[2];
         // ext obtém a extensão a partir do MIME (converte 'jpeg' para 'jpg')
         const ext = mime.split('/')[1] === 'jpeg' ? 'jpg' : mime.split('/')[1];
-        // Pasta temp
-        const uploadDir = path.join(__dirname, '../uploads/imagens', 'temp');
+        // Pasta onde salvar temporariamente
+        const uploadDir = path.join(__dirname, '../uploads/imagens/temp');
         if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
         const filename = Date.now() + '-' + Math.round(Math.random() * 1E9) + '.' + ext;
         const filePath = path.join(uploadDir, filename);

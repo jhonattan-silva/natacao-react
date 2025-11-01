@@ -138,11 +138,16 @@ const FormNoticia = ({ noticiaInicial = {}, onSalvo, onCancelar }) => {
   };
 
   // helper para transformar caminhos relativos em URLs acessíveis (dev/prod)
-  const backendOrigin = process.env.REACT_APP_API_URL;
+  const backendOrigin = process.env.REACT_APP_API_URL?.replace('/api', '') || '';
   const getImageUrl = url => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    if (url.startsWith('/uploads')) return `${backendOrigin}${url}`;
+    // Se for um caminho relativo
+    if (url.startsWith('/uploads')) {
+      // Em produção, se backendOrigin estiver vazio, usa o domínio atual
+      const origin = backendOrigin || window.location.origin;
+      return `${origin}${url}`;
+    }
     return url;
   };
 
