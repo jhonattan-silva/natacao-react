@@ -5,13 +5,10 @@ import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 try {
   if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
     pdfMake.vfs = pdfFonts.pdfMake.vfs;
-    console.log('VFS configurado via pdfFonts.pdfMake.vfs');
   } else if (pdfFonts && pdfFonts.vfs) {
     pdfMake.vfs = pdfFonts.vfs;
-    console.log('VFS configurado via pdfFonts.vfs');
   } else if (pdfFonts) {
     pdfMake.vfs = pdfFonts;
-    console.log('VFS configurado via pdfFonts diretamente');
   } else {
     console.error('Não foi possível configurar o VFS do pdfMake');
   }
