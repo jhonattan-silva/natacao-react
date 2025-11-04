@@ -204,8 +204,15 @@ const Resultados = () => {
     return classificacao;
   };
 
-  const renderDiferencaTempo = (tempoRealizado, diferencaCentesimos) => {
-    if (!diferencaCentesimos || tempoRealizado === 'NC' || tempoRealizado === 'DQL') {
+  const renderDiferencaTempo = (tempoRealizado, diferencaCentesimos, status) => {
+    //  Verifica status antes de processar
+    if (status === 'NC') return 'NC';
+    if (status === 'DQL') return 'DQL';
+    if (tempoRealizado === 'NC' || tempoRealizado === 'DQL' || tempoRealizado === '00:00:00') {
+      return status || 'NC';
+    }
+
+    if (!diferencaCentesimos) {
       return tempoRealizado;
     }
 
@@ -264,7 +271,8 @@ const Resultados = () => {
                           <div className={`${style.tabelaPersonalizada} ${style.tabelaResultadosBalizamento}`}>
                             <Tabela
                               dados={bateria.nadadores.map(nadador => {
-                                const tempo = renderDiferencaTempo(nadador.tempo, nadador.diferenca_centesimos);
+                                // Passa o status como terceiro parâmetro
+                                const tempo = renderDiferencaTempo(nadador.tempo, nadador.diferenca_centesimos, nadador.status);
                                 return prova.revezamento
                                   ? { Raia: nadador.raia, Equipe: nadador.nome_equipe, Tempo: tempo }
                                   : { 
