@@ -111,29 +111,60 @@ router.get('/melhores-tempos/:equipeId', async (req, res) => {
   const { equipeId } = req.params;
 
   try {
+    // subquery para pegar o evento do melhor tempo
     const [melhoresTempos] = await db.query(`
       SELECT 
-        n.nome AS nadador_nome,
-        n.sexo AS nadador_sexo,
-        cat.nome AS categoria_nome,
-        CONCAT(p.distancia, ' METROS ', p.estilo) AS prova_nome,
-        CONCAT(
-          LPAD(r.minutos, 2, '0'), ':', 
-          LPAD(r.segundos, 2, '0'), ':', 
-          LPAD(r.centesimos, 2, '0')
-        ) AS melhor_tempo,
+        rc1.nome_nadador AS nadador_nome,
+        rc1.sexo_nadador AS nadador_sexo,
+        rc1.categoria_nadador AS categoria_nome,
+        rc1.nome_prova AS prova_nome,
+        rc1.minutos,
+        rc1.segundos,
+        rc1.centesimos,
         e.nome AS evento_nome,
         e.data AS evento_data
-      FROM records r
-      JOIN nadadores n ON r.Nadadores_id = n.id
-      JOIN provas p ON r.provas_id = p.id
-      JOIN categorias cat ON n.categorias_id = cat.id
-      JOIN eventos e ON r.eventos_id = e.id
-      WHERE n.equipes_id = ?
-      ORDER BY n.nome ASC, p.distancia ASC, p.estilo ASC
-    `, [equipeId]);
+      FROM resultadosCompletos rc1
+      JOIN eventos e ON rc1.eventos_id = e.id
+      JOIN (
+        SELECT 
+          nadadores_id,
+          prova_id,
+          MIN(minutos * 6000 + segundos * 100 + centesimos) AS melhor_tempo_centesimos
+        FROM resultadosCompletos
+        WHERE equipes_id = ?
+          AND status = 'OK'
+          AND eh_revezamento = 0
+          AND nadadores_id IS NOT NULL
+        GROUP BY nadadores_id, prova_id
+      ) rc2 ON rc1.nadadores_id = rc2.nadadores_id 
+            AND rc1.prova_id = rc2.prova_id
+            AND (rc1.minutos * 6000 + rc1.segundos * 100 + rc1.centesimos) = rc2.melhor_tempo_centesimos
+      WHERE rc1.equipes_id = ?
+        AND rc1.status = 'OK'
+        AND rc1.eh_revezamento = 0
+        AND rc1.nadadores_id IS NOT NULL
+      GROUP BY rc1.nadadores_id, rc1.prova_id, rc1.nome_nadador, rc1.sexo_nadador, rc1.categoria_nadador, rc1.nome_prova, rc1.minutos, rc1.segundos, rc1.centesimos, e.nome, e.data
+      ORDER BY rc1.nome_nadador ASC, rc1.nome_prova ASC
+    `, [equipeId, equipeId]);
 
-    res.json(melhoresTempos);
+    // 🔹 Converte tempo para formato mm:ss:cc
+    const resultado = melhoresTempos.map(row => {
+      const minutos = row.minutos || 0;
+      const segundos = row.segundos || 0;
+      const centesimos = row.centesimos || 0;
+      
+      return {
+        nadador_nome: row.nadador_nome,
+        nadador_sexo: row.nadador_sexo,
+        categoria_nome: row.categoria_nome,
+        prova_nome: row.prova_nome,
+        melhor_tempo: `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}:${String(centesimos).padStart(2, '0')}`,
+        evento_nome: row.evento_nome,
+        evento_data: row.evento_data
+      };
+    });
+
+    res.json(resultado);
   } catch (error) {
     console.error('Erro ao buscar melhores tempos:', error.message);
     console.error('Stack trace:', error.stack);
@@ -149,29 +180,61 @@ router.get('/records-por-prova/:equipeId', async (req, res) => {
   const { equipeId } = req.params;
 
   try {
+    // Agrupa por prova_id + nadadores_id para pegar o melhor tempo de cada nadador em cada prova
     const [recordsPorProva] = await db.query(`
       SELECT 
-        CONCAT(p.distancia, ' METROS ', p.estilo) AS prova_nome,
-        p.sexo AS sexo_prova,
-        n.nome AS nadador_nome,
-        cat.nome AS categoria_nome,
-        CONCAT(
-          LPAD(r.minutos, 2, '0'), ':', 
-          LPAD(r.segundos, 2, '0'), ':', 
-          LPAD(r.centesimos, 2, '0')
-        ) AS tempo_record,
+        rc1.nome_prova AS prova_nome,
+        rc1.sexo_prova,
+        rc1.nome_nadador AS nadador_nome,
+        rc1.categoria_nadador AS categoria_nome,
+        rc1.minutos,
+        rc1.segundos,
+        rc1.centesimos,
         e.nome AS evento_nome,
         e.data AS evento_data
-      FROM records r
-      JOIN nadadores n ON r.Nadadores_id = n.id
-      JOIN provas p ON r.provas_id = p.id
-      JOIN categorias cat ON n.categorias_id = cat.id
-      JOIN eventos e ON r.eventos_id = e.id
-      WHERE n.equipes_id = ?
-      ORDER BY p.distancia ASC, p.estilo ASC, p.sexo ASC, r.minutos ASC, r.segundos ASC, r.centesimos ASC
-    `, [equipeId]);
+      FROM resultadosCompletos rc1
+      JOIN eventos e ON rc1.eventos_id = e.id
+      JOIN (
+        SELECT 
+          nadadores_id,
+          prova_id,
+          sexo_prova,
+          MIN(minutos * 6000 + segundos * 100 + centesimos) AS melhor_tempo_centesimos
+        FROM resultadosCompletos
+        WHERE equipes_id = ?
+          AND status = 'OK'
+          AND eh_revezamento = 0
+          AND nadadores_id IS NOT NULL
+        GROUP BY nadadores_id, prova_id, sexo_prova
+      ) rc2 ON rc1.nadadores_id = rc2.nadadores_id
+            AND rc1.prova_id = rc2.prova_id
+            AND rc1.sexo_prova = rc2.sexo_prova
+            AND (rc1.minutos * 6000 + rc1.segundos * 100 + rc1.centesimos) = rc2.melhor_tempo_centesimos
+      WHERE rc1.equipes_id = ?
+        AND rc1.status = 'OK'
+        AND rc1.eh_revezamento = 0
+        AND rc1.nadadores_id IS NOT NULL
+      ORDER BY rc1.nome_prova ASC, rc1.sexo_prova ASC, (rc1.minutos * 6000 + rc1.segundos * 100 + rc1.centesimos) ASC
+    `, [equipeId, equipeId]);
 
-    res.json(recordsPorProva);
+    // Converte tempo para formato mm:ss:cc
+    const resultado = recordsPorProva.map(row => {
+      const minutos = row.minutos || 0;
+      const segundos = row.segundos || 0;
+      const centesimos = row.centesimos || 0;
+      
+      return {
+        prova_nome: row.prova_nome,
+        sexo_prova: row.sexo_prova,
+        nadador_nome: row.nadador_nome,
+        categoria_nome: row.categoria_nome,
+        tempo_record: `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}:${String(centesimos).padStart(2, '0')}`,
+        evento_nome: row.evento_nome,
+        evento_data: row.evento_data
+      };
+    });
+
+    res.json(resultado);
   } catch (error) {
     console.error('Erro ao buscar records por prova:', error.message);
     console.error('Stack trace:', error.stack);
