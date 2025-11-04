@@ -465,27 +465,45 @@ async function classificarProva(provaId) {
       JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
       JOIN provas p ON ep.provas_id = p.id
       WHERE r.eventos_provas_id = ?
-      ORDER BY p.eh_revezamento ASC, p.id ASC, r.minutos ASC, r.segundos ASC, r.centesimos ASC
+      ORDER BY p.eh_revezamento ASC, p.id ASC
     `, [provaId]);
+
+    // Separa válidos de inválidos e ordena apenas os válidos
+    const validos = resultados.filter(row => {
+      if (row.status !== 'OK') return false;
+      // Ignora tempos zerados (00:00:00)
+      const totalCentesimos = row.minutos * 6000 + row.segundos * 100 + row.centesimos;
+      return totalCentesimos > 0;
+    }).sort((a, b) => {
+      const tempoA = a.minutos * 6000 + a.segundos * 100 + a.centesimos;
+      const tempoB = b.minutos * 6000 + b.segundos * 100 + b.centesimos;
+      return tempoA - tempoB;
+    });
+
+    const invalidos = resultados.filter(row => {
+      if (row.status !== 'OK') return true;
+      const totalCentesimos = row.minutos * 6000 + row.segundos * 100 + row.centesimos;
+      return totalCentesimos === 0;
+    });
 
     const classificacoes = [];
     let posicao = 1;
-    resultados.forEach(row => {
-      const tempo = row.status === 'OK'
-        ? `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`
-        : row.status === 'DQL' ? 'DQL' : 'NC';
-      const classificacao = row.status === 'OK' ? posicao++ : null;
 
+    // Processa válidos primeiro (com classificação)
+    validos.forEach(row => {
+      const tempo = `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`;
+      
       // Sempre gera ABSOLUTO
       classificacoes.push([
         row.eventosProvasId,
         row.nadadorId || null,
         row.equipeId || null,
         tempo,
-        classificacao,
-        row.status,
+        posicao, // classificação
+        'OK',
         'ABSOLUTO'
       ]);
+      
       // Se não for revezamento, gera também CATEGORIA
       if (!row.eh_revezamento) {
         classificacoes.push([
@@ -493,7 +511,36 @@ async function classificarProva(provaId) {
           row.nadadorId || null,
           row.equipeId || null,
           tempo,
-          classificacao,
+          posicao, // mesma classificação
+          'OK',
+          'CATEGORIA'
+        ]);
+      }
+      
+      posicao++;
+    });
+
+    // Processa inválidos (sem classificação)
+    invalidos.forEach(row => {
+      const tempo = row.status === 'DQL' ? 'DQL' : row.status === 'NC' ? 'NC' : '00:00:00';
+      
+      classificacoes.push([
+        row.eventosProvasId,
+        row.nadadorId || null,
+        row.equipeId || null,
+        tempo,
+        null, // sem classificação
+        row.status,
+        'ABSOLUTO'
+      ]);
+      
+      if (!row.eh_revezamento) {
+        classificacoes.push([
+          row.eventosProvasId,
+          row.nadadorId || null,
+          row.equipeId || null,
+          tempo,
+          null,
           row.status,
           'CATEGORIA'
         ]);
@@ -513,7 +560,7 @@ async function classificarProva(provaId) {
   } catch (error) {
     if (connection) {
       await connection.rollback();
-      connection.release(); // <-- garante liberação do lock
+      connection.release();
     }
     console.error('Erro ao classificar prova:', error.message);
     throw error;

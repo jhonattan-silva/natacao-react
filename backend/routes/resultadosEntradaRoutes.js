@@ -45,14 +45,24 @@ function converterTempoParaCentesimos(tempoStr) {
 
 // Função utilitária: classificação por tempo com empate
 function classificarPorTempoComEmpate(resultados) {
-  // Válidos: status OK e tempo válido
+  // Filtra e ordena apenas tempos válidos (> 0)
   const validos = resultados
-    .filter(r => r.status === 'OK' && r.tempo && r.tempo !== 'NC' && r.tempo !== 'DQL')
+    .filter(r => {
+      if (r.status !== 'OK') return false;
+      if (!r.tempo || r.tempo === 'NC' || r.tempo === 'DQL' || r.tempo === '00:00:00') return false;
+      const centesimos = converterTempoParaCentesimos(r.tempo);
+      return centesimos !== null && centesimos > 0;
+    })
     .map(r => ({ ...r, tempoCentesimos: converterTempoParaCentesimos(r.tempo) }))
     .sort((a, b) => a.tempoCentesimos - b.tempoCentesimos);
 
-  // Inválidos: NC, DQL, tempo nulo, status diferente de OK
-  const invalidos = resultados.filter(r => r.status !== 'OK' || !r.tempo || r.tempo === 'NC' || r.tempo === 'DQL');
+  // Inválidos: NC, DQL, tempo nulo, status diferente de OK, ou tempo zerado
+  const invalidos = resultados.filter(r => {
+    if (r.status !== 'OK') return true;
+    if (!r.tempo || r.tempo === 'NC' || r.tempo === 'DQL' || r.tempo === '00:00:00') return true;
+    const centesimos = converterTempoParaCentesimos(r.tempo);
+    return centesimos === null || centesimos === 0;
+  });
 
   // Classificação com empate
   let classificacao = 1;
@@ -64,8 +74,10 @@ function classificarPorTempoComEmpate(resultados) {
     }
     classificacao++;
   }
+  
   // NC/DQL sem classificação
   invalidos.forEach(r => r.classificacao = null);
+  
   // Retorna todos, válidos primeiro
   return [...validos, ...invalidos];
 }
