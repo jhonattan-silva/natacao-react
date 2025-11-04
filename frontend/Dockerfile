@@ -9,9 +9,11 @@ ARG REACT_APP_API_URL
 # 2. Defina-o como uma variável de ambiente para o restante do build
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
-# O resto do processo continua o mesmo
+# Copia os arquivos de dependências e instala
 COPY package*.json ./
-RUN npm ci
+RUN npm install
+
+# Copia o restante do código e builda
 COPY . .
 RUN npm run build
 

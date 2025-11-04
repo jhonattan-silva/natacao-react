@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y netcat-openbsd && apt-get clean && rm -
 
 # Copia os arquivos de dependências e instala
 COPY package*.json ./
-RUN npm ci
+RUN npm install --production
 
 # Copia o script wait-for.sh e dá permissão de execução
 COPY wait-for.sh /app/
