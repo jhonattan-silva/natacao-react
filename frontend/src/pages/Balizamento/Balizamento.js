@@ -63,8 +63,18 @@ const Balizamento = () => {
     };
 
     // Função para ordenar nadadores com e sem tempo registrado
-    const ordenarNadadoresPorTempo = (nadadores) => {
-        const ordenados = [...nadadores].sort((a, b) => {
+    const ordenarNadadoresPorTempo = (participantes) => {
+        // Remove duplicatas antes de ordenar - alterei o sort por map para corrigir problema com revezamentos
+        const unicos = Array.from(
+            new Map(
+                participantes.map(p => [
+                    p.revezamentos_inscricoes_id || p.inscricao_id || p.nadador_id,
+                    p
+                ])
+            ).values()
+        );
+
+        const ordenados = [...unicos].sort((a, b) => {
             const aInvalid = !a.melhor_tempo || a.melhor_tempo === "00:00" || a.melhor_tempo === "00:00:00";
             const bInvalid = !b.melhor_tempo || b.melhor_tempo === "00:00" || b.melhor_tempo === "00:00:00";
 
