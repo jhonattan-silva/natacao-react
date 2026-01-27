@@ -37,6 +37,8 @@ const Etapas = () => {
     const apiAbreInscricao = `/etapas/abreInscricao`;
     const apiListaEtapasAno = `/etapas/listarEtapasAno`;
 
+    const PROVAS_FIXAS_IDS = ['1','26','5','30','8','33','6','31','7','32','10','35','13','38','11','36','12','37'];
+
     const buttonLabels = {
         editar: 'Editar',
         excluir: 'Excluir',
@@ -125,8 +127,24 @@ const Etapas = () => {
                 .filter(prova => prova.sexo === 'F')
                 .map(prova => prova.id);
 
+            // Para Ambos, pegamos os IDs masculinos onde existe par feminino da mesma categoria
+            const categoriasPorMasculino = {};
+            provasOrdenadas.forEach(prova => {
+                const categoria = `${prova.distancia}-${prova.estilo}`;
+                if (prova.sexo === 'M') {
+                    categoriasPorMasculino[categoria] = prova.id;
+                }
+            });
+
             const selecionadasAmbos = provasOrdenadas
-                .filter(prova => selecionadasMasculino.includes(prova.id) && selecionadasFeminino.includes(prova.id))
+                .filter(prova => {
+                    if (prova.sexo === 'F') return false;
+                    const categoria = `${prova.distancia}-${prova.estilo}`;
+                    // Verifica se existe feminino da mesma categoria
+                    return provasOrdenadas.some(p => 
+                        p.sexo === 'F' && `${p.distancia}-${p.estilo}` === categoria
+                    );
+                })
                 .map(prova => prova.id);
 
             setSelecionadasMasculino(selecionadasMasculino);
@@ -376,6 +394,24 @@ const Etapas = () => {
         }
     };
 
+    const aplicarProvasFixas = () => {
+        if (!provasCarregadas) {
+            mostrarAlerta('Aguarde carregar a lista de provas.');
+            return;
+        }
+
+        const masculinoIds = new Set(provasMasculino.map(p => p.id));
+        const fixasValidas = PROVAS_FIXAS_IDS.filter(id => masculinoIds.has(id));
+        const femininas = fixasValidas
+            .map(id => idMap[id])
+            .filter(Boolean);
+
+        setSelecionadasAmbos(fixasValidas);
+        setSelecionadasMasculino(fixasValidas);
+        setSelecionadasFeminino(Array.from(new Set(femininas)));
+        mostrarAlerta('Provas fixas aplicadas. Ajuste somente o que for extra.');
+    };
+
     // Função auxiliar para limpar os campos do formulário
     const limparFormulario = () => {
         setNomeEtapa('');
@@ -411,6 +447,35 @@ const Etapas = () => {
         setFormVisivel(false);
     };
 
+    const ordenarProvasInterCaladas = (provasUnificadas) => {
+        // Agrupa as provas por categoria (distancia + estilo)
+        const porCategoria = {};
+        provasUnificadas.forEach(prova => {
+            const categoria = `${prova.label}`;
+            if (!porCategoria[categoria]) {
+                porCategoria[categoria] = { masculino: null, feminino: null };
+            }
+            if (prova.sexo === 'M') {
+                porCategoria[categoria].masculino = prova;
+            } else {
+                porCategoria[categoria].feminino = prova;
+            }
+        });
+
+        // Intercala M/F para cada categoria e reconstrói a lista com ordem sequential
+        const provasOrdenadas = [];
+        Object.values(porCategoria).forEach(categoria => {
+            if (categoria.masculino) provasOrdenadas.push(categoria.masculino);
+            if (categoria.feminino) provasOrdenadas.push(categoria.feminino);
+        });
+
+        // Atualiza o campo ordem com índices sequenciais
+        return provasOrdenadas.map((prova, index) => ({
+            ...prova,
+            ordem: index + 1
+        }));
+    };
+
     const handleAvancar = () => {
         if (etapaAtual === 1) {
             // Gera uma lista única de provas selecionadas (Masculino + Feminino)
@@ -424,7 +489,10 @@ const Etapas = () => {
                     sexo: provaMasculina ? 'M' : 'F'
                 }
             });
-            setProvasSelecionadas(provasUnificadas);
+            
+            // Ordena as provas intercaladas (M, F, M, F...)
+            const provasOrdenadas = ordenarProvasInterCaladas(provasUnificadas);
+            setProvasSelecionadas(provasOrdenadas);
             setEtapaAtual(2);
         }
     };
@@ -499,7 +567,7 @@ const Etapas = () => {
                 torneios_id: parseInt(torneioEtapa, 10),
                 quantidade_raias: parseInt(raias, 10),
                 provas: provasSelecionadas.map(prova => ({
-                    provas_id: prova.id,
+                    id: parseInt(prova.id, 10),
                     ordem: parseInt(prova.ordem, 10)
                 }))
             };
@@ -624,7 +692,8 @@ const Etapas = () => {
                                     classNameRadioOpcoes={style.radioRaias}
                                     valorSelecionado={raias}
                                 />
-                                <h2>Selecione as provas de acordo com sexo</h2>
+                                {/* CÓDIGO COMENTADO 2026 - Seleção automática de todas as provas como "Ambos" */}
+                                {/* <h2>Selecione as provas de acordo com sexo</h2>
                                 <div className={style.provasContainer}>
                                     <CheckboxGroup
                                         titulo="Masculino"
@@ -643,6 +712,19 @@ const Etapas = () => {
                                         opcoes={provasFeminino}
                                         selecionadas={selecionadasFeminino}
                                         aoAlterar={aoAlterarFeminino}
+                                    />
+                                </div> */}
+                                <h2>Provas do Evento (Ambos os Sexos)</h2>
+                                <div className={style.provasContainer}>
+                                    <div className={style.provasAcoes}>
+                                        <Botao onClick={aplicarProvasFixas}>Selecionar provas fixas</Botao>
+                                    </div>
+                                    <CheckboxGroup
+                                        titulo="Todas as Provas"
+                                        opcoes={provasMasculino}
+                                        selecionadas={selecionadasAmbos}
+                                        aoAlterar={aoAlterarAmbos}
+                                        useGrid={true}
                                     />
                                 </div>
                                 <Botao onClick={fecharFormulario}>Voltar</Botao>

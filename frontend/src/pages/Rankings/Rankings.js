@@ -7,7 +7,7 @@ import Cabecalho from '../../componentes/Cabecalho/Cabecalho';
 import Rodape from '../../componentes/Rodape/Rodape';
 
 const Rankings = () => {
-    const torneiosId = 3; // torneio de 2025
+    const [torneiosId, setTorneiosId] = useState(null); // Será preenchido dinamicamente
 
     const [rankingsEquipes, setRankingsEquipes] = useState([]);
     const [errorEquipes, setErrorEquipes] = useState(null);
@@ -17,6 +17,21 @@ const Rankings = () => {
     // novo estado para ranking mirim geral
     const [rankingMirimGeral, setRankingMirimGeral] = useState([]);
     const [errorMirimGeral, setErrorMirimGeral] = useState(null);
+
+    // Buscar o torneio aberto ao montar o componente
+    useEffect(() => {
+        const fetchTorneioAberto = async () => {
+            try {
+                const response = await api.get('/etapas/torneioAberto');
+                setTorneiosId(response.data.id);
+            } catch (error) {
+                console.error('Erro ao buscar torneio aberto:', error);
+                // Fallback para um ID padrão se falhar
+                setTorneiosId(3);
+            }
+        };
+        fetchTorneioAberto();
+    }, []);
 
     const fetchRankingsEquipes = async () => {
         try {
@@ -61,7 +76,7 @@ const Rankings = () => {
         fetchRankingsEquipes();
         fetchRankingsNadadores();
         fetchRankingMirimGeral(); // carrega também o ranking mirim
-    }, []);
+    }, [torneiosId]);
 
     /*
      * Adiciona posição considerando empates:

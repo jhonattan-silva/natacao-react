@@ -22,16 +22,35 @@ router.get('/listarEtapas', async (req, res) => {
 
 router.get('/listarEtapasAnoAtual', async (req, res) => {
     try {
+        // Busca o torneio aberto
+        const [torneio] = await db.query('SELECT id, nome FROM torneios WHERE aberto = 1 LIMIT 1');
+        
+        if (torneio.length === 0) {
+            // Se não houver torneio aberto, retorna array vazio ou busca o mais recente
+            const [torneioRecente] = await db.query('SELECT id, nome FROM torneios ORDER BY id DESC LIMIT 1');
+            if (torneioRecente.length === 0) {
+                return res.json([]);
+            }
+            const ano = parseInt(torneioRecente[0].nome);
+            const [etapasAno] = await db.query(`
+                SELECT * 
+                FROM eventos 
+                WHERE YEAR(data) = ?
+            `, [ano]);
+            return res.json(etapasAno);
+        }
+
+        const ano = parseInt(torneio[0].nome);
         const [etapasAno] = await db.query(`
             SELECT * 
             FROM eventos 
-            WHERE YEAR(data) = YEAR(CURDATE())
-        `);
+            WHERE YEAR(data) = ?
+        `, [ano]);
 
         res.json(etapasAno);
     } catch (error) {
-        console.error('Erro ao buscar etapas do ano:', error);
-        res.status(500).json({ error: 'Erro ao buscar etapas do ano' });
+        console.error('Erro ao buscar etapas do ano atual:', error);
+        res.status(500).json({ error: 'Erro ao buscar etapas do ano atual' });
     }
 });
 
@@ -60,6 +79,23 @@ router.get('/listarTorneios', async (req, res) => {
     } catch (error) {
         console.error('Erro ao buscar torneios:', error);
         res.status(500).json({ error: 'Erro ao buscar torneios' });
+    }
+});
+
+// Rota para BUSCAR TORNEIO ABERTO (flag aberto = 1)
+router.get('/torneioAberto', async (req, res) => {
+    try {
+        const [torneio] = await db.query('SELECT id, nome, aberto FROM torneios WHERE aberto = 1 LIMIT 1');
+        if (torneio.length > 0) {
+            res.json(torneio[0]);
+        } else {
+            // Se não houver torneio aberto, retorna o mais recente
+            const [torneioRecente] = await db.query('SELECT id, nome, aberto FROM torneios ORDER BY id DESC LIMIT 1');
+            res.json(torneioRecente[0] || { id: null, nome: null, aberto: 0 });
+        }
+    } catch (error) {
+        console.error('Erro ao buscar torneio aberto:', error);
+        res.status(500).json({ error: 'Erro ao buscar torneio aberto' });
     }
 });
 
@@ -98,10 +134,10 @@ router.post('/cadastrarEtapas', async (req, res) => {
         const etapaId = result.insertId; // ID do novo evento (etapa) criado
 
         // Insere as provas na tabela eventos_provas
-        for (const prova of provas) {            
+        for (const prova of provas) {
             await db.query(
-                'INSERT INTO eventos_provas (eventos_id, provas_id) VALUES (?, ?)',
-                [etapaId, prova.id]
+                'INSERT INTO eventos_provas (eventos_id, provas_id, ordem) VALUES (?, ?, ?)',
+                [etapaId, prova.id, prova.ordem]
             );
         }
 
@@ -246,7 +282,10 @@ router.delete('/excluiEtapa/:id', async (req, res) => {
     }
 
     try {
-        // await para aguardar a conclusão da operação de exclusão
+        // Primeiro deleta as provas associadas ao evento
+        await db.query('DELETE FROM eventos_provas WHERE eventos_id = ?', [eventoId]);
+        
+        // Depois deleta o evento
         await db.query('DELETE FROM eventos WHERE id = ?', [eventoId]);
 
         res.json({ message: 'Evento excluído com sucesso!' }); // mensagem de sucesso

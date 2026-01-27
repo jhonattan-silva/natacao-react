@@ -19,7 +19,8 @@
 /* Classe adicional para ativar o grid de 3 colunas quando necessário */
 .checkboxGrid.gridLayout {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 0.75rem;
 }
 

@@ -10,7 +10,8 @@ import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 
 const Records = () => {
     const navigate = useNavigate();
-    const [anoSelecionado, setAnoSelecionado] = useState(2025);
+    const [anosDisponiveis, setAnosDisponiveis] = useState([]);
+    const [anoSelecionado, setAnoSelecionado] = useState(null);
     const [provas, setProvas] = useState({});
     const [categorias, setCategorias] = useState([]);
     const [nadadores, setNadadores] = useState([]);
@@ -20,6 +21,24 @@ const Records = () => {
     const [avisoSexo, setAvisoSexo] = useState(''); // Estado para armazenar o aviso dinâmico
 
     const isMobile = window.innerWidth <= 768;
+
+    // Buscar torneios disponíveis e definir o aberto como padrão
+    useEffect(() => {
+        const fetchTorneios = async () => {
+            try {
+                const response = await api.get('/etapas/listarTorneios');
+                const torneios = response.data.map(t => ({ id: parseInt(t.nome), nome: t.nome }));
+                setAnosDisponiveis(torneios);
+
+                // Buscar o torneio aberto para definir como padrão
+                const torneioAberto = await api.get('/etapas/torneioAberto');
+                setAnoSelecionado(parseInt(torneioAberto.data.nome));
+            } catch (error) {
+                console.error('Erro ao buscar torneios:', error);
+            }
+        };
+        fetchTorneios();
+    }, []);
 
     useEffect(() => {
         // Fetch inicial para carregar provas e categorias
@@ -81,14 +100,14 @@ const Records = () => {
                         <h3>Ano</h3>
                         {isMobile ? (
                             <ListaSuspensa
-                                opcoes={[{ id: 2025, nome: '2025' }]}
+                                opcoes={anosDisponiveis}
                                 onChange={(id) => setAnoSelecionado(id)}
                                 textoPlaceholder="Selecione o ano"
                                 valorSelecionado={anoSelecionado}
                             />
                         ) : (
                             <ButtonWall
-                                itens={[{ id: 2025, nome: '2025' }]}
+                                itens={anosDisponiveis}
                                 onClick={(id) => setAnoSelecionado(id)}
                                 selecionado={anoSelecionado}
                             />

@@ -4,15 +4,19 @@
 }
 
 .provasContainer {
-    display: flex;
-    /*flex-direction: column; /* Organiza as checkboxes em coluna */
-    gap: 8px;
+    display: block; /* deixa o grid interno do CheckboxGroup controlar as colunas */
     padding: 16px;
     background-color: #f9f9f9;
     border-radius: 8px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-    justify-content: center;
-    text-align: center;
+    width: 80%;
+}
+
+.provasAcoes {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
 }
 
 .provasContainer label {
@@ -150,7 +154,8 @@ button:disabled, .btn:disabled {
 }
 
 .cadastroContainer { /* CAMPO DE FORMULARIO COMPLETO */
-    width: 70%;
+    width: 100%;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
     background-color: #f9f9f9;

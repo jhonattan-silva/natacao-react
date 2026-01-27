@@ -13,6 +13,7 @@ const formatarParaMaps = (endereco, cidade) => {
 
 const Inicio = () => {
     const [etapas, setEtapas] = useState([]);
+    const [anoTorneio, setAnoTorneio] = useState('');
     const [noticias, setNoticias] = useState([]); // Estado para notícias
     const backendOrigin = process.env.REACT_APP_API_URL.replace('/api', '');
     const getImageUrl = (url) => {
@@ -20,6 +21,19 @@ const Inicio = () => {
         if (url.startsWith('http')) return url;
         return `${backendOrigin}${url}`;
     };
+
+    useEffect(() => {
+        const fetchTorneioAberto = async () => {
+            try {
+                const response = await api.get('/etapas/torneioAberto');
+                setAnoTorneio(response.data.nome);
+            } catch (error) {
+                console.error('Erro ao buscar torneio aberto:', error);
+            }
+        };
+
+        fetchTorneioAberto();
+    }, []);
 
     useEffect(() => {
         const fetchEtapas = async () => {
@@ -67,7 +81,7 @@ const Inicio = () => {
                 </section>
             )}
             <section className={style.container}>
-                <h1>ETAPAS 2025</h1>
+                <h1>ETAPAS {anoTorneio}</h1>
                 <div className={style.cardsContainer}>
                     {etapas.map((etapa) => {
                         const { dataEvento, horario } = formataData(etapa.data);
