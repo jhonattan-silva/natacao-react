@@ -159,8 +159,16 @@ export const gerarPDFInscricoes = (inscricoes, evento, equipeNome, geradorNome, 
     const bodyRevezamento = [
         ['Prova', 'Sexo', 'Tempo para Balizamento']
     ];
+    console.log('📊 DEBUG - inscricoesRevezamento completo:', JSON.stringify(inscricoesRevezamento, null, 2));
     if (inscricoesRevezamento && inscricoesRevezamento.length > 0) {
-        inscricoesRevezamento.forEach(inscricao => {
+        inscricoesRevezamento.forEach((inscricao, index) => {
+            console.log(`📊 DEBUG - Revezamento ${index}:`, {
+                sexo: inscricao.sexo,
+                sexo_prova: inscricao.sexo_prova,
+                distancia: inscricao.distancia,
+                estilo: inscricao.estilo,
+                todosOsCampos: Object.keys(inscricao)
+            });
             const provaDescricao = `${inscricao.distancia || ''}m ${inscricao.estilo || ''}`.trim();
             const sexo = inscricao.sexo === 'M' ? 'Masculino' : inscricao.sexo === 'F' ? 'Feminino' : (inscricao.sexo || 'N/D');
             bodyRevezamento.push([

@@ -21,6 +21,7 @@ import Historico from "./pages/Historico/Historico"; // Página de histórico de
 import Relatorios from "./pages/Relatorios/Relatorios"; // Página de relatórios 
 import Resultados2023 from "./pages/ResultadosHistorico/Resultados2023";
 import Resultados2024 from "./pages/ResultadosHistorico/Resultados2024";
+import FacaParte from "./pages/FacaParte/FacaParte";
 
 
 const App = () => {
@@ -30,6 +31,7 @@ const App = () => {
                 {/* Rotas públicas */}
                 <Route path="/" element={<Inicio />}/> {/* Avisa o caminho inicial onde tem meu componente Inicio */}
                 <Route path="/login" element={<Login />} />
+                <Route path="/faca-parte" element={<FacaParte />} /> {/* Página para cadastro de novas equipes */}
                 <Route path="/resultados" element={<Resultados />} />
                 <Route path="/resultados/:eventoId" element={<Resultados />} /> {/* alterado de :provaId para :eventoId */}
                 <Route path="/rankings" element={<Rankings />}/>

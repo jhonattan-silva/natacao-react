@@ -48,6 +48,20 @@ const storageNadadores = multer.diskStorage({
 });
 const uploadNadadores = multer({ storage: storageNadadores });
 
+// Storage para logos de equipes
+const storageEquipes = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../uploads/equipes');
+    ensureDir(uploadPath);
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + ext);
+  }
+});
+const uploadEquipes = multer({ storage: storageEquipes });
+
 // Rota para upload de imagem de notícia
 router.post('/noticia', uploadNoticias.single('imagem'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
@@ -62,6 +76,13 @@ router.post('/noticia', uploadNoticias.single('imagem'), (req, res) => {
 router.post('/nadador', uploadNadadores.single('imagem'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
   const url = `/uploads/nadadores/${req.file.filename}`;
+  res.json({ url });
+});
+
+// Rota para upload de logo de equipe
+router.post('/equipe', uploadEquipes.single('imagem'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
+  const url = `/uploads/equipes/${req.file.filename}`;
   res.json({ url });
 });
 

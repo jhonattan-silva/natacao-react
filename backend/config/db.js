@@ -17,7 +17,7 @@ const pool = mysql.createPool({
     port: process.env.MYSQL_DB_PORT || 3306,
     charset: 'utf8mb4', // Configuração da codificação
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: 50,
     queueLimit: 0,
 });
 

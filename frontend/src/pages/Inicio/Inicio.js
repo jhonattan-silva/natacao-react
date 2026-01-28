@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Cabecalho from '../../componentes/Cabecalho/Cabecalho';
 import Rodape from '../../componentes/Rodape/Rodape';
 import Carrossel from '../../componentes/Carrossel/Carrossel';
@@ -15,6 +16,7 @@ const Inicio = () => {
     const [etapas, setEtapas] = useState([]);
     const [anoTorneio, setAnoTorneio] = useState('');
     const [noticias, setNoticias] = useState([]); // Estado para notícias
+    const [equipes, setEquipes] = useState([]); // Estado para equipes
     const backendOrigin = process.env.REACT_APP_API_URL.replace('/api', '');
     const getImageUrl = (url) => {
         if (!url) return '';
@@ -59,6 +61,20 @@ const Inicio = () => {
             }
         };
         fetchNoticias();
+    }, []);
+
+    // Buscar equipes ativas para exibir logos
+    useEffect(() => {
+        const fetchEquipes = async () => {
+            try {
+                const response = await api.get('/equipes/listarEquipes');
+                const equipesAtivas = response.data.filter(eq => eq.Ativo === 1 && eq.logo);
+                setEquipes(equipesAtivas);
+            } catch (error) {
+                console.error('Erro ao carregar equipes:', error);
+            }
+        };
+        fetchEquipes();
     }, []);
 
     // Seleciona os três primeiros itens (mais recentes)
@@ -108,6 +124,41 @@ const Inicio = () => {
                             />
                         );
                     })}
+                </div>
+            </section>
+            {/* Seção de logos das equipes */}
+            {equipes && equipes.length > 0 && (
+                <section className={style.equipesSection}>
+                    <h2>EQUIPES PARTICIPANTES</h2>
+                    <div className={style.equipesContainer}>
+                        {equipes.map((equipe) => (
+                            <div key={equipe.id} className={style.equipeItem}>
+                                <img 
+                                    src={getImageUrl(equipe.logo)} 
+                                    alt={equipe.Equipe} 
+                                    className={style.equipeLogo}
+                                    title={equipe.Equipe}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+            {/* Seção de Banners */}
+            <section className={style.bannersSection}>
+                <div className={style.bannersContainer}>
+                    <Link to="#regulamento" className={style.banner}>
+                        <div className={style.bannerContent}>
+                            <h3>Regulamento</h3>
+                            <p>Conheça as regras e normas da Liga</p>
+                        </div>
+                    </Link>
+                    <Link to="/faca-parte" className={style.banner}>
+                        <div className={style.bannerContent}>
+                            <h3>Traga sua Equipe</h3>
+                            <p>Cadastre sua equipe e participe</p>
+                        </div>
+                    </Link>
                 </div>
             </section>
             <Rodape />

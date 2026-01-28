@@ -6,7 +6,7 @@ const db = require('../config/db');
 router.get('/listarEquipes', async (req, res) => {
   try {
     const [equipes] = await db.query(`
-      SELECT e.nome AS Equipe, e.cidade AS Cidade, e.id AS id, e.ativo AS Ativo, u.nome AS Treinador 
+      SELECT e.nome AS Equipe, e.cidade AS Cidade, e.id AS id, e.ativo AS Ativo, e.logo AS logo, u.nome AS Treinador 
       FROM equipes e 
       LEFT JOIN usuarios_equipes ue ON e.id = ue.equipes_id 
       LEFT JOIN usuarios u ON ue.usuarios_id = u.id
@@ -19,14 +19,14 @@ router.get('/listarEquipes', async (req, res) => {
 });
 
 router.post('/cadastrarEquipe', async (req, res) => {
-  const { nome, cidade, treinadorId } = req.body;
+  const { nome, cidade, treinadorId, logo } = req.body;
 
   try {
     // Iniciar uma transação para garantir que ambas as operações sejam feitas
     await db.query('START TRANSACTION');
 
     // Insere a equipe e obtém o ID gerado
-    const [resultEquipe] = await db.query('INSERT INTO equipes (nome, cidade) VALUES (?, ?)', [nome, cidade]);
+    const [resultEquipe] = await db.query('INSERT INTO equipes (nome, cidade, logo) VALUES (?, ?, ?)', [nome, cidade, logo || null]);
     const equipeId = resultEquipe.insertId;
 
     // Se um treinador foi informado, cria o vínculo na tabela usuarios_equipes
@@ -66,14 +66,14 @@ router.put('/inativarEquipe/:id', async (req, res) => {
 // Rota para atualizar uma equipe existente
 router.put('/atualizarEquipe/:id', async (req, res) => {
   const equipeId = req.params.id;
-  const { nome, cidade, treinadorId } = req.body;
+  const { nome, cidade, treinadorId, logo } = req.body;
 
   try {
     // Iniciar uma transação para garantir que ambas as operações sejam feitas
     await db.query('START TRANSACTION');
 
     // Atualiza a equipe
-    await db.query('UPDATE equipes SET nome = ?, cidade = ? WHERE id = ?', [nome, cidade, equipeId]);
+    await db.query('UPDATE equipes SET nome = ?, cidade = ?, logo = ? WHERE id = ?', [nome, cidade, logo || null, equipeId]);
 
     // Remove vínculo atual
     await db.query('DELETE FROM usuarios_equipes WHERE equipes_id = ?', [equipeId]);

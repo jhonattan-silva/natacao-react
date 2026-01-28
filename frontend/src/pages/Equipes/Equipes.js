@@ -22,6 +22,9 @@ const Equipes = () => {
   const [treinadorEquipe, setTreinadorEquipe] = useState(''); // Para o treinador escolhido
   const [listaTreinadores, setListaTreinadores] = useState([]); // Para listar os treinadores
   const [busca, setBusca] = useState('');
+  const [logoEquipe, setLogoEquipe] = useState(''); // Para o logo da equipe
+  const [logoPreview, setLogoPreview] = useState(''); // Para preview da imagem
+  const backendOrigin = process.env.REACT_APP_API_URL.replace('/api', '');
 
   useEffect(() => { // Busca as equipes e treinadores ao carregar a página
     const fetchData = async () => {
@@ -54,6 +57,8 @@ const Equipes = () => {
       // Preenche os campos do formulário com os dados da equipe
       setNomeEquipe(equipe.Equipe);
       setCidadeEquipe(equipe.Cidade);
+      setLogoEquipe(equipe.logo || '');
+      setLogoPreview(equipe.logo ? `${backendOrigin}${equipe.logo}` : '');
 
       // Busca o treinador da equipe pelo nome
       const treinador = listaTreinadores.find(treinador => treinador.nome === equipe.Treinador);
@@ -81,6 +86,8 @@ const Equipes = () => {
     setNomeEquipe('');
     setCidadeEquipe('');
     setTreinadorEquipe('');
+    setLogoEquipe('');
+    setLogoPreview('');
     setFormVisivel(false);
   };
 
@@ -106,6 +113,30 @@ const Equipes = () => {
 
   const treinadorSelecionado = (id) => {
     setTreinadorEquipe(id);
+  };
+
+  const handleLogoUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('imagem', file);
+
+    try {
+      const response = await api.post('/upload/equipe', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setLogoEquipe(response.data.url);
+      setLogoPreview(`${backendOrigin}${response.data.url}`);
+    } catch (error) {
+      console.error('Erro ao fazer upload do logo:', error);
+      alert('Erro ao fazer upload da imagem.');
+    }
+  };
+
+  const removeLogo = () => {
+    setLogoEquipe('');
+    setLogoPreview('');
   };
 
 
@@ -150,7 +181,8 @@ const Equipes = () => {
     const equipeDados = {
       nome: nomeEquipe,
       cidade: cidadeEquipe,
-      treinadorId: treinadorEquipe ? treinadorEquipe : null
+      treinadorId: treinadorEquipe ? treinadorEquipe : null,
+      logo: logoEquipe || null
     };
 
     try {
@@ -191,7 +223,7 @@ const Equipes = () => {
             <TabelaEdicao
               dados={equipesFiltradas}
               onEdit={handleEdit}
-              colunasOcultas={['id', 'Ativo']}
+              colunasOcultas={['id', 'Ativo', 'logo']}
               funcExtra={(equipe) => (
                 <Botao onClick={() => handleInativar(equipe.id, equipe.ativo)}>
                   {equipe.ativo ? 'Inativar' : 'Ativar'}
@@ -216,6 +248,22 @@ const Equipes = () => {
                 valorSelecionado={treinadorEquipe} // ID do treinador
                 onChange={treinadorSelecionado}
               />
+              <div className={style.logoUploadContainer}>
+                <label htmlFor="logo-upload" className={style.logoLabel}>Logo da Equipe:</label>
+                <input 
+                  type="file" 
+                  id="logo-upload" 
+                  accept="image/*" 
+                  onChange={handleLogoUpload}
+                  className={style.fileInput}
+                />
+                {logoPreview && (
+                  <div className={style.logoPreview}>
+                    <img src={logoPreview} alt="Logo preview" className={style.previewImage} />
+                    <button type="button" onClick={removeLogo} className={style.removeButton}>Remover</button>
+                  </div>
+                )}
+              </div>
               <div className={style['button-group']}>
                 <Botao onClick={aoSalvar}>
                   {isEditing ? 'Atualizar' : 'Cadastrar'}

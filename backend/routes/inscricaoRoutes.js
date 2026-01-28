@@ -101,6 +101,7 @@ router.get('/listarInscricoes/:eventoId', async (req, res) => {
                 r.eventos_provas_id AS provaId,
                 p.estilo,
                 p.distancia,
+                p.sexo,
                 r.minutos,
                 r.segundos,
                 r.centesimos,

@@ -1,5 +1,5 @@
 import api from '../../servicos/api';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Botao from '../../componentes/Botao/Botao';
 import BotaoTabela from '../../componentes/BotaoTabela/BotaoTabela';
 import Formulario from '../../componentes/Formulario/Formulario';
@@ -24,10 +24,8 @@ const Etapas = () => {
     const [horaEtapa, setHoraEtapa] = useState(''); // Novo estado para o horário do evento
     const [etapaAtual, setEtapaAtual] = useState(1); // Novo estado para controlar a etapa atual
     const [provasSelecionadas, setProvasSelecionadas] = useState([]); // Novo estado para armazenar as provas selecionadas
-    const ordemInputRefs = useRef({}); //ref para não perder o foco do input de ordem depois de alterar qualquer caracter
     const { mostrar: mostrarAlerta, componente: alertaComponente, confirmar: confirmarAlerta } = useAlerta(); // Usa o hook useAlerta
 
-    const apiListaEtapas = `/etapas/listarEtapas`;
     const apiCadastraEtapas = `/etapas/cadastrarEtapas`;
     const apiListaTorneios = `/etapas/listarTorneios`;
     const apiListaProvasMasculino = `/etapas/listarProvas?sexo=M`;
@@ -67,11 +65,14 @@ const Etapas = () => {
             }
         };
         fetchAnos();
-    }, []);
+    }, [currentYear]);
 
     useEffect(() => {
-        fetchData(anoSelecionado); // Chama a função `fetchData` ao montar o componente
-    }, [anoSelecionado, apiListaEtapasAno]); // Incluído `apiListaEtapasAno` como dependência
+        const loadData = async () => {
+            await fetchData(anoSelecionado);
+        };
+        loadData();
+    }, [anoSelecionado]); // Apenas anoSelecionado é dependência
 
     const fetchData = async (ano) => {
         try {
@@ -182,34 +183,6 @@ const Etapas = () => {
         const torneioAtual = listaTorneios.find(t => t.nome.includes(currentYear.toString()));
         setTorneioEtapa(torneioAtual ? torneioAtual.id : '');
         setFormVisivel(true);
-    };
-
-    const torneioSelecionado = (id) => setTorneioEtapa(id); //guarda o id escolhido do torneio
-
-    const adicionarEtapa = async (dados) => {
-        try {
-            await api.post(apiCadastraEtapas, dados); // Envia os dados para salvar a nova etapa
-            await fetchData(anoSelecionado); // Recarrega a lista de etapas do backend
-            setFormVisivel(false); // Esconde o formulário após o salvamento
-        } catch (error) {
-            console.error('Erro ao cadastrar etapa:', error);
-        }
-    };
-
-    const atualizarEtapa = async (dados) => {
-        try {
-            await api.put(`${apiAtualizaEtapas}/${etapaEditando.id}`, dados); // Chama a rota de edição equivalente ao id selecionado
-            await fetchData(anoSelecionado); // Recarrega as etapas após atualizar
-            setFormVisivel(false); // Fecha o form
-            setEtapaEditando(null); // Limpa o estado de edição
-        } catch (error) {
-            console.error('Erro ao editar etapa:', error);
-            if (error.response && error.response.data && error.response.data.error) {
-                mostrarAlerta(error.response.data.error); // Exibe a mensagem de erro retornada pelo backend
-            } else {
-                mostrarAlerta('Esse evento já possui nadadores inscritos, por favor contate o desenvolvedor');
-            }
-        }
     };
 
     const [nomeEtapa, setNomeEtapa] = useState('');
@@ -361,19 +334,7 @@ const Etapas = () => {
             }
         };
         fetchProvas();
-    }, []);
-
-    const aoAlterarMasculino = (id, checked) => {
-        setSelecionadasMasculino(prev =>
-            checked ? [...prev, id] : prev.filter(item => item !== id)
-        );
-    };
-
-    const aoAlterarFeminino = (id, checked) => {
-        setSelecionadasFeminino(prev =>
-            checked ? [...prev, id] : prev.filter(item => item !== id)
-        );
-    };
+    }, [apiListaProvasMasculino, apiListaProvasFeminino]);
 
     const aoAlterarAmbos = (id, checked) => {
         const idMasculino = id; // ID da prova masculina é o mesmo da prova unificada
@@ -478,22 +439,56 @@ const Etapas = () => {
 
     const handleAvancar = () => {
         if (etapaAtual === 1) {
-            // Gera uma lista única de provas selecionadas (Masculino + Feminino)
-            const provasUnificadas = [...selecionadasMasculino, ...selecionadasFeminino].map((id, index) => {
-                const provaMasculina = provasMasculino.find(p => p.id === id);
-                const provaFeminina = provasFeminino.find(p => p.id === id);
-                return {
-                    id,
-                    label: provaMasculina ? provaMasculina.label : provaFeminina?.label,
-                    ordem: index + 1,
-                    sexo: provaMasculina ? 'M' : 'F'
-                }
-            });
-            
-            // Ordena as provas intercaladas (M, F, M, F...)
-            const provasOrdenadas = ordenarProvasInterCaladas(provasUnificadas);
-            setProvasSelecionadas(provasOrdenadas);
-            setEtapaAtual(2);
+            // Se está editando, preserva a ordem das provas existentes e adiciona novas ao final
+            if (etapaEditando) {
+                const idsAtuais = [...selecionadasMasculino, ...selecionadasFeminino];
+                const provasExistentes = provasSelecionadas.filter(prova => idsAtuais.includes(prova.id));
+                
+                // Identifica provas novas (que não estavam na lista original)
+                const idsExistentes = provasExistentes.map(p => p.id);
+                const idsNovos = idsAtuais.filter(id => !idsExistentes.includes(id));
+                
+                // Cria objetos para as provas novas
+                const provasNovas = idsNovos.map(id => {
+                    const provaMasculina = provasMasculino.find(p => p.id === id);
+                    const provaFeminina = provasFeminino.find(p => p.id === id);
+                    return {
+                        id,
+                        label: provaMasculina ? provaMasculina.label : provaFeminina?.label,
+                        ordem: 0, // Temporário, será ajustado abaixo
+                        sexo: provaMasculina ? 'M' : 'F',
+                        estilo: provaMasculina ? provaMasculina.estilo : provaFeminina?.estilo,
+                        distancia: provaMasculina ? provaMasculina.distancia : provaFeminina?.distancia
+                    };
+                });
+                
+                // Adiciona as novas provas ao final e ajusta suas ordens
+                const maiorOrdem = Math.max(...provasExistentes.map(p => p.ordem), 0);
+                const provasNovasComOrdem = provasNovas.map((prova, index) => ({
+                    ...prova,
+                    ordem: maiorOrdem + index + 1
+                }));
+                
+                setProvasSelecionadas([...provasExistentes, ...provasNovasComOrdem]);
+                setEtapaAtual(2);
+            } else {
+                // Criando nova etapa - aplica ordenação intercalada
+                const provasUnificadas = [...selecionadasMasculino, ...selecionadasFeminino].map((id, index) => {
+                    const provaMasculina = provasMasculino.find(p => p.id === id);
+                    const provaFeminina = provasFeminino.find(p => p.id === id);
+                    return {
+                        id,
+                        label: provaMasculina ? provaMasculina.label : provaFeminina?.label,
+                        ordem: index + 1,
+                        sexo: provaMasculina ? 'M' : 'F'
+                    }
+                });
+                
+                // Ordena as provas intercaladas (M, F, M, F...)
+                const provasOrdenadas = ordenarProvasInterCaladas(provasUnificadas);
+                setProvasSelecionadas(provasOrdenadas);
+                setEtapaAtual(2);
+            }
         }
     };
 
@@ -512,10 +507,11 @@ const Etapas = () => {
                 newProvas[index].duplicado = true;
             } else {
                 const ordemCorrigida = parseInt(novaOrdem, 10);
-                if (!isNaN(ordemCorrigida) && ordemCorrigida >= 1 && ordemCorrigida <= newProvas.length) {
+                const numProvas = newProvas.length;
+                if (!isNaN(ordemCorrigida) && ordemCorrigida >= 1 && ordemCorrigida <= numProvas) {
                     newProvas[index].ordem = ordemCorrigida;
                 } else {
-                    mostrarAlerta(`A ordem deve ser um número entre 1 e ${newProvas.length}.`);
+                    mostrarAlerta(`A ordem deve ser um número entre 1 e ${numProvas}.`);
                     return newProvas;
                 }
             }
