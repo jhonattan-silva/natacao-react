@@ -96,7 +96,7 @@ app.use(cors({
       callback(new Error('Origem não permitida pelo CORS'));
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
 }));
 

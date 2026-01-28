@@ -36,6 +36,7 @@ const FormNoticia = ({ noticiaInicial = {}, onSalvo, onCancelar }) => {
   const [imagemTemp, setImagemTemp] = useState(''); // Para armazenar imagem temporária
   const [data, setData] = useState('');
   const [status, setStatus] = useState('publicada');
+  const [exibirCarrossel, setExibirCarrossel] = useState(true); // Flag para exibir no carrossel
   const [imagemFile, setImagemFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
@@ -53,6 +54,7 @@ const FormNoticia = ({ noticiaInicial = {}, onSalvo, onCancelar }) => {
     setImagem(noticiaInicial.imagem || '');
     setData(formatDate(noticiaInicial.data) || formatDate(new Date()));
     setStatus(noticiaInicial.status || 'publicada');
+    setExibirCarrossel(noticiaInicial.exibir_carrossel !== undefined ? Boolean(noticiaInicial.exibir_carrossel) : true);
     setImagemFile(null);
     setGaleria(noticiaInicial.galeria || []);
     setGaleriaPreview((noticiaInicial.galeria || []).map(img => ({ url: img })));
@@ -157,7 +159,7 @@ const FormNoticia = ({ noticiaInicial = {}, onSalvo, onCancelar }) => {
     setLoading(true);
 
     try {
-      let payload = { titulo, subtitulo, resumo, texto, imagem, data, usuarios_id: 1, status, galeria, slug };
+      let payload = { titulo, subtitulo, resumo, texto, imagem, data, usuarios_id: 1, status, galeria, slug, exibir_carrossel: exibirCarrossel ? 1 : 0 };
       // Calcular ano e slug para os uploads
       const noticiaAno = data ? new Date(data).getFullYear().toString() : 'temp';
       const noticiaSlugForMove = slug || gerarSlug(titulo); // Certifique-se de ter ou importar uma função gerarSlug
@@ -373,6 +375,16 @@ const FormNoticia = ({ noticiaInicial = {}, onSalvo, onCancelar }) => {
             valorSelecionado={status}
           />
         </div>
+        <div className={style.campoNoticiasAdmin}>
+          <label className={style.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              checked={exibirCarrossel} 
+              onChange={(e) => setExibirCarrossel(e.target.checked)}
+            />
+            <span>Exibir no carrossel da página inicial</span>
+          </label>
+        </div>
         <div className={style.botoesNoticiasAdmin}>
           <Botao onClick={handleSubmit} className="">Salvar</Botao>
           <Botao onClick={onCancelar} className="">Cancelar</Botao>
@@ -433,6 +445,19 @@ const NoticiasAdmin = () => {
     );
   };
 
+  const handleToggleCarrossel = async noticia => {
+    const novoValor = noticia.exibir_carrossel ? 0 : 1;
+    try {
+      await api.patch(`/news/${noticia.id}/carrossel`, { exibir_carrossel: novoValor });
+      setNoticias(prev => prev.map(n => (
+        n.id === noticia.id ? { ...n, exibir_carrossel: novoValor } : n
+      )));
+      mostrarAlerta(novoValor ? 'Notícia exibida no carrossel.' : 'Notícia removida do carrossel.');
+    } catch {
+      mostrarAlerta('Erro ao atualizar carrossel.');
+    }
+  };
+
   //  se o formulário estiver em modo de edição
   if (modoForm) {
     return (
@@ -472,6 +497,7 @@ const NoticiasAdmin = () => {
                 <th>ID</th>
                 <th>Título</th>
                 <th>Status</th>
+                <th>Carrossel</th>
                 <th>Data</th>
                 <th>Ações</th>
               </tr>
@@ -482,10 +508,18 @@ const NoticiasAdmin = () => {
                   <td>{n.id}</td>
                   <td>{n.titulo}</td>
                   <td>{n.status}</td>
+                  <td>{n.exibir_carrossel ? 'Sim' : 'Não'}</td>
                   <td>{n.data}</td>
                   <td>
                     <Botao onClick={() => handleEditar(n)} className="">Editar</Botao>
                     <Botao onClick={() => handleExcluir(n)} className="" style={{marginLeft: 8, background: '#e74c3c'}}>Excluir</Botao>
+                    <Botao
+                      onClick={() => handleToggleCarrossel(n)}
+                      className=""
+                      style={{ marginLeft: 8, background: n.exibir_carrossel ? '#f39c12' : '#2ecc71' }}
+                    >
+                      {n.exibir_carrossel ? 'Ocultar Carrossel' : 'Mostrar Carrossel'}
+                    </Botao>
                   </td>
                 </tr>
               ))}

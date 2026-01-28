@@ -17,6 +17,29 @@ function gerarSlug(title) {
   return title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+// Listar notícias para o carrossel (apenas com flag ativa)
+router.get('/carrossel', async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT id, titulo, subtitulo, resumo, imagem, data, status, galeria, slug 
+       FROM noticias 
+       WHERE status = 'publicada' AND exibir_carrossel = 1 
+       ORDER BY data DESC, id DESC 
+       LIMIT 5`
+    );
+    // Se galeria for string, converte para array
+    rows.forEach(n => {
+      if (n.galeria && typeof n.galeria === 'string') {
+        try { n.galeria = JSON.parse(n.galeria); } catch { n.galeria = []; }
+      }
+    });
+    res.json(rows);
+  } catch (err) {
+    console.error('Erro ao buscar notícias do carrossel:', err);
+    res.status(500).json({ error: 'Erro ao buscar notícias do carrossel.' });
+  }
+});
+
 // Listar todas as notícias (mais recentes primeiro)
 router.get('/', async (req, res) => {
   try {
@@ -25,7 +48,7 @@ router.get('/', async (req, res) => {
     const whereClause = incluirRascunhos ? '' : "WHERE status = 'publicada'";
     
     const [rows] = await db.execute(
-      `SELECT id, titulo, subtitulo, resumo, imagem, data, status, galeria, slug 
+      `SELECT id, titulo, subtitulo, resumo, imagem, data, status, galeria, slug, exibir_carrossel 
        FROM noticias ${whereClause} ORDER BY data DESC, id DESC`
     );
     // Se galeria for string, converte para array
@@ -46,7 +69,7 @@ router.get('/:year/:slug', async (req, res) => {
   const { year, slug } = req.params;
   try {
     const [rows] = await db.execute(
-      `SELECT id, titulo, subtitulo, resumo, texto, imagem, data, status, galeria, slug
+      `SELECT id, titulo, subtitulo, resumo, texto, imagem, data, status, galeria, slug, exibir_carrossel
          FROM noticias WHERE YEAR(data) = ? AND slug = ?`,
       [year, slug]
     );
@@ -65,7 +88,7 @@ router.get('/:year/:slug', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const [rows] = await db.execute(
-      `SELECT id, titulo, subtitulo, resumo, texto, imagem, data, status, galeria, slug FROM noticias WHERE id = ?`,
+      `SELECT id, titulo, subtitulo, resumo, texto, imagem, data, status, galeria, slug, exibir_carrossel FROM noticias WHERE id = ?`,
       [req.params.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Notícia não encontrada.' });
@@ -82,7 +105,7 @@ router.get('/:id', async (req, res) => {
 // Criar notícia
 router.post('/', async (req, res) => {
   try {
-    let { titulo, subtitulo, resumo, texto, imagem, data, usuarios_id, status, galeria, slug } = req.body;
+    let { titulo, subtitulo, resumo, texto, imagem, data, usuarios_id, status, galeria, slug, exibir_carrossel } = req.body;
     
     // Gera slug se não for fornecido
     if (!slug || typeof slug !== 'string' || !slug.trim()) {
@@ -129,9 +152,9 @@ router.post('/', async (req, res) => {
     console.log('Criando notícia com payload:', { titulo, subtitulo, resumo, texto, imagem, data, usuarios_id: usuariosIdFinal, status, galeria: galeriaArr, slug });
 
     const [result] = await db.execute(
-      `INSERT INTO noticias (titulo, subtitulo, resumo, texto, imagem, data, usuarios_id, status, galeria, slug)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [titulo, subtitulo || null, resumo || null, texto || null, imagem || null, data || null, usuariosIdFinal, status || 'publicada', galeriaStr, slug]
+      `INSERT INTO noticias (titulo, subtitulo, resumo, texto, imagem, data, usuarios_id, status, galeria, slug, exibir_carrossel)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [titulo, subtitulo || null, resumo || null, texto || null, imagem || null, data || null, usuariosIdFinal, status || 'publicada', galeriaStr, slug, exibir_carrossel !== undefined ? exibir_carrossel : 1]
     );
 
     const noticiaId = result.insertId;
@@ -196,14 +219,28 @@ router.post('/', async (req, res) => {
 // Editar notícia
 router.put('/:id', async (req, res) => {
   try {
-    const { titulo, subtitulo, resumo, texto, imagem, data, usuarios_id, status, galeria, slug } = req.body;
+    const { titulo, subtitulo, resumo, texto, imagem, data, usuarios_id, status, galeria, slug, exibir_carrossel } = req.body;
     await db.execute(
-      `UPDATE noticias SET titulo=?, subtitulo=?, resumo=?, texto=?, imagem=?, data=?, usuarios_id=?, status=?, galeria=?, slug=? WHERE id=?`,
-      [titulo, subtitulo, resumo, texto, imagem, data, usuarios_id, status, JSON.stringify(galeria || []), slug || gerarSlug(titulo), req.params.id]
+      `UPDATE noticias SET titulo=?, subtitulo=?, resumo=?, texto=?, imagem=?, data=?, usuarios_id=?, status=?, galeria=?, slug=?, exibir_carrossel=? WHERE id=?`,
+      [titulo, subtitulo, resumo, texto, imagem, data, usuarios_id, status, JSON.stringify(galeria || []), slug || gerarSlug(titulo), exibir_carrossel !== undefined ? exibir_carrossel : 1, req.params.id]
     );
     res.json({ success: 'Notícia atualizada com sucesso!' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao atualizar notícia.' });
+  }
+});
+
+// Atualizar apenas a flag do carrossel
+router.patch('/:id/carrossel', async (req, res) => {
+  try {
+    const { exibir_carrossel } = req.body;
+    await db.execute(
+      `UPDATE noticias SET exibir_carrossel=? WHERE id=?`,
+      [exibir_carrossel ? 1 : 0, req.params.id]
+    );
+    res.json({ success: 'Carrossel atualizado com sucesso!' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar carrossel.' });
   }
 });
 

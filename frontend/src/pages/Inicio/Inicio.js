@@ -54,7 +54,7 @@ const Inicio = () => {
     useEffect(() => {
         const fetchNoticias = async () => {
             try {
-                const response = await api.get('/news');
+                const response = await api.get('/news/carrossel');
                 setNoticias(response.data);
             } catch (error) {
                 console.error('Erro ao carregar notícias:', error);
@@ -147,15 +147,21 @@ const Inicio = () => {
             {/* Seção de Banners */}
             <section className={style.bannersSection}>
                 <div className={style.bannersContainer}>
-                    <Link to="#regulamento" className={style.banner}>
+                    <a 
+                        href="/regulamento.pdf" 
+                        download="LPN_Regulamento_2026.pdf" 
+                        className={`${style.banner} ${style.bannerRegulamento}`}
+                    >
+                        <div className={style.bannerOverlay}></div>
                         <div className={style.bannerContent}>
-                            <h3>Regulamento</h3>
-                            <p>Conheça as regras e normas da Liga</p>
+                            <h3>📋 Regulamento</h3>
+                            <p>Baixe as regras e normas da Liga</p>
                         </div>
-                    </Link>
-                    <Link to="/faca-parte" className={style.banner}>
+                    </a>
+                    <Link to="/faca-parte" className={`${style.banner} ${style.bannerFacaParte}`}>
+                        <div className={style.bannerOverlay}></div>
                         <div className={style.bannerContent}>
-                            <h3>Traga sua Equipe</h3>
+                            <h3>🏊 Traga sua Equipe</h3>
                             <p>Cadastre sua equipe e participe</p>
                         </div>
                     </Link>
