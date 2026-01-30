@@ -62,6 +62,29 @@ const storageEquipes = multer.diskStorage({
 });
 const uploadEquipes = multer({ storage: storageEquipes });
 
+// Storage para regulamentos (PDF)
+const storageRegulamento = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../uploads/regulamentos');
+    ensureDir(uploadPath);
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `regulamento${ext}`);
+  }
+});
+
+const uploadRegulamento = multer({
+  storage: storageRegulamento,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype !== 'application/pdf') {
+      return cb(new Error('Apenas arquivos PDF são permitidos'));
+    }
+    cb(null, true);
+  }
+});
+
 // Rota para upload de imagem de notícia
 router.post('/noticia', uploadNoticias.single('imagem'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
@@ -84,6 +107,42 @@ router.post('/equipe', uploadEquipes.single('imagem'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
   const url = `/uploads/equipes/${req.file.filename}`;
   res.json({ url });
+});
+
+// Rota para upload de regulamento (PDF)
+router.post('/regulamento', uploadRegulamento.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+  console.log('✅ Regulamento salvo em:', req.file.path);
+  const url = `/uploads/regulamentos/${req.file.filename}`;
+  console.log('✅ URL retornada:', url);
+  res.json({ url });
+});
+
+// Rota para obter regulamento atual
+router.get('/regulamento', (req, res) => {
+  const filePath = path.join(__dirname, '../uploads/regulamentos/regulamento.pdf');
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Regulamento não encontrado.' });
+  }
+  return res.json({ url: '/uploads/regulamentos/regulamento.pdf' });
+});
+
+// Rota para deletar regulamento (remove todos os PDFs)
+router.delete('/regulamento', (req, res) => {
+  const dirPath = path.join(__dirname, '../uploads/regulamentos');
+  if (!fs.existsSync(dirPath)) {
+    return res.status(200).json({ message: 'Nenhum regulamento encontrado.' });
+  }
+
+  const files = fs.readdirSync(dirPath);
+  files.forEach((file) => {
+    const filePath = path.join(dirPath, file);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  });
+
+  return res.status(200).json({ message: 'Regulamento deletado com sucesso.' });
 });
 
 // Rota para mover imagem temporária da galeria/capa para pasta definitiva da notícia

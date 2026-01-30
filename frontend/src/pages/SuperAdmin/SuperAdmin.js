@@ -13,9 +13,10 @@ const SuperAdmin = () => {
     const [masterUsers, setMasterUsers] = useState([]);
     const [loadingMasters, setLoadingMasters] = useState(false);
 
-    // Buscar lista de usuários master ao carregar a página
+    // Buscar lista de usuários master e regulamento ao carregar a página
     useEffect(() => {
         fetchMasterUsers();
+        fetchRegulamento();
     }, []);
 
     const fetchMasterUsers = async () => {
@@ -32,6 +33,15 @@ const SuperAdmin = () => {
             mostrarAlerta('Erro ao buscar usuários master');
         } finally {
             setLoadingMasters(false);
+        }
+    };
+
+    const fetchRegulamento = async () => {
+        try {
+            const response = await api.get('/upload/regulamento');
+            setRegulamento(response.data.url);
+        } catch (error) {
+            setRegulamento(null);
         }
     };
 
@@ -59,7 +69,7 @@ const SuperAdmin = () => {
             const formData = new FormData();
             formData.append('file', file);
 
-            const response = await api.post('/api/upload/regulamento', formData, {
+            const response = await api.post('/upload/regulamento', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -83,7 +93,7 @@ const SuperAdmin = () => {
     const handleDeleteRegulamento = async () => {
         try {
             setLoading(true);
-            await api.delete('/api/upload/regulamento');
+            await api.delete('/upload/regulamento');
             mostrarAlerta('Regulamento deletado com sucesso!');
             setRegulamento(null);
         } catch (error) {
@@ -132,7 +142,7 @@ const SuperAdmin = () => {
                                         disabled={loading}
                                         className={style.fileInput}
                                     />
-                                    <label className={style.fileLabel}>
+                                    <label className={style.fileLabel} htmlFor="fileInput">
                                         {file ? `📁 ${file.name}` : '📂 Clique para selecionar um PDF'}
                                     </label>
                                     <Botao 
@@ -147,7 +157,12 @@ const SuperAdmin = () => {
                             {regulamento && (
                                 <div className={style.currentFile}>
                                     <p>✅ <strong>Regulamento atual:</strong></p>
-                                    <a href={regulamento} target="_blank" rel="noopener noreferrer">
+                                    <a 
+                                        href={`${process.env.REACT_APP_API_URL.replace('/api', '')}${regulamento}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        download="LPN_Regulamento.pdf"
+                                    >
                                         📥 Baixar Regulamento
                                     </a>
                                     <Botao 

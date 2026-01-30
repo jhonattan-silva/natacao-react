@@ -148,7 +148,7 @@ const Inicio = () => {
             <section className={style.bannersSection}>
                 <div className={style.bannersContainer}>
                     <a 
-                        href="/regulamento.pdf" 
+                        href={`${backendOrigin}/uploads/regulamentos/regulamento.pdf`}
                         download="LPN_Regulamento_2026.pdf" 
                         className={`${style.banner} ${style.bannerRegulamento}`}
                     >
