@@ -219,3 +219,8 @@
 .filtroInativosContainer label {
     color: #ffffff !important;
 }
+
+/* Remove box-shadow duplicado quando Formulario está dentro de cadastroContainer */
+.cadastroContainer :global(.formulario) {
+    box-shadow: none;
+}

@@ -1,3 +1,8 @@
+// Função para remover caracteres não numéricos
+export function somenteNumeros(str) {
+    return String(str).replace(/\D/g, '');
+}
+
 // Converter o tempo para milissegundos
 export function timeToMilliseconds(time) {
     if (time === "00:00") return Infinity; // Alterado: agora compara "00:00"

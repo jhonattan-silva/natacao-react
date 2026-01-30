@@ -13,13 +13,10 @@ ENV REACT_APP_API_URL=$REACT_APP_API_URL
 COPY package*.json ./
 RUN npm install
 
-# Copia o restante do código e builda
+# Copia o restante do código (incluindo inject-version.js)
 COPY . .
-RUN npm run build
 
-# Estágio 2: Imagem final
-FROM alpine:latest
-COPY --from=build /app/build /app/build
+# Build injeta versão do package.json automaticamente via inject-version.js
 RUN npm run build
 
 # Estágio 2: Criar uma imagem final leve

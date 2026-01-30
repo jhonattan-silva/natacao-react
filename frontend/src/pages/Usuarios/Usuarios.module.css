@@ -10,9 +10,12 @@
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-top: 20px;
-    width: 100%;
-    max-width: 600px;
+    margin: 20px auto;
+    width: 70%;
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .form-container h2 {
@@ -29,7 +32,7 @@
 
 .form-container input,
 .form-container select {
-    width: 100%;
+    width: 85%;
     padding: 10px;
     margin-bottom: 20px;
     border: 1px solid #ccc;
@@ -52,13 +55,19 @@
     display: flex;
     flex-wrap: wrap;
     margin-bottom: 20px;
+    width: 85%;
+    max-width: 85%;
+    justify-content: flex-start;
+    box-sizing: border-box;
+    gap: 15px;
 }
 
 .form-container .checkbox-group label {
-    margin-right: 10px;
+    margin-right: 0;
     color: #333; /* Ajustar a cor para que fique visível */
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .form-container .checkbox-group input[type="checkbox"] {
@@ -90,4 +99,9 @@
   align-items: center;
   margin-bottom: 16px;
   width: 100%;
+}
+
+/* Override do CheckBoxGroup para Usuários - mantém os perfis compactos */
+.form-container :global(.checkboxGroupContainer) {
+  width: 20%;
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../servicos/UserContext";
 import api from "../../servicos/api";
+import { somenteNumeros } from "../../servicos/functions";
 import style from './Login.module.css';
 import useAlerta from '../../hooks/useAlerta';
 
@@ -27,6 +28,12 @@ const Login = () => {
         return () => clearTimeout(verificarAutocomplete);
     }, [senha]);
 
+    const handleCpfChange = (e) => {
+        // Remove automaticamente pontos e traços, mantendo apenas números
+        const cpfLimpo = somenteNumeros(e.target.value);
+        setCpf(cpfLimpo);
+    };
+
     const handleLogin = async (e) => {
         e.preventDefault();
 
@@ -36,6 +43,8 @@ const Login = () => {
             const { token } = response.data;
 
             localStorage.setItem("token", token);
+            // Salva a versão do app para força relogin em updates
+            localStorage.setItem("appVersion", process.env.REACT_APP_VERSION || "1.0.0");
             atualizarUsuario();
 
             navigate("/admin");
@@ -64,9 +73,11 @@ const Login = () => {
                     <label>
                         CPF:
                         <input
-                            type="number"
-                            value={cpf}
-                            onChange={(e) => setCpf(e.target.value)}
+                            type="text"
+                            placeholder="000.000.000-00"
+                            value={cpf ? cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : ''}
+                            onChange={handleCpfChange}
+                            maxLength="14"
                             required
                         />
                     </label>

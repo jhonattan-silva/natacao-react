@@ -4,6 +4,7 @@ import api from '../../servicos/api';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import style from './CabecalhoAdmin.module.css';
 import CabecalhoLink from '../CabecalhoLink/CabecalhoLink';
+import useAlerta from '../../hooks/useAlerta';
 
 const logo = ['./imagens/logo_noBG.png'];
 
@@ -12,10 +13,11 @@ const CabecalhoAdmin = () => {
     const [equipe, setEquipe] = useState('');
     const [userProfile, setUserProfile] = useState([]);
     const [menuOpen, setMenuOpen] = useState(false);
-    const navigate = useNavigate(); // Hook de navegação do React Router
-    const location = useLocation(); // Get the current location
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { mostrar: mostrarAlerta, componente: alertaComponente } = useAlerta();
 
-    useEffect(() => { // Hook de efeito para buscar informações do usuário
+    useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
             const decodedToken = jwtDecode(token);
@@ -28,7 +30,7 @@ const CabecalhoAdmin = () => {
                 try {
                     const response = await api.get(`/usuarios/buscarUsuario/${userId}`);
                     const { nome, equipeId } = response.data;
-                    setNome(nome.split(' ')[0]); // Definir apenas o primeiro nome
+                    setNome(nome.split(' ')[0]);
 
                     // Buscar nome da equipe a partir do equipeId para o Profile
                     if (equipeUsuarioId) {
@@ -60,7 +62,9 @@ const CabecalhoAdmin = () => {
     };
 
     return (
-        <header className={style.cabecalho}>
+        <>
+            {alertaComponente}
+            <header className={style.cabecalho}>
             <div className={style.left}>
                 <Link to="/" onClick={() => handleLinkClick('/')}>
                     <img src={logo} alt='LPN logo' className={style.logo} />
@@ -72,13 +76,18 @@ const CabecalhoAdmin = () => {
                     <span className={style.closeButton} onClick={toggleMenu}>&times;</span>
                     <CabecalhoLink url='../Nadadores' onClick={() => { handleLinkClick('../Nadadores'); setMenuOpen(false); }}>Nadadores</CabecalhoLink>
                     <CabecalhoLink url='../Inscricao' onClick={() => { handleLinkClick('../Inscricao'); setMenuOpen(false); }}>Inscrição</CabecalhoLink>
-                    {userProfile.includes('admin') && (
+                    {(userProfile.includes('admin') || userProfile.includes('master')) && (
                         <>
                             <CabecalhoLink url='../Etapas' onClick={() => { handleLinkClick('../Etapas'); setMenuOpen(false); }}>Etapas</CabecalhoLink>
                             <CabecalhoLink url='../Usuarios' onClick={() => { handleLinkClick('../Usuarios'); setMenuOpen(false); }}>Usuários</CabecalhoLink>
                         </>
                     )}
-                    <CabecalhoLink url='../Admin' onClick={() => { handleLinkClick('../Admin'); setMenuOpen(false); }}>ADMIN</CabecalhoLink>
+                    {(userProfile.includes('admin') || userProfile.includes('master')) && (
+                        <CabecalhoLink url='../Admin' onClick={() => { handleLinkClick('../Admin'); setMenuOpen(false); }}>ADMIN</CabecalhoLink>
+                    )}
+                    {userProfile.includes('master') && (
+                        <CabecalhoLink url='../Super' onClick={() => { handleLinkClick('../Super'); setMenuOpen(false); }}>SUPER</CabecalhoLink>
+                    )}
                     {/* Usuário/equipe/sair dentro do sanduíche no mobile */}
                     {menuOpen && (
                         <div className={style.mobileUserInfo}>
@@ -105,8 +114,7 @@ const CabecalhoAdmin = () => {
             <div className={style.right}>
                 <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>
             </div>
-        </header>
-    )
+        </header>        </>    )
 }
 
 export default CabecalhoAdmin;

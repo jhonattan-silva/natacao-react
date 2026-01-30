@@ -22,6 +22,7 @@ import Relatorios from "./pages/Relatorios/Relatorios"; // Página de relatório
 import Resultados2023 from "./pages/ResultadosHistorico/Resultados2023";
 import Resultados2024 from "./pages/ResultadosHistorico/Resultados2024";
 import FacaParte from "./pages/FacaParte/FacaParte";
+import SuperAdmin from "./pages/SuperAdmin/SuperAdmin"; // Página de configurações globais (master only)
 
 
 const App = () => {
@@ -49,7 +50,7 @@ const App = () => {
                 <Route
                     path="/admin"
                     element={
-                        <ProtecaoRota requiredRoles={['admin', 'treinador', 'gerencial']}> {/* Protege a rota, só pode acessar se tiver perfil de admin */}
+                        <ProtecaoRota requiredRoles={['admin', 'master', 'treinador', 'gerencial']}>
                             <Admin />
                         </ProtecaoRota>
                     }
@@ -57,7 +58,7 @@ const App = () => {
                 <Route
                     path="/balizamento"
                     element={
-                        <ProtecaoRota requiredRoles={['admin']}>
+                        <ProtecaoRota requiredRoles={['admin', 'master']}>
                             <Balizamento />
                         </ProtecaoRota>
                     }
@@ -65,7 +66,7 @@ const App = () => {
                 <Route
                     path="/balizamentosAjuste"
                     element={
-                        <ProtecaoRota requiredRoles={['admin']}>
+                        <ProtecaoRota requiredRoles={['admin', 'master']}>
                             <BalizamentosAjuste />
                         </ProtecaoRota>
                     }
@@ -73,7 +74,7 @@ const App = () => {
                 <Route
                     path="/equipes"
                     element={
-                        <ProtecaoRota requiredRoles={['admin']}>
+                        <ProtecaoRota requiredRoles={['admin', 'master']}>
                             <Equipes />
                         </ProtecaoRota>
                     }
@@ -81,7 +82,7 @@ const App = () => {
                 <Route
                     path="/etapas"
                     element={
-                        <ProtecaoRota requiredRoles={['admin']}>
+                        <ProtecaoRota requiredRoles={['admin', 'master']}>
                             <Etapas />
                         </ProtecaoRota>
                     }
@@ -89,7 +90,7 @@ const App = () => {
                 <Route
                     path="/usuarios"
                     element={
-                        <ProtecaoRota requiredRoles={['admin']}>
+                        <ProtecaoRota requiredRoles={['admin', 'master']}>
                             <Usuarios />
                         </ProtecaoRota>
                     }
@@ -113,7 +114,7 @@ const App = () => {
                 <Route
                     path="/resultadosEntrada"
                     element={
-                        <ProtecaoRota requiredRoles={['admin']}>
+                        <ProtecaoRota requiredRoles={['admin', 'master']}>
                             <ResultadosEntrada />
                         </ProtecaoRota>
                     }
@@ -121,7 +122,7 @@ const App = () => {
                 <Route
                     path="/noticiasAdmin"
                     element={
-                        <ProtecaoRota requiredRoles={['admin']}>
+                        <ProtecaoRota requiredRoles={['admin', 'master']}>
                             <NoticiasAdmin />
                         </ProtecaoRota>
                     }
@@ -129,8 +130,16 @@ const App = () => {
                 <Route
                     path="/relatorios"
                     element={
-                        <ProtecaoRota requiredRoles={['admin', 'gerencial']}>
+                        <ProtecaoRota requiredRoles={['admin', 'master', 'gerencial']}>
                             <Relatorios />
+                        </ProtecaoRota>
+                    }
+                />
+                <Route
+                    path="/super"
+                    element={
+                        <ProtecaoRota requiredRoles={['master']}>
+                            <SuperAdmin />
                         </ProtecaoRota>
                     }
                 />

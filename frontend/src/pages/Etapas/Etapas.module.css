@@ -188,3 +188,8 @@ button:disabled, .btn:disabled {
     width: 50px;
     text-align: center;
 }
+
+/* Remove box-shadow duplicado do Formulario quando está em provasContainer */
+.provasContainer :global(.formulario) {
+    box-shadow: none;
+}

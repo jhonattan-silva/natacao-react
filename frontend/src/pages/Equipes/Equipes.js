@@ -242,12 +242,15 @@ const Equipes = () => {
           <div className={style.formularioContainer}>
             <div>
               <Formulario inputs={inputs} aoSalvar={aoSalvar} />
-              <ListaSuspensa
-                textoPlaceholder={"Escolha o treinador"}
-                fonteDados={apiListaTreinadores}
-                valorSelecionado={treinadorEquipe} // ID do treinador
-                onChange={treinadorSelecionado}
-              />
+              <div className={style.treinadorContainer}>
+                <label className={style.treinadorLabel}>Treinador Responsável:</label>
+                <ListaSuspensa
+                  textoPlaceholder={"Escolha o treinador"}
+                  fonteDados={apiListaTreinadores}
+                  valorSelecionado={treinadorEquipe} // ID do treinador
+                  onChange={treinadorSelecionado}
+                />
+              </div>
               <div className={style.logoUploadContainer}>
                 <label htmlFor="logo-upload" className={style.logoLabel}>Logo da Equipe:</label>
                 <input 

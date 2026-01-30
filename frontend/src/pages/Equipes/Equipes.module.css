@@ -15,6 +15,14 @@
   align-items: center;
 }
 
+.formularioContainer > div {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
 .centralizarBotao {
   display: flex;
   justify-content: center;
@@ -22,13 +30,24 @@
   margin-bottom: 16px;
   width: 100%;
 }
+
 .logoUploadContainer {
   width: 100%;
-  margin: 20px 0;
+  max-width: 600px;
+  margin: 20px auto;
   padding: 15px;
   border: 1px solid #ddd;
   border-radius: 8px;
   background-color: #fff;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 600px;
 }
 
 .logoLabel {
@@ -36,6 +55,28 @@
   font-weight: 600;
   margin-bottom: 10px;
   color: #333;
+}
+
+.treinadorLabel {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #555;
+  text-align: left;
+  width: 85%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.treinadorContainer {
+  width: 100%;
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .fileInput {
@@ -57,8 +98,10 @@
 }
 
 .previewImage {
-  max-width: 300px;
-  max-height: 300px;
+  max-width: 150px;
+  max-height: 150px;
+  width: auto;
+  height: auto;
   object-fit: contain;
   border: 2px solid #ddd;
   border-radius: 8px;
@@ -79,4 +122,9 @@
 
 .removeButton:hover {
   background-color: #d32f2f;
+}
+
+/* Remove box-shadow duplicado quando Formulario está dentro de formularioContainer */
+.formularioContainer :global(.formulario) {
+  box-shadow: none;
 }

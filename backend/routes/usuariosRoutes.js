@@ -2,11 +2,16 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 const db = require('../config/db');
+const { authMiddleware } = require('../middleware/authMiddleware');
 const { validarCPF, somenteNumeros, validarCelular } = require('../servicos/functions');
 
-router.get('/listarUsuarios', async (req, res) => {
+router.get('/listarUsuarios', authMiddleware, async (req, res) => {
   try {
-    const [rows] = await db.query(`
+    // Extrai perfis do usuário autenticado (vem do JWT via authMiddleware)
+    const userPerfis = req.user?.perfis || [];
+    const isMaster = userPerfis.includes('master');
+
+    let query = `
       SELECT u.id, u.nome, u.cpf, u.celular, u.email, u.ativo,  
              COALESCE(GROUP_CONCAT(DISTINCT p.nome SEPARATOR ', '), '') AS perfis,
              COALESCE(GROUP_CONCAT(DISTINCT e.nome SEPARATOR ', '), '') AS equipes
@@ -15,8 +20,18 @@ router.get('/listarUsuarios', async (req, res) => {
       LEFT JOIN perfis p ON up.perfis_id = p.id
       LEFT JOIN usuarios_equipes ue ON u.id = ue.usuarios_id
       LEFT JOIN equipes e ON ue.equipes_id = e.id
-      GROUP BY u.id, u.nome, u.cpf, u.celular, u.email, u.ativo
-  `);
+    `;
+    
+    // Se não for master, filtra para não mostrar usuários master (perfis_id = 5)
+    if (!isMaster) {
+      query += ` WHERE u.id NOT IN (
+        SELECT usuarios_id FROM usuarios_perfis WHERE perfis_id = 5
+      )`;
+    }
+    
+    query += ` GROUP BY u.id, u.nome, u.cpf, u.celular, u.email, u.ativo`;
+
+    const [rows] = await db.query(query);
     res.json(rows);
   } catch (error) {
     console.error('Erro ao buscar usuários:', error);

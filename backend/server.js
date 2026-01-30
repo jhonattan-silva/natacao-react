@@ -101,8 +101,9 @@ app.use(cors({
 }));
 
 // Configura o body parser com um limite maior para o JSON e urlencoded
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// Aumentado para 50mb para suportar conteúdo HTML grande do React Quill
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(helmet());
 
@@ -119,7 +120,7 @@ const usuariosRoutes = require('./routes/usuariosRoutes');
 const nadadoresRoutes = require('./routes/nadadoresRoutes');
 const inscricaoRoutes = require('./routes/inscricaoRoutes');
 const rankingsRoutes = require('./routes/rankingsRoutes');
-const uploadsRoutes = require('./routes/uploadsRoutes'); // Nova rota de uploads
+const uploadsRoutes = require('./routes/uploadsRoutes');
 const migracao = require('./routes/migracaoRoute');
 const resultadosEntrada = require('./routes/resultadosEntradaRoutes');
 const resultadosRoutes = require('./routes/resultadosRoutes');
@@ -139,12 +140,12 @@ app.use('/api/etapas', etapasRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/nadadores', nadadoresRoutes);
 app.use('/api/inscricao', inscricaoRoutes);
-app.use('/api/rankings', rankingsRoutes.router); // Corrigido para usar o router do rankingsRoutes
-app.use('/api/upload', uploadsRoutes); // Usando a nova rota de uploads
+app.use('/api/rankings', rankingsRoutes.router);
+app.use('/api/upload', uploadsRoutes); 
 app.use('/api/migracao', migracao);
 app.use('/api/resultadosEntrada', resultadosEntrada);
-app.use('/api/resultados', resultadosRoutes.router); // Corrigido para usar o router do resultadosRoutes
-app.use('/api/pontuacoes', pontuacoesRoutes.router); // Corrigido para usar o router do pontuacoesRoutes
+app.use('/api/resultados', resultadosRoutes.router); 
+app.use('/api/pontuacoes', pontuacoesRoutes.router);
 app.use('/api/estatisticas', estatisticasRoutes);
 app.use('/api/balizamentoExibicao', balizamentoExibicaoRoutes);
 app.use('/api/balizamentosAjuste', balizamentosAjusteRoutes);
