@@ -88,8 +88,11 @@ router.post('/cadastrarUsuario', async (req, res) => {
 
         await Promise.all(perfilPromises); // Executa todas as inserções de perfis em paralelo
 
-        // Insere na tabela `usuarios_equipes` somente se `equipeId` for fornecido
-        if (equipeId !== null) {
+        // Insere na tabela `usuarios_equipes` somente se `equipeId` for fornecido e não for null
+        if (equipeId !== null && equipeId !== undefined) {
+            // Remove qualquer treinador existente na equipe (substituição)
+            await connection.query('DELETE FROM usuarios_equipes WHERE equipes_id = ?', [equipeId]);
+            // Insere novo vínculo
             await connection.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [userId, equipeId]);
         }
 
@@ -149,6 +152,9 @@ router.put('/atualizarUsuario/:id', async (req, res) => {
     if (!perfis.includes(perfilTreinadorId)) {
       // Remove a equipe do usuário se o perfil de treinador foi removido
       await connection.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [userId]);
+    } else if (equipeId === null) {
+      // Se equipeId for null, remove o vinculo (desvincular treinador da equipe)
+      await connection.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [userId]);
     } else if (equipeId) {
       // Atualiza a equipe do usuário somente se ela for diferente da atual
       const [equipeExistente] = await connection.query(
@@ -157,7 +163,13 @@ router.put('/atualizarUsuario/:id', async (req, res) => {
       );
 
       if (equipeExistente.length === 0 || equipeExistente[0].equipes_id !== equipeId) {
-        await connection.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [userId]); // Remove a equipe antiga
+        // Remove vinculos antigos do próprio usuário
+        await connection.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [userId]);
+        
+        // Remove qualquer treinador existente na equipe (substituição)
+        await connection.query('DELETE FROM usuarios_equipes WHERE equipes_id = ?', [equipeId]);
+        
+        // Insere novo vinculo
         await connection.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [userId, equipeId]);
       }
     }
@@ -200,33 +212,11 @@ router.get('/buscarUsuario/:id', async (req, res) => {
     const userId = req.params.id;
 
     const query = `
-      SELECT u.id, u.nome, u.cpf, u.celular, u.email, ue.equipes_id AS equipeId
-      FROM usuarios u
-      LEFT JOIN usuarios_equipes ue ON u.id = ue.usuarios_id
-      WHERE u.id = ?
-    `;
-
-    const [usuario] = await db.query(query, [userId]);
-
-    if (usuario.length === 0) {
-      return res.status(404).json({ message: 'Usuário não encontrado' });
-    }
-
-    res.json(usuario[0]);
-  } catch (error) {
-    console.error('Erro ao buscar usuário:', error);
-    res.status(500).send('Erro ao buscar usuário');
-  }
-});
-
-router.get('/buscarUsuario/:id', async (req, res) => {
-  try {
-    const userId = req.params.id;
-
-    const query = `
       SELECT u.id, u.nome, u.cpf, u.celular, u.email,
              COALESCE(GROUP_CONCAT(DISTINCT p.nome SEPARATOR ', '), '') AS perfis,
-             COALESCE(GROUP_CONCAT(DISTINCT e.nome SEPARATOR ', '), '') AS equipes
+             COALESCE(GROUP_CONCAT(DISTINCT e.nome SEPARATOR ', '), '') AS equipes,
+             MAX(e.ativo) AS equipeAtiva,
+             MAX(ue.equipes_id) AS equipeId
       FROM usuarios u
       LEFT JOIN usuarios_perfis up ON u.id = up.usuarios_id
       LEFT JOIN perfis p ON up.perfis_id = p.id
@@ -250,6 +240,7 @@ router.get('/buscarUsuario/:id', async (req, res) => {
       celular: user.celular,
       email: user.email,
       equipeId: user.equipeId,
+      equipeAtiva: user.equipeAtiva,
       perfis: user.perfis.split(', '), // Assumindo que os perfis são separados por vírgula
     });
   } catch (error) {

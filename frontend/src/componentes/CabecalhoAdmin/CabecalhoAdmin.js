@@ -5,6 +5,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import style from './CabecalhoAdmin.module.css';
 import CabecalhoLink from '../CabecalhoLink/CabecalhoLink';
 import useAlerta from '../../hooks/useAlerta';
+import { useUser } from '../../servicos/UserContext';
 
 const logo = ['./imagens/logo_noBG.png'];
 
@@ -13,6 +14,8 @@ const CabecalhoAdmin = () => {
     const [equipe, setEquipe] = useState('');
     const [userProfile, setUserProfile] = useState([]);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [equipeInativa, setEquipeInativa] = useState(false);
+    const { user } = useUser();
     const navigate = useNavigate();
     const location = useLocation();
     const { mostrar: mostrarAlerta, componente: alertaComponente } = useAlerta();
@@ -46,6 +49,15 @@ const CabecalhoAdmin = () => {
         }
     }, []);
 
+    // Verificar se a equipe está inativa
+    useEffect(() => {
+        if (user?.equipeAtiva === 0) {
+            setEquipeInativa(true);
+        } else {
+            setEquipeInativa(false);
+        }
+    }, [user]);
+
     const handleLogout = () => {
         localStorage.removeItem('token'); // Remove o token do localStorage
         navigate('/'); // Redireciona para a página de login
@@ -76,14 +88,12 @@ const CabecalhoAdmin = () => {
                     <span className={style.closeButton} onClick={toggleMenu}>&times;</span>
                     <CabecalhoLink url='../Nadadores' onClick={() => { handleLinkClick('../Nadadores'); setMenuOpen(false); }}>Nadadores</CabecalhoLink>
                     <CabecalhoLink url='../Inscricao' onClick={() => { handleLinkClick('../Inscricao'); setMenuOpen(false); }}>Inscrição</CabecalhoLink>
+                    <CabecalhoLink url='../Admin' onClick={() => { handleLinkClick('../Admin'); setMenuOpen(false); }}>Admin</CabecalhoLink>
                     {(userProfile.includes('admin') || userProfile.includes('master')) && (
                         <>
                             <CabecalhoLink url='../Etapas' onClick={() => { handleLinkClick('../Etapas'); setMenuOpen(false); }}>Etapas</CabecalhoLink>
                             <CabecalhoLink url='../Usuarios' onClick={() => { handleLinkClick('../Usuarios'); setMenuOpen(false); }}>Usuários</CabecalhoLink>
                         </>
-                    )}
-                    {(userProfile.includes('admin') || userProfile.includes('master')) && (
-                        <CabecalhoLink url='../Admin' onClick={() => { handleLinkClick('../Admin'); setMenuOpen(false); }}>ADMIN</CabecalhoLink>
                     )}
                     {userProfile.includes('master') && (
                         <CabecalhoLink url='../Super' onClick={() => { handleLinkClick('../Super'); setMenuOpen(false); }}>SUPER</CabecalhoLink>
@@ -114,7 +124,13 @@ const CabecalhoAdmin = () => {
             <div className={style.right}>
                 <span className={style.menuIcon} onClick={toggleMenu}>&#9776;</span>
             </div>
-        </header>        </>    )
+        </header>
+        {equipeInativa && (
+            <div className={style.barraInativa}>
+                ⚠️ SUA EQUIPE ESTÁ INATIVA - Entre em contato com a administração para regularizar sua situação
+            </div>
+        )}
+        </>
+    )
 }
-
 export default CabecalhoAdmin;

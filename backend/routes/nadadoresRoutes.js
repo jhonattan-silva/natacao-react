@@ -194,4 +194,60 @@ router.get('/verificarCpf', authMiddleware, async (req, res) => {
     }
 });
 
+// Rota para recalcular categorias de todos os nadadores
+router.post('/recalcularCategorias', authMiddleware, async (req, res) => {
+    try {
+        // Buscar todos os nadadores com seu sexo
+        const [nadadores] = await db.query(`
+            SELECT n.id, n.sexo, n.data_nasc
+            FROM nadadores n
+        `);
+
+        let atualizados = 0;
+        let erros = 0;
+
+        // Para cada nadador, calcular a nova categoria
+        for (const nadador of nadadores) {
+            try {
+                // Calcular idade
+                const dataNasc = new Date(nadador.data_nasc);
+                const hoje = new Date();
+                let idade = hoje.getFullYear() - dataNasc.getFullYear();
+                
+                // Buscar categoria correspondente
+                const [categoria] = await db.query(`
+                    SELECT id FROM categorias
+                    WHERE sexo = ? AND idade_min <= ? AND idade_max >= ?
+                    LIMIT 1
+                `, [nadador.sexo, idade, idade]);
+
+                if (categoria.length > 0) {
+                    // Atualizar categoria do nadador
+                    await db.query(`
+                        UPDATE nadadores
+                        SET categorias_id = ?
+                        WHERE id = ?
+                    `, [categoria[0].id, nadador.id]);
+                    atualizados++;
+                } else {
+                    erros++;
+                }
+            } catch (error) {
+                console.error(`Erro ao atualizar nadador ${nadador.id}:`, error);
+                erros++;
+            }
+        }
+
+        res.json({ 
+            message: 'Recalcularção de categorias concluída',
+            atualizados,
+            erros,
+            total: nadadores.length
+        });
+    } catch (error) {
+        console.error('Erro ao recalcular categorias:', error);
+        res.status(500).json({ message: 'Erro ao recalcular categorias', error: error.message });
+    }
+});
+
 module.exports = router;

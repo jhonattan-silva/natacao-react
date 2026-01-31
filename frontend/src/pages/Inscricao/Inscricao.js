@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ListaSuspensa from "../../componentes/ListaSuspensa/ListaSuspensa";
 import CabecalhoAdmin from "../../componentes/CabecalhoAdmin/CabecalhoAdmin";
 import Botao from "../../componentes/Botao/Botao";
@@ -10,6 +11,7 @@ import { gerarPDFInscricoes } from "../../servicos/relatoriosPDF"; // Adicione e
 import styles from "./Inscricao.module.css"; // Importar o arquivo CSS como módulo
 
 const Inscricao = () => {
+    const navigate = useNavigate();
     const [nadadores, setNadadores] = useState([]);
     const [provas, setProvas] = useState([]);
     const [eventos, setEventos] = useState([]);
@@ -22,6 +24,7 @@ const Inscricao = () => {
     const [nomeEquipe, setNomeEquipe] = useState(''); // Novo estado para nome da equipe
     const [provas400, setProvas400] = useState([]);
     const [limite400, setLimite400] = useState({});
+    const [equipeInativa, setEquipeInativa] = useState(false);
     const user = useUser(); // Obter o usuário do contexto do usuário
     const { mostrar: mostrarAlerta, componente: alertaComponente } = useAlerta(); // Usar o hook useAlerta
 
@@ -49,6 +52,17 @@ const Inscricao = () => {
         };
         fetchEventos();
     }, []);
+
+    // Verificar se a equipe está inativa
+    useEffect(() => {
+        if (user?.user?.equipeAtiva === 0) {
+            setEquipeInativa(true);
+            // Bloquear acesso imediatamente
+            mostrarAlerta('Sua equipe está INATIVA. Entre em contato com a administração para regularizar.', () => {
+                navigate('/admin');
+            });
+        }
+    }, [user, navigate, mostrarAlerta]);
 
     const fetchDadosEvento = async () => {
         try {
@@ -259,6 +273,14 @@ const Inscricao = () => {
 
 
     const aoSalvar = async () => {
+        // Verificar se a equipe está inativa
+        if (equipeInativa) {
+            mostrarAlerta('Sua equipe está INATIVA. Entre em contato com a administração para regularizar.', () => {
+                navigate('/admin');
+            });
+            return;
+        }
+
         if (!eventoSelecionado) {
             mostrarAlerta("Selecione um evento para continuar.");
             return;

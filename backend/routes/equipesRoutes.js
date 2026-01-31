@@ -30,7 +30,9 @@ router.post('/cadastrarEquipe', async (req, res) => {
     const equipeId = resultEquipe.insertId;
 
     // Se um treinador foi informado, cria o vínculo na tabela usuarios_equipes
+    // Remove vínculo anterior do treinador com outra equipe (um treinador só pode ter uma equipe)
     if (treinadorId) {
+      await db.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [treinadorId]);
       await db.query(
         'INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)',
         [treinadorId, equipeId]
@@ -75,11 +77,13 @@ router.put('/atualizarEquipe/:id', async (req, res) => {
     // Atualiza a equipe
     await db.query('UPDATE equipes SET nome = ?, cidade = ?, logo = ? WHERE id = ?', [nome, cidade, logo || null, equipeId]);
 
-    // Remove vínculo atual
+    // Remove vínculo atual da equipe
     await db.query('DELETE FROM usuarios_equipes WHERE equipes_id = ?', [equipeId]);
 
     // Se for informado um treinador válido, insere novo vínculo
+    // Remove vínculo anterior do treinador com outra equipe (um treinador só pode ter uma equipe)
     if (treinadorId) {
+      await db.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [treinadorId]);
       await db.query('INSERT INTO usuarios_equipes (usuarios_id, equipes_id) VALUES (?, ?)', [treinadorId, equipeId]);
     }
 
@@ -92,6 +96,50 @@ router.put('/atualizarEquipe/:id', async (req, res) => {
     await db.query('ROLLBACK');
     console.error('Erro ao atualizar equipe:', error);
     res.status(500).json({ error: 'Ocorreu um erro ao atualizar a equipe. Por favor, tente novamente mais tarde.' });
+  }
+});
+
+// Rota para verificar se um treinador já está vinculado a alguma equipe
+router.get('/verificarTreinadorUsuario/:usuarioId', async (req, res) => {
+  try {
+    const { usuarioId } = req.params;
+    const [resultado] = await db.query(`
+      SELECT e.id, e.nome 
+      FROM usuarios_equipes ue
+      JOIN equipes e ON ue.equipes_id = e.id
+      WHERE ue.usuarios_id = ?
+    `, [usuarioId]);
+    
+    if (resultado.length > 0) {
+      res.json({ temEquipe: true, equipe: resultado[0] });
+    } else {
+      res.json({ temEquipe: false });
+    }
+  } catch (error) {
+    console.error('Erro ao verificar equipe do treinador:', error);
+    res.status(500).json({ error: 'Erro ao verificar equipe' });
+  }
+});
+
+// Rota para verificar se uma equipe já tem treinador
+router.get('/verificarTreinadorEquipe/:equipeId', async (req, res) => {
+  try {
+    const { equipeId } = req.params;
+    const [resultado] = await db.query(`
+      SELECT u.id, u.nome 
+      FROM usuarios_equipes ue
+      JOIN usuarios u ON ue.usuarios_id = u.id
+      WHERE ue.equipes_id = ?
+    `, [equipeId]);
+    
+    if (resultado.length > 0) {
+      res.json({ temTreinador: true, treinador: resultado[0] });
+    } else {
+      res.json({ temTreinador: false });
+    }
+  } catch (error) {
+    console.error('Erro ao verificar treinador da equipe:', error);
+    res.status(500).json({ error: 'Erro ao verificar treinador' });
   }
 });
 

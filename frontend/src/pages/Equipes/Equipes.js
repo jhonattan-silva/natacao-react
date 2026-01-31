@@ -8,8 +8,10 @@ import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import stylesBotao from '../../componentes/Botao/Botao.module.css';
 import Busca from '../../componentes/Busca/Busca';
+import useAlerta from '../../hooks/useAlerta';
 
 const Equipes = () => {
+  const { mostrar: mostrarAlerta, confirmar: confirmarAlerta, componente: AlertaComponente } = useAlerta();
   const [equipes, setEquipes] = useState([]);
   const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
   const apiListaEquipes = `equipes/listarEquipes`;
@@ -100,10 +102,10 @@ const Equipes = () => {
           equipe.id === id ? { ...equipe, ativo: novoStatus } : equipe
         )
       );
-      alert(`Equipe ${ativo ? 'inativada' : 'ativada'} com sucesso!`);
+      mostrarAlerta(`Equipe ${ativo ? 'inativada' : 'ativada'} com sucesso!`);
     } catch (error) {
       console.error('Erro ao inativar/ativar equipe:', error);
-      alert('Erro ao inativar/ativar equipe. Verifique os logs.');
+      mostrarAlerta('Erro ao inativar/ativar equipe. Verifique os logs.');
     }
   };
 
@@ -111,8 +113,39 @@ const Equipes = () => {
     setFormVisivel(true);
   };
 
-  const treinadorSelecionado = (id) => {
-    setTreinadorEquipe(id);
+  const treinadorSelecionado = async (id) => {
+    const treinadorId = id === '' ? null : id;
+    
+    // Verificar se o treinador já está vinculado a outra equipe
+    if (treinadorId) {
+      try {
+        const response = await api.get(`equipes/verificarTreinadorUsuario/${treinadorId}`);
+        
+        if (response.data.temEquipe) {
+          // Se estiver editando, verifica se não é a mesma equipe
+          if (isEditing && response.data.equipe.id === editTeamId) {
+            // É a mesma equipe, pode continuar
+            setTreinadorEquipe(treinadorId);
+            return;
+          }
+          
+          // Usa o hook useAlerta para confirmação
+          confirmarAlerta(
+            `Este treinador já está vinculado à equipe "${response.data.equipe.nome}".\n\nDeseja SUBSTITUIR e vincular à esta equipe? Ele perderá acesso aos nadadores e inscrições da equipe anterior.`,
+            () => {
+              // Confirmado - seleciona o treinador
+              setTreinadorEquipe(treinadorId);
+            }
+          );
+          return; // Não seleciona ainda, aguarda confirmação
+        }
+      } catch (error) {
+        mostrarAlerta('Erro ao verificar vínculo do treinador.');
+        return;
+      }
+    }
+    
+    setTreinadorEquipe(treinadorId);
   };
 
   const handleLogoUpload = async (event) => {
@@ -130,7 +163,7 @@ const Equipes = () => {
       setLogoPreview(`${backendOrigin}${response.data.url}`);
     } catch (error) {
       console.error('Erro ao fazer upload do logo:', error);
-      alert('Erro ao fazer upload da imagem.');
+      mostrarAlerta('Erro ao fazer upload da imagem.');
     }
   };
 
@@ -174,7 +207,7 @@ const Equipes = () => {
 
     // Validações
     if (!nomeEquipe || !cidadeEquipe) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
+      mostrarAlerta('Por favor, preencha todos os campos obrigatórios.');
       return; // Interrompe o processo de salvamento se houver campos vazios
     }
 
@@ -189,30 +222,41 @@ const Equipes = () => {
       if (isEditing) {
         // Edita a equipe
         await api.put(`equipes/atualizarEquipe/${editTeamId}`, equipeDados);
-        alert('Equipe atualizada com sucesso!');
+        mostrarAlerta('Equipe atualizada com sucesso!');
       } else {
         // Cria uma nova equipe
         await api.post(apiCadastraEquipe, equipeDados);
-        alert('Equipe cadastrada com sucesso!');
+        mostrarAlerta('Equipe cadastrada com sucesso!');
       }
 
       const response = await api.get(`${apiListaEquipes}`);
-      setEquipes(response.data);
+      // Mapeia Ativo para ativo para garantir consistência
+      const equipesTratadas = response.data.map(e => ({
+        ...e,
+        ativo: e.ativo !== undefined ? e.ativo : (e.Ativo !== undefined ? e.Ativo : 1)
+      }));
+      setEquipes(equipesTratadas);
       limparFormulario(); // Reseta o formulário
     } catch (error) {
       console.error('Erro ao salvar a equipe:', error);
-      alert('Erro ao salvar a equipe. Verifique os logs.');
+      mostrarAlerta('Erro ao salvar a equipe. Verifique os logs.');
     }
   };
 
-  // Filtra equipes pelo nome digitado na busca
-  const equipesFiltradas = equipes.filter(equipe =>
-    equipe.Equipe?.toLowerCase().includes(busca.toLowerCase())
-  );
+  // Filtra equipes pelo nome digitado na busca e ordena: ativas antes de inativas
+  const equipesFiltradas = equipes
+    .filter(equipe => equipe.Equipe?.toLowerCase().includes(busca.toLowerCase()))
+    .sort((a, b) => {
+      // Primeiro ordena por status (ativo = 1 antes de inativo = 0)
+      if (b.ativo !== a.ativo) return b.ativo - a.ativo;
+      // Depois ordena alfabeticamente pelo nome
+      return a.Equipe.localeCompare(b.Equipe);
+    });
 
   return (
     <>
       <CabecalhoAdmin />
+      {AlertaComponente}
       <div className={style.equipesPage}>
         <h1>EQUIPES</h1>
         <div className={style.centralizarBotao}>
@@ -245,9 +289,9 @@ const Equipes = () => {
               <div className={style.treinadorContainer}>
                 <label className={style.treinadorLabel}>Treinador Responsável:</label>
                 <ListaSuspensa
-                  textoPlaceholder={"Escolha o treinador"}
+                  textoPlaceholder={"SEM TREINADOR"}
                   fonteDados={apiListaTreinadores}
-                  valorSelecionado={treinadorEquipe} // ID do treinador
+                  valorSelecionado={treinadorEquipe || ''} // ID do treinador ou vazio
                   onChange={treinadorSelecionado}
                 />
               </div>

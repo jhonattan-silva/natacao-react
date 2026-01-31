@@ -1,3 +1,15 @@
+.barraInativa {
+    background-color: #d32f2f;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1em;
+    margin: 0;
+    border-bottom: 3px solid #b71c1c;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
 .cabecalho {
     display: flex;
     justify-content: space-between;

@@ -12,6 +12,7 @@ const SuperAdmin = () => {
     const [loading, setLoading] = useState(false);
     const [masterUsers, setMasterUsers] = useState([]);
     const [loadingMasters, setLoadingMasters] = useState(false);
+    const [loadingCategorias, setLoadingCategorias] = useState(false);
 
     // Buscar lista de usuários master e regulamento ao carregar a página
     useEffect(() => {
@@ -114,6 +115,31 @@ const SuperAdmin = () => {
         } catch (error) {
             console.error('Erro ao atualizar status:', error);
             mostrarAlerta('Erro ao atualizar status do usuário');
+        }
+    };
+
+    // Recalcular categorias de todos os nadadores
+    const handleRecalcularCategorias = async () => {
+        const confirmar = window.confirm(
+            'Tem certeza que deseja recalcular as categorias de TODOS os nadadores?\n\nEsta ação atualizará as categorias conforme as datas de nascimento e a data atual.'
+        );
+
+        if (!confirmar) return;
+
+        try {
+            setLoadingCategorias(true);
+            const response = await api.post('/nadadores/recalcularCategorias');
+            mostrarAlerta(
+                `✅ Categorias recalculadas com sucesso!\n\n` +
+                `Total de nadadores: ${response.data.total}\n` +
+                `Atualizados: ${response.data.atualizados}\n` +
+                `Erros: ${response.data.erros}`
+            );
+        } catch (error) {
+            console.error('Erro ao recalcular categorias:', error);
+            mostrarAlerta('Erro ao recalcular categorias. Verifique os logs.');
+        } finally {
+            setLoadingCategorias(false);
         }
     };
 
@@ -222,9 +248,27 @@ const SuperAdmin = () => {
                     <section className={style.section}>
                         <h2>⚙️ Configurações do Sistema</h2>
                         <div className={style.sectionContent}>
-                            <p>Configurações adicionais do sistema (futuras funcionalidades)</p>
-                            <div className={style.configPlaceholder}>
-                                <p>🚀 Mais opções de configuração em breve...</p>
+                            <p>Operações de manutenção e sincronização de dados</p>
+                            
+                            <div className={style.configSection}>
+                                <h3>🎯 Recalcular Categorias dos Nadadores</h3>
+                                <p>
+                                    Esta ação recalculará automaticamente as categorias de <strong>TODOS os nadadores</strong> 
+                                    conforme suas datas de nascimento e a data atual.
+                                </p>
+                                <p style={{ color: '#666', fontSize: '0.9em' }}>
+                                    ⚠️ Use esta função no início de cada ano ou quando necessário atualizar as categorias.
+                                </p>
+                                <Botao 
+                                    onClick={handleRecalcularCategorias}
+                                    disabled={loadingCategorias}
+                                    style={{ 
+                                        backgroundColor: '#2196F3',
+                                        marginTop: '1rem'
+                                    }}
+                                >
+                                    {loadingCategorias ? '⏳ Processando...' : '🔄 Recalcular Categorias'}
+                                </Botao>
                             </div>
                         </div>
                     </section>

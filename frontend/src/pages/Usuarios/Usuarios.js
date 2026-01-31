@@ -12,7 +12,7 @@ import useAlerta from '../../hooks/useAlerta';
 import Busca from '../../componentes/Busca/Busca';
 
 const Usuarios = () => {
-    const { mostrar: mostrarAlerta, componente: AlertaComponente } = useAlerta();
+    const { mostrar: mostrarAlerta, confirmar: confirmarAlerta, componente: AlertaComponente } = useAlerta();
     const [usuarios, setUsuarios] = useState([]);
     const [formVisivel, setFormVisivel] = useState(false); // Controla visibilidade do form de cadastro
     const [equipes, setEquipes] = useState(''); // controla as equipes
@@ -73,8 +73,39 @@ const Usuarios = () => {
         }
     }, [apiListaEquipes, mostrarAlerta]);
 
-    const aoSelecionarEquipe = (id) => {
-        setEquipeSelecionada(parseInt(id, 10)); // Converter para número inteiro
+    const aoSelecionarEquipe = async (id) => {
+        const equipeSelecionadaId = id === '' ? null : parseInt(id, 10);
+        
+        // Verificar se a equipe já tem outro treinador (tanto no cadastro quanto na edição)
+        if (equipeSelecionadaId) {
+            try {
+                const response = await api.get(`equipes/verificarTreinadorEquipe/${equipeSelecionadaId}`);
+                
+                if (response.data.temTreinador) {
+                    // No modo edição, verifica se o treinador não é o próprio usuário
+                    if (isEditing && response.data.treinador.id === editUserId) {
+                        // É o próprio usuário, pode continuar
+                        setEquipeSelecionada(equipeSelecionadaId);
+                        return;
+                    }
+                    
+                    // Usa o hook useAlerta para confirmação
+                    confirmarAlerta(
+                        `A equipe já possui o treinador "${response.data.treinador.nome}".\n\nDeseja SUBSTITUIR este treinador? Ele perderá acesso aos nadadores e inscrições desta equipe.`,
+                        () => {
+                            // Confirmado - seleciona a equipe
+                            setEquipeSelecionada(equipeSelecionadaId);
+                        }
+                    );
+                    return; // Não seleciona ainda, aguarda confirmação
+                }
+            } catch (error) {
+                mostrarAlerta('Erro ao verificar treinador da equipe.');
+                return;
+            }
+        }
+        
+        setEquipeSelecionada(equipeSelecionadaId);
     };
 
     // Carregar a lista de usuários ao montar o componente
@@ -280,10 +311,11 @@ const Usuarios = () => {
         }
 
         // Verifica se o perfil de treinador está selecionado sem equipe associada
-        if (perfisSelecionados.includes(perfilEspecificoId) && !equipeSelecionada) {
-            mostrarAlerta('É necessário Vincular uma equipe ao treinador');
-            return;
-        }
+        // Agora é OPCIONAL - treinador pode não ter equipe vinculada
+        // if (perfisSelecionados.includes(perfilEspecificoId) && !equipeSelecionada) {
+        //     mostrarAlerta('É necessário Vincular uma equipe ao treinador');
+        //     return;
+        // }
 
         const usuarioDados = {
             nome: nomeUsuario,
@@ -360,9 +392,9 @@ const Usuarios = () => {
                         />
                         {mostrarListaSuspensa && (
                             <ListaSuspensa
-                                textoPlaceholder="Escolha uma equipe"
+                                textoPlaceholder="Escolha uma equipe (ou deixe vazio para nenhuma)"
                                 fonteDados={apiListaEquipes}
-                                valorSelecionado={equipeSelecionada} // ID da equipe
+                                valorSelecionado={equipeSelecionada || ''} // ID da equipe ou vazio
                                 onChange={aoSelecionarEquipe}
                             />
                         )}

@@ -15,8 +15,8 @@ export const UserProvider = ({ children }) => {
             let perfil = { ...decoded };
             try {
                 const resp = await api.get(`/usuarios/buscarUsuario/${decoded.id}`);
-                const { nome, email } = resp.data;
-                perfil = { ...decoded, nome, email };
+                const { nome, email, equipeId, equipeAtiva } = resp.data;
+                perfil = { ...decoded, nome, email, equipeId: equipeId ? [equipeId] : [], equipeAtiva };
             } catch {
                 // falha ao buscar perfil, continua apenas com decoded
             }
