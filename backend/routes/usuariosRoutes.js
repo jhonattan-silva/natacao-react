@@ -88,8 +88,8 @@ router.post('/cadastrarUsuario', async (req, res) => {
 
         await Promise.all(perfilPromises); // Executa todas as inserções de perfis em paralelo
 
-        // Insere na tabela `usuarios_equipes` somente se `equipeId` for fornecido e não for null
-        if (equipeId !== null && equipeId !== undefined) {
+        // Insere na tabela `usuarios_equipes` somente se `equipeId` for fornecido e não for null, undefined ou vazio
+        if (equipeId && equipeId !== null && equipeId !== undefined && equipeId !== '') {
             // Remove qualquer treinador existente na equipe (substituição)
             await connection.query('DELETE FROM usuarios_equipes WHERE equipes_id = ?', [equipeId]);
             // Insere novo vínculo
@@ -152,8 +152,8 @@ router.put('/atualizarUsuario/:id', async (req, res) => {
     if (!perfis.includes(perfilTreinadorId)) {
       // Remove a equipe do usuário se o perfil de treinador foi removido
       await connection.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [userId]);
-    } else if (equipeId === null) {
-      // Se equipeId for null, remove o vinculo (desvincular treinador da equipe)
+    } else if (equipeId === null || equipeId === '' || equipeId === undefined) {
+      // Se equipeId for null, vazio ou undefined, remove o vinculo (desvincular treinador da equipe)
       await connection.query('DELETE FROM usuarios_equipes WHERE usuarios_id = ?', [userId]);
     } else if (equipeId) {
       // Atualiza a equipe do usuário somente se ela for diferente da atual

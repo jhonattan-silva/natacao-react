@@ -12,6 +12,42 @@
     color: black;
 }
 
+.loading {
+    text-align: center;
+    padding: 40px;
+    font-size: 1.2em;
+    color: #666;
+}
+
+.erro {
+    text-align: center;
+    padding: 20px;
+    background-color: #ffebee;
+    color: #c62828;
+    border-radius: 8px;
+    border: 1px solid #ef5350;
+    margin: 20px 0;
+}
+
+.avisoInativa {
+    text-align: center;
+    padding: 30px;
+    background-color: #ffebee;
+    color: #c62828;
+    border-radius: 8px;
+    border: 2px solid #d32f2f;
+    margin: 20px 0;
+    font-size: 1.1em;
+}
+
+.avisoInativa p {
+    margin: 10px 0;
+}
+
+.avisoInativa strong {
+    font-size: 1.3em;
+}
+
 .cardsContainer {
     display: flex;
     gap: 20px;

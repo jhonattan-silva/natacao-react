@@ -276,10 +276,19 @@ const Usuarios = () => {
     };
 
     // Filtra usuários pelo nome ou CPF digitado na busca
-    const usuariosFiltrados = usuarios.filter(usuario =>
-        usuario.nome?.toLowerCase().includes(busca.toLowerCase()) ||
-        usuario.cpf?.replace(/\D/g, '').includes(busca.replace(/\D/g, ''))
-    );
+    const usuariosFiltrados = usuarios.filter(usuario => {
+        const buscaLimpa = busca.toLowerCase();
+        const buscaNumeros = busca.replace(/\D/g, '');
+        
+        // Busca por nome
+        const encontrouNome = usuario.nome?.toLowerCase().includes(buscaLimpa);
+        
+        // Busca por CPF apenas se houver números na busca
+        const encontrouCPF = buscaNumeros.length > 0 && 
+                            usuario.cpf?.replace(/\D/g, '').includes(buscaNumeros);
+        
+        return encontrouNome || encontrouCPF;
+    });
 
     const aoSalvar = async (evento) => {
         evento.preventDefault();

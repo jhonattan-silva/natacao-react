@@ -9,40 +9,82 @@ const Dashboard = ({ equipeId: equipeIdProp }) => {
     const { user, loading } = useUser();
     const [dadosInscricoes, setDadosInscricoes] = useState(null);
     const [dadosEquipes, setDadosEquipes] = useState(null);
+    const [erro, setErro] = useState(null);
+    const [carregando, setCarregando] = useState(false);
 
     useEffect(() => {
         if (loading) return;
 
-        const equipeId = equipeIdProp || user?.equipeId; // Usa o prop se existir, senão pega do contexto
-        if (!equipeId) return;
+        // Validar equipeId antes de fazer requisições
+        const equipeId = equipeIdProp || (Array.isArray(user?.equipeId) ? user.equipeId[0] : user?.equipeId);
+        
+        if (!equipeId || equipeId === 'undefined') {
+            setErro('Nenhuma equipe vinculada ao usuário');
+            return;
+        }
 
-        const apiInscritosEquipe = `/estatisticas/inscricoesEquipe/${equipeId}`;
-        const apiEquipes = '/estatisticas/equipes';
+        const fetchDados = async () => {
+            setCarregando(true);
+            setErro(null);
 
-        const fetchInscricoes = async () => {
             try {
-                const response = await api.get(apiInscritosEquipe);
-                setDadosInscricoes(response.data);
+                // Buscar inscrições apenas se a equipe estiver ativa
+                if (user?.equipeAtiva !== 0) {
+                    try {
+                        const responseInscricoes = await api.get(`/estatisticas/inscricoesEquipe/${equipeId}`);
+                        setDadosInscricoes(responseInscricoes.data);
+                    } catch (error) {
+                        console.warn('Erro ao buscar inscrições:', error);
+                        setDadosInscricoes(null); // Não falha todo o dashboard
+                    }
+                }
+
+                // Buscar dados gerais de equipes
+                try {
+                    const responseEquipes = await api.get('/estatisticas/equipes');
+                    setDadosEquipes(responseEquipes.data);
+                } catch (error) {
+                    console.warn('Erro ao buscar equipes:', error);
+                    setDadosEquipes(null);
+                }
             } catch (error) {
-                console.error('Erro ao buscar dados de inscrições:', error);
+                console.error('Erro geral no dashboard:', error);
+                setErro('Erro ao carregar dados do dashboard');
+            } finally {
+                setCarregando(false);
             }
         };
 
-        const fetchEquipes = async () => {
-            try {
-                const response = await api.get(apiEquipes);
-                setDadosEquipes(response.data);
-            } catch (error) {
-                console.error('Erro ao buscar dados de equipes:', error);
-            }
-        };
-
-        fetchInscricoes();
-        fetchEquipes();
+        fetchDados();
     }, [user, loading, equipeIdProp]);
 
-    if (loading) return <div>Carregando...</div>;
-    if (!user && !equipeIdProp) return <div>Usuário não autenticado</div>;
+    if (loading || carregando) return <div className={style.loading}>⏳ Carregando...</div>;
+    
+    if (erro) {
+        return (
+            <section className={style.dashboardContainer}>
+                <div className={style.erro}>⚠️ {erro}</div>
+            </section>
+        );
+    }
+
+    if (!user && !equipeIdProp) return <div className={style.erro}>Usuário não autenticado</div>;
+
+    // Se equipe inativa, mostrar mensagem específica
+    if (user?.equipeAtiva === 0) {
+        return (
+            <section className={style.dashboardContainer}>
+                <h2>📊 Dashboard</h2>
+                <div className={style.avisoInativa}>
+                    <p>🔴 Sua equipe está <strong>INATIVA</strong></p>
+                    <p>Entre em contato com a administração para regularizar</p>
+                </div>
+                <div className={style.cardsContainer}>
+                    <EquipesCard dados={dadosEquipes} />
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className={style.dashboardContainer}>
