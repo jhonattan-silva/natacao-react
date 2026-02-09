@@ -310,11 +310,11 @@ router.post('/salvarResultados', async (req, res) => {
         await connection.beginTransaction();
 
         const [provaRows] = await connection.query(
-            `SELECT p.eh_revezamento 
-             FROM eventos_provas ep
-             JOIN provas p ON ep.provas_id = p.id
-             WHERE ep.id = ?`,
-            [provaId]
+          `SELECT p.eh_revezamento 
+           FROM eventos_provas ep
+           JOIN provas p ON ep.provas_id = p.id
+           WHERE ep.id = ?`,
+          [provaId]
         );
 
         if (provaRows.length === 0) {
@@ -323,6 +323,38 @@ router.post('/salvarResultados', async (req, res) => {
         }
 
         const ehRevezamento = Boolean(provaRows[0].eh_revezamento);
+
+        const [eventoInfoRows] = await connection.query(
+          `SELECT e.torneios_id AS torneioId, e.data AS eventoData
+           FROM eventos_provas ep
+           JOIN eventos e ON ep.eventos_id = e.id
+           WHERE ep.id = ?`,
+          [provaId]
+        );
+
+        if (eventoInfoRows.length === 0) {
+          console.error(`Erro: Evento da prova ${provaId} não encontrado.`);
+          throw new Error('Evento não encontrado.');
+        }
+
+        const torneioId = eventoInfoRows[0].torneioId;
+        const eventoData = eventoInfoRows[0].eventoData;
+
+        const definirContaPontuacao = async (nadadorId) => {
+          if (!nadadorId) return 1;
+          const [transferRows] = await connection.query(
+            `SELECT 1
+             FROM transferencias
+             WHERE nadadores_id = ?
+               AND torneio_id = ?
+               AND bloqueia_pontuacao = 1
+               AND data_transferencia <= ?
+             LIMIT 1`,
+            [nadadorId, torneioId, eventoData]
+          );
+
+          return transferRows.length > 0 ? 0 : 1;
+        };
 
         for (const bateria of dados) {
             const { nadadores, equipes } = bateria;
@@ -347,16 +379,18 @@ router.post('/salvarResultados', async (req, res) => {
                         [nadadorId, provaId]
                     );
 
+                    const contaPontuacao = await definirContaPontuacao(nadadorId);
+
                     if (existingRows.length > 0) {
                         await connection.query(
-                            'UPDATE resultados SET minutos = ?, segundos = ?, centesimos = ?, status = ?, equipes_id = ? WHERE id = ?',
-                            [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, status, equipeId, existingRows[0].id]
+                        'UPDATE resultados SET minutos = ?, segundos = ?, centesimos = ?, status = ?, equipes_id = ?, conta_pontuacao = ? WHERE id = ?',
+                        [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, status, equipeId, contaPontuacao, existingRows[0].id]
                         );
                     } else {
                         await connection.query(
-                            `INSERT INTO resultados (minutos, segundos, centesimos, nadadores_id, eventos_provas_id, status, equipes_id)
-                             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                            [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, nadadorId, provaId, status, equipeId]
+                        `INSERT INTO resultados (minutos, segundos, centesimos, nadadores_id, eventos_provas_id, status, equipes_id, conta_pontuacao)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [parsedTime.minutos, parsedTime.segundos, parsedTime.centesimos, nadadorId, provaId, status, equipeId, contaPontuacao]
                         );
                     }
                 }

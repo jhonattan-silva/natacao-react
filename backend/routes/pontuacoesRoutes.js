@@ -132,11 +132,15 @@ const calcularPontuacaoEvento = async (eventosId) => {
         const [classificacoes] = await db.execute(
           `SELECT c.id, n.categorias_id, cat.eh_mirim, cat.nome AS categoria_nome, c.tempo, c.tipo, c.status
            FROM classificacoes c
+           JOIN resultados r
+             ON r.eventos_provas_id = c.eventos_provas_id
+            AND r.nadadores_id = c.nadadores_id
            LEFT JOIN nadadores n ON c.nadadores_id = n.id
            LEFT JOIN categorias cat ON n.categorias_id = cat.id
            WHERE c.eventos_provas_id = ?
            AND c.tipo = 'CATEGORIA'
            AND c.status = 'OK'
+           AND r.conta_pontuacao = 1
            AND cat.eh_mirim = 1
            ORDER BY cat.nome ASC, c.tempo ASC`,
           [prova.evento_prova_id]
@@ -187,11 +191,15 @@ const calcularPontuacaoEvento = async (eventosId) => {
         const [classificacoesEquipe] = await db.execute(
           `SELECT c.id, n.categorias_id, cat.eh_mirim, cat.nome AS categoria_nome, c.tempo, c.status, c.classificacao, c.tipo
            FROM classificacoes c
+           JOIN resultados r
+             ON r.eventos_provas_id = c.eventos_provas_id
+            AND r.nadadores_id = c.nadadores_id
            LEFT JOIN nadadores n ON c.nadadores_id = n.id
            LEFT JOIN categorias cat ON n.categorias_id = cat.id
            WHERE c.eventos_provas_id = ?
            AND c.tipo = 'ABSOLUTO'
            AND c.status = 'OK'
+           AND r.conta_pontuacao = 1
            AND c.classificacao BETWEEN 1 AND 8
            ORDER BY c.classificacao ASC`,
           [prova.evento_prova_id]
@@ -211,11 +219,15 @@ const calcularPontuacaoEvento = async (eventosId) => {
         const [mirinsAbsoluto] = await db.execute(
           `SELECT c.id, c.nadadores_id, c.eventos_provas_id
            FROM classificacoes c
+           JOIN resultados r
+             ON r.eventos_provas_id = c.eventos_provas_id
+            AND r.nadadores_id = c.nadadores_id
            LEFT JOIN nadadores n ON c.nadadores_id = n.id
            LEFT JOIN categorias cat ON n.categorias_id = cat.id
            WHERE c.eventos_provas_id = ?
            AND c.tipo = 'ABSOLUTO'
            AND c.status = 'OK'
+           AND r.conta_pontuacao = 1
            AND cat.eh_mirim = 1`,
           [prova.evento_prova_id]
         );
@@ -245,11 +257,15 @@ const calcularPontuacaoEvento = async (eventosId) => {
         const [classificacoesInd] = await db.execute(
           `SELECT c.id, n.categorias_id, cat.eh_mirim, c.tempo, c.status, c.classificacao, c.tipo
            FROM classificacoes c
+           JOIN resultados r
+             ON r.eventos_provas_id = c.eventos_provas_id
+            AND r.nadadores_id = c.nadadores_id
            LEFT JOIN nadadores n ON c.nadadores_id = n.id
            LEFT JOIN categorias cat ON n.categorias_id = cat.id
            WHERE c.eventos_provas_id = ?
            AND c.tipo = 'ABSOLUTO'
            AND c.status = 'OK'
+           AND r.conta_pontuacao = 1
            AND cat.eh_mirim <> 1
            ORDER BY n.categorias_id, c.classificacao ASC`,
           [prova.evento_prova_id]
@@ -280,11 +296,15 @@ const calcularPontuacaoEvento = async (eventosId) => {
         const [classificacoes] = await db.execute(
           `SELECT c.id, n.categorias_id, cat.eh_mirim, c.tempo, c.status, c.classificacao, c.tipo
            FROM classificacoes c
+           JOIN resultados r
+             ON r.eventos_provas_id = c.eventos_provas_id
+            AND r.nadadores_id = c.nadadores_id
            LEFT JOIN nadadores n ON c.nadadores_id = n.id
            LEFT JOIN categorias cat ON n.categorias_id = cat.id
            WHERE c.eventos_provas_id = ?
            AND c.tipo = 'ABSOLUTO'
            AND c.status = 'OK'
+           AND r.conta_pontuacao = 1
            AND c.classificacao BETWEEN 1 AND 8
            ORDER BY c.classificacao ASC`,
           [prova.evento_prova_id]

@@ -25,6 +25,7 @@ const Nadadores = () => {
     const [editNadadorId, setEditNadadorId] = useState(null); // Guarda o ID do Nadador sendo editado
     const [equipeNadador, setEquipeNadador] = useState(null); // Guarda a equipe do Nadador sendo editado
     const [cpfExistente, setCpfExistente] = useState(false); // Controla se o CPF já existe
+    const [nadadorExistenteInfo, setNadadorExistenteInfo] = useState(null); // Dados do nadador existente
     /* INPUTS */
     const [nomeNadador, setNomeNadador] = useState(''); // Para input de nome
     const [cpf, setCpf] = useState('');
@@ -46,6 +47,7 @@ const Nadadores = () => {
     const apiInativarNadador = `nadadores/inativarNadador`;
     const apiAtualizaNadador = `nadadores/atualizarNadador`;
     const apiVerificaCpf = `nadadores/verificarCpf`; 
+    const apiTransferirNadador = `nadadores/transferirNadador`;
 
     const equipeSelecionada = (id) => { //para capturar a equipe escolhida, caso o usuário não tenha uma equipe (admin)
         setEquipes(id);
@@ -203,6 +205,40 @@ const Nadadores = () => {
         }
     };
 
+    const transferirNadador = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+
+            const response = await api.post(
+                apiTransferirNadador,
+                { cpf, equipeDestinoId: equipes },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            await fetchNadadores(equipes);
+            limparFormulario();
+            setFormVisivel(false);
+            setCpfExistente(false);
+            setNadadorExistenteInfo(null);
+
+            if (response?.data?.bloqueiaPontuacao) {
+                mostrarAlerta('Nadador transferido. Ele não pontuará mais nesta temporada.');
+            } else {
+                mostrarAlerta('Nadador transferido com sucesso!');
+            }
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                mostrarAlerta('Sessão expirada. Por favor, faça login novamente.');
+                navigate('/login');
+            } else {
+                mostrarAlerta('Erro ao transferir nadador: ' + error.message);
+            }
+        }
+    };
+
     const inputs = [
         {
             id: "cpfInput",
@@ -213,6 +249,7 @@ const Nadadores = () => {
             aoAlterar: (valor) => {
                 setCpf(aplicarMascaraCPF(valor));
                 setCpfExistente(false); // Limpa o estado ao alterar
+                setNadadorExistenteInfo(null);
             },
             onBlur: async () => {
                 const cpfNumeros = cpf.replace(/\D/g, '');
@@ -238,17 +275,20 @@ const Nadadores = () => {
                     });
             
                     if (response?.data?.exists) {
-                        const { nadador, equipe } = response.data;
-                        mostrarAlerta(
-                            `CPF já cadastrado!\n\nNadador: ${nadador}\nEquipe: ${equipe}\n\nEntre em contato com a administração.`
-                        );
+                        const { nadadorId, equipeId, nadador, equipe } = response.data;
+                        setNadadorExistenteInfo({ nadadorId, equipeId, nadador, equipe });
                         setCpfExistente(true);
+                        mostrarAlerta(
+                            `CPF já cadastrado!\n\nNadador: ${nadador}\nEquipe: ${equipe}\n\nSE CONTINUAR O CADASTRO, O NADADOR SERÁ TRANSFERIDO.`
+                        );
                     } else {
+                        setNadadorExistenteInfo(null);
                         setCpfExistente(false);
                     }
                 } catch (error) {
                     console.error('Erro ao verificar CPF:', error);
                     mostrarAlerta('Erro ao verificar CPF. Tente novamente.');
+                    setNadadorExistenteInfo(null);
                     setCpfExistente(false);
                 }
             }
@@ -330,6 +370,24 @@ const Nadadores = () => {
 
     const aoSalvar = async (evento) => {
         evento.preventDefault();
+
+        if (!editando && cpfExistente) {
+            if (!equipes) {
+                mostrarAlerta('Por favor, selecione uma equipe.');
+                return;
+            }
+
+            const nadadorNome = nadadorExistenteInfo?.nadador || 'Nadador';
+            const equipeOrigem = nadadorExistenteInfo?.equipe || 'Sem equipe';
+
+            confirmarAlerta(
+                `CPF já cadastrado!\n\nNadador: ${nadadorNome}\nEquipe atual: ${equipeOrigem}\n\nDeseja transferir este nadador para sua equipe?`,
+                async () => {
+                    await transferirNadador();
+                }
+            );
+            return;
+        }
 
         // Validações
         if (!nomeNadador || !cpf || !dataNasc || !celular || !sexo) {

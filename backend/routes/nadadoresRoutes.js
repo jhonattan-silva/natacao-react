@@ -172,7 +172,7 @@ router.get('/verificarCpf', authMiddleware, async (req, res) => {
         
         //Busca também o nome do nadador e da equipe
         const [rows] = await db.query(`
-            SELECT n.id, n.nome AS nadador_nome, e.nome AS equipe_nome
+            SELECT n.id, n.nome AS nadador_nome, n.equipes_id, e.nome AS equipe_nome
             FROM nadadores n
             LEFT JOIN equipes e ON n.equipes_id = e.id
             WHERE n.cpf = ?
@@ -180,10 +180,12 @@ router.get('/verificarCpf', authMiddleware, async (req, res) => {
         
         if (rows.length > 0) {
             // Retorna informações completas
-            res.json({ 
-                exists: true, 
+            res.json({
+                exists: true,
+                nadadorId: rows[0].id,
+                equipeId: rows[0].equipes_id,
                 nadador: rows[0].nadador_nome,
-                equipe: rows[0].equipe_nome || 'Sem equipe' 
+                equipe: rows[0].equipe_nome || 'Sem equipe'
             });
         } else {
             res.json({ exists: false });
@@ -191,6 +193,90 @@ router.get('/verificarCpf', authMiddleware, async (req, res) => {
     } catch (error) {
         console.error('Erro ao verificar CPF:', error);
         res.status(500).json({ message: 'Erro ao verificar CPF', error: error.message });
+    }
+});
+
+// Rota para transferir nadador entre equipes
+router.post('/transferirNadador', authMiddleware, async (req, res) => {
+    const { cpf, equipeDestinoId } = req.body;
+    const usuarioId = req.user?.id;
+
+    if (!cpf || !equipeDestinoId) {
+        return res.status(400).json({ message: 'CPF e equipe destino são obrigatórios.' });
+    }
+
+    if (!usuarioId) {
+        return res.status(401).json({ message: 'Usuário não autenticado.' });
+    }
+
+    const cpfNumeros = somenteNumeros(cpf);
+    let connection;
+
+    try {
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        const [nadadorRows] = await connection.query(
+            'SELECT id, equipes_id FROM nadadores WHERE cpf = ? LIMIT 1',
+            [cpfNumeros]
+        );
+
+        if (nadadorRows.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: 'Nadador nao encontrado.' });
+        }
+
+        const nadadorId = nadadorRows[0].id;
+        const equipeOrigemId = nadadorRows[0].equipes_id;
+
+        if (Number(equipeOrigemId) === Number(equipeDestinoId)) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'O nadador ja pertence a esta equipe.' });
+        }
+
+        const [torneioRows] = await connection.query(
+            'SELECT id FROM torneios WHERE aberto = 1 ORDER BY data_inicio DESC LIMIT 1'
+        );
+
+        if (torneioRows.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Nenhum torneio aberto encontrado.' });
+        }
+
+        const torneioId = torneioRows[0].id;
+
+        const [resultadoRows] = await connection.query(
+            `SELECT 1
+             FROM resultados r
+             JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
+             JOIN eventos e ON ep.eventos_id = e.id
+             WHERE r.nadadores_id = ? AND e.torneios_id = ?
+             LIMIT 1`,
+            [nadadorId, torneioId]
+        );
+
+        const bloqueiaPontuacao = resultadoRows.length > 0 ? 1 : 0;
+
+        await connection.query(
+            `INSERT INTO transferencias
+             (nadadores_id, equipe_origem_id, equipe_destino_id, data_transferencia, torneio_id, bloqueia_pontuacao, usuarios_id)
+             VALUES (?, ?, ?, NOW(), ?, ?, ?)`,
+            [nadadorId, equipeOrigemId, equipeDestinoId, torneioId, bloqueiaPontuacao, usuarioId]
+        );
+
+        await connection.query(
+            'UPDATE nadadores SET equipes_id = ? WHERE id = ?',
+            [equipeDestinoId, nadadorId]
+        );
+
+        await connection.commit();
+        res.json({ success: true, bloqueiaPontuacao: bloqueiaPontuacao === 1 });
+    } catch (error) {
+        if (connection) await connection.rollback();
+        console.error('Erro ao transferir nadador:', error);
+        res.status(500).json({ message: 'Erro ao transferir nadador.' });
+    } finally {
+        if (connection) connection.release();
     }
 });
 
