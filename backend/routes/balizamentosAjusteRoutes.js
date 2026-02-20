@@ -4,7 +4,19 @@ const db = require('../config/db');
 
 router.get('/listarEventos', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM eventos WHERE torneios_id = 3');
+        const [torneio] = await db.query('SELECT id FROM torneios WHERE aberto = 1 ORDER BY id DESC LIMIT 1');
+        let torneioId = torneio[0]?.id;
+
+        if (!torneioId) {
+            const [torneioRecente] = await db.query('SELECT id FROM torneios ORDER BY id DESC LIMIT 1');
+            torneioId = torneioRecente[0]?.id;
+        }
+
+        if (!torneioId) {
+            return res.json([]);
+        }
+
+        const [rows] = await db.query('SELECT * FROM eventos WHERE torneios_id = ?', [torneioId]);
         res.json(rows);
     } catch (error) {
         console.error('Erro ao buscar eventos:', error);

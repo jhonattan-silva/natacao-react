@@ -169,40 +169,25 @@ const Inscricao = () => {
 
             const provaSelecionada = provas.find(p => p.id === provaId);
             const distancia = provaSelecionada?.distancia;
-            const estilo = provaSelecionada?.estilo;
 
             const jaSelecionou25 = provasSelecionadas.some(id => {
                 const prova = provas.find(p => p.id === id);
                 return prova?.distancia === "25";
             });
 
-            const jaSelecionouLivre = provasSelecionadas.some(id => {
+            const jaSelecionouNao25 = provasSelecionadas.some(id => {
                 const prova = provas.find(p => p.id === id);
-                return prova?.estilo === "LIVRE";
+                return prova?.distancia !== "25";
             });
 
-            const jaSelecionouNao50 = provasSelecionadas.some(id => {
-                const prova = provas.find(p => p.id === id);
-                return prova?.distancia !== "50";
-            });
-
-            // REGRA: 25 + LIVRE não pode, em nenhuma ordem
-            if (isChecked && (
-                (distancia === "25" && jaSelecionouLivre) ||
-                (estilo === "LIVRE" && jaSelecionou25)
-            )) {
-                mostrarAlerta("Não é permitido combinar uma prova de 25m com uma prova de estilo LIVRE.");
+            // REGRA: Se escolher 25m, a outra prova tambem deve ser 25m
+            if (isChecked && distancia === "25" && jaSelecionouNao25) {
+                mostrarAlerta("Se escolher uma prova de 25m, a outra tambem deve ser de 25m.");
                 return prevSelecoes;
             }
 
-            // REGRA: Nenhuma prova diferente de distância "50" pode ser combinada com uma prova de "25"
-            if (isChecked && distancia === "25" && jaSelecionouNao50) {
-                mostrarAlerta("Não é permitido combinar uma prova de 25m com uma prova de distância diferente de 50m.");
-                return prevSelecoes;
-            }
-
-            if (isChecked && distancia !== "50" && jaSelecionou25) {
-                mostrarAlerta("Não é permitido combinar uma prova de distância diferente de 50m com uma prova de 25m.");
+            if (isChecked && distancia !== "25" && jaSelecionou25) {
+                mostrarAlerta("Se escolher uma prova de 25m, a outra tambem deve ser de 25m.");
                 return prevSelecoes;
             }
 

@@ -173,6 +173,50 @@ router.post('/salvarInscricao', async (req, res) => {
         }
     }
 
+    // Regra: se escolher 25m, a outra prova tambem deve ser 25m
+    const provaIds = [...new Set(inscricoesIndividuais.map(inscricao => inscricao.provaId))];
+    const distanciaPorProvaId = {};
+
+    if (provaIds.length > 0) {
+        const placeholders = provaIds.map(() => '?').join(',');
+        const [rows] = await db.query(
+            `SELECT ep.id AS eventos_provas_id, p.distancia
+             FROM eventos_provas ep
+             JOIN provas p ON ep.provas_id = p.id
+             WHERE ep.id IN (${placeholders})`,
+            provaIds
+        );
+
+        rows.forEach(row => {
+            distanciaPorProvaId[String(row.eventos_provas_id)] = String(row.distancia);
+        });
+    }
+
+    const regra25PorNadador = {};
+    for (const inscricao of inscricoesIndividuais) {
+        const provaId = String(inscricao.provaId);
+        const distancia = distanciaPorProvaId[provaId];
+
+        if (!distancia) {
+            return res.status(400).json({ message: 'Não foi possível validar a distância da prova.' });
+        }
+
+        if (!regra25PorNadador[inscricao.nadadorId]) {
+            regra25PorNadador[inscricao.nadadorId] = { has25: false, hasNon25: false };
+        }
+
+        if (distancia === '25') {
+            regra25PorNadador[inscricao.nadadorId].has25 = true;
+        } else {
+            regra25PorNadador[inscricao.nadadorId].hasNon25 = true;
+        }
+
+        const estado = regra25PorNadador[inscricao.nadadorId];
+        if (estado.has25 && estado.hasNon25) {
+            return res.status(400).json({ message: 'Se escolher uma prova de 25m, a outra também deve ser de 25m.' });
+        }
+    }
+
     const connection = await db.getConnection();
 
     try {

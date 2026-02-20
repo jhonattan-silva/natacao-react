@@ -56,6 +56,7 @@ router.get('/', async (req, res) => {
             WHERE YEAR(t.data_inicio) = ?
             ${prova ? 'AND r.provas_id = ?' : ''}
             ${categoria && categoria !== '*' ? 'AND c.nome = ?' : ''} 
+            AND (r.minutos * 6000 + r.segundos * 100 + r.centesimos) > 0
             ORDER BY r.minutos, r.segundos, r.centesimos ASC
         `;
 

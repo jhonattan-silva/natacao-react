@@ -85,8 +85,20 @@ function classificarPorTempoComEmpate(resultados) {
 // Listar todos os eventos
 router.get('/listarEventos', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM eventos where torneios_id = 3');
-        res.json(rows);
+    const [torneio] = await db.query('SELECT id FROM torneios WHERE aberto = 1 ORDER BY id DESC LIMIT 1');
+    let torneioId = torneio[0]?.id;
+
+    if (!torneioId) {
+      const [torneioRecente] = await db.query('SELECT id FROM torneios ORDER BY id DESC LIMIT 1');
+      torneioId = torneioRecente[0]?.id;
+    }
+
+    if (!torneioId) {
+      return res.json([]);
+    }
+
+    const [rows] = await db.query('SELECT * FROM eventos WHERE torneios_id = ?', [torneioId]);
+    res.json(rows);
     } catch (erro) {
         console.error('Erro ao buscar eventos ==> ', erro);
         res.status(500).json({
