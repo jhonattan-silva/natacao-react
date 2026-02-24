@@ -2,18 +2,40 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
+// Rota para listar anos que têm records disponíveis
+router.get('/anos-disponiveis', async (req, res) => {
+    try {
+        const [anos] = await db.execute(
+            `SELECT DISTINCT YEAR(t.data_inicio) AS ano
+             FROM records r
+             JOIN torneios t ON r.torneios_id = t.id
+             ORDER BY ano DESC`
+        );
+
+        res.json(anos.map(row => ({ id: row.ano, nome: row.ano })));
+    } catch (error) {
+        console.error('Erro ao buscar anos com records:', error);
+        res.status(500).json({ error: 'Erro ao buscar anos com records.' });
+    }
+});
+
 // Rota para obter filtros (provas e categorias)
 router.get('/filtros', async (req, res) => {
     const { ano } = req.query;
     try {
-        const [provas] = await db.execute(
-            `SELECT DISTINCT p.id, CONCAT(p.distancia, 'm ', p.estilo) AS prova, p.sexo
-             FROM records r
-             JOIN provas p ON r.provas_id = p.id
-             JOIN torneios t ON r.torneios_id = t.id
-             WHERE YEAR(t.data_inicio) = ?`,
-            [ano]
-        );
+        let query = `SELECT DISTINCT p.id, CONCAT(p.distancia, 'm ', p.estilo) AS prova, p.sexo
+                     FROM records r
+                     JOIN provas p ON r.provas_id = p.id
+                     JOIN torneios t ON r.torneios_id = t.id`;
+        let params = [];
+
+        // Se ano não for "absoluto", filtrar por ano específico
+        if (ano !== 'absoluto') {
+            query += ` WHERE YEAR(t.data_inicio) = ?`;
+            params.push(ano);
+        }
+
+        const [provas] = await db.execute(query, params);
 
         const [categorias] = await db.execute(
             `SELECT DISTINCT nome AS categoria
@@ -43,6 +65,34 @@ router.get('/filtros', async (req, res) => {
 router.get('/', async (req, res) => {
     const { ano, prova, categoria } = req.query;
     try {
+        // Se ano = "absoluto", buscar melhor tempo entre TODOS os torneios
+        if (ano === 'absoluto') {
+            const query = `
+                SELECT n.nome AS nome_nadador, 
+                       c.nome AS categoria, 
+                       e.nome AS equipe, 
+                       CONCAT(LPAD(r1.minutos, 2, '0'), ':', LPAD(r1.segundos, 2, '0'), '.', LPAD(r1.centesimos, 2, '0')) AS tempo
+                FROM (
+                    SELECT r.nadadores_id, r.minutos, r.segundos, r.centesimos,
+                           ROW_NUMBER() OVER (PARTITION BY r.nadadores_id ORDER BY (r.minutos * 6000 + r.segundos * 100 + r.centesimos) ASC) AS rn
+                    FROM records r
+                    WHERE (r.minutos * 6000 + r.segundos * 100 + r.centesimos) > 0
+                    ${prova ? 'AND r.provas_id = ?' : ''}
+                ) r1
+                JOIN nadadores n ON r1.nadadores_id = n.id
+                JOIN categorias c ON n.categorias_id = c.id
+                JOIN equipes e ON n.equipes_id = e.id
+                WHERE r1.rn = 1
+                ${categoria && categoria !== '*' ? 'AND c.nome = ?' : ''}
+                ORDER BY (r1.minutos * 6000 + r1.segundos * 100 + r1.centesimos) ASC
+            `;
+
+            const params = (prova ? [prova] : []).concat(categoria && categoria !== '*' ? [categoria] : []);
+            const [nadadores] = await db.execute(query, params);
+            return res.json(nadadores);
+        }
+
+        // Caso contrário, buscar records do ano específico
         const query = `
             SELECT n.nome AS nome_nadador, 
                    c.nome AS categoria, 

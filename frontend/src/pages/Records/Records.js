@@ -16,28 +16,29 @@ const Records = () => {
     const [categorias, setCategorias] = useState([]);
     const [nadadores, setNadadores] = useState([]);
     const [provaSelecionada, setProvaSelecionada] = useState(null);
-    const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
+    const [categoriaSelecionada, setCategoriaSelecionada] = useState('*'); // "Absoluto" como padrão
     const [sexoSelecionado, setSexoSelecionado] = useState(null); 
     const [avisoSexo, setAvisoSexo] = useState(''); // Estado para armazenar o aviso dinâmico
 
     const isMobile = window.innerWidth <= 768;
 
-    // Buscar torneios disponíveis e definir o aberto como padrão
+    // Buscar anos com records disponíveis e definir "Absoluto" como padrão
     useEffect(() => {
-        const fetchTorneios = async () => {
+        const fetchAnosDisponiveis = async () => {
             try {
-                const response = await api.get('/etapas/listarTorneios');
-                const torneios = response.data.map(t => ({ id: parseInt(t.nome), nome: t.nome }));
-                setAnosDisponiveis(torneios);
+                const response = await api.get('/records/anos-disponiveis');
+                const anos = response.data;
+                // Adicionar opção "Absoluto" no início
+                const anosComAbsoluto = [{ id: 'absoluto', nome: 'Absoluto' }, ...anos];
+                setAnosDisponiveis(anosComAbsoluto);
 
-                // Buscar o torneio aberto para definir como padrão
-                const torneioAberto = await api.get('/etapas/torneioAberto');
-                setAnoSelecionado(parseInt(torneioAberto.data.nome));
+                // Definir "Absoluto" como padrão
+                setAnoSelecionado('absoluto');
             } catch (error) {
-                console.error('Erro ao buscar torneios:', error);
+                console.error('Erro ao buscar anos com records:', error);
             }
         };
-        fetchTorneios();
+        fetchAnosDisponiveis();
     }, []);
 
     useEffect(() => {
@@ -58,14 +59,14 @@ const Records = () => {
         // Atualiza os nadadores sempre que uma prova ou categoria é selecionada
         const fetchNadadores = async () => {
             try {
-                const response = await api.get(`/records?ano=${anoSelecionado}&prova=${provaSelecionada}&categoria=${categoriaSelecionada}`);
+                const response = await api.get(`/records?ano=${anoSelecionado}&prova=${provaSelecionada}&categoria=${categoriaSelecionada || '*'}`);
                 setNadadores(response.data);
             } catch (error) {
                 console.error('Erro ao buscar nadadores:', error);
             }
         };
 
-        if (provaSelecionada || categoriaSelecionada) {
+        if (provaSelecionada) {
             fetchNadadores();
         }
     }, [anoSelecionado, provaSelecionada, categoriaSelecionada]);
@@ -78,6 +79,7 @@ const Records = () => {
         }
         setSexoSelecionado(sexo); // Atualiza o sexo selecionado
         setProvaSelecionada(id); // Atualiza a prova selecionada
+        setCategoriaSelecionada('*'); // Reset para "Absoluto" ao selecionar nova prova
     };
 
     const getH3Class = (sexo) => {

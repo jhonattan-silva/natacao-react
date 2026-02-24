@@ -168,16 +168,18 @@ const Inscricao = () => {
             }
 
             const provaSelecionada = provas.find(p => p.id === provaId);
-            const distancia = provaSelecionada?.distancia;
+            const normalizarDistancia = (valor) => String(valor ?? '').trim();
+            const distancia = normalizarDistancia(provaSelecionada?.distancia);
 
             const jaSelecionou25 = provasSelecionadas.some(id => {
                 const prova = provas.find(p => p.id === id);
-                return prova?.distancia === "25";
+                return normalizarDistancia(prova?.distancia) === "25";
             });
 
             const jaSelecionouNao25 = provasSelecionadas.some(id => {
                 const prova = provas.find(p => p.id === id);
-                return prova?.distancia !== "25";
+                const dist = normalizarDistancia(prova?.distancia);
+                return dist !== "" && dist !== "25";
             });
 
             // REGRA: Se escolher 25m, a outra prova tambem deve ser 25m
@@ -368,8 +370,9 @@ const Inscricao = () => {
             );
 
         } catch (error) {
+            const message = error?.response?.data?.message || 'Erro ao salvar a inscrição.';
             console.error("Erro ao realizar a inscrição:", error);
-            mostrarAlerta('Erro ao salvar a inscrição.');
+            mostrarAlerta(message);
         }
     };
 

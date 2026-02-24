@@ -49,14 +49,11 @@ const TabelaEdicao = ({
     <div className={style.tabelaContainer}>
       <table className={style.tabela}>
         <thead>
-          <tr>
-            {colunas.map(coluna => (
-              <th key={coluna}>
-                {colunasTitulos[coluna] || (coluna.charAt(0).toUpperCase() + coluna.slice(1))}
-              </th>
-            ))}
-            {(onEdit || onInativar || onDelete || funcExtra) && <th>Ações</th>} {/* Condicional para exibir Ações */}
-          </tr>
+          <tr>{colunas.map(coluna => (
+            <th key={coluna}>
+              {colunasTitulos[coluna] || (coluna.charAt(0).toUpperCase() + coluna.slice(1))}
+            </th>
+          ))}{(onEdit || onInativar || onDelete || funcExtra) && <th>Ações</th>}</tr>
         </thead>
         <tbody>
           {dados.map((linha, index) => {
@@ -64,52 +61,49 @@ const TabelaEdicao = ({
             const linhaProps = renderLinha ? renderLinha(linha) : {};
             
             return (
-              <tr key={index} {...linhaProps}>
-                {colunas.map((coluna, idx) => (
-                  <td key={idx}>{linha[coluna]}</td>
-                ))}
-                {(onEdit || onInativar || onDelete || funcExtra) && (
-                  <td>
-                    {isMobile ? (
-                      <div className={style.escondeAcoes}>
-                        <button
-                          className={style.btnAcaoMobile}
-                          onClick={() => setAcoesDropdownId(acoesDropdownId === linha.id ? null : linha.id)}
-                        >
-                          Ações
-                        </button>
-                        {acoesDropdownId === linha.id && (
-                          <div className={style.acoesDropdown}>
-                            {onEdit && (
-                              <div onClick={() => { onEdit(linha.id); setAcoesDropdownId(null); }}>
-                                <BotaoTabela tipo="editar" onClick={() => {}} />
-                              </div>
-                            )}
-                            {onInativar && (
-                              <div onClick={() => { onInativar(linha.id); setAcoesDropdownId(null); }}>
-                                <BotaoTabela tipo="inativar" onClick={() => {}} />
-                              </div>
-                            )}
-                            {onDelete && (
-                              <div onClick={() => { onDelete(linha.id); setAcoesDropdownId(null); }}>
-                                <BotaoTabela tipo="excluir" onClick={() => {}} />
-                              </div>
-                            )}
-                            {funcExtra && funcExtra(linha)}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <>
-                        {onEdit && <BotaoTabela tipo="editar" onClick={() => onEdit(linha.id)} />}
-                        {onInativar && <BotaoTabela tipo="inativar" onClick={() => onInativar(linha.id)} />}
-                        {onDelete && <BotaoTabela tipo="excluir" onClick={() => onDelete(linha.id)} />}
-                        {funcExtra && funcExtra(linha)}
-                      </>
-                    )}
-                  </td>
-                )}
-              </tr>
+              <tr key={index} {...linhaProps}>{colunas.map((coluna, idx) => (
+                <td key={idx}>{linha[coluna]}</td>
+              ))}{(onEdit || onInativar || onDelete || funcExtra) && (
+                <td>
+                  {isMobile ? (
+                    <div className={style.escondeAcoes}>
+                      <button
+                        className={style.btnAcaoMobile}
+                        onClick={() => setAcoesDropdownId(acoesDropdownId === linha.id ? null : linha.id)}
+                      >
+                        Ações
+                      </button>
+                      {acoesDropdownId === linha.id && (
+                        <div className={style.acoesDropdown}>
+                          {onEdit && (
+                            <div onClick={() => { onEdit(linha.id); setAcoesDropdownId(null); }}>
+                              <BotaoTabela tipo="editar" onClick={() => {}} />
+                            </div>
+                          )}
+                          {onInativar && (
+                            <div onClick={() => { onInativar(linha.id); setAcoesDropdownId(null); }}>
+                              <BotaoTabela tipo="inativar" onClick={() => {}} />
+                            </div>
+                          )}
+                          {onDelete && (
+                            <div onClick={() => { onDelete(linha.id); setAcoesDropdownId(null); }}>
+                              <BotaoTabela tipo="excluir" onClick={() => {}} />
+                            </div>
+                          )}
+                          {funcExtra && funcExtra(linha)}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      {onEdit && <BotaoTabela tipo="editar" onClick={() => onEdit(linha.id)} />}
+                      {onInativar && <BotaoTabela tipo="inativar" onClick={() => onInativar(linha.id)} />}
+                      {onDelete && <BotaoTabela tipo="excluir" onClick={() => onDelete(linha.id)} />}
+                      {funcExtra && funcExtra(linha)}
+                    </>
+                  )}
+                </td>
+              )}</tr>
             );
           })}
         </tbody>
