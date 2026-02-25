@@ -33,7 +33,12 @@ api.interceptors.response.use(
       // Se o erro for 401 (não autorizado), limpa o token e redireciona para o login
       console.log('Token expirado ou inválido. Redirecionando para login...');
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      
+      // Redirecionar apenas se não estiver já na página de login/auth
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/login') && !currentPath.includes('/auth') && currentPath !== '/') {
+        window.location.href = '/';
+      }
     }
     return Promise.reject(error);
   }

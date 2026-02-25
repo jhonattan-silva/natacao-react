@@ -37,6 +37,16 @@
   color: white;
 }
 
+.btnFecharParaConferencia {
+  background-color: #ff5722; /* Deep Orange */
+  color: white;
+}
+
+.btnEncerrarInscricoes {
+  background-color: #c62828; /* Dark Red */
+  color: white;
+}
+
 .btnGerarPontuacao {
   background-color: #9c27b0; /* Purple */
   color: white;

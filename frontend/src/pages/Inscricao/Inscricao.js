@@ -9,6 +9,7 @@ import { useUser } from "../../servicos/UserContext"; // Importar o contexto do 
 import useAlerta from "../../hooks/useAlerta"; // Importar o hook useAlerta
 import { gerarPDFInscricoes } from "../../servicos/relatoriosPDF"; // Adicione esta linha
 import styles from "./Inscricao.module.css"; // Importar o arquivo CSS como módulo
+import useAvisoBarra from "../../hooks/useAvisoBarra";
 
 const Inscricao = () => {
     const navigate = useNavigate();
@@ -25,8 +26,11 @@ const Inscricao = () => {
     const [provas400, setProvas400] = useState([]);
     const [limite400, setLimite400] = useState({});
     const [equipeInativa, setEquipeInativa] = useState(false);
+    const [permissoesConferencia, setPermissoesConferencia] = useState({});
+    const [revezamentosPermitidos, setRevezamentosPermitidos] = useState({});
     const user = useUser(); // Obter o usuário do contexto do usuário
     const { mostrar: mostrarAlerta, componente: alertaComponente } = useAlerta(); // Usar o hook useAlerta
+    const { mostrar: mostrarAviso, esconder: esconderAviso, componente: avisoBarraComponente } = useAvisoBarra();
 
     const apiEventos = `/inscricao/listarEventos`;
     const apiListaNadadores = `/inscricao/listarNadadores`;
@@ -34,6 +38,10 @@ const Inscricao = () => {
     const apiProvasEvento = `/inscricao/listarProvasEvento`;
     const apiSalvarInscricao = `/inscricao/salvarInscricao`;
     const apiVerificarRevezamento = `/inscricao/verificarRevezamento`;
+
+    const eventoAtual = eventos.find((evento) => String(evento.id) === String(eventoSelecionado));
+    const faseInscricao = eventoAtual?.inscricao_aberta;
+    const somenteExclusoes = faseInscricao === 2;
 
     // Nova função para formatar o sexo
     const formatSexo = (sexo) => {
@@ -94,17 +102,31 @@ const Inscricao = () => {
                 }
             });
 
+            const permissoesConferenciaLocal = {};
+
             inscricoesResponse.data.inscricoesIndividuais.forEach(inscricao => {
                 if (!novasSelecoes[inscricao.nadadorId]) {
                     novasSelecoes[inscricao.nadadorId] = {};
                 }
                 novasSelecoes[inscricao.nadadorId][inscricao.provaId] = true;
+
+                if (!permissoesConferenciaLocal[inscricao.nadadorId]) {
+                    permissoesConferenciaLocal[inscricao.nadadorId] = {};
+                }
+                permissoesConferenciaLocal[inscricao.nadadorId][inscricao.provaId] = true;
             });
 
             setSelecoes(novasSelecoes);
             setSelecoesRevezamento(novasSelecoesRevezamento);
             setInscricoesIndividuais(inscricoesResponse.data.inscricoesIndividuais); // Atualiza com inscrições individuais
             setInscricoesRevezamento(inscricoesResponse.data.inscricoesRevezamento); // Atualiza com inscrições de revezamento
+            setPermissoesConferencia(permissoesConferenciaLocal);
+
+            const revezamentosPermitidosLocal = {};
+            revezamentoResponse.data.forEach((inscricao) => {
+                revezamentosPermitidosLocal[inscricao.provaId] = true;
+            });
+            setRevezamentosPermitidos(revezamentosPermitidosLocal);
 
             // Regra: máximo 4 atletas por sexo em provas de 400m
             const provas400Local = provasFiltradas.filter(prova => String(prova.distancia) === "400");
@@ -137,6 +159,14 @@ const Inscricao = () => {
         }
     }, [eventoSelecionado]);
 
+    useEffect(() => {
+        if (somenteExclusoes) {
+            mostrarAviso('⚠️ INSCRICAO EM CONFERENCIA - Apenas exclusoes sao permitidas.');
+        } else {
+            esconderAviso();
+        }
+    }, [somenteExclusoes, mostrarAviso, esconderAviso]);
+
     // Buscar nome da equipe via nadadores ao carregar usuário
     useEffect(() => {
         const fetchNomeEquipe = async () => {
@@ -158,6 +188,14 @@ const Inscricao = () => {
     // Função para atualizar a seleção de checkboxes
     const handleCheckboxChange = (nadadorId, provaId, isChecked) => {
         setSelecoes(prevSelecoes => {
+            if (somenteExclusoes && isChecked) {
+                const permitido = !!permissoesConferencia[nadadorId]?.[provaId];
+                if (!permitido) {
+                    mostrarAlerta('A inscrição está em conferência. Apenas exclusões são permitidas.');
+                    return prevSelecoes;
+                }
+            }
+
             const selecoesNadador = prevSelecoes[nadadorId] || {};
             const provasSelecionadas = Object.entries(selecoesNadador).filter(([, val]) => val).map(([id]) => parseInt(id));
             const totalSelecionadas = provasSelecionadas.length;
@@ -249,6 +287,15 @@ const Inscricao = () => {
 
 
     const handleRevezamentoChange = (provaId, value) => {
+        if (somenteExclusoes) {
+            const valorAtual = selecoesRevezamento[provaId] || "Não";
+            const permitido = !!revezamentosPermitidos[provaId];
+            if (!permitido && valorAtual !== "Sim" && value === "Sim") {
+                mostrarAlerta('A inscrição está em conferência. Apenas exclusões são permitidas.');
+                return;
+            }
+        }
+
         setSelecoesRevezamento(prevSelecoes => {
             const novoEstado = {
                 ...prevSelecoes,
@@ -381,6 +428,7 @@ const Inscricao = () => {
         <>
             <CabecalhoAdmin />
             {alertaComponente}
+            {avisoBarraComponente}
             <h1>INSCRIÇÃO</h1>
             <ListaSuspensa
                 fonteDados={apiEventos}
@@ -451,6 +499,8 @@ const Inscricao = () => {
                                     provas={provas}
                                     selecoes={selecoes}
                                     onCheckboxChange={handleCheckboxChange}
+                                    bloquearNovas={somenteExclusoes}
+                                    permitidosConferencia={permissoesConferencia}
                                 />
                                 <div className={styles.containerTabelaRevezamentos}>
                                     <h3>Revezamentos</h3>

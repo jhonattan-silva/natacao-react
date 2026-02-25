@@ -41,8 +41,32 @@ const Etapas = () => {
         editar: 'Editar',
         excluir: 'Excluir',
         abrirInscricao: 'Abrir Inscrição',
-        fecharInscricao: 'Fechar Inscrição',
+        fecharParaConferencia: 'Fechar para Conferência',
+        encerrarInscricoes: 'Encerrar Inscrições',
         gerarPontuacao: 'Gerar Pontuação'
+    };
+
+    const getFaseInscricaoTexto = (fase) => {
+        const fases = {
+            0: 'Encerrada',
+            1: 'Aberta',
+            2: 'Conferência'
+        };
+
+        return fases[fase] || 'Desconhecida';
+    };
+
+    const getBotaoTipo = (inscricaoAberta) => {
+        switch (inscricaoAberta) {
+            case 0:
+                return 'abrirInscricao';
+            case 1:
+                return 'fecharParaConferencia';
+            case 2:
+                return 'encerrarInscricoes';
+            default:
+                return 'abrirInscricao';
+        }
     };
 
     // Buscar anos disponíveis ao montar o componente
@@ -394,8 +418,29 @@ const Etapas = () => {
 
     const abreInscricao = async (id, inscricaoAberta) => {
         try {
-            await api.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: inscricaoAberta ? 0 : 1 }); // Chama a rota para abrir/fechar inscrição
-            mostrarAlerta(`Inscrição ${inscricaoAberta ? 'fechada' : 'aberta'} com sucesso!`);
+            let novoEstado = 1;
+            let mensagem = 'Inscrição aberta com sucesso!';
+
+            switch (inscricaoAberta) {
+                case 0:
+                    novoEstado = 1;
+                    mensagem = 'Inscrição aberta com sucesso!';
+                    break;
+                case 1:
+                    novoEstado = 2;
+                    mensagem = 'Inscrição em conferência (somente exclusões).';
+                    break;
+                case 2:
+                    novoEstado = 0;
+                    mensagem = 'Inscrição encerrada com sucesso!';
+                    break;
+                default:
+                    novoEstado = 1;
+                    mensagem = 'Inscrição aberta com sucesso!';
+            }
+
+            await api.put(`${apiAbreInscricao}/${id}`, { inscricao_aberta: novoEstado });
+            mostrarAlerta(mensagem);
             fetchData(anoSelecionado); // Recarrega a lista de etapas do backend
         } catch (error) {
             console.error('Erro ao alterar inscrição:', error);
@@ -625,7 +670,7 @@ const Etapas = () => {
                                     return dataA - dataB;
                                 }).map(etapa => ({
                                     ...etapa,
-                                    inscricao_aberta_txt: formatBoolean(etapa.inscricao_aberta),
+                                    inscricao_aberta_txt: getFaseInscricaoTexto(etapa.inscricao_aberta),
                                     teve_balizamento: formatBoolean(etapa.teve_balizamento),
                                     teve_resultados: formatBoolean(etapa.teve_resultados),
                                     classificacao_finalizada: formatBoolean(etapa.classificacao_finalizada),
@@ -635,7 +680,7 @@ const Etapas = () => {
                             colunasTitulos={{
                                 nome: 'Nome',
                                 data: 'Data',
-                                inscricao_aberta_txt: 'Inscrição Aberta',
+                                inscricao_aberta_txt: 'Fase de Inscrição',
                                 teve_balizamento: 'Teve Balizamento',
                                 teve_resultados: 'Teve Resultados',
                                 classificacao_finalizada: 'Classificação Finalizada'
@@ -645,7 +690,7 @@ const Etapas = () => {
                             funcExtra={(etapa) => (
                                 <>
                                     <BotaoTabela
-                                        tipo={etapa.inscricao_aberta ? 'fecharInscricao' : 'abrirInscricao'}
+                                        tipo={getBotaoTipo(etapa.inscricao_aberta)}
                                         onClick={() => abreInscricao(etapa.id, etapa.inscricao_aberta)}
                                         labels={buttonLabels}
                                     />

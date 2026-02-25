@@ -94,10 +94,46 @@ const Balizamentos = () => {
     navigate(`/balizamentos/${id}`);
   };
 
+  const formatTempo = (tempo) => {
+    if (!tempo || tempo === '-') {
+      return '-';
+    }
+
+    const raw = String(tempo);
+    if (raw === 'NC' || raw === 'DQL') {
+      return raw;
+    }
+
+    const normalized = raw.replace(',', '.').replace('.', ':');
+    const parts = normalized.split(':');
+
+    if (parts.length === 1) {
+      parts.unshift('00', '00');
+    } else if (parts.length === 2) {
+      parts.unshift('00');
+    }
+
+    return parts.slice(0, 3).map(value => value.padStart(2, '0')).join(':');
+  };
+
   const renderTabelaBalizamento = (item) => {
     return item.baterias.map(bateria => {
+      const columnStyles = item.prova.revezamento
+        ? {
+            Raia: { width: '60px', textAlign: 'center' },
+            Equipe: { width: '260px' },
+            Tempo: { width: '90px', textAlign: 'center' }
+          }
+        : {
+            Raia: { width: '60px', textAlign: 'center' },
+            Nome: { width: '220px' },
+            Tempo: { width: '90px', textAlign: 'center' },
+            Equipe: { width: '220px' },
+            Categoria: { width: '120px' }
+          };
+
       const tableData = bateria.nadadores.map(nadador => {
-        let tempo = nadador.tempo || '-'; 
+        let tempo = formatTempo(nadador.tempo || '-'); 
         if (nadador.status === 'NC') {
           tempo = 'NC';
         } else if (nadador.status === 'DQL') {
@@ -136,6 +172,8 @@ const Balizamentos = () => {
               dados={tableData}
               textoExibicao={textoExibicao}
               colunasOcultas={colunasOcultas}
+              columnStyles={columnStyles}
+              fixedLayout
             />
           </div>
         </div>
@@ -179,6 +217,12 @@ const Balizamentos = () => {
                           <div className={style.balizamentosContainer}>
                             {Object.keys(balizamentosBanco).length > 0 ? (
                               Object.entries(balizamentosBanco).map(([prova, balizamentos]) => {
+                                const columnStylesBanco = {
+                                  Nome: { width: '220px' },
+                                  Tempo: { width: '90px', textAlign: 'center' },
+                                  Equipe: { width: '220px' },
+                                  Categoria: { width: '120px' }
+                                };
                                 return (
                                   <div key={prova} className={style.balizametoBancoItem}>
                                     <h2 className={style.titulo}>{prova}</h2>
@@ -187,7 +231,7 @@ const Balizamentos = () => {
                                         className={style.tabelaBalizamentoBanco}
                                         dados={balizamentos.map(item => ({
                                           Nome: item.nome_nadador || '-',
-                                          Tempo: item.tempo,
+                                          Tempo: formatTempo(item.tempo || '-'),
                                           Equipe: item.nome_equipe || '-',
                                           Categoria: item.categoria_nadador || '-',
                                         }))}
@@ -198,6 +242,8 @@ const Balizamentos = () => {
                                           Categoria: 'Categoria'
                                         }}
                                         colunasOcultas={[]}
+                                        columnStyles={columnStylesBanco}
+                                        fixedLayout
                                       />
                                     </div>
                                   </div>

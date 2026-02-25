@@ -207,7 +207,7 @@ router.get('/listarEquipes', async (req, res) => {
   }
 });
 
-router.get('/buscarUsuario/:id', async (req, res) => {
+router.get('/buscarUsuario/:id', authMiddleware, async (req, res) => {
   try {
     const userId = req.params.id;
 

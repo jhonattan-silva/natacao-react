@@ -270,6 +270,14 @@ const SuperAdmin = () => {
                                     {loadingCategorias ? '⏳ Processando...' : '🔄 Recalcular Categorias'}
                                 </Botao>
                             </div>
+
+                            <div className={style.configSection}>
+                                <h3>📄 Balizamento Padrao LPN (Legado)</h3>
+                                <p>
+                                    O PDF antigo do balizamento continua disponivel apenas para usuarios master.
+                                    Use o botao "Baixar Balizamento (Padrao LPN)" na tela de Balizamento.
+                                </p>
+                            </div>
                         </div>
                     </section>
                 </div>

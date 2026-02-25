@@ -8,7 +8,14 @@ import style from './Tabela.module.css';
  * colunasOcultas: Array de strings com os nomes das colunas a serem ocultadas
  * textoExibicao: Objeto com os textos de exibição para cada coluna
  */
-const Tabela = ({ dados = [], colunasOcultas = [], textoExibicao = {} }) => {
+const Tabela = ({
+    dados = [],
+    colunasOcultas = [],
+    textoExibicao = {},
+    columnStyles = {},
+    fixedLayout = false,
+    className = ''
+}) => {
     const [ordenaConfig, setOrdenaConfig] = useState({ key: null, direction: 'asc' });
 
     // Computa as colunas disponíveis filtrando as ocultas
@@ -44,14 +51,16 @@ const Tabela = ({ dados = [], colunasOcultas = [], textoExibicao = {} }) => {
 
     return (
         <div className={style['tabela-container']}>
-            <table className={style.tabela}>
+            <table
+                className={`${style.tabela} ${fixedLayout ? style.tabelaFixed : ''} ${className}`}
+            >
                 <thead>
                     <tr>
                         {colunas.map((coluna) => (
                             <th
                                 key={coluna}
                                 onClick={() => ordenar(coluna)}
-                                style={{ cursor: 'pointer' }}
+                                style={{ cursor: 'pointer', ...columnStyles[coluna] }}
                             >
                                 {textoExibicao[coluna] || coluna}
                                 {ordenaConfig.key === coluna && (
@@ -65,7 +74,7 @@ const Tabela = ({ dados = [], colunasOcultas = [], textoExibicao = {} }) => {
                     {sortedData.map((linha, index) => (
                         <tr key={index}>
                             {colunas.map((coluna, idx) => (
-                                <td key={idx}>{linha[coluna]}</td>
+                                <td key={idx} style={columnStyles[coluna]}>{linha[coluna]}</td>
                             ))}
                         </tr>
                     ))}
@@ -79,6 +88,9 @@ Tabela.propTypes = {
     dados: PropTypes.arrayOf(PropTypes.object).isRequired,
     colunasOcultas: PropTypes.arrayOf(PropTypes.string), // Validação para colunasOcultas
     textoExibicao: PropTypes.object, // Objeto com mapeamento: { colunaOriginal: 'Texto Exibido' }
+    columnStyles: PropTypes.object, // Objeto com estilos por coluna
+    fixedLayout: PropTypes.bool,
+    className: PropTypes.string
 };
 
 export default Tabela;

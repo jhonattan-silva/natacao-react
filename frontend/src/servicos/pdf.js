@@ -42,7 +42,7 @@ const headerFunction = (currentPage, pageCount, etapa) => {
 
   return {
     columns: [
-      { image: logo, width: 130, margin: [40, 5, 0, 0] },
+      { image: logo, width: 130, margin: [40, 15, 0, 0] },
       {
         stack: [
           { text: `${etapa?.nome ? etapa.nome.toUpperCase() : 'ETAPA I - TUPÃ'}`, style: 'eventHeader', alignment: 'right' },
@@ -50,30 +50,33 @@ const headerFunction = (currentPage, pageCount, etapa) => {
           { text: `DATA: ${formattedDate}`, style: 'eventInfo', alignment: 'right' },
           { text: `HORA: ${formattedTime}`, style: 'eventInfo', alignment: 'right' }
         ],
-        margin: [0, 5, 40, 0]
+        margin: [0, 15, 40, 0]
       }
     ]
   };
 };
 
-export const balizamentoPDF = (dados, etapa) => { 
-  // Ensure `dados` and `etapa` are valid
-  if (!dados || typeof dados !== 'object' || !Object.keys(dados).length) {
-    console.error('Dados inválidos para gerar o PDF de balizamento.');
-    return;
-  }
-
-  if (!etapa || typeof etapa !== 'object') {
-    console.error('Etapa inválida para gerar o PDF de balizamento.');
-    return;
-  }
-
+const buildBalizamentoDocDefinition = (dados, etapa, compactLayout) => {
   // Formatação da data e hora com ajuste de fuso horário (+3 horas)
   const eventDate = etapa?.data ? new Date(etapa.data) : new Date();
   const adjustedDate = new Date(eventDate);
   adjustedDate.setHours(adjustedDate.getHours() + 3);
   const formattedDate = eventDate.toLocaleDateString('pt-BR');
   const formattedTime = adjustedDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  const tableLayout = compactLayout
+    ? {
+        hLineWidth: () => 0,
+        vLineWidth: () => 0,
+        paddingTop: () => 0.5,
+        paddingBottom: () => 0.5,
+        paddingLeft: () => 2,
+        paddingRight: () => 2
+      }
+    : 'lightHorizontalLines';
+
+  const serieMargin = compactLayout ? [0, 2, 0, 0] : [0, 5, 0, 0];
+  const tableMargin = compactLayout ? [10, 2, 0, 3] : [10, 5, 0, 5];
 
   // Formata os dados para exibir no PDF, incluindo categoria e equipe
   const formattedData = Object.keys(dados).map(prova => {
@@ -84,20 +87,20 @@ export const balizamentoPDF = (dados, etapa) => {
       isRevezamento,
       baterias: dados[prova].map(bateria => (
         bateria.flat().map(nadador => ({
-          nome_nadador: nadador.nome || nadador.nome_nadador || 'N/D',
+          nome_nadador: (nadador.nome || nadador.nome_nadador || 'N/D').toUpperCase(),
           melhor_tempo: nadador.melhor_tempo || 'N/D',
           raia: nadador.raia || 'N/D',
-          categoria: nadador.categoria || 'N/D',
-          equipe: nadador.equipe || 'N/D'
+          categoria: (nadador.categoria || 'N/D').toUpperCase(),
+          equipe: (nadador.equipe || 'N/D').toUpperCase()
         }))
       ))
     };
   });
 
   // Definição do conteúdo do PDF com informações do evento em maiúsculas
-  const docDefinition = {
+  return {
     header: (currentPage, pageCount) => headerFunction(currentPage, pageCount, etapa), // Passa etapa para headerFunction
-    pageMargins: [10, 80, 10, 10], 
+    pageMargins: [25, 80, 20, 20], 
     content: [
       // Título padrão
       { text: 'Balizamento de Prova', style: 'header' },
@@ -109,9 +112,9 @@ export const balizamentoPDF = (dados, etapa) => {
           { 
             // Exibe a série como um título antes da tabela
             text: `${index + 1}ª Série`, 
-            style: 'subheader', 
-            alignment: 'center', 
-            margin: [0, 5, 0, 0] // Diminuído o espaçamento inferior de 5 para 0
+            style: compactLayout ? 'serieCompact' : 'subheader', 
+            alignment: compactLayout ? 'left' : 'center', 
+            margin: serieMargin
           },
           {
             table: {
@@ -129,7 +132,7 @@ export const balizamentoPDF = (dados, etapa) => {
                     ]
                   : [
                       { text: 'Raia', style: 'tableHeaderSmall' },
-                      { text: 'Nome', style: 'tableHeaderSmall' },
+                      { text: 'Atleta', style: 'tableHeaderSmall' },
                       { text: 'Categoria', style: 'tableHeaderSmall' },
                       { text: 'Equipe', style: 'tableHeaderSmall' },
                       { text: 'Tempo', style: 'tableHeaderSmall' }
@@ -152,8 +155,8 @@ export const balizamentoPDF = (dados, etapa) => {
                 )
               ]
             },
-            layout: 'lightHorizontalLines',
-            margin: [0, 5, 0, 5] // Acrescentado espaçamento entre as séries
+            layout: tableLayout,
+            margin: tableMargin
           }
         ])
       ])
@@ -166,6 +169,11 @@ export const balizamentoPDF = (dados, etapa) => {
       },
       subheader: {
         fontSize: 10, 
+        bold: true,
+        margin: [0, 0, 0, 0]
+      },
+      serieCompact: {
+        fontSize: 9,
         bold: true,
         margin: [0, 0, 0, 0]
       },
@@ -195,11 +203,50 @@ export const balizamentoPDF = (dados, etapa) => {
       font: 'Roboto' // Alterado para Roboto
     }
   };
+};
+
+export const balizamentoPDF = (dados, etapa) => { 
+  // Ensure `dados` and `etapa` are valid
+  if (!dados || typeof dados !== 'object' || !Object.keys(dados).length) {
+    console.error('Dados inválidos para gerar o PDF de balizamento.');
+    return;
+  }
+
+  if (!etapa || typeof etapa !== 'object') {
+    console.error('Etapa inválida para gerar o PDF de balizamento.');
+    return;
+  }
+
+  const docDefinition = buildBalizamentoDocDefinition(dados, etapa, true);
 
   // Atualiza o nome do arquivo conforme o padrão para Balizamento
   const anoAtual = new Date().getFullYear();
   const fileName = `LPN-Balizamento ${etapa?.nome?.replace(/\s+/g, ' ') || 'Relatorio'}_${anoAtual}.pdf`;
   // Ensure `docDefinition` is valid before generating the PDF
+  if (!docDefinition || !docDefinition.content || !docDefinition.content.length) {
+    console.error('Definição do documento inválida para gerar o PDF de balizamento.');
+    return;
+  }
+
+  pdfMake.createPdf(docDefinition).download(fileName);
+};
+
+export const balizamentoPDFPadraoLpn = (dados, etapa) => {
+  // Ensure `dados` and `etapa` are valid
+  if (!dados || typeof dados !== 'object' || !Object.keys(dados).length) {
+    console.error('Dados inválidos para gerar o PDF de balizamento.');
+    return;
+  }
+
+  if (!etapa || typeof etapa !== 'object') {
+    console.error('Etapa inválida para gerar o PDF de balizamento.');
+    return;
+  }
+
+  const docDefinition = buildBalizamentoDocDefinition(dados, etapa, false);
+  const anoAtual = new Date().getFullYear();
+  const fileName = `LPN-Balizamento Padrao ${etapa?.nome?.replace(/\s+/g, ' ') || 'Relatorio'}_${anoAtual}.pdf`;
+
   if (!docDefinition || !docDefinition.content || !docDefinition.content.length) {
     console.error('Definição do documento inválida para gerar o PDF de balizamento.');
     return;

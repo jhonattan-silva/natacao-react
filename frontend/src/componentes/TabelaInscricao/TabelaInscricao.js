@@ -2,7 +2,7 @@ import React from 'react';
 import LinhaInscricao from '../LinhaInscricao/LinhaInscricao';
 import styles from './TabelaInscricao.module.css';
 
-const TabelaInscricao = ({ nadadores, provas, selecoes, onCheckboxChange }) => {
+const TabelaInscricao = ({ nadadores, provas, selecoes, onCheckboxChange, bloquearNovas = false, permitidosConferencia = {} }) => {
     if (!Array.isArray(provas) || !Array.isArray(nadadores)) {
         console.error("Provas ou nadadores não são arrays válidos.");
         return null;
@@ -33,7 +33,7 @@ const TabelaInscricao = ({ nadadores, provas, selecoes, onCheckboxChange }) => {
                             </tr>
                         </thead>
                         <tbody>
-                        {nadadoresMasculino.map(nadador => {
+                            {nadadoresMasculino.map(nadador => {
                                 const numProvasSelecionadas = Object.values(selecoes[nadador.id] || {}).filter(Boolean).length;
                                 return (
                                     <LinhaInscricao
@@ -43,6 +43,8 @@ const TabelaInscricao = ({ nadadores, provas, selecoes, onCheckboxChange }) => {
                                         selecoes={selecoes[nadador.id] || {}}
                                         onCheckboxChange={onCheckboxChange}
                                         maxReached={numProvasSelecionadas >= 2}
+                                        bloquearNovas={bloquearNovas}
+                                        permitidosConferencia={permitidosConferencia[nadador.id] || {}}
                                     />
                                 );
                             })}
@@ -76,6 +78,8 @@ const TabelaInscricao = ({ nadadores, provas, selecoes, onCheckboxChange }) => {
                                         selecoes={selecoes[nadador.id] || {}}
                                         onCheckboxChange={onCheckboxChange}
                                         maxReached={numProvasSelecionadas >= 2}
+                                        bloquearNovas={bloquearNovas}
+                                        permitidosConferencia={permitidosConferencia[nadador.id] || {}}
                                     />
                                 );
                             })}

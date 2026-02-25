@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
 // Listar todos EVENTOS
 router.get('/listarEventos', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM eventos WHERE inscricao_aberta = 1'); // Busca todos os eventos
+        const [rows] = await db.query('SELECT * FROM eventos WHERE inscricao_aberta IN (1, 2)'); // Fases aberta e conferência
         res.json(rows); // Retorna a lista de eventos em JSON
     } catch (error) {
         console.error('Erro ao buscar eventos:', error); // Loga o erro no servidor
@@ -145,7 +146,7 @@ router.get('/verificarRevezamento/:eventoId', async (req, res) => {
 });
 
 // Rota para salvar as inscrições dos nadadores nas provas e da equipe nos revezamentos
-router.post('/salvarInscricao', async (req, res) => {
+router.post('/salvarInscricao', authMiddleware, async (req, res) => {
     const inscricoes = req.body;
 
     if (!inscricoes.length) {
@@ -160,6 +161,70 @@ router.post('/salvarInscricao', async (req, res) => {
     }
     if (!equipeId) {
         return res.status(400).json({ message: 'Equipe ID é necessário para salvar inscrições.' });
+    }
+
+    try {
+        const [eventoRows] = await db.query(
+            'SELECT inscricao_aberta FROM eventos WHERE id = ?',
+            [eventoId]
+        );
+
+        if (!eventoRows || !eventoRows[0]) {
+            return res.status(400).json({ message: 'Evento não encontrado.' });
+        }
+
+        const inscricaoAberta = eventoRows[0].inscricao_aberta;
+
+        if (inscricaoAberta === 0) {
+            return res.status(403).json({ message: 'A inscrição foi encerrada. Nenhuma alteração é permitida.' });
+        }
+
+        if (inscricaoAberta === 2) {
+            const inscricoesIndividuais = inscricoes.filter(inscricao => inscricao.nadadorId);
+            const inscricoesRevezamento = inscricoes.filter(inscricao => inscricao.equipeId && !inscricao.nadadorId);
+
+            const [atuaisIndividuais] = await db.query(
+                `SELECT i.nadadores_id AS nadadorId, i.eventos_provas_id AS provaId
+                 FROM inscricoes i
+                 JOIN nadadores n ON n.id = i.nadadores_id
+                 WHERE i.eventos_id = ? AND n.equipes_id = ?`,
+                [eventoId, equipeId]
+            );
+
+            const [atuaisRevezamento] = await db.query(
+                `SELECT equipes_id AS equipeId, eventos_provas_id AS provaId
+                 FROM revezamentos_inscricoes
+                 WHERE eventos_id = ? AND equipes_id = ?`,
+                [eventoId, equipeId]
+            );
+
+            const atuaisIndividuaisSet = new Set(
+                atuaisIndividuais.map((row) => `${row.nadadorId}-${row.provaId}`)
+            );
+
+            const atuaisRevezamentoSet = new Set(
+                atuaisRevezamento.map((row) => `${row.equipeId}-${row.provaId}`)
+            );
+
+            const possuiNovasIndividuais = inscricoesIndividuais.some((inscricao) => {
+                const chave = `${inscricao.nadadorId}-${inscricao.provaId}`;
+                return !atuaisIndividuaisSet.has(chave);
+            });
+
+            const possuiNovosRevezamentos = inscricoesRevezamento.some((inscricao) => {
+                const chave = `${inscricao.equipeId}-${inscricao.provaId}`;
+                return !atuaisRevezamentoSet.has(chave);
+            });
+
+            if (possuiNovasIndividuais || possuiNovosRevezamentos) {
+                return res.status(403).json({
+                    message: 'A inscrição está em conferência. Apenas exclusões são permitidas.'
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao validar fase de inscrição:', error);
+        return res.status(500).json({ message: 'Erro ao validar fase de inscrição.' });
     }
 
     // Validação para impedir que o mesmo nadador seja inscrito em mais de duas provas

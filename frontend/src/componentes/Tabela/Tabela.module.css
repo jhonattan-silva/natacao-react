@@ -10,6 +10,10 @@
     font-size: 14px; /* Define um tamanho de fonte padrão consistente */
 }
 
+.tabelaFixed {
+    table-layout: fixed;
+}
+
 /* Adiciono seletores mais específicos usando a classe pai */
 .tabela-container .tabela th, 
 .tabela-container .tabela td {

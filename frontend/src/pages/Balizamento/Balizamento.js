@@ -5,9 +5,11 @@ import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import Tabela from '../../componentes/Tabela/Tabela';
 import api from '../../servicos/api';
 import { timeToMilliseconds } from '../../servicos/functions'; // Updated import
-import { balizamentoPDF, gerarFilipetas } from '../../servicos/pdf';
+import { balizamentoPDF, balizamentoPDFPadraoLpn, gerarFilipetas } from '../../servicos/pdf';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import { relatorioInscritosPDF } from '../../servicos/relatoriosPDF';
+import useAlerta from '../../hooks/useAlerta';
+import { useUser } from '../../servicos/UserContext';
 
 
 
@@ -21,6 +23,9 @@ const Balizamento = () => {
     const [inscritosEquipeSexo, setInscritosEquipeSexo] = useState([]);
     const [etapa, setEtapa] = useState({}); // Estado para as infos do evento
     const [eventos, setEventos] = useState([]); // Estado para armazenar a lista de eventos
+    const { mostrar: mostrarAlerta, componente: alertaComponente } = useAlerta();
+    const { user } = useUser();
+    const isMaster = user?.perfis?.includes('master');
 
     const apiEventos = `/balizamento/listarEventos`;
     const apiInscritos = `/balizamento/listarInscritos`;
@@ -133,18 +138,18 @@ const Balizamento = () => {
     };
 
     const gerarBalizamento = async () => {
-        if (etapa.inscricao_aberta !== 0) {
-            alert("As inscrições deste evento ainda estão abertas.");
+        if (etapa.inscricao_aberta === 1) {
+            mostrarAlerta("As inscrições deste evento ainda estão abertas.");
             return;
         }
         if (!eventoId) {
-            alert("Por favor, selecione um evento.");
+            mostrarAlerta("Por favor, selecione um evento.");
             return;
         }
         try {
             // Verificar se a etapa já foi realizada (teve_resultados = 1)
             if (etapa.teve_resultados === 1) {
-                alert("Esta etapa já foi realizada. Não é possível gerar o balizamento.");
+                mostrarAlerta("Esta etapa já foi realizada. Não é possível gerar o balizamento.");
                 return;
             }
 
@@ -154,7 +159,7 @@ const Balizamento = () => {
 
             // Verificar se há nadadores inscritos
             if (!originais || originais.length === 0) {
-                alert("Não há nadadores inscritos neste evento. Não é possível gerar o balizamento.");
+                mostrarAlerta("Não há nadadores inscritos neste evento. Não é possível gerar o balizamento.");
                 return;
             }
 
@@ -271,25 +276,25 @@ const Balizamento = () => {
 
     // Salvar balizamento no banco
     const salvarBalizamento = async () => {
-        if (etapa.inscricao_aberta !== 0) {
-            alert("As inscrições deste evento ainda estão abertas, não é possível salvar.");
+        if (etapa.inscricao_aberta === 1) {
+            mostrarAlerta("As inscrições deste evento ainda estão abertas, não é possível salvar.");
             return;
         }
         if (!balizamentoGerado) {
-            alert('Nenhum balizamento foi gerado ainda.');
+            mostrarAlerta('Nenhum balizamento foi gerado ainda.');
             return;
         }
         try {
             const response = await api.post(apiSalvarBalizamento, { eventoId, balizamento: inscritos });
             if (response.data.ignoredProvas && response.data.ignoredProvas.length) {
-                alert("Balizamento salvo, porém as seguintes provas foram ignoradas:\n" + response.data.ignoredProvas.join("\n"));
+                mostrarAlerta("Balizamento salvo, porém as seguintes provas foram ignoradas:\n" + response.data.ignoredProvas.join("\n"));
             } else {
-                alert('Balizamento salvo com sucesso!');
+                mostrarAlerta('Balizamento salvo com sucesso!');
             }
             setBalizamentoGerado(false);
         } catch (error) {
             console.error('Erro ao salvar balizamento:', error);
-            alert(
+            mostrarAlerta(
                 error.response?.data?.message ||
                 error.response?.data?.error ||
                 'Erro ao salvar o balizamento. Tente novamente.'
@@ -300,6 +305,7 @@ const Balizamento = () => {
     return (
         <>
             <CabecalhoAdmin />
+            {alertaComponente}
             <div className={style.balizamento}>
                 <div className={style.centralizar}>
                     <h1>BALIZAMENTO</h1>
@@ -321,6 +327,11 @@ const Balizamento = () => {
                         <Botao onClick={() => balizamentoPDF(inscritos, etapa)} className={style.baixarBotao}>
                             Baixar Balizamento
                         </Botao>
+                        {isMaster && (
+                            <Botao onClick={() => balizamentoPDFPadraoLpn(inscritos, etapa)} className={style.baixarBotao}>
+                                Baixar Balizamento (Padrao LPN)
+                            </Botao>
+                        )}
                         <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo, etapa)} className={style.baixarBotao}>
                             Baixar Relatório de Inscritos
                         </Botao>
@@ -359,6 +370,11 @@ const Balizamento = () => {
                         <Botao onClick={() => balizamentoPDF(inscritos, etapa)} className={style.baixarBotao}>
                             Baixar Balizamento
                         </Botao>
+                        {isMaster && (
+                            <Botao onClick={() => balizamentoPDFPadraoLpn(inscritos, etapa)} className={style.baixarBotao}>
+                                Baixar Balizamento (Padrao LPN)
+                            </Botao>
+                        )}
                         <Botao onClick={() => relatorioInscritosPDF(inscritosOriginais, inscritosEquipe, inscritosEquipeSexo, etapa)} className={style.baixarBotao}>
                             Baixar Relatório de Inscritos
                         </Botao>

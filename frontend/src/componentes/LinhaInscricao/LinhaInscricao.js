@@ -1,7 +1,7 @@
 import React from 'react';
 import style from './LinhaInscricao.module.css';
 
-const LinhaInscricao = ({ nadador, provas, selecoes, onCheckboxChange, maxReached }) => (
+const LinhaInscricao = ({ nadador, provas, selecoes, onCheckboxChange, maxReached, bloquearNovas, permitidosConferencia }) => (
     <tr>
         <td>{nadador.nome}</td>
         {provas.map(prova => (
@@ -11,7 +11,10 @@ const LinhaInscricao = ({ nadador, provas, selecoes, onCheckboxChange, maxReache
                         type="checkbox"
                         checked={!!selecoes[prova.id]}
                         onChange={(e) => onCheckboxChange(nadador.id, prova.id, e.target.checked)}
-                        disabled={maxReached && !selecoes[prova.id]} // Desativa checkboxes adicionais se o limite foi atingido
+                        disabled={
+                            (maxReached && !selecoes[prova.id]) ||
+                            (bloquearNovas && !permitidosConferencia?.[prova.id])
+                        } // Desativa checkboxes adicionais ou novas em conferência
                     />
                 </div>
             </td>
