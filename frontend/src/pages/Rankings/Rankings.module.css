@@ -1,135 +1,81 @@
-/* Respostas menores */
-@media (max-width: 768px) {
-    .cadastroContainer {
-        width: 90%;
-        /* Aumenta a largura em telas menores */
-        padding: 15px;
-    }
-}
+/* Estilos para a página Rankings */
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
-/* rankings.module.css */
-.btnFiltrar {
-    background-color: #007bff;
-    font-weight: bolder;
-    width: 30%;
-    height: 50px;
-    padding: 10px;
-    margin-bottom: 15px;
-    margin-top: 15px;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 20px;
-}
-
-.btnFiltrar:hover {
-    background-color: #0056b3;
-}
-
-
-/* Estilo para o título */
-h1 {
-    font-size: 4rem;
-    color: #e3e9f1;
-    text-align: center;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    font-weight: bold;
-}
-
-/* Estilos para a tabela */
-.rankings table {
-    width: 90%; /* Aumenta o espaço horizontal */
-    margin: 20px auto;
-    border-collapse: collapse;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Reduz a intensidade da sombra */
-    border-radius: 8px; /* Ajusta o arredondamento */
-    overflow: hidden;
-    background-color: #f9f9f9; /* Fundo neutro */
-}
-
-.rankings th:first-child, 
-.rankings td:first-child {
-    width: 8%; /* Reduz a largura da coluna posição */
-    text-align: center; /* Centraliza o texto */
-}
-
-/* Cabeçalho da tabela */
-.rankings th {
-    background-color: #f1f1f1; /* Fundo neutro */
-    color: #333; /* Texto mais escuro */
-    font-weight: bold;
-    padding: 12px;
-    text-align: left;
-    font-size: 1rem;
-    border-bottom: 2px solid #ddd; /* Linha de separação */
-    text-transform: uppercase; /* Exibe o texto em uppercase */
-}
-
-/* Linhas da tabela */
-.rankings td {
-    padding: 10px;
-    text-align: left;
-    font-size: 1rem;
-    color: #333; /* Texto mais escuro */
-    border-bottom: 1px solid #ddd;
-}
-
-/* Remove alternância de cor nas linhas */
-.rankings tr:nth-child(even),
-.rankings tr:nth-child(odd) {
-    background-color: #fff;
-}
-
-/* Estilo de foco ao passar o mouse sobre uma linha */
-.rankings tr:hover {
-    background-color: #e0e0e0; /* Efeito mais escuro */
-}
-
-.rankings h2 {
-    color: #fff; /* Define a cor branca */
-    text-align: center; /* Centraliza o texto */
-    font-size: 2rem; /* Ajusta o tamanho da fonte */
-    margin-top: 20px; /* Espaçamento superior */
-    margin-bottom: 20px; /* Espaçamento inferior */
-}
-
-.filtroContainer {
-    /* CAMPO DE FORMULARIO COMPLETO */
-    width: 100%;
-    margin: 0 auto;
-    padding: 20px;
+.rankingsContainer {
+    font-family: 'Poppins', sans-serif;
     display: flex;
     flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+.filtros {
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    justify-content: center;
     align-items: center;
 }
 
-
-/* Estilo para inputs e selects */
-
-.filtroContainer select {
-    /* Tamanho e padding */
-    height: 50px;
-    width: 400px; /* Ajuste o valor conforme necessário */
-    max-width: 100%; /* Garante que o select não ultrapasse a largura do container */
-    padding: 10px 3px;
-    /* Fontes e cores */
-    font-size: 20px;
+.filtros h2, .filtros h3 {
+    font-weight: 600;
+    margin-right: 20px;
     color: #333;
+}
+
+.filtros button {
+    font-family: 'Poppins', sans-serif;
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    font-size: 14px;
+    width: auto;
+}
+
+.filtros .selecionado {
+    background-color: #0056b3;
+    color: #fff;
+    font-weight: bold;
+}
+
+.resultados {
+    font-family: 'Poppins', sans-serif;
     background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 50px;
-    text-align: center;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
-    -webkit-appearance: none;
--moz-appearance: none;
-appearance: none;
+.resultados h2 {
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+}
 
-    /* Aparência ao passar o mouse */
-    &:hover {
-        border-color: #999;
-        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+.resultados h3 {
+    font-weight: 600;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.resultados section {
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .filtros {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filtros button {
+        display: none;
     }
 }
+

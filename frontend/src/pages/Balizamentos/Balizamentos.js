@@ -7,6 +7,8 @@ import Cabecalho from '../../componentes/Cabecalho/Cabecalho';
 import Rodape from '../../componentes/Rodape/Rodape';
 import Abas from '../../componentes/Abas/Abas';
 import Card from '../../componentes/Card/Card';
+import ButtonWall from '../../componentes/ButtonWall/ButtonWall';
+import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import { formataData } from '../../servicos/functions';
 
 /*
@@ -39,10 +41,40 @@ const Balizamentos = () => {
   const [erro, setErro] = useState(null);
   const [loading, setLoading] = useState(true);
   const [eventosComBalizamentos, setEventosComBalizamentos] = useState([]);
+  const [torneiosId, setTorneiosId] = useState(null);
+  const [nomeTemporada, setNomeTemporada] = useState('');
+  const [temporadas, setTemporadas] = useState([]);
+
+  const isMobile = window.innerWidth <= 768;
 
   const apiBalizamentos = '/balizamentoExibicao/balizamentosEvento';
   const apiBalizamentosBanco = '/balizamentoExibicao/listarDoBanco';
   const apiEventosComBalizamentos = '/balizamentoExibicao/listarEventosComBalizamentos';
+
+  useEffect(() => {
+    const fetchTemporadas = async () => {
+      try {
+        const [resAberto, resTorneios] = await Promise.all([
+          api.get('/etapas/torneioAberto'),
+          api.get('/etapas/listarTorneios')
+        ]);
+
+        const torneioAberto = resAberto.data;
+        const temporadasFiltradas = (resTorneios.data || [])
+          .filter(t => Number(t.nome) >= 2025)
+          .filter(t => t.id <= torneioAberto.id)
+          .sort((a, b) => a.id - b.id);
+
+        setTorneiosId(torneioAberto.id);
+        setNomeTemporada(torneioAberto.nome);
+        setTemporadas(temporadasFiltradas);
+      } catch (err) {
+        console.error('Erro ao buscar temporadas:', err);
+      }
+    };
+
+    fetchTemporadas();
+  }, []);
 
   const fetchBalizamentos = async () => {
     try {
@@ -70,7 +102,13 @@ const Balizamentos = () => {
   const fetchEventosComBalizamentos = async () => {
     try {
       const response = await api.get(apiEventosComBalizamentos);
-      setEventosComBalizamentos(response.data || []);
+      const eventos = response.data || [];
+
+      if (torneiosId) {
+        setEventosComBalizamentos(eventos.filter(evento => Number(evento.torneios_id) === Number(torneiosId)));
+      } else {
+        setEventosComBalizamentos(eventos);
+      }
     } catch (err) {
       console.error("Erro ao buscar eventos com balizamentos:", err.message);
       setErro("Erro ao buscar eventos com balizamentos");
@@ -88,7 +126,16 @@ const Balizamentos = () => {
       setLoading(true);
       fetchEventosComBalizamentos();
     }
-  }, [eventoId]);
+  }, [eventoId, torneiosId]);
+
+  const handleMudarTemporada = (idSelecionado) => {
+    const novoId = Number(idSelecionado);
+    const temporada = temporadas.find(t => Number(t.id) === novoId);
+    if (temporada) {
+      setTorneiosId(novoId);
+      setNomeTemporada(temporada.nome);
+    }
+  };
 
   const aoClicarNoCard = (id) => {
     navigate(`/balizamentos/${id}`);
@@ -263,22 +310,47 @@ const Balizamentos = () => {
               </>
             ) : (
               <div className={style.eventosContainer}>
-                {eventosComBalizamentos.length > 0 ? (
-                  eventosComBalizamentos.map(evento => {
-                    const { dataEvento, horario } = formataData(evento.data);
-                    return (
-                      <Card 
-                        key={evento.id} 
-                        className={`${style.eventoCard} ${style.cardContainer}`}
-                        nome={`${evento.nome}`} 
-                        data={`Data: ${dataEvento}`} 
-                        horario={`Horário: ${horario}`} 
-                        local={`Sede: ${evento.sede}`} 
-                        cidade={`Cidade: ${evento.cidade}`}
-                        onClick={() => aoClicarNoCard(evento.id)}
+                {temporadas.length > 0 && (
+                  <div className={style.filtrosTemporada}>
+                    {isMobile ? (
+                      <ListaSuspensa
+                        opcoes={temporadas}
+                        onChange={(id) => handleMudarTemporada(id)}
+                        textoPlaceholder="Selecione a temporada"
+                        valorSelecionado={torneiosId}
                       />
-                    );
-                  })
+                    ) : (
+                      <ButtonWall
+                        itens={temporadas}
+                        onClick={(id) => handleMudarTemporada(id)}
+                        selecionado={torneiosId}
+                      />
+                    )}
+                  </div>
+                )}
+
+                {nomeTemporada && (
+                  <h2 className={style.temporadaSelecionada}>Temporada {nomeTemporada}</h2>
+                )}
+
+                {eventosComBalizamentos.length > 0 ? (
+                  <div className={style.eventosLista}>
+                    {eventosComBalizamentos.map(evento => {
+                      const { dataEvento, horario } = formataData(evento.data);
+                      return (
+                        <Card 
+                          key={evento.id} 
+                          className={`${style.eventoCard} ${style.cardContainer}`}
+                          nome={`${evento.nome}`} 
+                          data={`Data: ${dataEvento}`} 
+                          horario={`Horário: ${horario}`} 
+                          local={`Sede: ${evento.sede}`} 
+                          cidade={`Cidade: ${evento.cidade}`}
+                          onClick={() => aoClicarNoCard(evento.id)}
+                        />
+                      );
+                    })}
+                  </div>
                 ) : (
                   <p>Nenhum evento com balizamentos encontrado.</p>
                 )}

@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../servicos/api';
 import Tabela from '../../componentes/Tabela/Tabela';
-import Abas from '../../componentes/Abas/Abas';
 import style from './Rankings.module.css';
 import Cabecalho from '../../componentes/Cabecalho/Cabecalho';
 import Rodape from '../../componentes/Rodape/Rodape';
+import ButtonWall from '../../componentes/ButtonWall/ButtonWall';
+import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 
 const Rankings = () => {
+    const isMobile = window.innerWidth <= 768;
     const [torneiosId, setTorneiosId] = useState(null); // Será preenchido dinamicamente
+    const [nomeTemporada, setNomeTemporada] = useState(''); // Nome/ano da temporada
+    const [temporadas, setTemporadas] = useState([]); // Lista de todas as temporadas
+    const [torneioAbertoId, setTorneioAbertoId] = useState(null); // ID do torneio aberto
+    const [abaSelecionada, setAbaSelecionada] = useState('equipes'); // 'equipes' ou 'atletas'
 
     const [rankingsEquipes, setRankingsEquipes] = useState([]);
     const [errorEquipes, setErrorEquipes] = useState(null);
@@ -18,19 +24,32 @@ const Rankings = () => {
     const [rankingMirimGeral, setRankingMirimGeral] = useState([]);
     const [errorMirimGeral, setErrorMirimGeral] = useState(null);
 
-    // Buscar o torneio aberto ao montar o componente
+    // Buscar o torneio aberto e todas as temporadas ao montar o componente
     useEffect(() => {
-        const fetchTorneioAberto = async () => {
+        const fetchDados = async () => {
             try {
-                const response = await api.get('/etapas/torneioAberto');
-                setTorneiosId(response.data.id);
+                // Busca torneio aberto
+                const resAbertoResponse = await api.get('/etapas/torneioAberto');
+                const torneioAberto = resAbertoResponse.data;
+                setTorneioAbertoId(torneioAberto.id);
+                setTorneiosId(torneioAberto.id);
+                setNomeTemporada(torneioAberto.nome);
+
+                // Busca todas as temporadas
+                const resTemporadas = await api.get('/etapas/listarTorneios');
+                // Filtra apenas temporadas até a ativa e ordena crescente (menor para maior)
+                const temporadasFiltradas = resTemporadas.data
+                    .filter(t => t.id <= torneioAberto.id)
+                    .sort((a, b) => a.id - b.id);
+                setTemporadas(temporadasFiltradas);
             } catch (error) {
-                console.error('Erro ao buscar torneio aberto:', error);
-                // Fallback para um ID padrão se falhar
+                console.error('Erro ao buscar dados de temporadas:', error);
+                // Fallback
                 setTorneiosId(3);
+                setNomeTemporada('Temporada Padrão');
             }
         };
-        fetchTorneioAberto();
+        fetchDados();
     }, []);
 
     const fetchRankingsEquipes = async () => {
@@ -73,9 +92,11 @@ const Rankings = () => {
     };
 
     useEffect(() => {
-        fetchRankingsEquipes();
-        fetchRankingsNadadores();
-        fetchRankingMirimGeral(); // carrega também o ranking mirim
+        if (torneiosId) {
+            fetchRankingsEquipes();
+            fetchRankingsNadadores();
+            fetchRankingMirimGeral(); // carrega também o ranking mirim
+        }
     }, [torneiosId]);
 
     /*
@@ -148,25 +169,23 @@ const Rankings = () => {
     }));
     const mirimWithPosition = addPosicaoNoRanking(normalizedRankingMirim);
 
-    // Conteúdo da aba para equipes + mirim juntos
-    const equipeTabContent = errorEquipes ? (
+    // Conteúdo para equipes + mirim juntos
+    const equipeContent = errorEquipes ? (
         <div style={{ color: 'red', marginTop: '10px' }}>
             <strong>Erro:</strong> {errorEquipes}
         </div>
     ) : (
         <>
-            {/* Ranking normal de equipes */}
             {rankingsEquipesWithPosition.length > 0 ? (
                 <Tabela
                     dados={rankingsEquipesWithPosition}
                     textoExibicao={{ posicao: 'Posição', equipe: 'Equipe', pontos: 'Pontos' }}
-                    colunasOcultas={['equipes_id']} // esconde id interno
+                    colunasOcultas={['equipes_id']}
                 />
             ) : (
                 <p>Nenhum dado disponível para o ranking das equipes.</p>
             )}
 
-            {/* Ranking Mirim Geral abaixo */}
             <h2 style={{ marginTop: '2rem' }}>Ranking Mirim Geral</h2>
             {errorMirimGeral ? (
                 <div style={{ color: 'red' }}>{errorMirimGeral}</div>
@@ -174,7 +193,7 @@ const Rankings = () => {
                 <Tabela
                     dados={mirimWithPosition}
                     textoExibicao={{ posicao: 'Posição', equipe: 'Equipe', pontos: 'Pontos Mirim' }}
-                    colunasOcultas={['equipes_id']} // esconde id interno
+                    colunasOcultas={['equipes_id']}
                 />
             ) : (
                 <p>Nenhum dado mirim disponível.</p>
@@ -182,8 +201,8 @@ const Rankings = () => {
         </>
     );
 
-    // Conteúdo da aba para atletas (nadadores), exibindo por gênero e categoria
-    const atletaTabContent = errorNadadores ? (
+    // Conteúdo para atletas (nadadores), exibindo por gênero e categoria
+    const atletaContent = errorNadadores ? (
         <div style={{ color: 'red', marginTop: '10px' }}>
             <strong>Erro:</strong> {errorNadadores}
         </div>
@@ -224,17 +243,57 @@ const Rankings = () => {
         </>
     );
 
-    const tabs = [
-        { label: 'Classificação por Equipe', content: equipeTabContent },
-        { label: 'Classificação por Atleta', content: atletaTabContent }
+    // Opções para abas
+    const abas = [
+        { id: 'equipes', nome: 'Classificação por Equipe' },
+        { id: 'atletas', nome: 'Classificação por Atleta' }
     ];
 
     return (
         <>
             <Cabecalho />
-            <div className={style.rankings}>
-                <h1>Rankings</h1>
-                <Abas tabs={tabs} />
+            <div className={style.rankingsContainer}>
+                <aside className={style.filtros}>
+                    <h2>Filtros</h2>
+                    <div>
+                        <h3>Temporada</h3>
+                        {isMobile ? (
+                            <ListaSuspensa
+                                opcoes={temporadas}
+                                onChange={(id) => setTorneiosId(id)}
+                                textoPlaceholder="Selecione a temporada"
+                                valorSelecionado={torneiosId}
+                            />
+                        ) : (
+                            <ButtonWall
+                                itens={temporadas}
+                                onClick={(id) => setTorneiosId(id)}
+                                selecionado={torneiosId}
+                            />
+                        )}
+                    </div>
+                    <div>
+                        <h3>Visualizar</h3>
+                        {isMobile ? (
+                            <ListaSuspensa
+                                opcoes={abas}
+                                onChange={(id) => setAbaSelecionada(id)}
+                                textoPlaceholder="Selecione a visualização"
+                                valorSelecionado={abaSelecionada}
+                            />
+                        ) : (
+                            <ButtonWall
+                                itens={abas}
+                                onClick={(id) => setAbaSelecionada(id)}
+                                selecionado={abaSelecionada}
+                            />
+                        )}
+                    </div>
+                </aside>
+                <main className={style.resultados}>
+                    <h2>Rankings {nomeTemporada && `- Temporada ${nomeTemporada}`}</h2>
+                    {abaSelecionada === 'equipes' ? equipeContent : atletaContent}
+                </main>
             </div>
             <Rodape />
         </>

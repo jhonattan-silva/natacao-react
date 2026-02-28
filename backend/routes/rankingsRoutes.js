@@ -372,5 +372,8 @@ router.get('/ranking-mirim-geral/:torneioId', async (req, res) => {
 
 module.exports = {
   router,
-  atualizarRankingEquipesPorEvento, //exporto para atualizar ranking quando algum resultado de prova é inserido
+  atualizarRankingEquipesPorEvento,
+  calcularRankingEquipes,
+  calcularRankingNadadores,
+  calcularRankingEquipesMirim
 };

@@ -129,7 +129,7 @@ async function atualizarRecordsPorProva(eventosProvasId) {
     console.log(`[atualizarRecordsPorProva] Iniciando atualização de records para eventos_provas_id: ${eventosProvasId}`);
     
     try {
-        // 1. Buscar informações da prova E status do evento
+        // 1. Buscar informações da prova
         const [provaInfo] = await db.query(`
             SELECT ep.provas_id, ep.eventos_id, e.torneios_id, p.eh_revezamento, e.classificacao_finalizada
             FROM eventos_provas ep
@@ -143,18 +143,11 @@ async function atualizarRecordsPorProva(eventosProvasId) {
             return { success: false, message: 'Prova não encontrada' };
         }
 
-        const { provas_id, torneios_id, eh_revezamento, classificacao_finalizada } = provaInfo[0];
-        const eventoFinalizado = classificacao_finalizada === 1;
+        const { provas_id, eh_revezamento } = provaInfo[0];
 
-        console.log(`[atualizarRecordsPorProva] Evento finalizado: ${eventoFinalizado ? 'SIM' : 'NÃO'}`);
-
-        if (eventoFinalizado) {
-            // 🔹 EVENTO FINALIZADO: Recalcular records considerando TODO o histórico
-            return await recalcularRecordsHistorico(provas_id, eh_revezamento);
-        } else {
-            // 🔹 EVENTO EM ANDAMENTO: Apenas atualizar se for melhor que o record atual
-            return await atualizarRecordsAtual(eventosProvasId, provas_id, torneios_id, eh_revezamento);
-        }
+        // Sempre recalcula o histórico completo para garantir consistência em caso de edição de resultados.
+        // Isso evita records "fantasma" quando um tempo anteriormente melhor é corrigido para pior.
+        return await recalcularRecordsHistorico(provas_id, eh_revezamento);
 
     } catch (error) {
         console.error(`[atualizarRecordsPorProva] Erro ao atualizar records:`, error);
@@ -262,76 +255,62 @@ async function recalcularRecordsHistorico(provas_id, eh_revezamento) {
     console.log(`[recalcularRecordsHistorico] Recalculando TODO o histórico para prova ${provas_id}`);
 
     if (eh_revezamento) {
-        // REVEZAMENTOS - Buscar todas as equipes que participaram desta prova
-        const [todasEquipes] = await db.query(`
-            SELECT DISTINCT r.equipes_id
-            FROM resultados r
-            WHERE r.eventos_provas_id IN (
-                SELECT ep.id FROM eventos_provas ep WHERE ep.provas_id = ?
-            )
-            AND r.equipes_id IS NOT NULL
-            AND r.status = 'OK'
-        `, [provas_id]);
+        // Reconstrói records da prova do zero para evitar resíduos de dados antigos
+        await db.query(`DELETE FROM recordsEquipes WHERE provas_id = ?`, [provas_id]);
 
-        for (const { equipes_id } of todasEquipes) {
-            const [melhorTempo] = await db.query(`
-                SELECT r.minutos, r.segundos, r.centesimos, e.torneios_id
+        const [melhoresEquipes] = await db.query(`
+            SELECT base.equipes_id, base.minutos, base.segundos, base.centesimos, base.torneios_id
+            FROM (
+                SELECT r.equipes_id, r.minutos, r.segundos, r.centesimos, e.torneios_id,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY r.equipes_id
+                           ORDER BY (r.minutos * 6000 + r.segundos * 100 + r.centesimos) ASC
+                       ) AS rn
                 FROM resultados r
                 JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
                 JOIN eventos e ON ep.eventos_id = e.id
-                WHERE ep.provas_id = ? AND r.equipes_id = ? AND r.status = 'OK'
-                ORDER BY (r.minutos * 6000 + r.segundos * 100 + r.centesimos) ASC
-                LIMIT 1
-            `, [provas_id, equipes_id]);
+                WHERE ep.provas_id = ?
+                  AND r.equipes_id IS NOT NULL
+                  AND r.status = 'OK'
+            ) base
+            WHERE base.rn = 1
+        `, [provas_id]);
 
-            if (melhorTempo.length === 0) {
-                await db.query(`DELETE FROM recordsEquipes WHERE equipes_id = ? AND provas_id = ?`, [equipes_id, provas_id]);
-                console.log(`[recalcularRecordsHistorico] Record de equipe removido (sem tempos válidos): Equipe ${equipes_id}`);
-            } else {
-                const { minutos, segundos, centesimos, torneios_id } = melhorTempo[0];
-                await db.query(`
-                    INSERT INTO recordsEquipes (equipes_id, provas_id, torneios_id, minutos, segundos, centesimos)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    ON DUPLICATE KEY UPDATE minutos = ?, segundos = ?, centesimos = ?, torneios_id = ?
-                `, [equipes_id, provas_id, torneios_id, minutos, segundos, centesimos, minutos, segundos, centesimos, torneios_id]);
-                console.log(`[recalcularRecordsHistorico] Record de equipe recalculado: Equipe ${equipes_id}`);
-            }
+        for (const row of melhoresEquipes) {
+            await db.query(`
+                INSERT INTO recordsEquipes (equipes_id, provas_id, torneios_id, minutos, segundos, centesimos)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `, [row.equipes_id, provas_id, row.torneios_id, row.minutos, row.segundos, row.centesimos]);
+            console.log(`[recalcularRecordsHistorico] Record de equipe recalculado: Equipe ${row.equipes_id}`);
         }
     } else {
-        // INDIVIDUAIS - Buscar todos os nadadores que participaram desta prova
-        const [todosNadadores] = await db.query(`
-            SELECT DISTINCT r.nadadores_id
-            FROM resultados r
-            WHERE r.eventos_provas_id IN (
-                SELECT ep.id FROM eventos_provas ep WHERE ep.provas_id = ?
-            )
-            AND r.nadadores_id IS NOT NULL
-            AND r.status = 'OK'
-        `, [provas_id]);
+        // Reconstrói records individuais da prova do zero para evitar resíduos de dados antigos
+        await db.query(`DELETE FROM records WHERE provas_id = ?`, [provas_id]);
 
-        for (const { nadadores_id } of todosNadadores) {
-            const [melhorTempo] = await db.query(`
-                SELECT r.minutos, r.segundos, r.centesimos, e.torneios_id
+        const [melhoresNadadores] = await db.query(`
+            SELECT base.nadadores_id, base.minutos, base.segundos, base.centesimos, base.torneios_id
+            FROM (
+                SELECT r.nadadores_id, r.minutos, r.segundos, r.centesimos, e.torneios_id,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY r.nadadores_id
+                           ORDER BY (r.minutos * 6000 + r.segundos * 100 + r.centesimos) ASC
+                       ) AS rn
                 FROM resultados r
                 JOIN eventos_provas ep ON r.eventos_provas_id = ep.id
                 JOIN eventos e ON ep.eventos_id = e.id
-                WHERE ep.provas_id = ? AND r.nadadores_id = ? AND r.status = 'OK'
-                ORDER BY (r.minutos * 6000 + r.segundos * 100 + r.centesimos) ASC
-                LIMIT 1
-            `, [provas_id, nadadores_id]);
+                WHERE ep.provas_id = ?
+                  AND r.nadadores_id IS NOT NULL
+                  AND r.status = 'OK'
+            ) base
+            WHERE base.rn = 1
+        `, [provas_id]);
 
-            if (melhorTempo.length === 0) {
-                await db.query(`DELETE FROM records WHERE nadadores_id = ? AND provas_id = ?`, [nadadores_id, provas_id]);
-                console.log(`[recalcularRecordsHistorico] Record individual removido (sem tempos válidos): Nadador ${nadadores_id}`);
-            } else {
-                const { minutos, segundos, centesimos, torneios_id } = melhorTempo[0];
-                await db.query(`
-                    INSERT INTO records (nadadores_id, provas_id, torneios_id, minutos, segundos, centesimos)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    ON DUPLICATE KEY UPDATE minutos = ?, segundos = ?, centesimos = ?, torneios_id = ?
-                `, [nadadores_id, provas_id, torneios_id, minutos, segundos, centesimos, minutos, segundos, centesimos, torneios_id]);
-                console.log(`[recalcularRecordsHistorico] Record individual recalculado: Nadador ${nadadores_id}`);
-            }
+        for (const row of melhoresNadadores) {
+            await db.query(`
+                INSERT INTO records (nadadores_id, provas_id, torneios_id, minutos, segundos, centesimos)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `, [row.nadadores_id, provas_id, row.torneios_id, row.minutos, row.segundos, row.centesimos]);
+            console.log(`[recalcularRecordsHistorico] Record individual recalculado: Nadador ${row.nadadores_id}`);
         }
     }
 

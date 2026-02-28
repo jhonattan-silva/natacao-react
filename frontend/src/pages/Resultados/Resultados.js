@@ -8,6 +8,8 @@ import Rodape from '../../componentes/Rodape/Rodape';
 import Abas from '../../componentes/Abas/Abas';
 import Card from '../../componentes/Card/Card';
 import Botao from '../../componentes/Botao/Botao';
+import ButtonWall from '../../componentes/ButtonWall/ButtonWall';
+import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 import { formataData } from '../../servicos/functions';
 
 const Resultados = () => {
@@ -23,6 +25,11 @@ const Resultados = () => {
   const [pontuacaoEtapa, setPontuacaoEtapa] = useState([]);
   const [eventoFinalizado, setEventoFinalizado] = useState(null);
   const [pontuacaoMirim, setPontuacaoMirim] = useState([]);
+  const [torneiosId, setTorneiosId] = useState(null);
+  const [nomeTemporada, setNomeTemporada] = useState('');
+  const [temporadas, setTemporadas] = useState([]);
+
+  const isMobile = window.innerWidth <= 768;
 
   const apiClassificacao = '/resultados/resultadosPorCategoria';
   const apiAbsoluto = '/resultados/resultadosAbsoluto';
@@ -32,6 +39,30 @@ const Resultados = () => {
   const apiRankingEquipesMirim = '/rankings/ranking-mirim';
   const apiBuscaResultadosCompleto = '/resultados/buscaResultadosCompleto';
   const apiStatusEvento = '/resultados/statusEvento';
+
+  useEffect(() => {
+    const fetchTemporadas = async () => {
+      try {
+        const [resAberto, resTorneios] = await Promise.all([
+          api.get('/etapas/torneioAberto'),
+          api.get('/etapas/listarTorneios')
+        ]);
+
+        const torneioAberto = resAberto.data;
+        const temporadasFiltradas = (resTorneios.data || [])
+          .filter(t => t.id <= torneioAberto.id)
+          .sort((a, b) => a.id - b.id);
+
+        setTorneiosId(torneioAberto.id);
+        setNomeTemporada(torneioAberto.nome);
+        setTemporadas(temporadasFiltradas);
+      } catch (err) {
+        console.error('Erro ao buscar temporadas:', err);
+      }
+    };
+
+    fetchTemporadas();
+  }, []);
 
   const agruparPorProvaEBateria = (dados) => {
     // Agrupa por prova
@@ -117,7 +148,13 @@ const Resultados = () => {
   const fetchEventosComResultados = async () => {
     try {
       const response = await api.get(apiEventosComResultados);
-      setEventosComResultados(response.data || []);
+      const eventos = response.data || [];
+
+      if (torneiosId) {
+        setEventosComResultados(eventos.filter(evento => Number(evento.torneios_id) === Number(torneiosId)));
+      } else {
+        setEventosComResultados(eventos);
+      }
     } catch (err) {
       console.error("Erro ao buscar eventos com resultados:", err.message);
       setErro("Erro ao buscar eventos com resultados");
@@ -186,7 +223,19 @@ const Resultados = () => {
       setLoading(true);
       fetchEventosComResultados();
     }
-  }, [eventoId]);
+  }, [eventoId, torneiosId]);
+
+  const handleMudarTemporada = (idSelecionado) => {
+    const novoId = Number(idSelecionado);
+    const temporada = temporadas.find(t => Number(t.id) === novoId);
+    if (temporada) {
+      setTorneiosId(novoId);
+      setNomeTemporada(temporada.nome);
+    }
+  };
+
+  const anoSelecionado = Number(nomeTemporada);
+  const mostrarBotaoHistorico = anoSelecionado === 2023 || anoSelecionado === 2024;
 
   const aoClicarNoCard = (id) => {
     navigate(`/resultados/${id}`);
@@ -240,7 +289,7 @@ const Resultados = () => {
     <>
       <Cabecalho />
       <div className={style.resultadosContainer}>
-        <h1 className={style.titulo}>Resultados</h1>
+        <h1 className={style.titulo}>RESULTADOS</h1>
         {loading ? (
           <p className={style.loadingMessage}>Aguarde um momento, carregando...</p>
         ) : (
@@ -526,41 +575,62 @@ const Resultados = () => {
               </>
             ) : (
               <div className={style.eventosContainer}>
+                {temporadas.length > 0 && (
+                  <div className={style.filtrosTemporada}>
+                    {isMobile ? (
+                      <ListaSuspensa
+                        opcoes={temporadas}
+                        onChange={(id) => handleMudarTemporada(id)}
+                        textoPlaceholder="Selecione a temporada"
+                        valorSelecionado={torneiosId}
+                      />
+                    ) : (
+                      <ButtonWall
+                        itens={temporadas}
+                        onClick={(id) => handleMudarTemporada(id)}
+                        selecionado={torneiosId}
+                      />
+                    )}
+                  </div>
+                )}
+
+                {nomeTemporada && (
+                  <h2 className={style.temporadaSelecionada}>Temporada {nomeTemporada}</h2>
+                )}
+
                 {eventosComResultados.length > 0 ? (
-                  eventosComResultados.map(evento => {
-                    const { dataEvento, horario } = formataData(evento.data);
-                    return (
-                      <Card
-                        key={evento.id}
-                        className={`${style.eventoCard} ${style.cardContainer}`}
-                        nome={`${evento.nome}`}
-                        data={`Data: ${dataEvento}`}
-                        horario={`Horário: ${horario}`}
-                        local={`Sede: ${evento.sede}`}
-                        cidade={`Cidade: ${evento.cidade}`}
-                        onClick={() => aoClicarNoCard(evento.id)}
-                      >
-                      </Card>
-                    );
-                  })
+                  <div className={style.eventosLista}>
+                    {eventosComResultados.map(evento => {
+                      const { dataEvento, horario } = formataData(evento.data);
+                      return (
+                        <Card
+                          key={evento.id}
+                          className={`${style.eventoCard} ${style.cardContainer}`}
+                          nome={`${evento.nome}`}
+                          data={`Data: ${dataEvento}`}
+                          horario={`Horário: ${horario}`}
+                          local={`Sede: ${evento.sede}`}
+                          cidade={`Cidade: ${evento.cidade}`}
+                          onClick={() => aoClicarNoCard(evento.id)}
+                        >
+                        </Card>
+                      );
+                    })}
+                  </div>
                 ) : (
                   <p>Nenhum evento com resultados encontrado.</p>
                 )}
-                
-                <div className={style.botoesAnosAnteriores}>
-                  <Botao 
-                    onClick={() => navigate('/resultados/2024')}
-                    className={style.botaoAno}
-                  >
-                    Resultados 2024
-                  </Botao>
-                  <Botao 
-                    onClick={() => navigate('/resultados/2023')}
-                    className={style.botaoAno}
-                  >
-                    Resultados 2023
-                  </Botao>
-                </div>
+
+                {mostrarBotaoHistorico && (
+                  <div className={style.botoesAnosAnteriores}>
+                    <Botao
+                      onClick={() => navigate(`/resultados/${anoSelecionado}`)}
+                      className={style.botaoAno}
+                    >
+                      Baixar resultados {anoSelecionado}
+                    </Botao>
+                  </div>
+                )}
               </div>
             )}
           </>

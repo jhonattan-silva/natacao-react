@@ -474,9 +474,35 @@ router.post('/salvarResultados', async (req, res) => {
             throw new Error(resultadoPontuacao.error);
         }
 
-        // Atualiza o ranking das equipes
+        // Atualiza o ranking das equipes por evento
         await rankingsRoutes.atualizarRankingEquipesPorEvento(rows[0].eventoId);
         await atualizarRankingEquipesPorEvento(rows[0].eventoId);
+
+        // Atualiza os rankings gerais do torneio (equipes, nadadores, mirim)
+        let rankingConnection;
+        try {
+            rankingConnection = await db.getConnection();
+            await rankingConnection.beginTransaction();
+            
+            // Limpa rankings anteriores dentro da transação
+            await rankingConnection.execute(`DELETE FROM rankingEquipes WHERE torneios_id = ?`, [torneioId]);
+            await rankingConnection.execute(`DELETE FROM rankingNadadores WHERE torneios_id = ?`, [torneioId]);
+            await rankingConnection.execute(`DELETE FROM rankingEquipesMirim WHERE torneios_id = ?`, [torneioId]);
+
+            // Calcula e insere os novos rankings usando a mesma conexão
+            await rankingsRoutes.calcularRankingEquipes(rankingConnection, torneioId);
+            await rankingsRoutes.calcularRankingNadadores(rankingConnection, torneioId);
+            await rankingsRoutes.calcularRankingEquipesMirim(rankingConnection, torneioId);
+
+            await rankingConnection.commit();
+            console.log(`[salvarResultados] Rankings do torneio ${torneioId} atualizados com sucesso!`);
+        } catch (rankingError) {
+            if (rankingConnection) await rankingConnection.rollback();
+            console.error('[salvarResultados] Erro ao atualizar rankings:', rankingError);
+            // Não falha o endpoint, apenas loga o erro
+        } finally {
+            if (rankingConnection) rankingConnection.release();
+        }
 
         res.status(200).json({ success: true, message: 'Resultados, classificação, records e pontuação salvos com sucesso!' });
     } catch (error) {
@@ -744,10 +770,43 @@ router.post('/transmitir-resultados-evento/:eventoId', async (req, res) => {
       console.error(`[transmitir-resultados-evento] Erro ao recalcular pontuação:`, resultadoPontuacao.error);
       return res.status(207).json({ success: false, message: `Transmitidas ${total} provas, mas erro ao recalcular pontuação.`, erros: [...erros, { eventoId, erro: resultadoPontuacao.error }] });
     }
-    if (erros.length > 0) {
-      return res.status(207).json({ success: false, message: `Transmitidas ${total} provas, ${erros.length} com erro. Pontuação recalculada.`, erros });
+
+    // Busca o torneioId do evento para atualizar rankings gerais
+    const [eventoInfo] = await db.execute(`SELECT torneios_id FROM eventos WHERE id = ?`, [eventoId]);
+    if (eventoInfo.length > 0) {
+      const torneioId = eventoInfo[0].torneios_id;
+      
+      // Atualiza os rankings gerais do torneio
+      let rankingConnection;
+      try {
+        rankingConnection = await db.getConnection();
+        await rankingConnection.beginTransaction();
+        
+        // Limpa rankings anteriores dentro da transação
+        await rankingConnection.execute(`DELETE FROM rankingEquipes WHERE torneios_id = ?`, [torneioId]);
+        await rankingConnection.execute(`DELETE FROM rankingNadadores WHERE torneios_id = ?`, [torneioId]);
+        await rankingConnection.execute(`DELETE FROM rankingEquipesMirim WHERE torneios_id = ?`, [torneioId]);
+
+        // Calcula e insere os novos rankings usando a mesma conexão
+        await rankingsRoutes.calcularRankingEquipes(rankingConnection, torneioId);
+        await rankingsRoutes.calcularRankingNadadores(rankingConnection, torneioId);
+        await rankingsRoutes.calcularRankingEquipesMirim(rankingConnection, torneioId);
+
+        await rankingConnection.commit();
+        console.log(`[transmitir-resultados-evento] Rankings do torneio ${torneioId} atualizados com sucesso!`);
+      } catch (rankingError) {
+        if (rankingConnection) await rankingConnection.rollback();
+        console.error('[transmitir-resultados-evento] Erro ao atualizar rankings:', rankingError);
+        // Não falha o endpoint, apenas loga o erro
+      } finally {
+        if (rankingConnection) rankingConnection.release();
+      }
     }
-    return res.status(200).json({ success: true, message: `Transmitidas ${total} provas do evento ${eventoId} com sucesso! Pontuação recalculada.` });
+
+    if (erros.length > 0) {
+      return res.status(207).json({ success: false, message: `Transmitidas ${total} provas, ${erros.length} com erro. Pontuação e rankings recalculados.`, erros });
+    }
+    return res.status(200).json({ success: true, message: `Transmitidas ${total} provas do evento ${eventoId} com sucesso! Pontuação e rankings recalculados.` });
   } catch (error) {
     console.error('Erro ao transmitir resultados do evento:', error);
     return res.status(500).json({ error: 'Erro ao transmitir resultados do evento.' });

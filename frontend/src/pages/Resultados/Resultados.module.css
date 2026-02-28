@@ -195,6 +195,24 @@ body {
   color: #000;
 }
 
+.filtrosTemporada {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.resultadosContainer .temporadaSelecionada {
+  text-align: center;
+  margin-bottom: 1.25rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* ======================= */
 /* Mensagens               */
 /* ======================= */
@@ -269,9 +287,17 @@ body {
 
 .eventosContainer {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.eventosLista {
+  display: flex;
   flex-wrap: wrap;
   gap: 16px;
   justify-content: center;
+  width: 100%;
 }
 
 /* ======================= */
