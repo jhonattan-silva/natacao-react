@@ -145,20 +145,16 @@ const calcularPontuacaoEvento = async (eventosId) => {
            ORDER BY cat.nome ASC, c.tempo ASC`,
           [prova.evento_prova_id]
         );
-        // Agrupa por categoria Mirim
+        // Agrupa por categoria Mirim e atribui pontuação considerando empates
         const categoriasMirim = [...new Set(classificacoes.map(row => row.categoria_nome))];
         let pontuadosMirim = [];
         for (const categoria of categoriasMirim) {
           const atletasCategoria = classificacoes.filter(row => row.categoria_nome === categoria);
           // Ordena por tempo (posição real na categoria)
           atletasCategoria.sort((a, b) => tempoParaCentesimo(a.tempo) - tempoParaCentesimo(b.tempo));
-          // Atribui pontuação conforme posição real (até 8)
-          pontuadosMirim = pontuadosMirim.concat(
-            atletasCategoria.slice(0, 8).map((row, idx) => ({
-              id: row.id,
-              pontuacao: PONTOS_INDIVIDUAL[idx] || 0
-            }))
-          );
+          // Atribui pontuação considerando empates (divide pontos entre empatados)
+          const pontuadosCat = atribuirPontuacao(atletasCategoria, PONTOS_INDIVIDUAL, 'tempo');
+          pontuadosMirim = pontuadosMirim.concat(pontuadosCat);
         }
         if (pontuadosMirim.length > 0) {
           const updates = pontuadosMirim.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);

@@ -488,10 +488,21 @@ async function classificarProva(provaId) {
 
     const classificacoes = [];
     let posicao = 1;
+    let posicaoAtual = 1;
 
-    // Processa válidos primeiro (com classificação)
-    validos.forEach(row => {
+    // Processa válidos primeiro (com classificação considerando empates)
+    validos.forEach((row, index) => {
       const tempo = `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`;
+      
+      // Detecta empate: se o tempo atual é diferente do anterior, atualiza posição
+      if (index > 0) {
+        const tempoAtual = row.minutos * 6000 + row.segundos * 100 + row.centesimos;
+        const tempoAnterior = validos[index - 1].minutos * 6000 + validos[index - 1].segundos * 100 + validos[index - 1].centesimos;
+        
+        if (tempoAtual !== tempoAnterior) {
+          posicaoAtual = posicao; // Atualiza para a posição real (pula posições se houve empate)
+        }
+      }
       
       // Sempre gera ABSOLUTO
       classificacoes.push([
@@ -499,7 +510,7 @@ async function classificarProva(provaId) {
         row.nadadorId || null,
         row.equipeId || null,
         tempo,
-        posicao, // classificação
+        posicaoAtual, // classificação considerando empate
         'OK',
         'ABSOLUTO'
       ]);
@@ -511,13 +522,13 @@ async function classificarProva(provaId) {
           row.nadadorId || null,
           row.equipeId || null,
           tempo,
-          posicao, // mesma classificação
+          posicaoAtual, // mesma classificação
           'OK',
           'CATEGORIA'
         ]);
       }
       
-      posicao++;
+      posicao++; // Incrementa sempre (conta quantos já passaram)
     });
 
     // Processa inválidos (sem classificação)
