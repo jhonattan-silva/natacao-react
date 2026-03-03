@@ -138,13 +138,19 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
               cat.nome AS categoria_nadador,  
               c.pontuacao_individual, 
               c.pontuacao_equipe,
+                c_cat.pontuacao_individual AS c_cat_pontuacao_individual,
+                c_cat.pontuacao_equipe AS c_cat_pontuacao_equipe,
               ep.ordem  
           FROM classificacoes c
           JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
           JOIN provas p ON ep.provas_id = p.id
           LEFT JOIN nadadores n ON c.nadadores_id = n.id
           LEFT JOIN equipes e ON c.equipes_id = e.id
-          LEFT JOIN categorias cat ON n.categorias_id = cat.id  
+          LEFT JOIN categorias cat ON n.categorias_id = cat.id
+          LEFT JOIN classificacoes c_cat
+            ON c_cat.eventos_provas_id = c.eventos_provas_id
+           AND c_cat.nadadores_id = c.nadadores_id
+           AND c_cat.tipo = 'CATEGORIA'
           WHERE ep.eventos_id = ? AND c.tipo = 'ABSOLUTO'
           ORDER BY ep.ordem ASC, c.eventos_provas_id ASC, c.classificacao ASC; 
         `, [eventoId]);
@@ -168,8 +174,14 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
                 tempo: row.tempo,
                 status: row.status,
                 categoria_nadador: row.categoria_nadador,
-                pontuacao_individual: row.pontuacao_individual,
-                pontuacao_equipe: row.pontuacao_equipe,
+                pontuacao_individual:
+                  Number(row.eh_prova_categoria) === 1 && Number(row.pontuacao_individual || 0) === 0
+                    ? row.c_cat_pontuacao_individual ?? row.pontuacao_individual
+                    : row.pontuacao_individual,
+                pontuacao_equipe:
+                  Number(row.eh_prova_categoria) === 1 && Number(row.pontuacao_equipe || 0) === 0
+                    ? row.c_cat_pontuacao_equipe ?? row.pontuacao_equipe
+                    : row.pontuacao_equipe,
               eh_revezamento: row.eh_revezamento,
               eh_prova_categoria: row.eh_prova_categoria,
               eh_prova_ouro: row.eh_prova_ouro,

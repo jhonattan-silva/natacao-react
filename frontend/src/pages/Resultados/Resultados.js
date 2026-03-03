@@ -28,6 +28,8 @@ const Resultados = () => {
   const [torneiosId, setTorneiosId] = useState(null);
   const [nomeTemporada, setNomeTemporada] = useState('');
   const [temporadas, setTemporadas] = useState([]);
+  const [provaAbsolutoSelecionada, setProvaAbsolutoSelecionada] = useState('');
+  const [provaCategoriaSelecionada, setProvaCategoriaSelecionada] = useState('');
 
   const isMobile = window.innerWidth <= 768;
 
@@ -225,6 +227,11 @@ const Resultados = () => {
     }
   }, [eventoId, torneiosId]);
 
+  useEffect(() => {
+    setProvaAbsolutoSelecionada('');
+    setProvaCategoriaSelecionada('');
+  }, [eventoId]);
+
   const handleMudarTemporada = (idSelecionado) => {
     const novoId = Number(idSelecionado);
     const temporada = temporadas.find(t => Number(t.id) === novoId);
@@ -236,6 +243,30 @@ const Resultados = () => {
 
   const anoSelecionado = Number(nomeTemporada);
   const mostrarBotaoHistorico = anoSelecionado === 2023 || anoSelecionado === 2024;
+
+  const opcoesFiltroProvaAbsoluto = Object.keys(absoluto).map((prova) => ({
+    id: prova,
+    nome: prova
+      .replace('(F)', '- Feminino')
+      .replace('(M)', '- Masculino')
+  }));
+
+  const provasAbsolutoFiltradas = Object.entries(absoluto).filter(([prova]) => {
+    if (!provaAbsolutoSelecionada) return true;
+    return prova === provaAbsolutoSelecionada;
+  });
+
+  const opcoesFiltroProvaCategoria = Object.keys(provasAgrupadas).map((chaveAgrupada) => ({
+    id: chaveAgrupada,
+    nome: chaveAgrupada
+      .replace('(Masculino)', '- Masculino')
+      .replace('(Feminino)', '- Feminino')
+  }));
+
+  const provasCategoriasFilteradas = Object.entries(provasAgrupadas).filter(([chaveAgrupada]) => {
+    if (!provaCategoriaSelecionada) return true;
+    return chaveAgrupada === provaCategoriaSelecionada;
+  });
 
   const aoClicarNoCard = (id) => {
     navigate(`/resultados/${id}`);
@@ -355,7 +386,17 @@ const Resultados = () => {
                       EVENTO EM ANDAMENTO - ATUALIZE A PÁGINA APÓS CADA PROVA
                     </h2>
                   )}
-                  {Object.entries(provasAgrupadas)
+                  {Object.keys(provasAgrupadas).length > 0 && (
+                    <div className={style.filtroProvaAbsoluto}>
+                      <ListaSuspensa
+                        opcoes={opcoesFiltroProvaCategoria}
+                        onChange={(id) => setProvaCategoriaSelecionada(id)}
+                        textoPlaceholder="Filtrar por prova (todas)"
+                        valorSelecionado={provaCategoriaSelecionada}
+                      />
+                    </div>
+                  )}
+                  {provasCategoriasFilteradas
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([chaveAgrupada, { nomeProva, sexo, categorias }]) => (
                       <div key={chaveAgrupada}>
@@ -462,8 +503,18 @@ const Resultados = () => {
                           EVENTO EM ANDAMENTO - ATUALIZE A PÁGINA APÓS CADA PROVA
                         </h2>
                       )}
+                      {Object.keys(absoluto).length > 0 && (
+                        <div className={style.filtroProvaAbsoluto}>
+                          <ListaSuspensa
+                            opcoes={opcoesFiltroProvaAbsoluto}
+                            onChange={(id) => setProvaAbsolutoSelecionada(id)}
+                            textoPlaceholder="Filtrar por prova (todas)"
+                            valorSelecionado={provaAbsolutoSelecionada}
+                          />
+                        </div>
+                      )}
                       {Object.keys(absoluto).length > 0 ? (
-                        Object.entries(absoluto)
+                        provasAbsolutoFiltradas
                           .map(([prova, resultados]) => {
                             const colunasOcultas = [];
                             const ehRevezamento = resultados.some(item => item.eh_revezamento);

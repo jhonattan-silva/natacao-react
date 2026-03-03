@@ -167,17 +167,18 @@ const calcularPontuacaoEvento = async (eventosId) => {
           );
         }
 
-        // sincroniza pontuação_individual do registro CATEGORIA para o ABSOLUTO (NÃO sincroniza pontuacao_equipe!)
+        // sincroniza pontuações do registro CATEGORIA para o ABSOLUTO
         await db.execute(
           `UPDATE classificacoes cat
              JOIN classificacoes abs 
                ON cat.eventos_provas_id = abs.eventos_provas_id
               AND cat.nadadores_id      = abs.nadadores_id
               AND abs.tipo             = 'ABSOLUTO'
-           SET abs.pontuacao_individual = cat.pontuacao_individual
+           SET abs.pontuacao_individual = cat.pontuacao_individual,
+               abs.pontuacao_equipe     = cat.pontuacao_equipe
            WHERE cat.eventos_provas_id = ?
              AND cat.tipo = 'CATEGORIA'
-             AND cat.pontuacao_individual > 0`,
+             AND (cat.pontuacao_individual > 0 OR cat.pontuacao_equipe > 0)`,
           [prova.evento_prova_id]
         );
       } else if (prova.eh_prova_ouro) {

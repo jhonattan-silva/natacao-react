@@ -27,6 +27,14 @@
     text-align: center;
 }
 
+.tabela-container .tabela tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.tabela-container .tabela tbody tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
 @media (max-width: 600px) {
     .tabela-container .tabela th, 
     .tabela-container .tabela td {

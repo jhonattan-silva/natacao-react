@@ -282,6 +282,12 @@ body {
     gap: 12px;
   }
 
+  .filtroProvaAbsoluto {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto 0.75rem;
+  }
+
   .eventoCard {
     width: 100%;
   }
@@ -369,6 +375,12 @@ body {
   gap: 16px;
   justify-content: center;
   width: 100%;
+}
+
+.filtroProvaAbsoluto {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto 1rem;
 }
 
 /* ======================= */
