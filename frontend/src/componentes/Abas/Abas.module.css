@@ -1,26 +1,37 @@
 .abasContainer {
-  width: 80%;
+  width: 100%;
   margin: 0 auto;
 }
 
 .tabs {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 0.5rem;
   margin-bottom: 0; /* Remover margem inferior */
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
 }
 
 .tabs .tabButton {
-  flex: 1;
-  padding: 10px;
+  flex: 0 0 auto;
+  min-width: 180px;
+  padding: 0.75rem 1rem;
   cursor: pointer;
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
   border-bottom-left-radius: 0; /* Remove bottom border-radius */
   border-bottom-right-radius: 0; /* Remove bottom border-radius */
   margin: 0; /* Remover margem */
-  font-size: 2.5rem; /* Increase font size */
+  font-size: 1.05rem;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
   font-weight: bold; /* Increase font weight */
   color: #f0f0f0 !important; /* Change text color to a lighter shade */
+  scroll-snap-align: start;
 }
 
 .tabs .tabButton.active {
@@ -61,25 +72,46 @@
   background-color: #964cd6 !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .abasContainer {
-    width: 100%; /* Use full width on smaller screens */
-    padding: 0 10px; /* Add padding for better spacing */
+    width: 100%;
+    padding: 0;
   }
 
   .tabs {
-    flex-direction: column; /* Stack tabs vertically */
-    align-items: stretch; /* Ensure tabs take full width */
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    justify-content: stretch;
+    gap: 0;
+    padding: 0;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    scroll-snap-type: none !important;
   }
 
   .tabs .tabButton {
-    font-size: 1.8rem; /* Reduce font size for smaller screens */
-    padding: 8px; /* Adjust padding */
-    text-align: center; /* Center-align text */
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 0.86rem;
+    padding: 0.65rem 0.75rem;
+    text-align: center;
+    white-space: normal;
+    min-height: 52px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
   }
 
   .tabContent {
-    font-size: 1.6rem; /* Adjust content font size */
-    padding: 10px; /* Add padding for better readability */
+    font-size: 1rem;
+    padding: 0.5rem 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .tabs {
+    grid-template-columns: 1fr;
   }
 }

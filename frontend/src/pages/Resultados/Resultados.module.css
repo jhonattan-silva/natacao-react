@@ -250,6 +250,77 @@ body {
   .resultadosContainer {
     padding: 1rem;
   }
+
+  .resultadosContainer h1 {
+    font-size: 1.75rem;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+  }
+
+  .resultadosContainer h2 {
+    font-size: 1.2rem;
+    line-height: 1.3;
+  }
+
+  .tituloCategoria {
+    font-size: 1.05rem;
+  }
+
+  .eventoAndamento {
+    font-size: 1.15rem;
+    margin: 1rem 0;
+    letter-spacing: 0.3px;
+  }
+
+  .resultadosContainer .temporadaSelecionada {
+    font-size: 1.35rem;
+  }
+
+  .eventosLista {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .eventoCard {
+    width: 100%;
+  }
+
+  .cardContainer {
+    width: 100%;
+  }
+
+  .tabelaPersonalizada,
+  .classificacaoTabela,
+  .pontuacaoEtapaContainer {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabelaResultadosBalizamento table,
+  .tabelaClassificacaoCategoria table,
+  .tabelaClassificacaoFinal table {
+    min-width: 760px;
+  }
+
+  .tabelaPontuacaoEtapa table,
+  .pontuacaoEtapaContainer table {
+    min-width: 420px;
+  }
+
+  .tabelaPersonalizada thead th,
+  .tabelaPersonalizada tbody td,
+  .classificacaoTabela th,
+  .classificacaoTabela td {
+    padding: 0.5rem 0.45rem;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  .loadingMessage {
+    font-size: 1.2rem;
+  }
 }
 
 /* ======================= */

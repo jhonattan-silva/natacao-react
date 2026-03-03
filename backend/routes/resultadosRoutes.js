@@ -50,6 +50,7 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
                 p.eh_revezamento,
                 p.eh_prova_categoria,
                 p.eh_prova_ouro,
+                p.eh_prova_festival,
                 p.sexo AS sexo_prova,
                 c.pontuacao_individual,
                 c.pontuacao_equipe
@@ -95,7 +96,8 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
               pontuacao_individual: row.pontuacao_individual,
               pontuacao_equipe: row.pontuacao_equipe,
               eh_prova_categoria: row.eh_prova_categoria === 1,
-              eh_prova_ouro: row.eh_prova_ouro === 1
+              eh_prova_ouro: row.eh_prova_ouro === 1,
+              eh_prova_festival: row.eh_prova_festival === 1
             });
         });
 
@@ -128,6 +130,9 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
               c.status, 
               c.tipo,
               p.eh_revezamento,
+              p.eh_prova_categoria,
+              p.eh_prova_ouro,
+              p.eh_prova_festival,
               p.sexo AS sexo_prova,
               n.sexo AS sexo_nadador,
               cat.nome AS categoria_nadador,  
@@ -165,7 +170,10 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
                 categoria_nadador: row.categoria_nadador,
                 pontuacao_individual: row.pontuacao_individual,
                 pontuacao_equipe: row.pontuacao_equipe,
-                eh_revezamento: row.eh_revezamento
+              eh_revezamento: row.eh_revezamento,
+              eh_prova_categoria: row.eh_prova_categoria,
+              eh_prova_ouro: row.eh_prova_ouro,
+              eh_prova_festival: row.eh_prova_festival
             });
         });
 

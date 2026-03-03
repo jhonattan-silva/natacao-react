@@ -394,32 +394,54 @@ const Resultados = () => {
                               classificacao_categoria
                             };
                           });
+                          const provaEhCategoria = atletasComClassificacao.some(atleta => atleta.eh_prova_categoria);
+                          const provaEhFestival = atletasComClassificacao.some(atleta => atleta.eh_prova_festival);
+                          const dadosTabelaCategoria = atletasComClassificacao.map(atleta => ({
+                            Classificação: renderMedalha(atleta.classificacao_categoria, atleta.eh_prova_categoria),
+                            'Classificação Absoluto': atleta.classificacao,
+                            Nome: atleta.nomeNadador,
+                            Tempo: atleta.tempo || '-',
+                            Equipe: atleta.nomeEquipe,
+                            Categoria: atleta.categoria,
+                            ...(!provaEhFestival && provaEhCategoria
+                              ? {
+                                  Pontuação_Mirim_Individual: atleta.pontuacao_individual != null ? atleta.pontuacao_individual : 0,
+                                  Pontuação_Mirim_Equipe: atleta.pontuacao_equipe != null ? atleta.pontuacao_equipe : 0
+                                }
+                              : !provaEhFestival
+                                ? {
+                                  Pontuação_Ouro_Individual: atleta.pontuacao_individual != null ? atleta.pontuacao_individual : 0,
+                                  Pontuação_Ouro_Equipe: atleta.pontuacao_equipe != null ? atleta.pontuacao_equipe : 0
+                                  }
+                                : {})
+                          }));
+                          const textoExibicaoCategoria = {
+                            Classificação: 'Classificação Categoria',
+                            'Classificação Absoluto': 'Classificação Absoluto',
+                            Nome: 'Nadador',
+                            Tempo: 'Tempo',
+                            Equipe: 'Equipe',
+                            Categoria: 'Categoria',
+                            ...(!provaEhFestival && provaEhCategoria
+                              ? {
+                                  Pontuação_Mirim_Individual: 'Pontos Mirim (Individual)',
+                                  Pontuação_Mirim_Equipe: 'Pontos Mirim (Equipe)'
+                                }
+                              : !provaEhFestival
+                                ? {
+                                  Pontuação_Ouro_Individual: 'Pontos Ouro (Individual)',
+                                  Pontuação_Ouro_Equipe: 'Pontos Ouro (Equipe)'
+                                  }
+                                : {})
+                          };
                           return (
                             <div key={categoria}>
                               <h3 className={style.tituloCategoria}>{categoria}</h3>
                               <div className={style.classificacaoTabela}>
                                 <Tabela
                                   className={style.tabelaClassificacaoCategoria}
-                                  dados={atletasComClassificacao.map(atleta => ({
-                                    Classificação: renderMedalha(atleta.classificacao_categoria, atleta.eh_prova_categoria),
-                                    'Classificação Absoluto': atleta.classificacao,
-                                    Nome: atleta.nomeNadador,
-                                    Tempo: atleta.tempo || '-',
-                                    Equipe: atleta.nomeEquipe,
-                                    Categoria: atleta.categoria,
-                                    Pontuação: atleta.pontuacao_individual != null ? atleta.pontuacao_individual : 0,
-                                    Pontuação_Equipe: atleta.pontuacao_equipe != null ? atleta.pontuacao_equipe : 0
-                                  }))}
-                                  textoExibicao={{
-                                    Classificação: 'Classificação Categoria',
-                                    'Classificação Absoluto': 'Classificação Absoluto',
-                                    Nome: 'Nadador',
-                                    Tempo: 'Tempo',
-                                    Equipe: 'Equipe',
-                                    Categoria: 'Categoria',
-                                    Pontuação: 'Pontuação',
-                                    Pontuação_Equipe: 'Pontuação Equipe'
-                                  }}
+                                  dados={dadosTabelaCategoria}
+                                  textoExibicao={textoExibicaoCategoria}
                                   colunasOcultas={['Categoria']}
                                 />
                               </div>
@@ -445,8 +467,10 @@ const Resultados = () => {
                           .map(([prova, resultados]) => {
                             const colunasOcultas = [];
                             const ehRevezamento = resultados.some(item => item.eh_revezamento);
+                            const provaEhCategoria = resultados.some(item => Number(item.eh_prova_categoria) === 1);
+                            const provaEhFestival = resultados.some(item => Number(item.eh_prova_festival) === 1);
                             if (ehRevezamento) {
-                              colunasOcultas.push('Categoria', 'Nome', 'Tipo');
+                              colunasOcultas.push('Categoria', 'Nome');
                             }
 
                             // Corrige para garantir que está mostrando o campo pontuacao_individual do backend
@@ -457,13 +481,25 @@ const Resultados = () => {
                               Tempo: item.tempo,
                               Equipe: item.nome_equipe || '-',
                               Categoria: item.categoria_nadador || '-',
-                              Tipo: item.tipo || '',
-                              Pontuação_Individual: item.pontuacao_individual !== undefined && item.pontuacao_individual !== null
-                                ? Number(item.pontuacao_individual)
-                                : 0,
-                              Pontuação_Equipe: item.pontuacao_equipe !== undefined && item.pontuacao_equipe !== null
-                                ? Number(item.pontuacao_equipe)
-                                : 0
+                              ...(!provaEhFestival && provaEhCategoria
+                                ? {
+                                    Pontuação_Mirim_Individual: item.pontuacao_individual !== undefined && item.pontuacao_individual !== null
+                                      ? Number(item.pontuacao_individual)
+                                      : 0,
+                                    Pontuação_Mirim_Equipe: item.pontuacao_equipe !== undefined && item.pontuacao_equipe !== null
+                                      ? Number(item.pontuacao_equipe)
+                                      : 0
+                                  }
+                                : !provaEhFestival
+                                  ? {
+                                    Pontuação_Ouro_Individual: item.pontuacao_individual !== undefined && item.pontuacao_individual !== null
+                                      ? Number(item.pontuacao_individual)
+                                      : 0,
+                                    Pontuação_Ouro_Equipe: item.pontuacao_equipe !== undefined && item.pontuacao_equipe !== null
+                                      ? Number(item.pontuacao_equipe)
+                                      : 0
+                                    }
+                                  : {})
                             }));
 
                             return (
@@ -480,9 +516,17 @@ const Resultados = () => {
                                         Tempo: 'Tempo',
                                         Equipe: 'Equipe',
                                         Categoria: 'Categoria',
-                                        Tipo: 'Tipo',
-                                        Pontuação_Individual: 'Pontos Individuais',
-                                        Pontuação_Equipe: 'Pontos Equipe'
+                                        ...(!provaEhFestival && provaEhCategoria
+                                          ? {
+                                              Pontuação_Mirim_Individual: 'Pontos Mirim (Individual)',
+                                              Pontuação_Mirim_Equipe: 'Pontos Mirim (Equipe)'
+                                            }
+                                          : !provaEhFestival
+                                            ? {
+                                              Pontuação_Ouro_Individual: 'Pontos Ouro (Individual)',
+                                              Pontuação_Ouro_Equipe: 'Pontos Ouro (Equipe)'
+                                              }
+                                            : {})
                                       }}
                                       colunasOcultas={colunasOcultas}
                                     />
