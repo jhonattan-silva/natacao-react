@@ -352,7 +352,8 @@ const Resultados = () => {
                             <Tabela
                               dados={bateria.nadadores.map(nadador => {
                                 // Passa o status como terceiro parâmetro
-                                const tempo = renderDiferencaTempo(nadador.tempo, nadador.diferenca_centesimos, nadador.status);
+                                const diferenca = nadador.diferenca_centesimos ?? nadador.diferenca_centesimos_ajustada;
+                                const tempo = renderDiferencaTempo(nadador.tempo, diferenca, nadador.status);
                                 return prova.revezamento
                                   ? { Raia: nadador.raia, Equipe: nadador.nome_equipe, Tempo: tempo }
                                   : { 

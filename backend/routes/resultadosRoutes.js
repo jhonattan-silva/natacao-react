@@ -433,7 +433,36 @@ router.get('/buscaResultadosCompleto/:eventoId', async (req, res) => {
   const { eventoId } = req.params;
   try {
     const [rows] = await db.query(
-      `SELECT * FROM resultadosCompletos WHERE eventos_id = ? ORDER BY ordem ASC, bateria_id ASC, raia ASC`,
+      `SELECT 
+         rc.*,
+         COALESCE(
+           rc.diferenca_centesimos,
+           CASE
+             WHEN rc.minutos IS NULL OR rc.segundos IS NULL OR rc.centesimos IS NULL THEN NULL
+             WHEN rc.nadadores_id IS NOT NULL
+                  AND i.minutos IS NOT NULL
+                  AND i.segundos IS NOT NULL
+                  AND i.centesimos IS NOT NULL
+                  AND (i.minutos * 6000 + i.segundos * 100 + i.centesimos) > 0
+               THEN (rc.minutos * 6000 + rc.segundos * 100 + rc.centesimos) - (i.minutos * 6000 + i.segundos * 100 + i.centesimos)
+             WHEN rc.eh_revezamento = 1
+                  AND ri.minutos IS NOT NULL
+                  AND ri.segundos IS NOT NULL
+                  AND ri.centesimos IS NOT NULL
+                  AND (ri.minutos * 6000 + ri.segundos * 100 + ri.centesimos) > 0
+               THEN (rc.minutos * 6000 + rc.segundos * 100 + rc.centesimos) - (ri.minutos * 6000 + ri.segundos * 100 + ri.centesimos)
+             ELSE NULL
+           END
+         ) AS diferenca_centesimos_ajustada
+       FROM resultadosCompletos rc
+       LEFT JOIN inscricoes i
+         ON i.nadadores_id = rc.nadadores_id
+        AND i.eventos_provas_id = rc.eventos_provas_id
+       LEFT JOIN revezamentos_inscricoes ri
+         ON ri.equipes_id = rc.equipes_id
+        AND ri.eventos_provas_id = rc.eventos_provas_id
+       WHERE rc.eventos_id = ?
+       ORDER BY rc.ordem ASC, rc.bateria_id ASC, rc.raia ASC`,
       [eventoId]
     );
     res.json(rows);

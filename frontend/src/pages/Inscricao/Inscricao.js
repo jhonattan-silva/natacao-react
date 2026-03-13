@@ -128,7 +128,8 @@ const Inscricao = () => {
             });
             setRevezamentosPermitidos(revezamentosPermitidosLocal);
 
-            // Regra: máximo 4 atletas por sexo em provas de 400m
+            // Regra (400m): máximo 2 atletas por prova.
+            // Como masculino e feminino têm provas (IDs) diferentes, isso representa 2 por sexo.
             const provas400Local = provasFiltradas.filter(prova => String(prova.distancia) === "400");
             setProvas400(provas400Local);
 
@@ -231,14 +232,9 @@ const Inscricao = () => {
                 return prevSelecoes;
             }
 
-            // REGRA: Máximo 4 atletas por sexo em provas de 400m
+            // REGRA (400m): máximo 2 atletas por prova (feminino e masculino já são provas/IDs distintos)
             const provaSelecionada400 = provas400.find(p => p.id === provaId);
             if (provaSelecionada400) {
-                // Monta o novo estado de seleções após o clique atual
-                const novasSelecoesNadador = {
-                    ...(prevSelecoes[nadadorId] || {}),
-                    [provaId]: isChecked
-                };
                 const idsMarcados = new Set();
 
                 // 1. Já salvos no banco, exceto os desmarcados na tela
@@ -268,8 +264,8 @@ const Inscricao = () => {
                     idsMarcados.add(String(nadadorId));
                 }
 
-                if (idsMarcados.size > 4) {
-                    mostrarAlerta("Só é permitido inscrever até 4 atletas por equipe na prova de 400m.");
+                if (idsMarcados.size > 2) {
+                    mostrarAlerta("Só é permitido inscrever até 2 atletas do mesmo sexo por prova de 400m.");
                     return prevSelecoes;
                 }
             }

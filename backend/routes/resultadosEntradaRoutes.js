@@ -526,13 +526,23 @@ async function transmitirResultadoProva(provaId) {
   console.log(`[transmitirResultadoProva] Transmitindo resultados da prova ${provaId}`);
   // Descobre se é revezamento e pega eventos_id
   const [provaRows] = await db.query(
-    'SELECT ep.eventos_id, p.eh_revezamento FROM eventos_provas ep JOIN provas p ON ep.provas_id = p.id WHERE ep.id = ?',
+    `SELECT ep.eventos_id, p.eh_revezamento, t.aberto AS torneio_aberto
+     FROM eventos_provas ep
+     JOIN provas p ON ep.provas_id = p.id
+     JOIN eventos e ON ep.eventos_id = e.id
+     JOIN torneios t ON e.torneios_id = t.id
+     WHERE ep.id = ?`,
     [provaId]
   );
   if (!provaRows || provaRows.length === 0) {
     throw new Error('Prova não encontrada para o ID informado.');
   }
   const provaInfo = provaRows[0];
+  if (!Number(provaInfo.torneio_aberto)) {
+    const error = new Error('Reprocessamento bloqueado: o torneio desta prova está encerrado.');
+    error.statusCode = 403;
+    throw error;
+  }
   const eventoId = provaInfo.eventos_id;
 
   // Garante que a tabela classificacoes está atualizada para o cálculo de pontuação
@@ -628,7 +638,7 @@ async function transmitirResultadoProva(provaId) {
       tempo = `${String(row.minutos).padStart(2, '0')}:${String(row.segundos).padStart(2, '0')}:${String(row.centesimos).padStart(2, '0')}`;
     }
 
-    // Recupera o tempo de inscrição do nadador
+    // Recupera o tempo de inscrição (nadador ou equipe no revezamento)
     let tempoInscricaoCentesimos = null;
     if (row.nadadores_id) {
       const [inscricao] = await db.query(
@@ -649,9 +659,30 @@ async function transmitirResultadoProva(provaId) {
       }
     }
 
+    if (row.eh_revezamento && row.equipes_id) {
+      const [inscricaoRevezamento] = await db.query(
+        'SELECT minutos, segundos, centesimos FROM revezamentos_inscricoes WHERE equipes_id = ? AND eventos_provas_id = ? LIMIT 1',
+        [row.equipes_id, provaId]
+      );
+
+      if (inscricaoRevezamento.length > 0) {
+        const { minutos, segundos, centesimos } = inscricaoRevezamento[0];
+        if (minutos != null && segundos != null && centesimos != null) {
+          const calculado = minutos * 6000 + segundos * 100 + centesimos;
+          if (calculado > 0) {
+            tempoInscricaoCentesimos = calculado;
+          }
+        }
+      }
+    }
+
     // Calcula a diferença em centésimos, mas só preenche se o tempo de inscrição existir e for válido
-    const tempoRealizadoCentesimos = row.minutos * 6000 + row.segundos * 100 + row.centesimos;
-    const diferencaCentesimos = tempoInscricaoCentesimos !== null && tempoInscricaoCentesimos > 0
+    const tempoRealizadoCentesimos =
+      row.minutos != null && row.segundos != null && row.centesimos != null
+        ? (row.minutos * 6000 + row.segundos * 100 + row.centesimos)
+        : null;
+
+    const diferencaCentesimos = tempoInscricaoCentesimos !== null && tempoInscricaoCentesimos > 0 && tempoRealizadoCentesimos !== null
       ? calcularDiferencaCentesimos(tempoInscricaoCentesimos, tempoRealizadoCentesimos)
       : null;
 
@@ -733,7 +764,7 @@ router.post('/transmitirResultadoProva/:provaId', async (req, res) => {
     res.json(resultado);
   } catch (error) {
     console.error('Erro ao transmitir prova:', error.message);
-    res.status(500).json({ error: 'Erro ao transmitir prova' });
+    res.status(error.statusCode || 500).json({ error: error.message || 'Erro ao transmitir prova' });
   }
 });
 
@@ -745,6 +776,24 @@ router.post('/transmitir-resultados-evento/:eventoId', async (req, res) => {
     if (!eventoId) {
       return res.status(400).json({ error: 'O ID do evento é obrigatório!' });
     }
+
+    const [eventoStatus] = await db.execute(
+      `SELECT t.aberto AS torneio_aberto
+       FROM eventos e
+       JOIN torneios t ON e.torneios_id = t.id
+       WHERE e.id = ?
+       LIMIT 1`,
+      [eventoId]
+    );
+
+    if (!eventoStatus.length) {
+      return res.status(404).json({ error: 'Evento não encontrado.' });
+    }
+
+    if (!Number(eventoStatus[0].torneio_aberto)) {
+      return res.status(403).json({ error: 'Reprocessamento bloqueado: o torneio deste evento está encerrado.' });
+    }
+
     // Busca todos os eventos_provas_id do evento
     const [provas] = await db.execute(
       `SELECT ep.id FROM eventos_provas ep WHERE ep.eventos_id = ?`,
@@ -816,8 +865,18 @@ router.post('/transmitir-resultados-evento/:eventoId', async (req, res) => {
 // Migrar todos os resultados antigos para resultadosCompletos
 router.post('/migrarTodosResultados', async (req, res) => {
     try {
-        // Busca todos os eventos
-        const [eventos] = await db.query('SELECT id FROM eventos');
+    // Busca apenas eventos de torneio aberto
+    const [eventos] = await db.query(`
+      SELECT e.id
+      FROM eventos e
+      JOIN torneios t ON e.torneios_id = t.id
+      WHERE t.aberto = 1
+    `);
+
+    if (!eventos.length) {
+      return res.status(403).json({ error: 'Migração bloqueada: não há torneio aberto.' });
+    }
+
         let totalProvas = 0;
         let totalMigradas = 0;
 

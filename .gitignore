@@ -58,3 +58,4 @@ docker-compose.dev.yml
 frontend/Dockerfile.dev
 backend/uploads/imagens/2025/*
 frontend/.env
+backend/uploads/relatorios/pos-prova/*

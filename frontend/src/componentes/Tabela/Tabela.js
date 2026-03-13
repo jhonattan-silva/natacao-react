@@ -18,9 +18,9 @@ const Tabela = ({
 }) => {
     const [ordenaConfig, setOrdenaConfig] = useState({ key: null, direction: 'asc' });
 
-    // Computa as colunas disponíveis filtrando as ocultas
+    // Computa as colunas disponíveis filtrando as ocultas e campos especiais internos
     const colunas = dados && dados.length > 0 
-        ? Object.keys(dados[0]).filter(coluna => !colunasOcultas.includes(coluna))
+        ? Object.keys(dados[0]).filter(coluna => !colunasOcultas.includes(coluna) && !coluna.startsWith('_'))
         : [];
 
     const sortedData = React.useMemo(() => {
@@ -72,7 +72,7 @@ const Tabela = ({
                 </thead>
                 <tbody>
                     {sortedData.map((linha, index) => (
-                        <tr key={index}>
+                        <tr key={index} className={linha._rowClassName || ''}>
                             {colunas.map((coluna, idx) => (
                                 <td key={idx} style={columnStyles[coluna]}>{linha[coluna]}</td>
                             ))}

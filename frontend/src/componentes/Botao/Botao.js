@@ -2,9 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import styles from './Botao.module.css';
 
-const Botao = ({ onClick, children, className }) => {
+const Botao = ({ onClick, children, className, ...rest }) => {
   return (
-    <button className={`${styles.botao} ${className}`} onClick={onClick}>
+    <button className={`${styles.botao} ${className || ''}`} onClick={onClick} {...rest}>
       {children}
     </button>
   );

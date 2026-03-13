@@ -88,6 +88,7 @@ const CabecalhoAdmin = () => {
                     <span className={style.closeButton} onClick={toggleMenu}>&times;</span>
                     <CabecalhoLink url='../Nadadores' onClick={() => { handleLinkClick('../Nadadores'); setMenuOpen(false); }}>Nadadores</CabecalhoLink>
                     <CabecalhoLink url='../Inscricao' onClick={() => { handleLinkClick('../Inscricao'); setMenuOpen(false); }}>Inscrição</CabecalhoLink>
+                    <CabecalhoLink url='../Relatorios' onClick={() => { handleLinkClick('../Relatorios'); setMenuOpen(false); }}>Relatórios</CabecalhoLink>
                     <CabecalhoLink url='../Admin' onClick={() => { handleLinkClick('../Admin'); setMenuOpen(false); }}>Admin</CabecalhoLink>
                     {(userProfile.includes('admin') || userProfile.includes('master')) && (
                         <>

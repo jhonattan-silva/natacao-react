@@ -379,17 +379,37 @@ export const gerarPDFResultadosEquipe = (evento, provas, estatisticas, equipeNom
 export const gerarPDFMelhoresTempos = (melhoresTempos, equipeNome) => {
     const anoAtual = new Date().getFullYear();
 
+    const getCorFonteDiferenca = (valor) => {
+        if (!valor || valor === '-') return undefined;
+        const texto = String(valor).trim();
+        if (texto.startsWith('+')) return '#B91C1C';
+        if (texto.startsWith('-')) return '#166534';
+        if (texto.startsWith('±')) return '#374151';
+        return undefined;
+    };
+
     const bodyTempos = [
-        ['Nadador', 'Categoria', 'Prova', 'Melhor Tempo', 'Evento', 'Data']
+        [
+            'Nadador',
+            'Categoria',
+            'Prova',
+            { text: 'Melhor Tempo', alignment: 'center' },
+            { text: 'Dif. p/ Melhor da Prova', alignment: 'center' },
+            'Evento',
+            'Data'
+        ]
     ];
 
     melhoresTempos.forEach(tempo => {
         const dataFormatada = new Date(tempo.evento_data).toLocaleDateString('pt-BR');
+        const diferencaTexto = tempo.diferenca_para_melhor || '-';
+        const corFonteDiferenca = getCorFonteDiferenca(diferencaTexto);
         bodyTempos.push([
             tempo.nadador_nome || '-',
             tempo.categoria_nome || '-',
             tempo.prova_nome || '-',
-            tempo.melhor_tempo || '-',
+            { text: tempo.melhor_tempo || '-', alignment: 'center' },
+            { text: diferencaTexto, alignment: 'center', color: corFonteDiferenca, bold: true },
             tempo.evento_nome || '-',
             dataFormatada
         ]);
@@ -413,7 +433,7 @@ export const gerarPDFMelhoresTempos = (melhoresTempos, equipeNome) => {
             {
                 table: {
                     headerRows: 1,
-                    widths: ['*', 'auto', '*', 'auto', '*', 'auto'],
+                    widths: ['*', 'auto', '*', 'auto', 'auto', '*', 'auto'],
                     body: bodyTempos
                 },
                 layout: 'lightHorizontalLines'

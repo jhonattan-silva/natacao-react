@@ -7,13 +7,14 @@ import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
 import api from '../../servicos/api';
 import { jwtDecode } from 'jwt-decode';
 import { gerarPDFResultadosEquipe, gerarPDFMelhoresTempos, gerarPDFRecordsPorProva } from '../../servicos/relatoriosPDF';
+import { gerarPDFPosProvaEquipe } from '../../servicos/relatoriosPosProvaPDF';
 import style from './Relatorios.module.css';
 import InputTexto from '../../componentes/InputTexto/InputTexto';
+import ListaSuspensa from '../../componentes/ListaSuspensa/ListaSuspensa';
 
 function Relatorios() {
   const [relatorioAtivo, setRelatorioAtivo] = useState(null);
   const [dadosRelatorio, setDadosRelatorio] = useState([]);
-  const [estatisticas, setEstatisticas] = useState(null);
   const [melhoresTempos, setMelhoresTempos] = useState([]);
   const [recordsPorProva, setRecordsPorProva] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -24,10 +25,16 @@ function Relatorios() {
   const [provasDisponiveis, setProvasDisponiveis] = useState([]);
   const [sexoSelecionado, setSexoSelecionado] = useState('todos');
   const [nomeEquipe, setNomeEquipe] = useState('');
+  const [anoTemporadaAtual, setAnoTemporadaAtual] = useState('');
+  const [temporadasDisponiveis, setTemporadasDisponiveis] = useState([]);
+  const [anoSelecionado, setAnoSelecionado] = useState('');
   const [nadadoresSelecionados, setNadadoresSelecionados] = useState([]);
   const [termoBusca, setTermoBusca] = useState('');
   const [nadadoresSugeridos, setNadadoresSugeridos] = useState([]);
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
+  const [eventosPosProva, setEventosPosProva] = useState([]);
+  const [eventoPosProvaSelecionado, setEventoPosProvaSelecionado] = useState('');
+  const [baixandoPosProva, setBaixandoPosProva] = useState(false);
 
   // Buscar equipeId do token JWT
   const getEquipeId = () => {
@@ -62,6 +69,66 @@ function Relatorios() {
     fetchNomeEquipe();
   }, [equipeId]);
 
+  useEffect(() => {
+    const fetchTemporadas = async () => {
+      try {
+        const [resAberto, resTorneios] = await Promise.all([
+          api.get('/etapas/torneioAberto'),
+          api.get('/etapas/listarTorneios')
+        ]);
+
+        const anoAtual = String(resAberto?.data?.nome || '');
+        if (anoAtual) setAnoTemporadaAtual(anoAtual);
+
+        const temporadas = (resTorneios?.data || [])
+          .map((torneio) => ({ id: String(torneio.nome), nome: `Temporada ${torneio.nome}` }))
+          .sort((a, b) => Number(b.id) - Number(a.id));
+
+        setTemporadasDisponiveis(temporadas);
+
+        if (anoAtual) {
+          setAnoSelecionado(anoAtual);
+        } else if (temporadas.length > 0) {
+          setAnoSelecionado(temporadas[0].id);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar temporada atual:', error);
+      }
+    };
+
+    fetchTemporadas();
+  }, []);
+
+  // Carregar eventos disponíveis para relatório Pós-Prova
+  useEffect(() => {
+    const fetchEventosPosProva = async () => {
+      if (!equipeId || !anoSelecionado || relatorioAtivo !== 'pos-prova') return;
+
+      try {
+        setLoading(true);
+        setErro(null);
+        const response = await api.get(`/relatorios/pos-prova/eventos/${equipeId}`, {
+          params: { ano: anoSelecionado }
+        });
+
+        const opcoes = (response.data?.eventos || []).map((evento) => ({
+          id: evento.id,
+          nome: evento.nome
+        }));
+
+        setEventosPosProva(opcoes);
+        setEventoPosProvaSelecionado('');
+      } catch (error) {
+        console.error('Erro ao carregar eventos pós-prova:', error);
+        setErro('Não foi possível carregar os eventos do relatório pós-prova.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEventosPosProva();
+  }, [equipeId, anoSelecionado, relatorioAtivo]);
+
   const fetchResultadosEquipe = async () => {
     if (!equipeId) {
       setErro('Não foi possível identificar a equipe. Faça login novamente.');
@@ -94,17 +161,6 @@ function Relatorios() {
       setErro('Erro ao buscar resultados da equipe');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchEstatisticas = async () => {
-    if (!equipeId) return;
-    
-    try {
-      const response = await api.get(`/relatorios/estatisticas-equipe/${equipeId}`);
-      setEstatisticas(response.data);
-    } catch (error) {
-      console.error('Erro ao buscar estatísticas:', error);
     }
   };
 
@@ -162,7 +218,6 @@ function Relatorios() {
   useEffect(() => {
     if (relatorioAtivo === 'resultados' && equipeId) {
       fetchResultadosEquipe();
-      fetchEstatisticas();
     } else if (relatorioAtivo === 'melhores-tempos' && equipeId) {
       fetchMelhoresTempos();
     } else if (relatorioAtivo === 'records-prova' && equipeId) {
@@ -203,9 +258,35 @@ function Relatorios() {
   };
 
   // Filtrar dados pelo evento selecionado
-  const dadosFiltrados = eventoSelecionado
-    ? dadosRelatorio.filter(evento => `${evento.evento}_${evento.data}` === eventoSelecionado)
+  const eventosDisponiveisFiltrados = anoSelecionado
+    ? eventosDisponiveis.filter(evento => {
+        const anoEvento = new Date(evento.data).getFullYear();
+        return String(anoEvento) === String(anoSelecionado);
+      })
+    : eventosDisponiveis;
+
+  const dadosRelatorioFiltradosAno = anoSelecionado
+    ? dadosRelatorio.filter(evento => {
+        const anoEvento = new Date(evento.data).getFullYear();
+        return String(anoEvento) === String(anoSelecionado);
+      })
     : dadosRelatorio;
+
+  const dadosFiltrados = eventoSelecionado
+    ? dadosRelatorioFiltradosAno.filter(evento => `${evento.evento}_${evento.data}` === eventoSelecionado)
+    : dadosRelatorioFiltradosAno;
+
+  useEffect(() => {
+    if (eventosDisponiveisFiltrados.length === 0) {
+      setEventoSelecionado(null);
+      return;
+    }
+
+    const eventoAtualExiste = eventosDisponiveisFiltrados.some(evento => evento.id === eventoSelecionado);
+    if (!eventoAtualExiste) {
+      setEventoSelecionado(eventosDisponiveisFiltrados[0].id);
+    }
+  }, [anoSelecionado, eventosDisponiveisFiltrados, eventoSelecionado]);
 
   // Função para manipular a mudança de provas selecionadas
   const handleProvaChange = (provaId, checked) => {
@@ -276,57 +357,69 @@ function Relatorios() {
   };
 
   // Filtrar melhores tempos pelos nadadores selecionados
+  const tempoParaCentesimos = (tempo) => {
+    if (!tempo || typeof tempo !== 'string') return null;
+    const [min, seg, cen] = tempo.split(':').map(Number);
+    if ([min, seg, cen].some(Number.isNaN)) return null;
+    return (min * 6000) + (seg * 100) + cen;
+  };
+
+  const formatarDiferencaTempo = (diferencaCentesimos) => {
+    if (diferencaCentesimos === null || diferencaCentesimos === undefined) return '-';
+
+    const sinal = diferencaCentesimos > 0 ? '+' : diferencaCentesimos < 0 ? '-' : '±';
+    const valor = Math.abs(diferencaCentesimos);
+    const minutos = Math.floor(valor / 6000);
+    const segundos = Math.floor((valor % 6000) / 100);
+    const centesimos = valor % 100;
+
+    return `${sinal}${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}:${String(centesimos).padStart(2, '0')}`;
+  };
+
+  const renderDiferencaParaMelhor = (diferencaTexto, diferencaCentesimos) => {
+    if (diferencaTexto === '-' || diferencaCentesimos === null || diferencaCentesimos === undefined) {
+      return '-';
+    }
+
+    const classe = diferencaCentesimos <= 0 ? style.tempoMelhorado : style.tempoPiorado;
+    return <span className={classe}>{diferencaTexto}</span>;
+  };
+
+  const melhoresTemposComDiferenca = melhoresTempos.map((tempo) => {
+    const tempoAtual = Number.isFinite(Number(tempo.melhor_tempo_centesimos))
+      ? Number(tempo.melhor_tempo_centesimos)
+      : tempoParaCentesimos(tempo.melhor_tempo);
+    
+    const melhorGlobal = Number.isFinite(Number(tempo.melhor_tempo_global_centesimos))
+      ? Number(tempo.melhor_tempo_global_centesimos)
+      : null;
+    
+    const diferenca = (tempoAtual !== null && melhorGlobal !== null)
+      ? tempoAtual - melhorGlobal
+      : null;
+
+    return {
+      ...tempo,
+      diferenca_centesimos_para_melhor: diferenca,
+      diferenca_para_melhor: formatarDiferencaTempo(diferenca)
+    };
+  });
+
   const melhoresTemposFiltrados = nadadoresSelecionados.length > 0
-    ? melhoresTempos.filter(tempo => 
+    ? melhoresTemposComDiferenca.filter(tempo => 
         nadadoresSelecionados.some(n => n.nome === tempo.nadador_nome)
       )
-    : melhoresTempos;
+    : melhoresTemposComDiferenca;
 
   const renderRelatorioResultados = () => (
     <div className={style.relatorioConteudo}>
       <h2>Relatório de Resultados da Equipe</h2>
-      
-      {estatisticas && (
-        <div className={style.estatisticasCard}>
-          <h3>Resumo Geral</h3>
-          <div className={style.estatisticasGrid}>
-            <div className={style.estatItem}>
-              <span className={style.estatLabel}>Total de Nadadores:</span>
-              <span className={style.estatValor}>{estatisticas.total_nadadores}</span>
-            </div>
-            <div className={style.estatItem}>
-              <span className={style.estatLabel}>Total de Provas:</span>
-              <span className={style.estatValor}>{estatisticas.total_provas}</span>
-            </div>
-            <div className={style.estatItem}>
-              <span className={style.estatLabel}>🥇 Ouro:</span>
-              <span className={style.estatValor}>{estatisticas.total_ouro}</span>
-            </div>
-            <div className={style.estatItem}>
-              <span className={style.estatLabel}>🥈 Prata:</span>
-              <span className={style.estatValor}>{estatisticas.total_prata}</span>
-            </div>
-            <div className={style.estatItem}>
-              <span className={style.estatLabel}>🥉 Bronze:</span>
-              <span className={style.estatValor}>{estatisticas.total_bronze}</span>
-            </div>
-            <div className={style.estatItem}>
-              <span className={style.estatLabel}>Pontos Individuais:</span>
-              <span className={style.estatValor}>{estatisticas.total_pontos_individuais || 0}</span>
-            </div>
-            <div className={style.estatItem}>
-              <span className={style.estatLabel}>Pontos Equipe:</span>
-              <span className={style.estatValor}>{estatisticas.total_pontos_equipe || 0}</span>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {eventosDisponiveis.length > 0 && (
+      {eventosDisponiveisFiltrados.length > 0 && (
         <div className={style.seletorEventos}>
           <h3>Selecione o Evento:</h3>
           <div className={style.botoesEventos}>
-            {eventosDisponiveis.map(evento => (
+            {eventosDisponiveisFiltrados.map(evento => (
               <Botao
                 key={evento.id}
                 onClick={() => setEventoSelecionado(evento.id)}
@@ -379,7 +472,7 @@ function Relatorios() {
             <Botao onClick={() => {
               const eventoSelecionadoObj = eventosDisponiveis.find(e => e.id === eventoSelecionado);
               const provasDoEvento = dadosFiltrados[0]?.provas || [];
-              gerarPDFResultadosEquipe(eventoSelecionadoObj, provasDoEvento, estatisticas, nomeEquipe);
+              gerarPDFResultadosEquipe(eventoSelecionadoObj, provasDoEvento, null, nomeEquipe);
             }}>
               Baixar Relatório em PDF
             </Botao>
@@ -452,19 +545,42 @@ function Relatorios() {
       ) : (
         <>
           <Tabela
-            dados={melhoresTemposFiltrados.map(tempo => ({
-              Nadador: tempo.nadador_nome,
-              Categoria: tempo.categoria_nome,
-              Prova: tempo.prova_nome,
-              Melhor_Tempo: tempo.melhor_tempo,
-              Evento: tempo.evento_nome,
-              Data: new Date(tempo.evento_data).toLocaleDateString('pt-BR')
-            }))}
+            dados={(() => {
+              // Cria mapa de nadador -> índice único
+              const nadoresUnicos = [];
+              const mapaIndiceNadador = new Map();
+              
+              melhoresTemposFiltrados.forEach((tempo) => {
+                if (!mapaIndiceNadador.has(tempo.nadador_nome)) {
+                  mapaIndiceNadador.set(tempo.nadador_nome, nadoresUnicos.length);
+                  nadoresUnicos.push(tempo.nadador_nome);
+                }
+              });
+              
+              return melhoresTemposFiltrados.map((tempo) => {
+                const indiceNadador = mapaIndiceNadador.get(tempo.nadador_nome);
+                
+                return {
+                  _rowClassName: indiceNadador % 2 === 0 ? style.linhaGrupoA : style.linhaGrupoB,
+                  Nadador: tempo.nadador_nome,
+                  Categoria: tempo.categoria_nome,
+                  Prova: tempo.prova_nome,
+                  Melhor_Tempo: tempo.melhor_tempo,
+                  Dif_Para_Melhor: renderDiferencaParaMelhor(
+                    tempo.diferenca_para_melhor,
+                    tempo.diferenca_centesimos_para_melhor
+                  ),
+                  Evento: tempo.evento_nome,
+                  Data: new Date(tempo.evento_data).toLocaleDateString('pt-BR')
+                };
+              });
+            })()}
             textoExibicao={{
               Nadador: 'Nadador',
               Categoria: 'Categoria',
               Prova: 'Prova',
               Melhor_Tempo: 'Melhor Tempo',
+              Dif_Para_Melhor: 'Dif. p/ Melhor da Prova',
               Evento: 'Evento',
               Data: 'Data'
             }}
@@ -595,6 +711,58 @@ function Relatorios() {
     </div>
   );
 
+  const renderRelatorioPosProva = () => {
+    const handleBaixarPosProva = async () => {
+      if (!equipeId || !eventoPosProvaSelecionado) return;
+
+      try {
+        setBaixandoPosProva(true);
+        setErro(null);
+        const response = await api.get(`/relatorios/pos-prova/arquivo/${equipeId}`, {
+          params: { eventoId: eventoPosProvaSelecionado }
+        });
+        gerarPDFPosProvaEquipe(response.data);
+      } catch (error) {
+        console.error('Erro ao gerar relatório pós-prova:', error);
+        setErro('Erro ao gerar/baixar relatório pós-prova.');
+      } finally {
+        setBaixandoPosProva(false);
+      }
+    };
+
+    return (
+      <div className={style.relatorioConteudo}>
+        <h2>Relatório Pós-Prova (Técnicos)</h2>
+        <p className={style.descricao}>
+          Selecione o evento e baixe o PDF com tempos da equipe de todas as provas e comparativos técnicos.
+        </p>
+
+        {loading ? (
+          <p>Carregando eventos...</p>
+        ) : erro ? (
+          <p className={style.erro}>{erro}</p>
+        ) : (
+          <div className={style.formArea}>
+            <ListaSuspensa
+              opcoes={eventosPosProva}
+              onChange={setEventoPosProvaSelecionado}
+              textoPlaceholder="Selecione um evento"
+              valorSelecionado={eventoPosProvaSelecionado}
+            />
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <Botao 
+                onClick={handleBaixarPosProva} 
+                disabled={!eventoPosProvaSelecionado || baixandoPosProva}
+              >
+                {baixandoPosProva ? '⏳ Gerando PDF...' : '📥 Baixar Relatório'}
+              </Botao>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={style.relatoriosContainer}>
       <CabecalhoAdmin />
@@ -627,7 +795,25 @@ function Relatorios() {
           >
             Melhores Tempos por Prova
           </Botao>
+          <Botao
+            onClick={() => setRelatorioAtivo('pos-prova')}
+            className={relatorioAtivo === 'pos-prova' ? style.ativo : ''}
+          >
+            Relatório Pós-Prova (Técnicos)
+          </Botao>
         </div>
+
+        {relatorioAtivo && (
+          <div className={style.seletorTemporadaGlobal}>
+            <h3>Temporada:</h3>
+            <ListaSuspensa
+              opcoes={temporadasDisponiveis}
+              onChange={setAnoSelecionado}
+              textoPlaceholder="Selecione a temporada"
+              valorSelecionado={anoSelecionado}
+            />
+          </div>
+        )}
 
         <div className={style.relatoriosArea}>
           {relatorioAtivo === null && (
@@ -639,6 +825,7 @@ function Relatorios() {
           {relatorioAtivo === 'resultados' && renderRelatorioResultados()}
           {relatorioAtivo === 'melhores-tempos' && renderRelatorioDesempenho()}
           {relatorioAtivo === 'records-prova' && renderRecordsPorProva()}
+          {relatorioAtivo === 'pos-prova' && renderRelatorioPosProva()}
         </div>
       </main>
 

@@ -13,6 +13,9 @@ const SuperAdmin = () => {
     const [masterUsers, setMasterUsers] = useState([]);
     const [loadingMasters, setLoadingMasters] = useState(false);
     const [loadingCategorias, setLoadingCategorias] = useState(false);
+    const [loadingRelatoriosPosProva, setLoadingRelatoriosPosProva] = useState(false);
+    const [loadingAnonimizacaoApply, setLoadingAnonimizacaoApply] = useState(false);
+    const [anonimizacaoResumo, setAnonimizacaoResumo] = useState(null);
 
     // Buscar lista de usuários master e regulamento ao carregar a página
     useEffect(() => {
@@ -141,6 +144,62 @@ const SuperAdmin = () => {
         } finally {
             setLoadingCategorias(false);
         }
+    };
+
+    const handlePreGerarRelatoriosPosProva = async () => {
+        const confirmar = window.confirm(
+            'Deseja pré-gerar os relatórios pós-prova para o último evento com resultados?\n\nEssa ação cria o cache para acelerar os downloads dos técnicos.'
+        );
+
+        if (!confirmar) return;
+
+        try {
+            setLoadingRelatoriosPosProva(true);
+            const response = await api.post('/relatorios/pos-prova/pregerar');
+            mostrarAlerta(
+                `✅ Pré-geração concluída!\n\n` +
+                `Evento: ${response.data.evento_nome}\n` +
+                `Equipes: ${response.data.total_equipes}\n` +
+                `Relatórios gerados: ${response.data.total_relatorios}`
+            );
+        } catch (error) {
+            console.error('Erro ao pré-gerar relatórios pós-prova:', error);
+            mostrarAlerta('Erro ao pré-gerar relatórios pós-prova. Verifique o backend.');
+        } finally {
+            setLoadingRelatoriosPosProva(false);
+        }
+    };
+
+    const executarAnonimizacao = async () => {
+        try {
+            setLoadingAnonimizacaoApply(true);
+
+            const response = await api.post('/admin-tools/anonimizar-base-dev', { apply: true });
+            setAnonimizacaoResumo(response.data);
+
+            mostrarAlerta(
+                `✅ Base anonimizada com sucesso!\n\n` +
+                `Nadadores: ${response.data.nadadores}\n` +
+                `Usuarios: ${response.data.usuarios}\n\n` +
+                `${response.data.aviso}`
+            );
+        } catch (error) {
+            console.error('Erro ao executar anonimização:', error);
+            mostrarAlerta(error.response?.data?.message || 'Erro ao executar anonimização da base.');
+        } finally {
+            setLoadingAnonimizacaoApply(false);
+        }
+    };
+
+    const handleAplicarAnonimizacao = async () => {
+        const confirmar = window.confirm(
+            'Deseja anonimizar a base de desenvolvimento agora?\n\n' +
+            'A ação vai trocar nomes ativos por nomes fictícios masculinos/femininos, usar "Inativo 1, 2, 3..." para inativos e gerar CPFs válidos fictícios.'
+        );
+
+        if (!confirmar) return;
+
+        await executarAnonimizacao();
     };
 
     return (
@@ -277,6 +336,64 @@ const SuperAdmin = () => {
                                     O PDF antigo do balizamento continua disponivel apenas para usuarios master.
                                     Use o botao "Baixar Balizamento (Padrao LPN)" na tela de Balizamento.
                                 </p>
+                            </div>
+
+                            <div className={style.configSection}>
+                                <h3>📊 Relatórios Pós-Prova (Pré-geração)</h3>
+                                <p>
+                                    Gera em lote os relatórios pós-prova para o último evento com resultados,
+                                    reduzindo carga em horários de pico para os técnicos.
+                                </p>
+                                <Botao
+                                    onClick={handlePreGerarRelatoriosPosProva}
+                                    disabled={loadingRelatoriosPosProva}
+                                    style={{
+                                        backgroundColor: '#6a1b9a',
+                                        marginTop: '1rem'
+                                    }}
+                                >
+                                    {loadingRelatoriosPosProva ? '⏳ Gerando relatórios...' : '🗂️ Gerar Relatórios Pós-Prova'}
+                                </Botao>
+                            </div>
+
+                            <div className={style.configSection}>
+                                <h3>🕵️ Anonimização da Base de Desenvolvimento</h3>
+                                <p>
+                                    Troca nomes de nadadores e usuários ativos por nomes fictícios masculinos/femininos,
+                                    define inativos como "Inativo 1, 2, 3...", gera CPFs válidos fictícios
+                                    e substitui celular e email de usuários.
+                                </p>
+                                <p style={{ color: '#666', fontSize: '0.9em' }}>
+                                    ⚠️ Disponível apenas fora de produção. Os relatórios já gerados em uploads não são alterados automaticamente.
+                                </p>
+
+                                <div className={style.actionRow}>
+                                    <Botao
+                                        onClick={handleAplicarAnonimizacao}
+                                        disabled={loadingAnonimizacaoApply}
+                                        className={style.warningButton}
+                                    >
+                                        {loadingAnonimizacaoApply ? '⏳ Anonimizando...' : '🧪 Anonimizar Base Dev'}
+                                    </Botao>
+                                </div>
+
+                                {anonimizacaoResumo && (
+                                    <div className={style.previewBox}>
+                                        <p><strong>Nadadores:</strong> {anonimizacaoResumo.nadadores}</p>
+                                        <p><strong>Usuários:</strong> {anonimizacaoResumo.usuarios}</p>
+                                        <p><strong>Aviso:</strong> {anonimizacaoResumo.aviso}</p>
+
+                                        <div className={style.previewList}>
+                                            {anonimizacaoResumo.preview.map((item) => (
+                                                <div key={`${item.tipo}-${item.id}`} className={style.previewItem}>
+                                                    <strong>{item.tipo} #{item.id}</strong>
+                                                    <span>{item.antes} → {item.depois}</span>
+                                                    <span>{item.cpfAntes} → {item.cpfDepois}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </section>

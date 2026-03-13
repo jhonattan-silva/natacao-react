@@ -132,6 +132,7 @@ const noticiasRoutes = require('./routes/noticiasRoutes');
 const recordsRoutes = require('./routes/recordsRoutes');
 const relatorioRoutes = require('./routes/relatorioRoutes');
 const contatoRoutes = require('./routes/contatoRoutes');
+const adminToolsRoutes = require('./routes/adminToolsRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/balizamento', balizamentoRoutes);
@@ -153,6 +154,7 @@ app.use('/api/news', noticiasRoutes);
 app.use('/api/records', recordsRoutes);
 app.use('/api/relatorios', relatorioRoutes);
 app.use('/api/contato', contatoRoutes);
+app.use('/api/admin-tools', adminToolsRoutes);
 
 // Garante que o Nginx sirva /uploads/ diretamente para o frontend
 // Substitui a chamada direta a express.static por middleware que adiciona headers CORS
