@@ -6,21 +6,28 @@ const router = express.Router();
 // POST - Criar novo contato (Faca Parte)
 router.post('/faca-parte', async (req, res) => {
     try {
-        const { nome, clube, cidade, telefone, mensagem } = req.body;
+        const { nome, email, clube, cidade, telefone, mensagem } = req.body;
 
         // Validações básicas
-        if (!nome || !clube || !cidade || !telefone || !mensagem) {
+        if (!nome || !email || !clube || !cidade || !telefone || !mensagem) {
             return res.status(400).json({ 
                 erro: 'Todos os campos são obrigatórios!' 
             });
         }
 
+        const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim());
+        if (!emailValido) {
+            return res.status(400).json({
+                erro: 'Email inválido.'
+            });
+        }
+
         const query = `
-            INSERT INTO contatos_faca_parte (nome, clube, cidade, telefone, mensagem)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO contatos_faca_parte (nome, email, clube, cidade, telefone, mensagem)
+            VALUES (?, ?, ?, ?, ?, ?)
         `;
 
-        db.query(query, [nome, clube, cidade, telefone, mensagem], (error, result) => {
+        db.query(query, [nome, email, clube, cidade, telefone, mensagem], (error, result) => {
             if (error) {
                 console.error('Erro ao salvar contato:', error);
                 return res.status(500).json({ erro: 'Erro ao processar solicitação' });

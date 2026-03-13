@@ -10,6 +10,7 @@ const FacaParte = () => {
     const { mostrar: mostrarAlerta, componente: alertaComponente } = useAlerta();
     const [formData, setFormData] = useState({
         nome: '',
+        email: '',
         clube: '',
         cidade: '',
         telefone: '',
@@ -44,6 +45,7 @@ const FacaParte = () => {
             mostrarAlerta('Obrigado! Entraremos em contato em breve!');
             setFormData({
                 nome: '',
+                email: '',
                 clube: '',
                 cidade: '',
                 telefone: '',
@@ -54,7 +56,7 @@ const FacaParte = () => {
             if (error.code === 'ECONNABORTED' || (typeof error.message === 'string' && error.message.toLowerCase().includes('timeout'))) {
                 // Tratamos timeout como sucesso, pois o registro foi salvo no banco
                 mostrarAlerta('Obrigado! Recebemos seu contato. Em breve retornaremos.');
-                setFormData({ nome: '', clube: '', cidade: '', telefone: '', mensagem: '' });
+                setFormData({ nome: '', email: '', clube: '', cidade: '', telefone: '', mensagem: '' });
                 console.warn('Requisição excedeu o tempo limite, mas o backend processou a inserção.');
             } else {
                 mostrarAlerta('Erro ao enviar formulário. Tente novamente.');
@@ -84,6 +86,19 @@ const FacaParte = () => {
                                 onChange={handleChange}
                                 required
                                 placeholder="Seu nome completo"
+                            />
+                        </div>
+
+                        <div className={style.formGroup}>
+                            <label htmlFor="email">Email*</label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                placeholder="seuemail@exemplo.com"
                             />
                         </div>
 
