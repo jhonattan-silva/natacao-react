@@ -223,14 +223,16 @@ const Usuarios = () => {
             label: "Nome",
             placeholder: "Digite o nome",
             valor: nomeUsuario,
-            aoAlterar: setNomeUsuario
+            aoAlterar: setNomeUsuario,
+            maxLength: 255
         },
         {
             obrigatorio: true,
             label: "CPF",
             placeholder: "Somente números",
             valor: cpf,
-            aoAlterar: (valor) => setCpf(aplicarMascaraCPF(valor)) // Aplicando a máscara ao alterar
+            aoAlterar: (valor) => setCpf(aplicarMascaraCPF(valor)), // Aplicando a máscara ao alterar
+            maxLength: 14
         },
         {
             obrigatorio: true,
@@ -238,21 +240,24 @@ const Usuarios = () => {
             placeholder: "Digite uma senha",
             valor: senha,
             aoAlterar: setSenha,
-            tipo: "password" // Add this line to hide password characters
+            tipo: "password", // Add this line to hide password characters
+            maxLength: 255
         },
         {
             obrigatorio: true,
             label: "Celular",
             placeholder: "Celular (com ddd, somente números)",
             valor: celular,
-            aoAlterar: (valor) => setCelular(aplicarMascaraCelular(valor))
+            aoAlterar: (valor) => setCelular(aplicarMascaraCelular(valor)),
+            maxLength: 15
         },
         {
             obrigatorio: true,
             label: "E-mail",
             placeholder: "Digite um e-mail",
             valor: email,
-            aoAlterar: setEmail
+            aoAlterar: setEmail,
+            maxLength: 45
         }
     ];
 
@@ -306,6 +311,11 @@ const Usuarios = () => {
 
         if (!validarCelular(celular.replace(/\D/g, ''))) {
             mostrarAlerta('Celular inválido. Certifique-se de que o número está correto.');
+            return;
+        }
+
+        if (nomeUsuario.length > 255 || email.length > 45 || senha.length > 255) {
+            mostrarAlerta('Nome, e-mail ou senha excedem o limite aceito pelo banco.');
             return;
         }
 

@@ -234,7 +234,8 @@ const Nadadores = () => {
                 mostrarAlerta('Sessão expirada. Por favor, faça login novamente.');
                 navigate('/login');
             } else {
-                mostrarAlerta('Erro ao transferir nadador: ' + error.message);
+                const apiMessage = error.response?.data?.message;
+                mostrarAlerta(apiMessage || ('Erro ao transferir nadador: ' + error.message));
             }
         }
     };
@@ -299,13 +300,15 @@ const Nadadores = () => {
             label: "Nome",
             placeholder: "Digite o nome",
             valor: nomeNadador,
-            aoAlterar: setNomeNadador
+            aoAlterar: setNomeNadador,
+            maxLength: 120
         },
         {
             label: "Cidade",
             placeholder: "Digite a cidade",
             valor: cidade,
-            aoAlterar: setCidade
+            aoAlterar: setCidade,
+            maxLength: 200
         },
         {
             obrigatorio: true,
@@ -347,7 +350,8 @@ const Nadadores = () => {
             label: "Celular",
             placeholder: "Celular (com ddd, somente números)",
             valor: celular,
-            aoAlterar: (valor) => setCelular(aplicarMascaraCelular(valor))
+            aoAlterar: (valor) => setCelular(aplicarMascaraCelular(valor)),
+            maxLength: 15
         }
     ];
 
@@ -408,6 +412,11 @@ const Nadadores = () => {
 
         if (!validarCelular(celular)) {
             mostrarAlerta('Celular inválido. Certifique-se de que o número está correto.');
+            return;
+        }
+
+        if (nomeNadador.length > 120 || cidade.length > 200) {
+            mostrarAlerta('Nome ou cidade excedem o limite aceito pelo banco.');
             return;
         }
 

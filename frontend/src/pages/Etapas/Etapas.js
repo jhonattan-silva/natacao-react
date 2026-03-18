@@ -239,7 +239,8 @@ const Etapas = () => {
             label: "Nome do Evento",
             placeholder: "Digite o nome do evento",
             valor: nomeEtapa,
-            aoAlterar: setNomeEtapa
+            aoAlterar: setNomeEtapa,
+            maxLength: 45
         },
         {
             obrigatorio: true,
@@ -288,21 +289,24 @@ const Etapas = () => {
             label: "Cidade",
             placeholder: "Digite a Cidade",
             valor: cidadeEtapa,
-            aoAlterar: setCidadeEtapa
+            aoAlterar: setCidadeEtapa,
+            maxLength: 45
         },
         {
             obrigatorio: false,
             label: "Sede",
             placeholder: "Digite a sede do evento",
             valor: sedeEtapa,
-            aoAlterar: setSedeEtapa
+            aoAlterar: setSedeEtapa,
+            maxLength: 45
         },
         {
             obrigatorio: false,
             label: "Endereço",
             placeholder: "Digite o endereço",
             valor: enderecoEtapa,
-            aoAlterar: setEnderecoEtapa
+            aoAlterar: setEnderecoEtapa,
+            maxLength: 255
         }
     ];
 
@@ -590,6 +594,11 @@ const Etapas = () => {
         // Validação da quantidade de raias
         if (!raias || isNaN(raias) || parseInt(raias, 10) <= 0) {
             mostrarAlerta('Por favor, selecione a quantidade de raias.');
+            return;
+        }
+
+        if (nomeEtapa.length > 45 || cidadeEtapa.length > 45 || sedeEtapa.length > 45 || enderecoEtapa.length > 255) {
+            mostrarAlerta('Um ou mais campos excedem o limite aceito pelo banco.');
             return;
         }
 

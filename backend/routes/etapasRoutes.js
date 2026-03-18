@@ -2,6 +2,35 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
+const LIMITES_EVENTO = {
+    nome: 45,
+    cidade: 45,
+    sede: 45,
+    endereco: 255,
+};
+
+const validarTamanhoCampoEvento = (valor, limite) => String(valor || '').length <= limite;
+
+const validarCamposEvento = ({ nome, cidade, sede, endereco }) => {
+    if (!validarTamanhoCampoEvento(nome, LIMITES_EVENTO.nome)) {
+        return `O campo nome aceita no máximo ${LIMITES_EVENTO.nome} caracteres.`;
+    }
+
+    if (!validarTamanhoCampoEvento(cidade, LIMITES_EVENTO.cidade)) {
+        return `O campo cidade aceita no máximo ${LIMITES_EVENTO.cidade} caracteres.`;
+    }
+
+    if (!validarTamanhoCampoEvento(sede, LIMITES_EVENTO.sede)) {
+        return `O campo sede aceita no máximo ${LIMITES_EVENTO.sede} caracteres.`;
+    }
+
+    if (!validarTamanhoCampoEvento(endereco, LIMITES_EVENTO.endereco)) {
+        return `O campo endereco aceita no máximo ${LIMITES_EVENTO.endereco} caracteres.`;
+    }
+
+    return null;
+};
+
 // Rota para BUSCAR TODOS EVENTOS 
 router.get('/listarEtapas', async (req, res) => {
     try {
@@ -126,6 +155,11 @@ router.post('/cadastrarEtapas', async (req, res) => {
     const { nome, data, cidade, sede, endereco, quantidade_raias, torneios_id, provas } = req.body;
 
     try {
+        const erroValidacao = validarCamposEvento({ nome, cidade, sede, endereco });
+        if (erroValidacao) {
+            return res.status(400).json({ error: erroValidacao });
+        }
+
         // Cria o evento na tabela etapas
         const [result] = await db.query(
             'INSERT INTO eventos (nome, data, cidade, sede, endereco, quantidade_raias, torneios_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -177,6 +211,11 @@ router.put('/atualizarEtapas/:id', async (req, res) => {
     const connection = await db.getConnection(); // Obtém conexão para transação
 
     try {
+        const erroValidacao = validarCamposEvento({ nome, cidade, sede, endereco });
+        if (erroValidacao) {
+            return res.status(400).json({ error: erroValidacao });
+        }
+
         // Verifica se existem inscrições associadas à etapa
         const [inscricoes] = await connection.query(
             'SELECT COUNT(*) AS total FROM inscricoes WHERE eventos_id = ?',

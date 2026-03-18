@@ -5,6 +5,40 @@ const db = require('../config/db');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { validarCPF, somenteNumeros, validarCelular } = require('../servicos/functions');
 
+const LIMITES_USUARIO = {
+  nome: 255,
+  cpf: 11,
+  celular: 20,
+  email: 45,
+  senha: 255,
+};
+
+const validarTamanhoCampoUsuario = (valor, limite) => String(valor || '').length <= limite;
+
+const validarCamposUsuario = ({ nome, cpf, celular, email, senha }) => {
+  if (!validarTamanhoCampoUsuario(nome, LIMITES_USUARIO.nome)) {
+    return `O campo nome aceita no máximo ${LIMITES_USUARIO.nome} caracteres.`;
+  }
+
+  if (!validarTamanhoCampoUsuario(cpf, LIMITES_USUARIO.cpf)) {
+    return `O campo cpf aceita no máximo ${LIMITES_USUARIO.cpf} caracteres numericos.`;
+  }
+
+  if (!validarTamanhoCampoUsuario(celular, LIMITES_USUARIO.celular)) {
+    return `O campo celular aceita no máximo ${LIMITES_USUARIO.celular} caracteres.`;
+  }
+
+  if (!validarTamanhoCampoUsuario(email, LIMITES_USUARIO.email)) {
+    return `O campo email aceita no máximo ${LIMITES_USUARIO.email} caracteres.`;
+  }
+
+  if (senha !== undefined && senha !== null && !validarTamanhoCampoUsuario(senha, LIMITES_USUARIO.senha)) {
+    return `O campo senha aceita no máximo ${LIMITES_USUARIO.senha} caracteres.`;
+  }
+
+  return null;
+};
+
 router.get('/listarUsuarios', authMiddleware, async (req, res) => {
   try {
     // Extrai perfis do usuário autenticado (vem do JWT via authMiddleware)
@@ -51,6 +85,17 @@ router.post('/cadastrarUsuario', async (req, res) => {
     try {
         connection = await db.getConnection(); // Obtém a conexão do pool
         await connection.beginTransaction(); // Inicia a transação
+
+        const erroValidacao = validarCamposUsuario({
+          nome,
+          cpf: cpfNumeros,
+          celular: celularNumeros,
+          email,
+          senha,
+        });
+        if (erroValidacao) {
+          return res.status(400).json({ message: erroValidacao });
+        }
 
         // Validações
         if (!validarCPF(cpfNumeros)) {
@@ -119,6 +164,17 @@ router.put('/atualizarUsuario/:id', async (req, res) => {
 
   try {
     await connection.beginTransaction(); // Inicia a transação
+
+    const erroValidacao = validarCamposUsuario({
+      nome,
+      cpf: cpfNumeros,
+      celular: celularNumeros,
+      email,
+      senha,
+    });
+    if (erroValidacao) {
+      return res.status(400).json({ message: erroValidacao });
+    }
 
     // Atualiza os dados do usuário
     let query = 'UPDATE usuarios SET nome = ?, cpf = ?, celular = ?, email = ?';

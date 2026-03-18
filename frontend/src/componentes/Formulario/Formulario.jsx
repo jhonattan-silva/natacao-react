@@ -19,6 +19,7 @@ import style from './Formulario.module.css';
  *   @param {boolean} [inputs[].obrigatorio] - Se o campo é obrigatório.
  *   @param {string} [inputs[].tipo] - Tipo do input (ex: text, email).
  *   @param {function} [inputs[].onBlur] - Função chamada ao perder o foco.
+ *   @param {number} [inputs[].maxLength] - Limite máximo de caracteres aceito pelo campo.
  * @param {function} props.aoSalvar - Função chamada ao submeter o formulário.
  *
  * @returns {JSX.Element} Um formulário renderizado dinamicamente.
@@ -38,6 +39,7 @@ const Formulario = ({ inputs, aoSalvar }) => {
                             valor={input.valor}
                             aoAlterar={input.aoAlterar}
                             onBlur={input.onBlur}
+                            maxLength={input.maxLength}
                         />
                     </div>
                 ))}

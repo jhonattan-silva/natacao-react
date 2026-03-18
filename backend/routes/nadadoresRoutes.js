@@ -4,6 +4,35 @@ const db = require('../config/db');
 const { authMiddleware } = require('../middleware/authMiddleware'); // Autenticação
 const { validarData, validarDataNaoFutura, validarCPF, somenteNumeros, validarCelular } = require('../servicos/functions');
 
+const LIMITES_NADADOR = {
+    nome: 120,
+    cpf: 11,
+    celular: 20,
+    cidade: 200,
+};
+
+const validarTamanhoCampo = (valor, limite) => String(valor || '').length <= limite;
+
+const validarCamposNadador = ({ nome, cpf, telefone, cidade }) => {
+    if (!validarTamanhoCampo(nome, LIMITES_NADADOR.nome)) {
+        return `O campo nome aceita no máximo ${LIMITES_NADADOR.nome} caracteres.`;
+    }
+
+    if (!validarTamanhoCampo(cpf, LIMITES_NADADOR.cpf)) {
+        return `O campo cpf aceita no máximo ${LIMITES_NADADOR.cpf} caracteres numericos.`;
+    }
+
+    if (!validarTamanhoCampo(telefone, LIMITES_NADADOR.celular)) {
+        return `O campo celular aceita no máximo ${LIMITES_NADADOR.celular} caracteres.`;
+    }
+
+    if (!validarTamanhoCampo(cidade, LIMITES_NADADOR.cidade)) {
+        return `O campo cidade aceita no máximo ${LIMITES_NADADOR.cidade} caracteres.`;
+    }
+
+    return null;
+};
+
 router.get('/listarNadadores', authMiddleware, async (req, res) => {
     try {
         const equipeId = req.query.equipeId; // Pega equipeId da query, não do usuário
@@ -46,6 +75,11 @@ router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
     const telefoneNumeros = somenteNumeros(telefone);
 
     try {
+        const erroValidacao = validarCamposNadador({ nome, cpf: cpfNumeros, telefone: telefoneNumeros, cidade });
+        if (erroValidacao) {
+            return res.status(400).json({ message: erroValidacao });
+        }
+
         // Validações
         if (!validarCPF(cpfNumeros)) {
             return res.status(400).json({ message: 'CPF inválido.' });
@@ -105,6 +139,11 @@ router.put('/atualizarNadador/:id', authMiddleware, async (req, res) => {
     const telefoneNumeros = telefone.replace(/\D/g, '');
 
     try {
+        const erroValidacao = validarCamposNadador({ nome, cpf: cpfNumeros, telefone: telefoneNumeros, cidade });
+        if (erroValidacao) {
+            return res.status(400).json({ message: erroValidacao });
+        }
+
         // Verifica se o CPF já está cadastrado em outro nadador
         const [cpfExistente] = await db.query(
             'SELECT id FROM nadadores WHERE cpf = ? AND id <> ?',
@@ -265,7 +304,7 @@ router.post('/transferirNadador', authMiddleware, async (req, res) => {
         );
 
         await connection.query(
-            'UPDATE nadadores SET equipes_id = ? WHERE id = ?',
+            'UPDATE nadadores SET equipes_id = ?, ativo = 1 WHERE id = ?',
             [equipeDestinoId, nadadorId]
         );
 

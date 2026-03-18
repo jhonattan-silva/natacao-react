@@ -11,9 +11,9 @@ import style from './InputTexto.module.css';
  * @param {function} props.aoAlterar - Função chamada ao alterar o valor (onChange).
  * @param {boolean} props.obrigatorio - Define se o campo é obrigatório.
  * @param {string} props.placeholder - Texto exibido como dica no campo.
- * @param {string} props.label - Rótulo exibido acima do campo.
  * @param {function} [props.onBlur] - Função chamada ao perder o foco (onBlur).
  * @param {boolean} [props.disabled] - Define se o campo está desabilitado.
+ * @param {number} [props.maxLength] - Limite máximo de caracteres aceito pelo input.
  * @returns {JSX.Element} Componente de input de texto estilizado.
  */
 const InputTexto = (props) => {
@@ -34,6 +34,7 @@ const InputTexto = (props) => {
                 placeholder={props.placeholder}
                 disabled={props.disabled} // adiciona disabled se passado via props
                 readOnly={props.disabled} // reforça que não pode ser editado
+                maxLength={props.maxLength}
             />
         </div>
     );
