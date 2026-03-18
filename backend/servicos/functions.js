@@ -15,6 +15,8 @@ function validarDataNaoFutura(data) {
  * @returns {boolean} - Retorna `true` se o CPF for válido.
  */
 function validarCPF(cpf) {
+    if (cpf === undefined || cpf === null) return false;
+    cpf = String(cpf);
     cpf = cpf.replace(/\D/g, ''); // Remove caracteres não numéricos
     if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
 
@@ -37,7 +39,8 @@ function validarCPF(cpf) {
  * @returns {string} - String contendo apenas números.
  */
 function somenteNumeros(str) {
-    return str.replace(/\D/g, '');
+    if (str === undefined || str === null) return '';
+    return String(str).replace(/\D/g, '');
 }
 
 /**
@@ -46,6 +49,7 @@ function somenteNumeros(str) {
  * @returns {boolean} - Retorna `true` se a data for válida.
  */
 function validarData(data) {
+    if (!data || typeof data !== 'string' || !data.includes('-')) return false;
     const [ano, mes, dia] = data.split('-').map(Number);
     const dataVerificada = new Date(ano, mes - 1, dia); // Meses começam em 0 no JavaScript
     return (
@@ -61,7 +65,8 @@ function validarData(data) {
  * @returns {boolean} - Retorna `true` se o número for válido.
  */
 function validarCelular(celular) {
-    return celular.length === 10 || celular.length === 11; // Aceita números com 10 ou 11 dígitos
+    const numero = String(celular || '');
+    return numero.length === 10 || numero.length === 11; // Aceita números com 10 ou 11 dígitos
 }
 
 module.exports = {

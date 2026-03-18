@@ -26,6 +26,8 @@ const Nadadores = () => {
     const [equipeNadador, setEquipeNadador] = useState(null); // Guarda a equipe do Nadador sendo editado
     const [cpfExistente, setCpfExistente] = useState(false); // Controla se o CPF já existe
     const [nadadorExistenteInfo, setNadadorExistenteInfo] = useState(null); // Dados do nadador existente
+    const [modoTransferenciaEdicao, setModoTransferenciaEdicao] = useState(false);
+    const [nadadorTransferenciaId, setNadadorTransferenciaId] = useState(null);
     /* INPUTS */
     const [nomeNadador, setNomeNadador] = useState(''); // Para input de nome
     const [cpf, setCpf] = useState('');
@@ -205,16 +207,27 @@ const Nadadores = () => {
         }
     };
 
-    const transferirNadador = async () => {
+    const transferirNadador = async (nadadorDados = null) => {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
                 throw new Error('Token não encontrado. Por favor, faça login novamente.');
             }
 
+            const payload = modoTransferenciaEdicao
+                ? {
+                    nadadorId: nadadorTransferenciaId,
+                    equipeDestinoId: equipes,
+                    nadadorDados
+                }
+                : {
+                    cpf,
+                    equipeDestinoId: equipes
+                };
+
             const response = await api.post(
                 apiTransferirNadador,
-                { cpf, equipeDestinoId: equipes },
+                payload,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
@@ -223,6 +236,8 @@ const Nadadores = () => {
             setFormVisivel(false);
             setCpfExistente(false);
             setNadadorExistenteInfo(null);
+            setModoTransferenciaEdicao(false);
+            setNadadorTransferenciaId(null);
 
             if (response?.data?.bloqueiaPontuacao) {
                 mostrarAlerta('Nadador transferido. Ele não pontuará mais nesta temporada.');
@@ -240,6 +255,26 @@ const Nadadores = () => {
         }
     };
 
+    const prepararTransferenciaComEdicao = (dadosNadador = nadadorExistenteInfo) => {
+        if (!dadosNadador) {
+            mostrarAlerta('Não foi possível carregar os dados do nadador para transferência.');
+            return;
+        }
+
+        setModoTransferenciaEdicao(true);
+        setNadadorTransferenciaId(dadosNadador.nadadorId);
+
+        setNomeNadador(dadosNadador.nome || '');
+        setCpf(aplicarMascaraCPF(dadosNadador.cpf || ''));
+        setDataNasc((dadosNadador.dataNasc || '').split('-').reverse().join('/'));
+        setCelular(aplicarMascaraCelular(dadosNadador.celular || ''));
+        setSexo(dadosNadador.sexo || '');
+        setCidade(dadosNadador.cidade || '');
+
+        setCpfExistente(false);
+        mostrarAlerta('Dados carregados. Você pode editar e salvar para transferir e atualizar o cadastro.');
+    };
+
     const inputs = [
         {
             id: "cpfInput",
@@ -251,8 +286,14 @@ const Nadadores = () => {
                 setCpf(aplicarMascaraCPF(valor));
                 setCpfExistente(false); // Limpa o estado ao alterar
                 setNadadorExistenteInfo(null);
+                setModoTransferenciaEdicao(false);
+                setNadadorTransferenciaId(null);
             },
             onBlur: async () => {
+                if (modoTransferenciaEdicao) {
+                    return;
+                }
+
                 const cpfNumeros = cpf.replace(/\D/g, '');
                 
                 if (!validarCPF(cpf)) {
@@ -276,11 +317,15 @@ const Nadadores = () => {
                     });
             
                     if (response?.data?.exists) {
-                        const { nadadorId, equipeId, nadador, equipe } = response.data;
-                        setNadadorExistenteInfo({ nadadorId, equipeId, nadador, equipe });
+                        const { nadadorId, equipeId, nadador, equipe, nome, cpf, dataNasc, celular, sexo, cidade } = response.data;
+                        const dadosNadadorExistente = { nadadorId, equipeId, nadador, equipe, nome, cpf, dataNasc, celular, sexo, cidade };
+                        setNadadorExistenteInfo(dadosNadadorExistente);
                         setCpfExistente(true);
-                        mostrarAlerta(
-                            `CPF já cadastrado!\n\nNadador: ${nadador}\nEquipe: ${equipe}\n\nSE CONTINUAR O CADASTRO, O NADADOR SERÁ TRANSFERIDO.`
+                        confirmarAlerta(
+                            `CPF já cadastrado!\n\nNadador: ${nadador}\nEquipe: ${equipe}\n\nDeseja carregar os dados para transferir e atualizar o cadastro?`,
+                            async () => {
+                                prepararTransferenciaComEdicao(dadosNadadorExistente);
+                            }
                         );
                     } else {
                         setNadadorExistenteInfo(null);
@@ -364,6 +409,10 @@ const Nadadores = () => {
         setSexo('');
         setCidade('');
         setFormVisivel(false);
+        setModoTransferenciaEdicao(false);
+        setNadadorTransferenciaId(null);
+        setCpfExistente(false);
+        setNadadorExistenteInfo(null);
     };
 
     // Função para limpar o formulário e esconder
@@ -375,21 +424,47 @@ const Nadadores = () => {
     const aoSalvar = async (evento) => {
         evento.preventDefault();
 
-        if (!editando && cpfExistente) {
-            if (!equipes) {
-                mostrarAlerta('Por favor, selecione uma equipe.');
+        if (!editando && cpfExistente && !modoTransferenciaEdicao) {
+            mostrarAlerta('CPF já cadastrado. Confirme a transferência ao sair do campo CPF para carregar os dados.');
+            return;
+        }
+
+        if (modoTransferenciaEdicao) {
+            if (!nomeNadador || !cpf || !dataNasc || !celular || !sexo) {
+                mostrarAlerta('Por favor, preencha todos os campos obrigatórios.');
                 return;
             }
 
-            const nadadorNome = nadadorExistenteInfo?.nadador || 'Nadador';
-            const equipeOrigem = nadadorExistenteInfo?.equipe || 'Sem equipe';
+            if (!validarCPF(cpf)) {
+                mostrarAlerta('CPF inválido. Por favor, insira um CPF válido.');
+                return;
+            }
 
-            confirmarAlerta(
-                `CPF já cadastrado!\n\nNadador: ${nadadorNome}\nEquipe atual: ${equipeOrigem}\n\nDeseja transferir este nadador para sua equipe?`,
-                async () => {
-                    await transferirNadador();
-                }
-            );
+            if (!validarCelular(celular)) {
+                mostrarAlerta('Celular inválido. Certifique-se de que o número está correto.');
+                return;
+            }
+
+            if (!validarDataNascNaoFutura(dataNasc)) {
+                mostrarAlerta('Data de nascimento inválida ou no futuro.');
+                return;
+            }
+
+            if (nomeNadador.length > 120 || cidade.length > 200) {
+                mostrarAlerta('Nome ou cidade excedem o limite aceito pelo banco.');
+                return;
+            }
+
+            const nadadorDados = {
+                nome: nomeNadador,
+                cpf,
+                data_nasc: dataNasc.split('/').reverse().join('-'),
+                telefone: celular,
+                sexo,
+                cidade
+            };
+
+            await transferirNadador(nadadorDados);
             return;
         }
 
@@ -465,6 +540,8 @@ const Nadadores = () => {
         }
     };
 
+    const textoBotaoSalvar = modoTransferenciaEdicao ? 'Transferir e Salvar' : 'Salvar';
+
     return (
         <>
             <CabecalhoAdmin />
@@ -525,6 +602,11 @@ const Nadadores = () => {
                 )}
                 {formVisivel && (
                     <div className={style.cadastroContainer}>
+                        {modoTransferenciaEdicao && (
+                            <div className={style.modoTransferenciaAviso}>
+                                Modo transferencia/edicao ativo: voce esta editando um nadador existente e, ao salvar, os dados serao atualizados junto com a transferencia.
+                            </div>
+                        )}
                         <Formulario inputs={inputs} aoSalvar={aoSalvar} />
                         <RadioButtons
                             classNameRadioDiv={style.radioSexoDiv}
@@ -547,7 +629,7 @@ const Nadadores = () => {
                                 valorSelecionado={equipeNadador} // Passa o valor selecionado
                             />
                         )}
-                        <Botao onClick={aoSalvar}>Salvar</Botao>
+                        <Botao onClick={aoSalvar}>{textoBotaoSalvar}</Botao>
                         <Botao onClick={handleVoltar}>Voltar</Botao>
                     </div>
                 )}

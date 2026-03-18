@@ -224,3 +224,16 @@
 .cadastroContainer :global(.formulario) {
     box-shadow: none;
 }
+
+.modoTransferenciaAviso {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 0 16px 0;
+    padding: 12px 14px;
+    border: 1px solid #f0ad4e;
+    border-radius: 6px;
+    background-color: #fff6e5;
+    color: #7a4e00;
+    font-size: 0.95rem;
+    font-weight: 600;
+}

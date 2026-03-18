@@ -71,7 +71,7 @@ router.get('/listarEquipes', authMiddleware, async (req, res) => {
 router.post('/cadastrarNadador', authMiddleware, async (req, res) => {
     const { nome, cpf, data_nasc, telefone, sexo, equipeId, cidade } = req.body;
 
-    const cpfNumeros = somenteNumeros(cpf);
+    const cpfNumeros = cpf ? somenteNumeros(cpf) : null;
     const telefoneNumeros = somenteNumeros(telefone);
 
     try {
@@ -211,7 +211,17 @@ router.get('/verificarCpf', authMiddleware, async (req, res) => {
         
         //Busca também o nome do nadador e da equipe
         const [rows] = await db.query(`
-            SELECT n.id, n.nome AS nadador_nome, n.equipes_id, e.nome AS equipe_nome
+            SELECT
+                n.id,
+                n.nome AS nadador_nome,
+                n.equipes_id,
+                e.nome AS equipe_nome,
+                n.nome,
+                n.cpf,
+                DATE_FORMAT(n.data_nasc, '%Y-%m-%d') AS data_nasc,
+                n.celular,
+                n.sexo,
+                n.cidade
             FROM nadadores n
             LEFT JOIN equipes e ON n.equipes_id = e.id
             WHERE n.cpf = ?
@@ -224,7 +234,13 @@ router.get('/verificarCpf', authMiddleware, async (req, res) => {
                 nadadorId: rows[0].id,
                 equipeId: rows[0].equipes_id,
                 nadador: rows[0].nadador_nome,
-                equipe: rows[0].equipe_nome || 'Sem equipe'
+                equipe: rows[0].equipe_nome || 'Sem equipe',
+                nome: rows[0].nome,
+                cpf: rows[0].cpf,
+                dataNasc: rows[0].data_nasc,
+                celular: rows[0].celular,
+                sexo: rows[0].sexo,
+                cidade: rows[0].cidade
             });
         } else {
             res.json({ exists: false });
@@ -237,28 +253,37 @@ router.get('/verificarCpf', authMiddleware, async (req, res) => {
 
 // Rota para transferir nadador entre equipes
 router.post('/transferirNadador', authMiddleware, async (req, res) => {
-    const { cpf, equipeDestinoId } = req.body;
+    const { cpf, equipeDestinoId, nadadorId: nadadorIdRequest, nadadorDados } = req.body;
     const usuarioId = req.user?.id;
 
-    if (!cpf || !equipeDestinoId) {
-        return res.status(400).json({ message: 'CPF e equipe destino são obrigatórios.' });
+    if ((!cpf && !nadadorIdRequest) || !equipeDestinoId) {
+        return res.status(400).json({ message: 'CPF ou nadadorId e equipe destino são obrigatórios.' });
     }
 
     if (!usuarioId) {
         return res.status(401).json({ message: 'Usuário não autenticado.' });
     }
 
-    const cpfNumeros = somenteNumeros(cpf);
+    const cpfNumeros = cpf ? somenteNumeros(cpf) : null;
+    const possuiAtualizacao = !!(nadadorDados && typeof nadadorDados === 'object');
     let connection;
 
     try {
         connection = await db.getConnection();
         await connection.beginTransaction();
 
-        const [nadadorRows] = await connection.query(
-            'SELECT id, equipes_id FROM nadadores WHERE cpf = ? LIMIT 1',
-            [cpfNumeros]
-        );
+        let nadadorRows;
+        if (nadadorIdRequest) {
+            [nadadorRows] = await connection.query(
+                'SELECT id, equipes_id, nome, cpf, data_nasc, celular, sexo, cidade FROM nadadores WHERE id = ? LIMIT 1',
+                [nadadorIdRequest]
+            );
+        } else {
+            [nadadorRows] = await connection.query(
+                'SELECT id, equipes_id, nome, cpf, data_nasc, celular, sexo, cidade FROM nadadores WHERE cpf = ? LIMIT 1',
+                [cpfNumeros]
+            );
+        }
 
         if (nadadorRows.length === 0) {
             await connection.rollback();
@@ -303,10 +328,85 @@ router.post('/transferirNadador', authMiddleware, async (req, res) => {
             [nadadorId, equipeOrigemId, equipeDestinoId, torneioId, bloqueiaPontuacao, usuarioId]
         );
 
-        await connection.query(
-            'UPDATE nadadores SET equipes_id = ?, ativo = 1 WHERE id = ?',
-            [equipeDestinoId, nadadorId]
-        );
+        if (possuiAtualizacao) {
+            const nomeAtualizado = nadadorDados.nome;
+            const cpfAtualizado = somenteNumeros(nadadorDados.cpf);
+            const dataNascAtualizada = nadadorDados.data_nasc;
+            const telefoneAtualizado = somenteNumeros(nadadorDados.telefone);
+            const sexoAtualizado = nadadorDados.sexo;
+            const cidadeAtualizada = nadadorDados.cidade;
+
+            const erroValidacao = validarCamposNadador({
+                nome: nomeAtualizado,
+                cpf: cpfAtualizado,
+                telefone: telefoneAtualizado,
+                cidade: cidadeAtualizada
+            });
+            if (erroValidacao) {
+                await connection.rollback();
+                return res.status(400).json({ message: erroValidacao });
+            }
+
+            if (!validarCPF(cpfAtualizado)) {
+                await connection.rollback();
+                return res.status(400).json({ message: 'CPF inválido.' });
+            }
+
+            if (!validarData(dataNascAtualizada) || !validarDataNaoFutura(dataNascAtualizada)) {
+                await connection.rollback();
+                return res.status(400).json({ message: 'Data de nascimento inválida ou no futuro.' });
+            }
+
+            if (!validarCelular(telefoneAtualizado)) {
+                await connection.rollback();
+                return res.status(400).json({ message: 'Telefone inválido. Certifique-se de que o número está correto.' });
+            }
+
+            const [cpfExistente] = await connection.query(
+                'SELECT id FROM nadadores WHERE cpf = ? AND id <> ?',
+                [cpfAtualizado, nadadorId]
+            );
+            if (cpfExistente.length > 0) {
+                await connection.rollback();
+                return res.status(409).json({ message: 'CPF já cadastrado.' });
+            }
+
+            const anoAtual = new Date().getFullYear();
+            const anoNascimento = new Date(dataNascAtualizada).getFullYear();
+            const idade = anoAtual - anoNascimento;
+
+            const [categoria] = await connection.query(
+                `SELECT id FROM categorias WHERE sexo = ? AND idade_min <= ? AND (idade_max >= ? OR idade_max IS NULL) LIMIT 1`,
+                [sexoAtualizado, idade, idade]
+            );
+
+            if (!categoria.length) {
+                await connection.rollback();
+                return res.status(400).json({ message: 'Nenhuma categoria encontrada para este nadador.' });
+            }
+
+            await connection.query(
+                `UPDATE nadadores
+                 SET nome = ?, cpf = ?, data_nasc = ?, celular = ?, sexo = ?, cidade = ?, categorias_id = ?, equipes_id = ?, ativo = 1
+                 WHERE id = ?`,
+                [
+                    nomeAtualizado,
+                    cpfAtualizado,
+                    dataNascAtualizada,
+                    telefoneAtualizado,
+                    sexoAtualizado,
+                    cidadeAtualizada,
+                    categoria[0].id,
+                    equipeDestinoId,
+                    nadadorId
+                ]
+            );
+        } else {
+            await connection.query(
+                'UPDATE nadadores SET equipes_id = ?, ativo = 1 WHERE id = ?',
+                [equipeDestinoId, nadadorId]
+            );
+        }
 
         await connection.commit();
         res.json({ success: true, bloqueiaPontuacao: bloqueiaPontuacao === 1 });

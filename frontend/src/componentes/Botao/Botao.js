@@ -2,9 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import styles from './Botao.module.css';
 
-const Botao = ({ onClick, children, className, ...rest }) => {
+const Botao = ({ onClick, children, className, classBtn, ...rest }) => {
+  const classes = `${styles.botao} ${className || classBtn || ''}`;
+
   return (
-    <button className={`${styles.botao} ${className || ''}`} onClick={onClick} {...rest}>
+    <button className={classes} onClick={onClick} {...rest}>
       {children}
     </button>
   );
@@ -13,7 +15,8 @@ const Botao = ({ onClick, children, className, ...rest }) => {
 Botao.propTypes = {
   onClick: PropTypes.func.isRequired,
   children: PropTypes.node.isRequired,
-  className: PropTypes.string
+  className: PropTypes.string,
+  classBtn: PropTypes.string
 };
 
 export default Botao;

@@ -219,6 +219,16 @@ function prepararAnonimizacao(nadadores, usuarios) {
     });
 
     const usuariosAnonimizados = usuarios.map((usuario, indice) => {
+        if (Number(usuario.protegido) === 1) {
+            return {
+                id: usuario.id,
+                nome: usuario.nome,
+                cpf: usuario.cpf,
+                celular: usuario.celular,
+                email: usuario.email
+            };
+        }
+
         const estaAtivo = Number(usuario.ativo) === 1;
 
         return {
@@ -240,7 +250,22 @@ async function carregarDados(connection) {
         'SELECT id, nome, cpf, celular, sexo, ativo FROM nadadores ORDER BY id ASC'
     );
     const [usuarios] = await connection.query(
-        'SELECT id, nome, cpf, celular, email, ativo FROM usuarios ORDER BY id ASC'
+        `SELECT
+            u.id,
+            u.nome,
+            u.cpf,
+            u.celular,
+            u.email,
+            u.ativo,
+            EXISTS (
+                SELECT 1
+                FROM usuarios_perfis up
+                INNER JOIN perfis p ON p.id = up.perfis_id
+                WHERE up.usuarios_id = u.id
+                  AND p.nome IN ('master', 'admin')
+            ) AS protegido
+         FROM usuarios u
+         ORDER BY u.id ASC`
     );
 
     return { nadadores, usuarios };
