@@ -3,6 +3,7 @@ import api from '../../servicos/api';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import Botao from '../../componentes/Botao/Botao';
 import useAlerta from '../../hooks/useAlerta';
+import GerenciadorIndices from '../../componentes/GerenciadorIndices/GerenciadorIndices';
 import style from './SuperAdmin.module.css';
 
 const SuperAdmin = () => {
@@ -397,6 +398,11 @@ const SuperAdmin = () => {
                             </div>
                         </div>
                     </section>
+                </div>
+
+                {/* Seção de Gerenciador de Índices de Tempos */}
+                <div className={style.fullWidthSection}>
+                    <GerenciadorIndices />
                 </div>
             </div>
         </>

@@ -53,13 +53,23 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
                 p.eh_prova_festival,
                 p.sexo AS sexo_prova,
                 c.pontuacao_individual,
-                c.pontuacao_equipe
+                c.pontuacao_equipe,
+                i.tempo_indice,
+                CASE
+                  WHEN c.status = 'OK'
+                     AND i.tempo_indice IS NOT NULL
+                     AND c.tempo REGEXP '^[0-9]{2}:[0-9]{2}:[0-9]{2}$'
+                     AND TIME(c.tempo) > i.tempo_indice
+                  THEN 1
+                  ELSE 0
+                END AS nao_pontua_por_indice
             FROM classificacoes c
             JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
             JOIN provas p ON ep.provas_id = p.id
             LEFT JOIN nadadores n ON c.nadadores_id = n.id
             LEFT JOIN equipes e ON c.equipes_id = e.id
             LEFT JOIN categorias cat ON n.categorias_id = cat.id
+              LEFT JOIN IndicesTempos i ON i.provas_id = p.id AND i.ativo = 1
             WHERE ep.eventos_id = ? 
             AND (
                 (p.eh_prova_categoria = 1 AND c.tipo = 'CATEGORIA') OR
@@ -95,6 +105,8 @@ router.get('/resultadosPorCategoria/:eventoId', async (req, res) => {
               tempo: row.tempo,
               pontuacao_individual: row.pontuacao_individual,
               pontuacao_equipe: row.pontuacao_equipe,
+              tempo_indice: row.tempo_indice,
+              nao_pontua_por_indice: Number(row.nao_pontua_por_indice) === 1,
               eh_prova_categoria: row.eh_prova_categoria === 1,
               eh_prova_ouro: row.eh_prova_ouro === 1,
               eh_prova_festival: row.eh_prova_festival === 1
@@ -140,6 +152,15 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
               c.pontuacao_equipe,
                 c_cat.pontuacao_individual AS c_cat_pontuacao_individual,
                 c_cat.pontuacao_equipe AS c_cat_pontuacao_equipe,
+              i.tempo_indice,
+              CASE
+                WHEN c.status = 'OK'
+                     AND i.tempo_indice IS NOT NULL
+                     AND c.tempo REGEXP '^[0-9]{2}:[0-9]{2}:[0-9]{2}$'
+                     AND TIME(c.tempo) > i.tempo_indice
+                THEN 1
+                ELSE 0
+              END AS nao_pontua_por_indice,
               ep.ordem  
           FROM classificacoes c
           JOIN eventos_provas ep ON c.eventos_provas_id = ep.id
@@ -147,6 +168,7 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
           LEFT JOIN nadadores n ON c.nadadores_id = n.id
           LEFT JOIN equipes e ON c.equipes_id = e.id
           LEFT JOIN categorias cat ON n.categorias_id = cat.id
+          LEFT JOIN IndicesTempos i ON i.provas_id = p.id AND i.ativo = 1
           LEFT JOIN classificacoes c_cat
             ON c_cat.eventos_provas_id = c.eventos_provas_id
            AND c_cat.nadadores_id = c.nadadores_id
@@ -182,6 +204,8 @@ router.get('/resultadosAbsoluto/:eventoId', async (req, res) => {
                   Number(row.eh_prova_categoria) === 1 && Number(row.pontuacao_equipe || 0) === 0
                     ? row.c_cat_pontuacao_equipe ?? row.pontuacao_equipe
                     : row.pontuacao_equipe,
+              tempo_indice: row.tempo_indice,
+              nao_pontua_por_indice: Number(row.nao_pontua_por_indice) === 1,
               eh_revezamento: row.eh_revezamento,
               eh_prova_categoria: row.eh_prova_categoria,
               eh_prova_ouro: row.eh_prova_ouro,

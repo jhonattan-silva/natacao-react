@@ -429,3 +429,23 @@ body {
   padding: 0.1rem 0.3rem;
   border-radius: 4px;
 }
+
+.legendaIndice {
+  margin-top: 8px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background-color: #fffbe8;
+  border-left: 3px solid #e0c76a;
+  color: #5f4a00;
+  font-size: 0.92rem;
+  border-radius: 4px;
+}
+
+.linhaForaIndice td {
+  background-color: #ffe79a !important;
+  color: #5a4300;
+}
+
+.linhaForaIndice td:first-child {
+  border-left: 4px solid #d7a700 !important;
+}

@@ -108,17 +108,15 @@ const Rankings = () => {
         let pontuacaoAnterior = null;
         let posicaoAtual = 0;
         let offset = 1;
-        let posicaoAnterior = null; 
         return ranking.map((item, idx) => {
             const pontos = item.Pontos !== undefined ? item.Pontos : item.pontos;
             let posicao = '';
             if (pontos !== pontuacaoAnterior) {
                 posicaoAtual = offset;
                 posicao = posicaoAtual;
-                posicaoAnterior = posicaoAtual;
                 pontuacaoAnterior = pontos;
             } else {
-                posicao = ''; // Suprime a posição nos empatados
+                posicao = posicaoAtual; // Empatados compartilham a mesma posição
             }
             offset++;
             return { posicao, ...item };
@@ -154,19 +152,23 @@ const Rankings = () => {
     });
 
     // Normaliza ranking de equipes, padronizando a key 'pontos'
-    const normalizedRankingsEquipes = rankingsEquipes.map(item => ({
-        equipes_id: item.equipes_id,
-        equipe: item.Equipe || item.equipe,
-        pontos: Number(item.Pontos || item.pontos || 0)
-    }));
+    const normalizedRankingsEquipes = rankingsEquipes
+        .map(item => ({
+            equipes_id: item.equipes_id,
+            equipe: item.Equipe || item.equipe,
+            pontos: Number(item.Pontos || item.pontos || 0)
+        }))
+        .sort((a, b) => (b.pontos - a.pontos) || String(a.equipe).localeCompare(String(b.equipe), 'pt-BR'));
     const rankingsEquipesWithPosition = addPosicaoNoRanking(normalizedRankingsEquipes);
 
     // Normaliza ranking mirim geral
-    const normalizedRankingMirim = rankingMirimGeral.map(item => ({
-        equipes_id: item.equipes_id,
-        equipe: item.equipe_nome,
-        pontos: Number(item.pontos_total || item.pontos || 0)
-    }));
+    const normalizedRankingMirim = rankingMirimGeral
+        .map(item => ({
+            equipes_id: item.equipes_id,
+            equipe: item.equipe_nome,
+            pontos: Number(item.pontos_total || item.pontos || 0)
+        }))
+        .sort((a, b) => (b.pontos - a.pontos) || String(a.equipe).localeCompare(String(b.equipe), 'pt-BR'));
     const mirimWithPosition = addPosicaoNoRanking(normalizedRankingMirim);
 
     // Conteúdo para equipes + mirim juntos

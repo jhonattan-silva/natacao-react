@@ -72,7 +72,7 @@ const Tabela = ({
                 </thead>
                 <tbody>
                     {sortedData.map((linha, index) => (
-                        <tr key={index} className={linha._rowClassName || ''}>
+                        <tr key={index} className={linha._rowClassName || ''} style={linha._rowStyle || undefined}>
                             {colunas.map((coluna, idx) => (
                                 <td key={idx} style={columnStyles[coluna]}>{linha[coluna]}</td>
                             ))}

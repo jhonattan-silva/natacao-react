@@ -445,6 +445,7 @@ const Resultados = () => {
                             Tempo: atleta.tempo || '-',
                             Equipe: atleta.nomeEquipe,
                             Categoria: atleta.categoria,
+                            _rowClassName: atleta.nao_pontua_por_indice ? style.linhaForaIndice : '',
                             ...(!provaEhFestival && provaEhCategoria
                               ? {
                                   Pontuação_Mirim_Individual: atleta.pontuacao_individual != null ? atleta.pontuacao_individual : 0,
@@ -487,6 +488,11 @@ const Resultados = () => {
                                   colunasOcultas={['Categoria']}
                                 />
                               </div>
+                              {atletasComClassificacao.some(atleta => atleta.nao_pontua_por_indice) && (
+                                <p className={style.legendaIndice}>
+                                  {`Observação: linhas destacadas indicam nadadores que não pontuaram por estarem acima do índice estabelecido de ${atletasComClassificacao.find(atleta => atleta.nao_pontua_por_indice)?.tempo_indice || '--:--:--'}.`}
+                                </p>
+                              )}
                             </div>
                           );
                         })}
@@ -533,6 +539,7 @@ const Resultados = () => {
                               Tempo: item.tempo,
                               Equipe: item.nome_equipe || '-',
                               Categoria: item.categoria_nadador || '-',
+                              _rowClassName: item.nao_pontua_por_indice ? style.linhaForaIndice : '',
                               ...(!provaEhFestival && provaEhCategoria
                                 ? {
                                     Pontuação_Mirim_Individual: item.pontuacao_individual !== undefined && item.pontuacao_individual !== null
@@ -559,29 +566,36 @@ const Resultados = () => {
                                 <h2 className={style.titulo}>{prova.replace('(M)', 'MASCULINO').replace('(F)', 'FEMININO')}</h2>
                                 <div className={style.tabelaPersonalizada}>
                                   {dadosTabela.length > 0 ? (
-                                    <Tabela
-                                      className={style.tabelaClassificacaoFinal}
-                                      dados={dadosTabela}
-                                      textoExibicao={{
-                                        Classificação: 'Classificação',
-                                        Nome: 'Nome',
-                                        Tempo: 'Tempo',
-                                        Equipe: 'Equipe',
-                                        Categoria: 'Categoria',
-                                        ...(!provaEhFestival && provaEhCategoria
-                                          ? {
-                                              Pontuação_Mirim_Individual: 'Pontos Mirim (Individual)',
-                                              Pontuação_Mirim_Equipe: 'Pontos Mirim (Equipe)'
-                                            }
-                                          : !provaEhFestival
+                                    <>
+                                      <Tabela
+                                        className={style.tabelaClassificacaoFinal}
+                                        dados={dadosTabela}
+                                        textoExibicao={{
+                                          Classificação: 'Classificação',
+                                          Nome: 'Nome',
+                                          Tempo: 'Tempo',
+                                          Equipe: 'Equipe',
+                                          Categoria: 'Categoria',
+                                          ...(!provaEhFestival && provaEhCategoria
                                             ? {
-                                              Pontuação_Ouro_Individual: 'Pontos Ouro (Individual)',
-                                              Pontuação_Ouro_Equipe: 'Pontos Ouro (Equipe)'
+                                                Pontuação_Mirim_Individual: 'Pontos Mirim (Individual)',
+                                                Pontuação_Mirim_Equipe: 'Pontos Mirim (Equipe)'
                                               }
-                                            : {})
-                                      }}
-                                      colunasOcultas={colunasOcultas}
-                                    />
+                                            : !provaEhFestival
+                                              ? {
+                                                Pontuação_Ouro_Individual: 'Pontos Ouro (Individual)',
+                                                Pontuação_Ouro_Equipe: 'Pontos Ouro (Equipe)'
+                                                }
+                                              : {})
+                                        }}
+                                        colunasOcultas={colunasOcultas}
+                                      />
+                                      {resultados.some(item => item.nao_pontua_por_indice) && (
+                                        <p className={style.legendaIndice}>
+                                          {`Observação: linhas destacadas indicam nadadores que não pontuaram por estarem acima do índice estabelecido de ${resultados.find(item => item.nao_pontua_por_indice)?.tempo_indice || '--:--:--'}.`}
+                                        </p>
+                                      )}
+                                    </>
                                   ) : (
                                     <p>Nenhum dado disponível.</p>
                                   )}
@@ -608,18 +622,23 @@ const Resultados = () => {
                   {pontuacaoEtapa.length > 0 ? (
                     <Tabela
                       className={style.tabelaPontuacaoEtapa}
-                      dados={pontuacaoEtapa
-                        .sort((a, b) => b.pontos - a.pontos)
-                        .map((item, index, array) => {
-                          const posicao = index === 0 || item.pontos !== array[index - 1].pontos
-                            ? index + 1
-                            : null;
+                      dados={(() => {
+                        const ordenado = [...pontuacaoEtapa]
+                          .sort((a, b) => (b.pontos - a.pontos) || String(a.equipe).localeCompare(String(b.equipe), 'pt-BR'));
+
+                        let ultimaPosicao = 0;
+                        return ordenado.map((item, index) => {
+                          if (index === 0 || item.pontos !== ordenado[index - 1].pontos) {
+                            ultimaPosicao = index + 1;
+                          }
+
                           return {
-                            Posição: posicao || '',
+                            Posição: ultimaPosicao,
                             Equipe: item.equipe,
                             Pontos: item.pontos
                           };
-                        })}
+                        });
+                      })()}
                       textoExibicao={{
                         Posição: 'Posição',
                         Equipe: 'Equipe',
@@ -636,18 +655,23 @@ const Resultados = () => {
                     className={style.tabelaPontuacaoEtapa}
                     dados={
                       pontuacaoMirim.length > 0
-                        ? pontuacaoMirim
-                            .sort((a, b) => Number(b.pontos) - Number(a.pontos))
-                            .map((item, index, array) => {
-                              const posicao = index === 0 || Number(item.pontos) !== Number(array[index - 1].pontos)
-                                ? index + 1
-                                : null;
+                        ? (() => {
+                            const ordenado = [...pontuacaoMirim]
+                              .sort((a, b) => (Number(b.pontos) - Number(a.pontos)) || String(a.equipe_nome).localeCompare(String(b.equipe_nome), 'pt-BR'));
+
+                            let ultimaPosicao = 0;
+                            return ordenado.map((item, index) => {
+                              if (index === 0 || Number(item.pontos) !== Number(ordenado[index - 1].pontos)) {
+                                ultimaPosicao = index + 1;
+                              }
+
                               return {
-                                Posição: posicao || '',
+                                Posição: ultimaPosicao,
                                 Equipe: item.equipe_nome,
                                 Pontos: item.pontos
                               };
-                            })
+                            });
+                          })()
                         : []
                     }
                     textoExibicao={{

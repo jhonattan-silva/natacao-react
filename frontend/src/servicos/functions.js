@@ -3,6 +3,27 @@ export function somenteNumeros(str) {
     return String(str).replace(/\D/g, '');
 }
 
+// Mascara progressiva para digitacao de tempo (MM:SS:CC)
+export function aplicarMascaraTempo(valor) {
+    const apenasNumeros = somenteNumeros(valor).slice(0, 6);
+
+    if (apenasNumeros.length <= 2) return apenasNumeros;
+    if (apenasNumeros.length <= 4) {
+        return `${apenasNumeros.slice(0, 2)}:${apenasNumeros.slice(2)}`;
+    }
+
+    return `${apenasNumeros.slice(0, 2)}:${apenasNumeros.slice(2, 4)}:${apenasNumeros.slice(4, 6)}`;
+}
+
+// Normaliza qualquer entrada para sempre retornar MM:SS:CC
+export function normalizarTempoMMSSCC(valor) {
+    const apenasNumeros = somenteNumeros(valor).slice(-6).padStart(6, '0');
+    const minutos = apenasNumeros.slice(0, 2);
+    const segundos = apenasNumeros.slice(2, 4);
+    const centesimos = apenasNumeros.slice(4, 6);
+    return `${minutos}:${segundos}:${centesimos}`;
+}
+
 // Converter o tempo para milissegundos
 export function timeToMilliseconds(time) {
     if (time === "00:00") return Infinity; // Alterado: agora compara "00:00"

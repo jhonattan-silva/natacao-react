@@ -30,8 +30,17 @@ export const ResultadosProvider = ({ children }) => {
     }));
   };
 
+  const limparProvaTemporaria = (provaId) => {
+    setResultados((prev) => {
+      if (!prev || !prev[provaId]) return prev;
+      const novo = { ...prev };
+      delete novo[provaId];
+      return novo;
+    });
+  };
+
   return (
-    <ResultadosContext.Provider value={{ resultados, salvarTempo }}>
+    <ResultadosContext.Provider value={{ resultados, salvarTempo, limparProvaTemporaria }}>
       {children}
     </ResultadosContext.Provider>
   );

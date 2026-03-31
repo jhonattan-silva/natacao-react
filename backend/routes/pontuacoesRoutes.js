@@ -21,12 +21,48 @@ function tempoParaCentesimo(tempo) {
   return min * 6000 + seg * 100 + cent;
 }
 
-// Função para atribuir pontuação considerando empates reais (por tempo em centésimos)
-function atribuirPontuacao(classificacoes, tabelaPontuacao, campoTempo = 'tempo') {
+// Função para buscar o índice de tempo de uma prova
+async function buscarIndiceProva(provaId) {
+  try {
+    const [resultado] = await db.query(
+      `SELECT tempo_indice FROM IndicesTempos 
+       WHERE provas_id = ? AND ativo = 1 
+       LIMIT 1`,
+      [provaId]
+    );
+    if (resultado.length > 0) {
+      return resultado[0].tempo_indice;
+    }
+    return null;
+  } catch (error) {
+    console.error(`Erro ao buscar índice para prova ${provaId}:`, error);
+    return null;
+  }
+}
+
+// Função para comparar tempos e verificar se está acima do índice
+function tempoAcimaIndice(tempo, indiceStr) {
+  if (!tempo || !indiceStr || tempo === 'NC' || tempo === 'DQL') return false;
+  
+  const tempoCentesimo = tempoParaCentesimo(tempo);
+  const indiceCentesimo = tempoParaCentesimo(indiceStr);
+  
+  return tempoCentesimo > indiceCentesimo;
+}
+
+// Função para atribuir pontuação considerando empates reais (por tempo em centésimos) e índices
+function atribuirPontuacao(classificacoes, tabelaPontuacao, campoTempo = 'tempo', indiceTempoStr = null) {
   // Filtra apenas status OK e tempo válido
-  const validos = classificacoes.filter(row => row.status === 'OK' && row[campoTempo] && row[campoTempo] !== 'NC' && row[campoTempo] !== 'DQL')
-    .map(row => ({ ...row, tempoCentesimos: tempoParaCentesimo(row[campoTempo]) }))
-    .sort((a, b) => a.tempoCentesimos - b.tempoCentesimos);
+  let validos = classificacoes.filter(row => row.status === 'OK' && row[campoTempo] && row[campoTempo] !== 'NC' && row[campoTempo] !== 'DQL')
+    .map(row => ({ ...row, tempoCentesimos: tempoParaCentesimo(row[campoTempo]) }));
+  
+  // Aplica filtro de índice se existir
+  if (indiceTempoStr) {
+    const indiceCentesimo = tempoParaCentesimo(indiceTempoStr);
+    validos = validos.filter(row => row.tempoCentesimos <= indiceCentesimo);
+  }
+  
+  validos.sort((a, b) => a.tempoCentesimos - b.tempoCentesimos);
 
   let i = 0;
   let premiados = [];
@@ -65,7 +101,7 @@ const calcularPontuacaoEvento = async (eventosId) => {
   try {
     console.log(`[pontuacoesRoutes] Iniciando cálculo de pontuação para evento ${eventosId}`);
     const [provasEvento] = await db.execute(
-      `SELECT ep.id AS evento_prova_id, p.eh_revezamento, p.eh_prova_ouro, p.eh_prova_categoria, p.eh_prova_festival,
+      `SELECT ep.id AS evento_prova_id, p.id AS provas_id, p.eh_revezamento, p.eh_prova_ouro, p.eh_prova_categoria, p.eh_prova_festival,
               p.estilo, p.distancia, p.sexo
        FROM eventos_provas ep 
        JOIN provas p ON ep.provas_id = p.id 
@@ -90,6 +126,12 @@ const calcularPontuacaoEvento = async (eventosId) => {
       // Garante que a classificação existe para esta prova
       await classificarProva(prova.evento_prova_id);
 
+      // Buscar o índice de tempo para esta prova (se existir)
+      const indiceProva = await buscarIndiceProva(prova.provas_id);
+      if (indiceProva) {
+        console.log(`[pontuacoesRoutes] Índice configurado: ${prova.distancia}m ${prova.estilo} ${prova.sexo} = ${indiceProva}`);
+      }
+
       const nomeProva = `${prova.estilo} ${prova.distancia} ${prova.sexo}`;
       
       if (prova.eh_revezamento) {
@@ -107,7 +149,7 @@ const calcularPontuacaoEvento = async (eventosId) => {
         );
         
         // EQUIPE: todos os revezamentos pontuam para a equipe (pontuação dobrada)
-        const pontuadosEquipe = atribuirPontuacao(classificacoes, PONTOS_REVEZAMENTO, 'tempo');
+        const pontuadosEquipe = atribuirPontuacao(classificacoes, PONTOS_REVEZAMENTO, 'tempo', indiceProva);
         if (pontuadosEquipe.length > 0) {
           const equipeUpdates = pontuadosEquipe.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
           const idsEquipe = pontuadosEquipe.map(row => row.id);
@@ -117,7 +159,7 @@ const calcularPontuacaoEvento = async (eventosId) => {
         }
         
         // INDIVIDUAL: revezamentos sempre pontuam individualmente (pontuação dobrada)
-        const pontuadosInd = atribuirPontuacao(classificacoes, PONTOS_REVEZAMENTO, 'tempo');
+        const pontuadosInd = atribuirPontuacao(classificacoes, PONTOS_REVEZAMENTO, 'tempo', indiceProva);
         if (pontuadosInd.length > 0) {
           const indUpdates = pontuadosInd.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
           const idsInd = pontuadosInd.map(row => row.id);
@@ -153,7 +195,7 @@ const calcularPontuacaoEvento = async (eventosId) => {
           // Ordena por tempo (posição real na categoria)
           atletasCategoria.sort((a, b) => tempoParaCentesimo(a.tempo) - tempoParaCentesimo(b.tempo));
           // Atribui pontuação considerando empates (divide pontos entre empatados)
-          const pontuadosCat = atribuirPontuacao(atletasCategoria, PONTOS_INDIVIDUAL, 'tempo');
+          const pontuadosCat = atribuirPontuacao(atletasCategoria, PONTOS_INDIVIDUAL, 'tempo', indiceProva);
           pontuadosMirim = pontuadosMirim.concat(pontuadosCat);
         }
         if (pontuadosMirim.length > 0) {
@@ -202,7 +244,7 @@ const calcularPontuacaoEvento = async (eventosId) => {
           [prova.evento_prova_id]
         );
         // EQUIPE: todos pontuam para a equipe em provas ouro (posição absoluta)
-        const pontuadosEquipe = atribuirPontuacao(classificacoesEquipe, PONTOS_INDIVIDUAL, 'tempo');
+        const pontuadosEquipe = atribuirPontuacao(classificacoesEquipe, PONTOS_INDIVIDUAL, 'tempo', indiceProva);
         if (pontuadosEquipe.length > 0) {
           const equipeUpdates = pontuadosEquipe.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
           const idsEquipe = pontuadosEquipe.map(row => row.id);
@@ -272,7 +314,7 @@ const calcularPontuacaoEvento = async (eventosId) => {
         const categoriasPetizMais = [...new Set(classificacoesInd.map(row => row.categorias_id))];
         for (const categoriaId of categoriasPetizMais) {
           const atletasCategoria = classificacoesInd.filter(row => row.categorias_id === categoriaId);
-          const pontuadosCat = atribuirPontuacao(atletasCategoria, PONTOS_INDIVIDUAL, 'tempo');
+          const pontuadosCat = atribuirPontuacao(atletasCategoria, PONTOS_INDIVIDUAL, 'tempo', indiceProva);
           pontuadosInd = pontuadosInd.concat(pontuadosCat);
         }
         if (pontuadosInd.length > 0) {
@@ -310,7 +352,7 @@ const calcularPontuacaoEvento = async (eventosId) => {
         if (classificacoes.length > 0) {
           
           // EQUIPE: todos pontuam para a equipe em provas ouro
-          const pontuadosEquipe = atribuirPontuacao(classificacoes, PONTOS_INDIVIDUAL, 'tempo');
+          const pontuadosEquipe = atribuirPontuacao(classificacoes, PONTOS_INDIVIDUAL, 'tempo', indiceProva);
           if (pontuadosEquipe.length > 0) {
             const equipeUpdates = pontuadosEquipe.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
             const idsEquipe = pontuadosEquipe.map(row => row.id);
@@ -322,7 +364,7 @@ const calcularPontuacaoEvento = async (eventosId) => {
           // INDIVIDUAL: só Petiz+ (não Mirim) pontua individualmente em provas ouro
           const petizMais = classificacoes.filter(row => row.eh_mirim !== 1);
           
-          const pontuadosInd = atribuirPontuacao(petizMais, PONTOS_INDIVIDUAL, 'tempo');
+          const pontuadosInd = atribuirPontuacao(petizMais, PONTOS_INDIVIDUAL, 'tempo', indiceProva);
           if (pontuadosInd.length > 0) {
             const indUpdates = pontuadosInd.map(row => `WHEN ${row.id} THEN ${row.pontuacao}`);
             const idsInd = pontuadosInd.map(row => row.id);

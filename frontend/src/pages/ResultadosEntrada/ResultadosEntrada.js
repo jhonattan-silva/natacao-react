@@ -5,6 +5,7 @@ import api from '../../servicos/api';
 import Botao from '../../componentes/Botao/Botao';
 import CabecalhoAdmin from '../../componentes/CabecalhoAdmin/CabecalhoAdmin';
 import { ResultadosContext } from '../../servicos/ResultadoContext'; // Contexto para salvar temporariamente o resultado de cada nadador
+import { normalizarTempoMMSSCC } from '../../servicos/functions';
 import CheckboxGroup from '../../componentes/CheckBoxGroup/CheckBoxGroup';
 import useAlerta from '../../hooks/useAlerta'; // <-- Adicione este import
 
@@ -18,7 +19,7 @@ const ResultadosEntrada = () => {
     const [provaId, setProvaId] = useState(''); // Estado da prova selecionada
     const [baterias, setBaterias] = useState([]); // Recebe as baterias de cada prova
     const [erro, setErro] = useState(null); // Estado para erros
-    const { resultados, salvarTempo } = useContext(ResultadosContext); // Contexto com os resultados
+    const { resultados, salvarTempo, limparProvaTemporaria } = useContext(ResultadosContext); // Contexto com os resultados
     const [inputSalvo, setInputSalvo] = useState(null); // Estado para controlar a estilização do input
     const [checkboxes, setCheckboxes] = useState({}); // Estado para os checkboxes
     const [valoresBanco, setValoresBanco] = useState({}); // Novo estado para os tempos do banco
@@ -213,25 +214,8 @@ const ResultadosEntrada = () => {
         setInputSalvo({ bateriaId, id, isEquipe });
     };
 
-    // Função robusta para normalizar tempo: sempre 6 dígitos numéricos (mm:ss:cc)
-    const formatarTempo = (tempo) => {
-        if (!tempo) return '00:00:00';
-        // Remove tudo que não for número
-        let apenasNumeros = String(tempo).replace(/\D/g, '');
-        // Limita a 6 dígitos (se vier mais, pega os últimos)
-        apenasNumeros = apenasNumeros.slice(-6);
-        // Preenche à esquerda com zeros
-        const preenchido = apenasNumeros.padStart(6, '0');
-        // Se não for número, retorna zeros
-        if (!/^[0-9]{6}$/.test(preenchido)) return '00:00:00';
-        const minutos = preenchido.slice(0, 2);
-        const segundos = preenchido.slice(2, 4);
-        const centesimos = preenchido.slice(4, 6);
-        return `${minutos}:${segundos}:${centesimos}`;
-    };
-
     const handleTempoChange = (bateriaId, id, valor, isEquipe = false) => {
-        const tempoFormatado = formatarTempo(valor);
+        const tempoFormatado = normalizarTempoMMSSCC(valor);
         atualizarTempo(bateriaId, id, tempoFormatado, isEquipe);
         salvarTempo(provaId, id, tempoFormatado); // salva temporariamente o tempo
         setInputSalvo({ bateriaId, id, isEquipe }); // mantem o estado do input salvo
@@ -303,6 +287,22 @@ const ResultadosEntrada = () => {
             // Chama a API para transmitir os resultados completos da prova
             await api.post(`/resultadosEntrada/transmitirResultadoProva/${eventosProvasId}`);
             await api.post(`/pontuacoes/pontuar-evento/${eventoId}`);
+
+            // A prova ja foi persistida no banco: limpa dados temporarios apenas desta prova.
+            limparProvaTemporaria(provaId);
+            setCheckboxes((prev) => {
+                const novo = { ...prev };
+                baterias.forEach((bateria) => {
+                    bateria.nadadores.forEach((nadador) => {
+                        delete novo[nadador.id];
+                    });
+                    bateria.equipes.forEach((equipe) => {
+                        delete novo[equipe.id];
+                    });
+                });
+                return novo;
+            });
+            setInputSalvo(null);
 
             const indexAtual = provas.findIndex(p => String(p.prova_id) === String(provaId));
             if (indexAtual !== -1 && indexAtual + 1 < provas.length) {

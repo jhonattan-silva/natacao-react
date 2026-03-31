@@ -254,6 +254,12 @@
     font-size: 1.1rem;
 }
 
+/* Seção Full Width para Gerenciador de Índices */
+.fullWidthSection {
+    width: 100%;
+    margin-top: 3rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .superAdminContainer {
