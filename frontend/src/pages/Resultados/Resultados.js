@@ -316,6 +316,30 @@ const Resultados = () => {
     );
   };
 
+  const tempoParaCentesimos = (tempo) => {
+    if (!tempo || typeof tempo !== 'string') return null;
+
+    const partes = tempo.split(':').map(Number);
+    if (partes.length !== 3 || partes.some(Number.isNaN)) return null;
+
+    return (partes[0] * 6000) + (partes[1] * 100) + partes[2];
+  };
+
+  const estaAcimaDoIndice = (tempo, tempoIndice) => {
+    const tempoCentesimos = tempoParaCentesimos(tempo);
+    const indiceCentesimos = tempoParaCentesimos(tempoIndice);
+
+    if (tempoCentesimos === null || indiceCentesimos === null) {
+      return false;
+    }
+
+    return tempoCentesimos > indiceCentesimos;
+  };
+
+  const deveDestacarPorIndice = (atleta) => (
+    atleta.nao_pontua_por_indice || (atleta.status === 'OK' && atleta.tempo_indice && estaAcimaDoIndice(atleta.tempo, atleta.tempo_indice))
+  );
+
   return (
     <>
       <Cabecalho />
@@ -438,6 +462,7 @@ const Resultados = () => {
                           });
                           const provaEhCategoria = atletasComClassificacao.some(atleta => atleta.eh_prova_categoria);
                           const provaEhFestival = atletasComClassificacao.some(atleta => atleta.eh_prova_festival);
+                          const atletasForaIndice = atletasComClassificacao.filter(deveDestacarPorIndice);
                           const dadosTabelaCategoria = atletasComClassificacao.map(atleta => ({
                             Classificação: renderMedalha(atleta.classificacao_categoria, atleta.eh_prova_categoria),
                             'Classificação Absoluto': atleta.classificacao,
@@ -445,7 +470,7 @@ const Resultados = () => {
                             Tempo: atleta.tempo || '-',
                             Equipe: atleta.nomeEquipe,
                             Categoria: atleta.categoria,
-                            _rowClassName: atleta.nao_pontua_por_indice ? style.linhaForaIndice : '',
+                            _rowClassName: deveDestacarPorIndice(atleta) ? style.linhaForaIndice : '',
                             ...(!provaEhFestival && provaEhCategoria
                               ? {
                                   Pontuação_Mirim_Individual: atleta.pontuacao_individual != null ? atleta.pontuacao_individual : 0,
@@ -488,9 +513,9 @@ const Resultados = () => {
                                   colunasOcultas={['Categoria']}
                                 />
                               </div>
-                              {atletasComClassificacao.some(atleta => atleta.nao_pontua_por_indice) && (
+                              {atletasForaIndice.length > 0 && (
                                 <p className={style.legendaIndice}>
-                                  {`Observação: linhas destacadas indicam nadadores que não pontuaram por estarem acima do índice estabelecido de ${atletasComClassificacao.find(atleta => atleta.nao_pontua_por_indice)?.tempo_indice || '--:--:--'}.`}
+                                  {`Observação: linhas destacadas indicam nadadores que não pontuaram por estarem acima do índice estabelecido de ${atletasForaIndice[0]?.tempo_indice || '--:--:--'}.`}
                                 </p>
                               )}
                             </div>
@@ -527,6 +552,7 @@ const Resultados = () => {
                             const ehRevezamento = resultados.some(item => item.eh_revezamento);
                             const provaEhCategoria = resultados.some(item => Number(item.eh_prova_categoria) === 1);
                             const provaEhFestival = resultados.some(item => Number(item.eh_prova_festival) === 1);
+                            const resultadosForaIndice = resultados.filter(deveDestacarPorIndice);
                             if (ehRevezamento) {
                               colunasOcultas.push('Categoria', 'Nome');
                             }
@@ -539,7 +565,7 @@ const Resultados = () => {
                               Tempo: item.tempo,
                               Equipe: item.nome_equipe || '-',
                               Categoria: item.categoria_nadador || '-',
-                              _rowClassName: item.nao_pontua_por_indice ? style.linhaForaIndice : '',
+                              _rowClassName: deveDestacarPorIndice(item) ? style.linhaForaIndice : '',
                               ...(!provaEhFestival && provaEhCategoria
                                 ? {
                                     Pontuação_Mirim_Individual: item.pontuacao_individual !== undefined && item.pontuacao_individual !== null
@@ -568,8 +594,8 @@ const Resultados = () => {
                                   {dadosTabela.length > 0 ? (
                                     <>
                                       <Tabela
-                                        className={style.tabelaClassificacaoFinal}
                                         dados={dadosTabela}
+                                        className={style.tabelaClassificacaoFinal}
                                         textoExibicao={{
                                           Classificação: 'Classificação',
                                           Nome: 'Nome',
@@ -590,9 +616,9 @@ const Resultados = () => {
                                         }}
                                         colunasOcultas={colunasOcultas}
                                       />
-                                      {resultados.some(item => item.nao_pontua_por_indice) && (
+                                      {resultadosForaIndice.length > 0 && (
                                         <p className={style.legendaIndice}>
-                                          {`Observação: linhas destacadas indicam nadadores que não pontuaram por estarem acima do índice estabelecido de ${resultados.find(item => item.nao_pontua_por_indice)?.tempo_indice || '--:--:--'}.`}
+                                          {`Observação: linhas destacadas indicam nadadores que não pontuaram por estarem acima do índice estabelecido de ${resultadosForaIndice[0]?.tempo_indice || '--:--:--'}.`}
                                         </p>
                                       )}
                                     </>
