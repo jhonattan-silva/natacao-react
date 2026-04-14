@@ -448,7 +448,19 @@ const Etapas = () => {
             fetchData(anoSelecionado); // Recarrega a lista de etapas do backend
         } catch (error) {
             console.error('Erro ao alterar inscrição:', error);
-            const mensagemErro = error?.response?.data?.message || error?.response?.data?.error || 'Erro ao alterar inscrição.';
+            const status = error?.response?.status;
+            const data = error?.response?.data;
+            const mensagemApi = typeof data === 'string'
+                ? null
+                : (data?.message || data?.error);
+
+            const mensagemErro =
+                mensagemApi ||
+                (status === 403
+                    ? 'Não é permitido reabrir inscrições após haver resultados lançados para este evento.'
+                    : status === 404
+                        ? 'Evento não encontrado para alterar inscrição.'
+                        : 'Erro ao alterar inscrição.');
             mostrarAlerta(mensagemErro);
         }
     };

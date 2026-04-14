@@ -355,6 +355,9 @@ router.put('/abreInscricao/:id', async (req, res) => {
         const estaReabrindoInscricao = novoStatusInscricao === 1 && statusAtualInscricao !== 1;
 
         if (estaReabrindoInscricao && teveResultados) {
+            console.warn(
+                `[abreInscricao] Bloqueio de reabertura | evento=${etapaId} | statusAtual=${statusAtualInscricao} | novoStatus=${novoStatusInscricao} | teve_resultados=1`
+            );
             return res.status(403).json({
                 message: 'Não é permitido reabrir inscrições após haver resultados lançados para este evento.'
             });
