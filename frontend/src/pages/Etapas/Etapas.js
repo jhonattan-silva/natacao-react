@@ -449,10 +449,7 @@ const Etapas = () => {
         } catch (error) {
             console.error('Erro ao alterar inscrição:', error);
             const status = error?.response?.status;
-            const data = error?.response?.data;
-            const mensagemApi = typeof data === 'string'
-                ? null
-                : (data?.message || data?.error);
+            const mensagemApi = error?.response?.data?.message || error?.response?.data?.error || null;
 
             const mensagemErro =
                 mensagemApi ||
