@@ -22,7 +22,7 @@ const GerenciadorIndices = () => {
   }, []);
 
   /**
-   * Buscar lista de provas de 400m
+   * Buscar lista de provas elegíveis para índice (200m e 400m)
    */
   const fetchProvas = async () => {
     try {
@@ -32,7 +32,7 @@ const GerenciadorIndices = () => {
       }
     } catch (error) {
       console.error('Erro ao buscar provas:', error);
-      mostrarAlerta('Erro ao buscar provas de 400m');
+      mostrarAlerta('Erro ao buscar provas de 200m e 400m');
     }
   };
 
@@ -179,7 +179,7 @@ const GerenciadorIndices = () => {
 
         <form onSubmit={handleSalvarIndice}>
           <div className={style.grupo}>
-            <label htmlFor="prova">Prova (400m)</label>
+            <label htmlFor="prova">Prova (200m/400m)</label>
             <select
               id="prova"
               value={selectedProvaId}
@@ -221,7 +221,7 @@ const GerenciadorIndices = () => {
               type="text"
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
-              placeholder="Ex: Índice 2025 para 400m Livre"
+              placeholder="Ex: Índice 2025 para 200m/400m Livre"
               disabled={loading}
             />
           </div>

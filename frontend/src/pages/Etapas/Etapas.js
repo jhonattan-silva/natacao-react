@@ -448,7 +448,8 @@ const Etapas = () => {
             fetchData(anoSelecionado); // Recarrega a lista de etapas do backend
         } catch (error) {
             console.error('Erro ao alterar inscrição:', error);
-            mostrarAlerta('Erro ao alterar inscrição.'); 
+            const mensagemErro = error?.response?.data?.message || error?.response?.data?.error || 'Erro ao alterar inscrição.';
+            mostrarAlerta(mensagemErro);
         }
     };
 

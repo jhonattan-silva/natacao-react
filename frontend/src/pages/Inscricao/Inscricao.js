@@ -42,6 +42,9 @@ const Inscricao = () => {
     const eventoAtual = eventos.find((evento) => String(evento.id) === String(eventoSelecionado));
     const faseInscricao = eventoAtual?.inscricao_aberta;
     const somenteExclusoes = faseInscricao === 2;
+    const provasComIndice = provas
+        .filter((prova) => !!prova.tempo_indice)
+        .sort((a, b) => a.ordem - b.ordem);
 
     // Nova função para formatar o sexo
     const formatSexo = (sexo) => {
@@ -436,6 +439,18 @@ const Inscricao = () => {
             <div>
                 {eventoSelecionado && (
                     <div className={styles.centralizado}>
+                        {provasComIndice.length > 0 && (
+                            <div className={styles.avisoIndices}>
+                                <h3>Indices de tempo definidos para este evento</h3>
+                                <ul>
+                                    {provasComIndice.map((prova) => (
+                                        <li key={`indice-${prova.id}`}>
+                                            {prova.ordem} - {prova.distancia}m {prova.estilo} {formatSexo(prova.sexo)}: {prova.tempo_indice}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                         <div className={styles.provasLegenda}>
                             <h3>Provas do Evento</h3>
                             <ul>

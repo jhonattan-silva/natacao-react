@@ -245,8 +245,8 @@ router.get('/listar-provas', async (req, res) => {
         i.ativo
       FROM provas p
       LEFT JOIN IndicesTempos i ON p.id = i.provas_id AND i.ativo = 1
-      WHERE p.distancia = 400
-      ORDER BY p.estilo ASC, p.sexo ASC
+      WHERE p.distancia IN (200, 400)
+      ORDER BY p.distancia ASC, p.estilo ASC, p.sexo ASC
     `);
 
     res.json({ success: true, dados: provas });

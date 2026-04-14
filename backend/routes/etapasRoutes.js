@@ -338,12 +338,32 @@ router.delete('/excluiEtapa/:id', async (req, res) => {
 router.put('/abreInscricao/:id', async (req, res) => {
     const etapaId = req.params.id;
     const { inscricao_aberta } = req.body;
+    const novoStatusInscricao = Number(inscricao_aberta);
 
     try {
+        const [eventoRows] = await db.query(
+            'SELECT inscricao_aberta, teve_resultados FROM eventos WHERE id = ?',
+            [etapaId]
+        );
+
+        if (!eventoRows || !eventoRows[0]) {
+            return res.status(404).json({ message: 'Evento não encontrado.' });
+        }
+
+        const statusAtualInscricao = Number(eventoRows[0].inscricao_aberta);
+        const teveResultados = Number(eventoRows[0].teve_resultados) === 1;
+        const estaReabrindoInscricao = novoStatusInscricao === 1 && statusAtualInscricao !== 1;
+
+        if (estaReabrindoInscricao && teveResultados) {
+            return res.status(403).json({
+                message: 'Não é permitido reabrir inscrições após haver resultados lançados para este evento.'
+            });
+        }
+
         // Atualiza a coluna inscricao_aberta da etapa
         await db.query(
             'UPDATE eventos SET inscricao_aberta = ? WHERE id = ?',
-            [inscricao_aberta, etapaId]
+            [novoStatusInscricao, etapaId]
         );
 
         res.json({ message: 'Inscrição atualizada com sucesso!' });

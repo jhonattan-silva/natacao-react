@@ -44,9 +44,10 @@ router.get('/listarProvasEvento/:eventoId', async (req, res) => {
     try {
         // Buscar provas associadas ao evento específico
         const [provas] = await db.query(`
-            SELECT p.*, ep.*
+            SELECT p.*, ep.*, i.tempo_indice
             FROM eventos_provas ep
             JOIN provas p ON ep.provas_id = p.id
+            LEFT JOIN IndicesTempos i ON i.provas_id = p.id AND i.ativo = 1
             WHERE ep.eventos_id = ?
             ORDER BY ep.ordem
         `, [eventoId]);
